@@ -12,4 +12,9 @@ public class EsAggregationWrapper<T> extends AbstractEsAggregationWrapper<T, SFu
     public EsAggregationWrapper(Class<T> tClass) {
         super.tClass = tClass;
     }
+
+    @Override
+    protected EsAggregationWrapper<T> instance() {
+        return new EsAggregationWrapper<>(super.tClass);
+    }
 }

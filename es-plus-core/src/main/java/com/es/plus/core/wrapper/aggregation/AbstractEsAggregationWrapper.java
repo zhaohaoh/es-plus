@@ -5,7 +5,10 @@ import org.elasticsearch.common.geo.GeoDistance;
 import org.elasticsearch.common.geo.GeoPoint;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.script.Script;
+import org.elasticsearch.search.aggregations.AggregationBuilder;
+import org.elasticsearch.search.aggregations.AggregatorFactories;
 import org.elasticsearch.search.aggregations.BaseAggregationBuilder;
+import org.elasticsearch.search.aggregations.PipelineAggregationBuilder;
 import org.elasticsearch.search.aggregations.bucket.adjacency.AdjacencyMatrix;
 import org.elasticsearch.search.aggregations.bucket.adjacency.AdjacencyMatrixAggregationBuilder;
 import org.elasticsearch.search.aggregations.bucket.composite.CompositeAggregationBuilder;
@@ -38,10 +41,12 @@ import org.elasticsearch.search.aggregations.bucket.terms.TermsAggregationBuilde
 import org.elasticsearch.search.aggregations.metrics.*;
 import org.elasticsearch.search.aggregations.pipeline.*;
 import org.elasticsearch.search.sort.FieldSortBuilder;
+import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 import static com.es.plus.constant.EsConstant.AGG_DELIMITER;
 
@@ -52,277 +57,355 @@ public abstract class AbstractEsAggregationWrapper<T, R extends SFunction<T, ?>,
     protected AbstractEsAggregationWrapper() {
     }
 
+    protected abstract Children instance();
+
     protected Children children = (Children) this;
     protected List<BaseAggregationBuilder> aggregationBuilder = new ArrayList<>();
-    protected Object current;
+    protected BaseAggregationBuilder currentBuilder;
 
     public List<BaseAggregationBuilder> getAggregationBuilder() {
         return aggregationBuilder;
     }
 
+    public Children subAggregation(Consumer<Children> consumer) {
+        final Children children = instance();
+        consumer.accept(children);
+        List<BaseAggregationBuilder> aggregationBuilder = children.getAggregationBuilder();
+        if (!CollectionUtils.isEmpty(aggregationBuilder)) {
+            AggregatorFactories.Builder builder = new AggregatorFactories.Builder();
+            for (BaseAggregationBuilder baseAggregationBuilder : aggregationBuilder) {
+                if (baseAggregationBuilder instanceof AggregationBuilder) {
+                    builder.addAggregator((AggregationBuilder) baseAggregationBuilder);
+                } else {
+                    builder.addPipelineAggregator((PipelineAggregationBuilder) baseAggregationBuilder);
+                }
+            }
+            currentBuilder.subAggregations(builder);
+        }
+        return this.children;
+    }
+
     @Override
-    public ValueCountAggregationBuilder count(R name) {
+    public Children count(R name) {
         String field = getAggregationField(name);
         String aggName = field + AGG_DELIMITER + ValueCountAggregationBuilder.NAME;
         ValueCountAggregationBuilder valueCountAggregationBuilder = new ValueCountAggregationBuilder(aggName);
         valueCountAggregationBuilder.field(field);
-        return valueCountAggregationBuilder;
+        currentBuilder = valueCountAggregationBuilder;
+        aggregationBuilder.add(currentBuilder);
+        return this.children;
     }
 
     /**
      * Create a new {@link Avg} aggregation with the given name.
      */
     @Override
-    public AvgAggregationBuilder avg(R name) {
+    public Children avg(R name) {
         String field = getAggregationField(name);
         String aggName = field + AGG_DELIMITER + AvgAggregationBuilder.NAME;
         AvgAggregationBuilder avgAggregationBuilder = new AvgAggregationBuilder(aggName);
         avgAggregationBuilder.field(field);
-        return avgAggregationBuilder;
+        currentBuilder = avgAggregationBuilder;
+        aggregationBuilder.add(currentBuilder);
+        return this.children;
     }
 
     /**
      * Create a new {@link Avg} aggregation with the given name.
      */
     @Override
-    public WeightedAvgAggregationBuilder weightedAvg(R name) {
+    public Children weightedAvg(R name) {
         String field = getAggregationField(name);
         String aggName = field + AGG_DELIMITER + WeightedAvgAggregationBuilder.NAME;
-        return new WeightedAvgAggregationBuilder(aggName);
+        WeightedAvgAggregationBuilder weightedAvgAggregationBuilder = new WeightedAvgAggregationBuilder(aggName);
+        currentBuilder = weightedAvgAggregationBuilder;
+        aggregationBuilder.add(currentBuilder);
+        return this.children;
     }
 
     /**
      * Create a new {@link Max} aggregation with the given name.
      */
     @Override
-    public MaxAggregationBuilder max(R name) {
+    public Children max(R name) {
         String field = getAggregationField(name);
         String aggName = field + AGG_DELIMITER + MaxAggregationBuilder.NAME;
         MaxAggregationBuilder maxAggregationBuilder = new MaxAggregationBuilder(aggName);
         maxAggregationBuilder.field(field);
-        return maxAggregationBuilder;
+        currentBuilder = maxAggregationBuilder;
+        aggregationBuilder.add(currentBuilder);
+        return this.children;
     }
 
     /**
      * Create a new {@link Min} aggregation with the given name.
      */
     @Override
-    public MinAggregationBuilder min(R name) {
+    public Children min(R name) {
         String field = getAggregationField(name);
         String aggName = field + AGG_DELIMITER + MinAggregationBuilder.NAME;
         MinAggregationBuilder minAggregationBuilder = new MinAggregationBuilder(aggName);
         minAggregationBuilder.field(field);
-        return minAggregationBuilder;
+        currentBuilder = minAggregationBuilder;
+        aggregationBuilder.add(currentBuilder);
+        return this.children;
     }
 
     /**
      * Create a new {@link Sum} aggregation with the given name.
      */
     @Override
-    public SumAggregationBuilder sum(R name) {
+    public Children sum(R name) {
         String field = getAggregationField(name);
         String aggName = field + AGG_DELIMITER + SumAggregationBuilder.NAME;
         SumAggregationBuilder sumAggregationBuilder = new SumAggregationBuilder(aggName);
         sumAggregationBuilder.field(field);
-        return sumAggregationBuilder;
+        currentBuilder = sumAggregationBuilder;
+        aggregationBuilder.add(currentBuilder);
+        return this.children;
     }
 
     /**
      * Create a new {@link Stats} aggregation with the given name.
      */
     @Override
-    public StatsAggregationBuilder stats(R name) {
+    public Children stats(R name) {
         String field = getAggregationField(name);
         String aggName = field + AGG_DELIMITER + StatsAggregationBuilder.NAME;
         StatsAggregationBuilder statsAggregationBuilder = new StatsAggregationBuilder(aggName);
         statsAggregationBuilder.field(field);
-        return statsAggregationBuilder;
+        currentBuilder = statsAggregationBuilder;
+        aggregationBuilder.add(currentBuilder);
+        return this.children;
     }
 
     /**
      * Create a new {@link ExtendedStats} aggregation with the given name.
      */
     @Override
-    public ExtendedStatsAggregationBuilder extendedStats(R name) {
+    public Children extendedStats(R name) {
         String field = getAggregationField(name);
         String aggName = field + AGG_DELIMITER + ExtendedStatsAggregationBuilder.NAME;
         ExtendedStatsAggregationBuilder extendedStatsAggregationBuilder = new ExtendedStatsAggregationBuilder(aggName);
         extendedStatsAggregationBuilder.field(field);
-        return extendedStatsAggregationBuilder;
+        currentBuilder = extendedStatsAggregationBuilder;
+        aggregationBuilder.add(currentBuilder);
+        return this.children;
     }
 
     /**
      * Create a new {@link Filter} aggregation with the given name.
      */
     @Override
-    public FilterAggregationBuilder filter(R name, QueryBuilder filter) {
+    public Children filter(R name, QueryBuilder filter) {
         String field = getAggregationField(name);
         String aggName = field + AGG_DELIMITER + FilterAggregationBuilder.NAME;
-        return new FilterAggregationBuilder(aggName, filter);
+        FilterAggregationBuilder filterAggregationBuilder = new FilterAggregationBuilder(aggName, filter);
+        currentBuilder = filterAggregationBuilder;
+        aggregationBuilder.add(currentBuilder);
+        return this.children;
     }
 
     /**
      * Create a new {@link Filters} aggregation with the given name.
      */
     @Override
-    public FiltersAggregationBuilder filters(R name, FiltersAggregator.KeyedFilter... filters) {
+    public Children filters(R name, FiltersAggregator.KeyedFilter... filters) {
         String field = getAggregationField(name);
         String aggName = field + AGG_DELIMITER + FiltersAggregationBuilder.NAME;
-        return new FiltersAggregationBuilder(aggName, filters);
+        FiltersAggregationBuilder filtersAggregationBuilder = new FiltersAggregationBuilder(aggName, filters);
+        currentBuilder = filtersAggregationBuilder;
+        aggregationBuilder.add(currentBuilder);
+        return this.children;
     }
 
     /**
      * Create a new {@link Filters} aggregation with the given name.
      */
     @Override
-    public FiltersAggregationBuilder filters(R name, QueryBuilder... filters) {
+    public Children filters(R name, QueryBuilder... filters) {
         String field = getAggregationField(name);
         String aggName = field + AGG_DELIMITER + FiltersAggregationBuilder.NAME;
-        return new FiltersAggregationBuilder(aggName, filters);
+        FiltersAggregationBuilder filtersAggregationBuilder = new FiltersAggregationBuilder(aggName, filters);
+        currentBuilder = filtersAggregationBuilder;
+        aggregationBuilder.add(currentBuilder);
+        return this.children;
     }
 
     /**
      * Create a new {@link AdjacencyMatrix} aggregation with the given name.
      */
     @Override
-    public AdjacencyMatrixAggregationBuilder adjacencyMatrix(R name, Map<String, QueryBuilder> filters) {
+    public Children adjacencyMatrix(R name, Map<String, QueryBuilder> filters) {
         String field = getAggregationField(name);
         String aggName = field + AGG_DELIMITER + AdjacencyMatrixAggregationBuilder.NAME;
-        return new AdjacencyMatrixAggregationBuilder(aggName, filters);
+        AdjacencyMatrixAggregationBuilder adjacencyMatrixAggregationBuilder = new AdjacencyMatrixAggregationBuilder(aggName, filters);
+        currentBuilder = adjacencyMatrixAggregationBuilder;
+        aggregationBuilder.add(currentBuilder);
+        return this.children;
     }
 
     /**
      * Create a new {@link AdjacencyMatrix} aggregation with the given name and separator
      */
     @Override
-    public AdjacencyMatrixAggregationBuilder adjacencyMatrix(R name, String separator, Map<String, QueryBuilder> filters) {
+    public Children adjacencyMatrix(R name, String separator, Map<String, QueryBuilder> filters) {
         String field = getAggregationField(name);
         String aggName = field + AGG_DELIMITER + AdjacencyMatrixAggregationBuilder.NAME;
-        return new AdjacencyMatrixAggregationBuilder(aggName, separator, filters);
+        AdjacencyMatrixAggregationBuilder adjacencyMatrixAggregationBuilder = new AdjacencyMatrixAggregationBuilder(aggName, separator, filters);
+        currentBuilder = adjacencyMatrixAggregationBuilder;
+        aggregationBuilder.add(currentBuilder);
+        return this.children;
     }
 
     /**
      * Create a new {@link Sampler} aggregation with the given name.
      */
     @Override
-    public SamplerAggregationBuilder sampler(R name) {
+    public Children sampler(R name) {
         String field = getAggregationField(name);
         String aggName = field + AGG_DELIMITER + SamplerAggregationBuilder.NAME;
-        return new SamplerAggregationBuilder(aggName);
+        SamplerAggregationBuilder samplerAggregationBuilder = new SamplerAggregationBuilder(aggName);
+        currentBuilder = samplerAggregationBuilder;
+        aggregationBuilder.add(currentBuilder);
+        return this.children;
     }
 
     /**
      * Create a new {@link Sampler} aggregation with the given name.
      */
     @Override
-    public DiversifiedAggregationBuilder diversifiedSampler(R name) {
+    public Children diversifiedSampler(R name) {
         String field = getAggregationField(name);
         String aggName = field + AGG_DELIMITER + DiversifiedAggregationBuilder.NAME;
         DiversifiedAggregationBuilder diversifiedAggregationBuilder = new DiversifiedAggregationBuilder(aggName);
         diversifiedAggregationBuilder.field(field);
-        return diversifiedAggregationBuilder;
+        currentBuilder = diversifiedAggregationBuilder;
+        aggregationBuilder.add(currentBuilder);
+        return this.children;
     }
 
     /**
      * Create a new {@link Global} aggregation with the given name.
      */
     @Override
-    public GlobalAggregationBuilder global(R name) {
+    public Children global(R name) {
         String field = getAggregationField(name);
         String aggName = field + AGG_DELIMITER + GlobalAggregationBuilder.NAME;
-        return new GlobalAggregationBuilder(aggName);
+        GlobalAggregationBuilder globalAggregationBuilder = new GlobalAggregationBuilder(aggName);
+        currentBuilder = globalAggregationBuilder;
+        aggregationBuilder.add(currentBuilder);
+        return this.children;
     }
 
     /**
      * Create a new {@link Missing} aggregation with the given name.
      */
     @Override
-    public MissingAggregationBuilder missing(R name) {
+    public Children missing(R name) {
         String field = getAggregationField(name);
         String aggName = field + AGG_DELIMITER + MissingAggregationBuilder.NAME;
         MissingAggregationBuilder missingAggregationBuilder = new MissingAggregationBuilder(aggName);
         missingAggregationBuilder.field(field);
-        return missingAggregationBuilder;
+        currentBuilder = missingAggregationBuilder;
+        aggregationBuilder.add(currentBuilder);
+        return this.children;
     }
 
     /**
      * Create a new {@link Nested} aggregation with the given name.
      */
     @Override
-    public NestedAggregationBuilder nested(R name, String path) {
+    public Children nested(R name, String path) {
         String field = getAggregationField(name);
         String aggName = field + AGG_DELIMITER + NestedAggregationBuilder.NAME;
-        return new NestedAggregationBuilder(aggName, path);
+        NestedAggregationBuilder nestedAggregationBuilder = new NestedAggregationBuilder(aggName, path);
+        currentBuilder = nestedAggregationBuilder;
+        aggregationBuilder.add(currentBuilder);
+        return this.children;
     }
 
     /**
      * Create a new {@link ReverseNested} aggregation with the given name.
      */
     @Override
-    public ReverseNestedAggregationBuilder reverseNested(R name) {
+    public Children reverseNested(R name) {
         String field = getAggregationField(name);
         String aggName = field + AGG_DELIMITER + ReverseNestedAggregationBuilder.NAME;
-        return new ReverseNestedAggregationBuilder(aggName);
+        ReverseNestedAggregationBuilder reverseNestedAggregationBuilder = new ReverseNestedAggregationBuilder(aggName);
+        currentBuilder = reverseNestedAggregationBuilder;
+        aggregationBuilder.add(currentBuilder);
+        return this.children;
     }
 
     /**
      * Create a new {@link GeoDistance} aggregation with the given name.
      */
     @Override
-    public GeoDistanceAggregationBuilder geoDistance(R name, GeoPoint origin) {
+    public Children geoDistance(R name, GeoPoint origin) {
         String field = getAggregationField(name);
         String aggName = field + AGG_DELIMITER + GeoDistanceAggregationBuilder.NAME;
         GeoDistanceAggregationBuilder geoDistanceAggregationBuilder = new GeoDistanceAggregationBuilder(aggName, origin);
         geoDistanceAggregationBuilder.field(field);
-        return geoDistanceAggregationBuilder;
+        currentBuilder = geoDistanceAggregationBuilder;
+        aggregationBuilder.add(currentBuilder);
+        return this.children;
     }
 
     /**
      * Create a new {@link Histogram} aggregation with the given name.
      */
     @Override
-    public HistogramAggregationBuilder histogram(R name) {
+    public Children histogram(R name) {
         String field = getAggregationField(name);
         String aggName = field + AGG_DELIMITER + HistogramAggregationBuilder.NAME;
         HistogramAggregationBuilder histogramAggregationBuilder = new HistogramAggregationBuilder(aggName);
         histogramAggregationBuilder.field(field);
-        return histogramAggregationBuilder;
+        currentBuilder = histogramAggregationBuilder;
+        aggregationBuilder.add(currentBuilder);
+        return this.children;
     }
 
     /**
      * Create a new {@link InternalGeoHashGrid} aggregation with the given name.
      */
     @Override
-    public GeoHashGridAggregationBuilder geohashGrid(R name) {
+    public Children geohashGrid(R name) {
         String field = getAggregationField(name);
         String aggName = field + AGG_DELIMITER + GeoHashGridAggregationBuilder.NAME;
         GeoHashGridAggregationBuilder geoHashGridAggregationBuilder = new GeoHashGridAggregationBuilder(aggName);
         geoHashGridAggregationBuilder.field(field);
-        return geoHashGridAggregationBuilder;
+        currentBuilder = geoHashGridAggregationBuilder;
+        aggregationBuilder.add(currentBuilder);
+        return this.children;
     }
 
     /**
      * Create a new {@link InternalGeoTileGrid} aggregation with the given name.
      */
     @Override
-    public GeoTileGridAggregationBuilder geotileGrid(R name) {
+    public Children geotileGrid(R name) {
         String field = getAggregationField(name);
         String aggName = field + AGG_DELIMITER + GeoTileGridAggregationBuilder.NAME;
         GeoTileGridAggregationBuilder geoTileGridAggregationBuilder = new GeoTileGridAggregationBuilder(aggName);
         geoTileGridAggregationBuilder.field(field);
-        return geoTileGridAggregationBuilder;
+        currentBuilder = geoTileGridAggregationBuilder;
+        aggregationBuilder.add(currentBuilder);
+        return this.children;
     }
 
     /**
      * Create a new {@link SignificantTerms} aggregation with the given name.
      */
     @Override
-    public SignificantTermsAggregationBuilder significantTerms(R name) {
+    public Children significantTerms(R name) {
         String field = getAggregationField(name);
         String aggName = field + AGG_DELIMITER + SignificantTermsAggregationBuilder.NAME;
         SignificantTermsAggregationBuilder significantTermsAggregationBuilder = new SignificantTermsAggregationBuilder(aggName);
         significantTermsAggregationBuilder.field(field);
-        return significantTermsAggregationBuilder;
+        currentBuilder = significantTermsAggregationBuilder;
+        aggregationBuilder.add(currentBuilder);
+        return this.children;
     }
 
 
@@ -330,12 +413,14 @@ public abstract class AbstractEsAggregationWrapper<T, R extends SFunction<T, ?>,
      * Create a new {@link SignificantTextAggregationBuilder} aggregation with the given name and text field name
      */
     @Override
-    public SignificantTextAggregationBuilder significantText(R name, String fieldName) {
+    public Children significantText(R name, String fieldName) {
         String field = getAggregationField(name);
         String aggName = field + AGG_DELIMITER + SignificantTextAggregationBuilder.NAME;
         SignificantTextAggregationBuilder significantTextAggregationBuilder = new SignificantTextAggregationBuilder(aggName, fieldName);
         significantTextAggregationBuilder.fieldName(aggName);
-        return significantTextAggregationBuilder;
+        currentBuilder = significantTextAggregationBuilder;
+        aggregationBuilder.add(currentBuilder);
+        return this.children;
     }
 
 
@@ -344,24 +429,28 @@ public abstract class AbstractEsAggregationWrapper<T, R extends SFunction<T, ?>,
      * name.
      */
     @Override
-    public DateHistogramAggregationBuilder dateHistogram(R name) {
+    public Children dateHistogram(R name) {
         String field = getAggregationField(name);
         String aggName = field + AGG_DELIMITER + DateHistogramAggregationBuilder.NAME;
         DateHistogramAggregationBuilder dateHistogramAggregationBuilder = new DateHistogramAggregationBuilder(aggName);
         dateHistogramAggregationBuilder.field(field);
-        return dateHistogramAggregationBuilder;
+        currentBuilder = dateHistogramAggregationBuilder;
+        aggregationBuilder.add(currentBuilder);
+        return this.children;
     }
 
     /**
      * Create a new {@link Range} aggregation with the given name.
      */
     @Override
-    public RangeAggregationBuilder range(R name) {
+    public Children range(R name) {
         String field = getAggregationField(name);
         String aggName = field + AGG_DELIMITER + RangeAggregationBuilder.NAME;
         RangeAggregationBuilder rangeAggregationBuilder = new RangeAggregationBuilder(aggName);
         rangeAggregationBuilder.field(field);
-        return rangeAggregationBuilder;
+        currentBuilder = rangeAggregationBuilder;
+        aggregationBuilder.add(currentBuilder);
+        return this.children;
     }
 
     /**
@@ -369,12 +458,14 @@ public abstract class AbstractEsAggregationWrapper<T, R extends SFunction<T, ?>,
      * given name.
      */
     @Override
-    public DateRangeAggregationBuilder dateRange(R name) {
+    public Children dateRange(R name) {
         String field = getAggregationField(name);
         String aggName = field + AGG_DELIMITER + DateRangeAggregationBuilder.NAME;
         DateRangeAggregationBuilder dateRangeAggregationBuilder = new DateRangeAggregationBuilder(aggName);
         dateRangeAggregationBuilder.field(field);
-        return dateRangeAggregationBuilder;
+        currentBuilder = dateRangeAggregationBuilder;
+        aggregationBuilder.add(currentBuilder);
+        return this.children;
     }
 
     /**
@@ -382,247 +473,314 @@ public abstract class AbstractEsAggregationWrapper<T, R extends SFunction<T, ?>,
      * given name.
      */
     @Override
-    public IpRangeAggregationBuilder ipRange(R name) {
+    public Children ipRange(R name) {
         String field = getAggregationField(name);
         String aggName = field + AGG_DELIMITER + IpRangeAggregationBuilder.NAME;
         IpRangeAggregationBuilder ipRangeAggregationBuilder = new IpRangeAggregationBuilder(aggName);
         ipRangeAggregationBuilder.field(field);
-        return ipRangeAggregationBuilder;
+        currentBuilder = ipRangeAggregationBuilder;
+        aggregationBuilder.add(currentBuilder);
+        return this.children;
     }
 
     /**
      * Create a new {@link Terms} aggregation with the given name.
      */
     @Override
-    public TermsAggregationBuilder terms(R name) {
+    public Children terms(R name) {
         String field = getAggregationField(name);
         String aggName = field + AGG_DELIMITER + TermsAggregationBuilder.NAME;
         TermsAggregationBuilder termsAggregationBuilder = new TermsAggregationBuilder(aggName);
         termsAggregationBuilder.field(field);
-        return termsAggregationBuilder;
+        currentBuilder = termsAggregationBuilder;
+        aggregationBuilder.add(currentBuilder);
+        return this.children;
     }
 
     /**
      * Create a new {@link Percentiles} aggregation with the given name.
      */
     @Override
-    public PercentilesAggregationBuilder percentiles(R name) {
+    public Children percentiles(R name) {
         String field = getAggregationField(name);
         String aggName = field + AGG_DELIMITER + PercentilesAggregationBuilder.NAME;
         PercentilesAggregationBuilder percentilesAggregationBuilder = new PercentilesAggregationBuilder(aggName);
         percentilesAggregationBuilder.field(field);
-        return percentilesAggregationBuilder;
+        currentBuilder = percentilesAggregationBuilder;
+        aggregationBuilder.add(currentBuilder);
+        return this.children;
     }
 
     /**
      * Create a new {@link PercentileRanks} aggregation with the given name.
      */
     @Override
-    public PercentileRanksAggregationBuilder percentileRanks(R name, double[] values) {
+    public Children percentileRanks(R name, double[] values) {
         String field = getAggregationField(name);
         String aggName = field + AGG_DELIMITER + PercentileRanksAggregationBuilder.NAME;
         PercentileRanksAggregationBuilder percentileRanksAggregationBuilder = new PercentileRanksAggregationBuilder(aggName, values);
         percentileRanksAggregationBuilder.field(field);
-        return percentileRanksAggregationBuilder;
+        currentBuilder = percentileRanksAggregationBuilder;
+        aggregationBuilder.add(currentBuilder);
+        return this.children;
     }
 
     /**
      * Create a new {@link MedianAbsoluteDeviation} aggregation with the given name
      */
     @Override
-    public MedianAbsoluteDeviationAggregationBuilder medianAbsoluteDeviation(R name) {
+    public Children medianAbsoluteDeviation(R name) {
         String field = getAggregationField(name);
         String aggName = field + AGG_DELIMITER + MedianAbsoluteDeviationAggregationBuilder.NAME;
         MedianAbsoluteDeviationAggregationBuilder medianAbsoluteDeviationAggregationBuilder = new MedianAbsoluteDeviationAggregationBuilder(aggName);
         medianAbsoluteDeviationAggregationBuilder.field(field);
-        return medianAbsoluteDeviationAggregationBuilder;
+        currentBuilder = medianAbsoluteDeviationAggregationBuilder;
+        aggregationBuilder.add(currentBuilder);
+        return this.children;
     }
 
     /**
      * Create a new {@link Cardinality} aggregation with the given name.
      */
     @Override
-    public CardinalityAggregationBuilder cardinality(R name) {
+    public Children cardinality(R name) {
         String field = getAggregationField(name);
         String aggName = field + AGG_DELIMITER + CardinalityAggregationBuilder.NAME;
         CardinalityAggregationBuilder cardinalityAggregationBuilder = new CardinalityAggregationBuilder(aggName);
         cardinalityAggregationBuilder.field(field);
-        return cardinalityAggregationBuilder;
+        currentBuilder = cardinalityAggregationBuilder;
+        aggregationBuilder.add(currentBuilder);
+        return this.children;
     }
 
     /**
      * Create a new {@link TopHits} aggregation with the given name.
      */
     @Override
-    public TopHitsAggregationBuilder topHits(R name) {
+    public Children topHits(R name) {
         String field = getAggregationField(name);
         String aggName = field + AGG_DELIMITER + TopHitsAggregationBuilder.NAME;
-        return new TopHitsAggregationBuilder(aggName);
+        TopHitsAggregationBuilder topHitsAggregationBuilder = new TopHitsAggregationBuilder(aggName);
+        currentBuilder = topHitsAggregationBuilder;
+        aggregationBuilder.add(currentBuilder);
+        return this.children;
     }
 
     /**
      * Create a new {@link GeoBounds} aggregation with the given name.
      */
     @Override
-    public GeoBoundsAggregationBuilder geoBounds(R name) {
+    public Children geoBounds(R name) {
         String field = getAggregationField(name);
         String aggName = field + AGG_DELIMITER + GeoBoundsAggregationBuilder.NAME;
         GeoBoundsAggregationBuilder geoBoundsAggregationBuilder = new GeoBoundsAggregationBuilder(aggName);
         geoBoundsAggregationBuilder.field(field);
-        return geoBoundsAggregationBuilder;
+        currentBuilder = geoBoundsAggregationBuilder;
+        aggregationBuilder.add(currentBuilder);
+        return this.children;
     }
 
     /**
      * Create a new {@link GeoCentroid} aggregation with the given name.
      */
     @Override
-    public GeoCentroidAggregationBuilder geoCentroid(R name) {
+    public Children geoCentroid(R name) {
         String field = getAggregationField(name);
         String aggName = field + AGG_DELIMITER + GeoCentroidAggregationBuilder.NAME;
         GeoCentroidAggregationBuilder geoCentroidAggregationBuilder = new GeoCentroidAggregationBuilder(aggName);
         geoCentroidAggregationBuilder.field(field);
-        return geoCentroidAggregationBuilder;
+        currentBuilder = geoCentroidAggregationBuilder;
+        aggregationBuilder.add(currentBuilder);
+        return this.children;
     }
 
     /**
      * Create a new {@link ScriptedMetric} aggregation with the given name.
      */
     @Override
-    public ScriptedMetricAggregationBuilder scriptedMetric(R name) {
+    public Children scriptedMetric(R name) {
         String field = getAggregationField(name);
         String aggName = field + AGG_DELIMITER + ScriptedMetricAggregationBuilder.NAME;
-        return new ScriptedMetricAggregationBuilder(aggName);
+        ScriptedMetricAggregationBuilder scriptedMetricAggregationBuilder = new ScriptedMetricAggregationBuilder(aggName);
+        currentBuilder = scriptedMetricAggregationBuilder;
+        aggregationBuilder.add(currentBuilder);
+        return this.children;
     }
 
     /**
      * Create a new {@link CompositeAggregationBuilder} aggregation with the given name.
      */
     @Override
-    public CompositeAggregationBuilder composite(R name, List<CompositeValuesSourceBuilder<?>> sources) {
+    public Children composite(R name, List<CompositeValuesSourceBuilder<?>> sources) {
         String field = getAggregationField(name);
         String aggName = field + AGG_DELIMITER + CompositeAggregationBuilder.NAME;
-        return new CompositeAggregationBuilder(aggName, sources);
+        CompositeAggregationBuilder compositeAggregationBuilder = new CompositeAggregationBuilder(aggName, sources);
+        currentBuilder = compositeAggregationBuilder;
+        aggregationBuilder.add(currentBuilder);
+        return this.children;
     }
 
     /**
      * piple
      */
     @Override
-    public DerivativePipelineAggregationBuilder derivative(R name, String bucketsPath) {
+    public Children derivative(R name, String bucketsPath) {
         String field = getAggregationField(name);
         String aggName = field + AGG_DELIMITER + DerivativePipelineAggregationBuilder.NAME;
-        return new DerivativePipelineAggregationBuilder(aggName, bucketsPath);
+        DerivativePipelineAggregationBuilder derivativePipelineAggregationBuilder = new DerivativePipelineAggregationBuilder(aggName, bucketsPath);
+        currentBuilder = derivativePipelineAggregationBuilder;
+        aggregationBuilder.add(derivativePipelineAggregationBuilder);
+        return this.children;
     }
 
     @Override
-    public MaxBucketPipelineAggregationBuilder maxBucket(R name, String bucketsPath) {
+    public Children maxBucket(R name, String bucketsPath) {
         String field = getAggregationField(name);
         String aggName = field + AGG_DELIMITER + MaxBucketPipelineAggregationBuilder.NAME;
-        return new MaxBucketPipelineAggregationBuilder(aggName, bucketsPath);
+        MaxBucketPipelineAggregationBuilder maxBucketPipelineAggregationBuilder = new MaxBucketPipelineAggregationBuilder(aggName, bucketsPath);
+        currentBuilder = maxBucketPipelineAggregationBuilder;
+        aggregationBuilder.add(currentBuilder);
+        return this.children;
     }
 
     @Override
-    public MinBucketPipelineAggregationBuilder minBucket(R name, String bucketsPath) {
+    public Children minBucket(R name, String bucketsPath) {
         String field = getAggregationField(name);
         String aggName = field + AGG_DELIMITER + MinBucketPipelineAggregationBuilder.NAME;
-        return new MinBucketPipelineAggregationBuilder(aggName, bucketsPath);
+        MinBucketPipelineAggregationBuilder minBucketPipelineAggregationBuilder = new MinBucketPipelineAggregationBuilder(aggName, bucketsPath);
+        currentBuilder = minBucketPipelineAggregationBuilder;
+        aggregationBuilder.add(currentBuilder);
+        return this.children;
     }
 
     @Override
-    public final AvgBucketPipelineAggregationBuilder avgBucket(R name, String bucketsPath) {
+    public final Children avgBucket(R name, String bucketsPath) {
         String field = getAggregationField(name);
         String aggName = field + AvgBucketPipelineAggregationBuilder.NAME;
-        return new AvgBucketPipelineAggregationBuilder(aggName, bucketsPath);
+        AvgBucketPipelineAggregationBuilder avgBucketPipelineAggregationBuilder = new AvgBucketPipelineAggregationBuilder(aggName, bucketsPath);
+        currentBuilder = avgBucketPipelineAggregationBuilder;
+        aggregationBuilder.add(currentBuilder);
+        return this.children;
     }
 
     @Override
-    public SumBucketPipelineAggregationBuilder sumBucket(R name, String bucketsPath) {
+    public Children sumBucket(R name, String bucketsPath) {
         String field = getAggregationField(name);
         String aggName = field + AGG_DELIMITER + SumBucketPipelineAggregationBuilder.NAME;
-        return new SumBucketPipelineAggregationBuilder(aggName, bucketsPath);
+        SumBucketPipelineAggregationBuilder sumBucketPipelineAggregationBuilder = new SumBucketPipelineAggregationBuilder(aggName, bucketsPath);
+        currentBuilder = sumBucketPipelineAggregationBuilder;
+        aggregationBuilder.add(currentBuilder);
+        return this.children;
     }
 
     @Override
-    public StatsBucketPipelineAggregationBuilder statsBucket(R name, String bucketsPath) {
+    public Children statsBucket(R name, String bucketsPath) {
         String field = getAggregationField(name);
         String aggName = field + AGG_DELIMITER + StatsBucketPipelineAggregationBuilder.NAME;
-        return new StatsBucketPipelineAggregationBuilder(aggName, bucketsPath);
+        StatsBucketPipelineAggregationBuilder statsBucketPipelineAggregationBuilder = new StatsBucketPipelineAggregationBuilder(aggName, bucketsPath);
+        currentBuilder = statsBucketPipelineAggregationBuilder;
+        aggregationBuilder.add(currentBuilder);
+        return this.children;
     }
 
     @Override
-    public ExtendedStatsBucketPipelineAggregationBuilder extendedStatsBucket(R name, String bucketsPath) {
+    public Children extendedStatsBucket(R name, String bucketsPath) {
         String field = getAggregationField(name);
         String aggName = field + AGG_DELIMITER + ExtendedStatsBucketPipelineAggregationBuilder.NAME;
-        return new ExtendedStatsBucketPipelineAggregationBuilder(aggName, bucketsPath);
+        ExtendedStatsBucketPipelineAggregationBuilder extendedStatsBucketPipelineAggregationBuilder = new ExtendedStatsBucketPipelineAggregationBuilder(aggName, bucketsPath);
+        currentBuilder = extendedStatsBucketPipelineAggregationBuilder;
+        aggregationBuilder.add(currentBuilder);
+        return this.children;
     }
 
     @Override
-    public PercentilesBucketPipelineAggregationBuilder percentilesBucket(R name, String bucketsPath) {
+    public Children percentilesBucket(R name, String bucketsPath) {
         String field = getAggregationField(name);
         String aggName = field + AGG_DELIMITER + PercentilesBucketPipelineAggregationBuilder.NAME;
-        return new PercentilesBucketPipelineAggregationBuilder(aggName, bucketsPath);
+        PercentilesBucketPipelineAggregationBuilder percentilesBucketPipelineAggregationBuilder = new PercentilesBucketPipelineAggregationBuilder(aggName, bucketsPath);
+        currentBuilder = percentilesBucketPipelineAggregationBuilder;
+        aggregationBuilder.add(currentBuilder);
+        return this.children;
     }
 
     @Override
-    public BucketScriptPipelineAggregationBuilder bucketScript(R name, Map<String, String> bucketsPathsMap, Script script) {
+    public Children bucketScript(R name, Map<String, String> bucketsPathsMap, Script script) {
         String field = getAggregationField(name);
         String aggName = field + AGG_DELIMITER + BucketScriptPipelineAggregationBuilder.NAME;
-        return new BucketScriptPipelineAggregationBuilder(aggName, bucketsPathsMap, script);
+        BucketScriptPipelineAggregationBuilder bucketScriptPipelineAggregationBuilder = new BucketScriptPipelineAggregationBuilder(aggName, bucketsPathsMap, script);
+        currentBuilder = bucketScriptPipelineAggregationBuilder;
+        aggregationBuilder.add(currentBuilder);
+        return this.children;
     }
 
     @Override
-    public BucketScriptPipelineAggregationBuilder bucketScript(R name, Script script, String... bucketsPaths) {
+    public Children bucketScript(R name, Script script, String... bucketsPaths) {
         String field = getAggregationField(name);
         String aggName = field + AGG_DELIMITER + BucketScriptPipelineAggregationBuilder.NAME;
-        return new BucketScriptPipelineAggregationBuilder(aggName, script, bucketsPaths);
+        BucketScriptPipelineAggregationBuilder bucketScriptPipelineAggregationBuilder = new BucketScriptPipelineAggregationBuilder(aggName, script, bucketsPaths);
+        currentBuilder = bucketScriptPipelineAggregationBuilder;
+        aggregationBuilder.add(currentBuilder);
+        return this.children;
     }
 
     @Override
-    public BucketSelectorPipelineAggregationBuilder bucketSelector(R name, Map<String, String> bucketsPathsMap, Script script) {
+    public Children bucketSelector(R name, Map<String, String> bucketsPathsMap, Script script) {
         String field = getAggregationField(name);
         String aggName = field + AGG_DELIMITER + BucketSelectorPipelineAggregationBuilder.NAME;
-        return new BucketSelectorPipelineAggregationBuilder(aggName, bucketsPathsMap, script);
+        BucketSelectorPipelineAggregationBuilder bucketSelectorPipelineAggregationBuilder = new BucketSelectorPipelineAggregationBuilder(aggName, bucketsPathsMap, script);
+        currentBuilder = bucketSelectorPipelineAggregationBuilder;
+        aggregationBuilder.add(currentBuilder);
+        return this.children;
     }
 
     @Override
-    public BucketSelectorPipelineAggregationBuilder bucketSelector(R name, Script script, String... bucketsPaths) {
+    public Children bucketSelector(R name, Script script, String... bucketsPaths) {
         String field = getAggregationField(name);
         String aggName = field + AGG_DELIMITER + BucketSelectorPipelineAggregationBuilder.NAME;
-        return new BucketSelectorPipelineAggregationBuilder(aggName, script, bucketsPaths);
+        BucketSelectorPipelineAggregationBuilder bucketSelectorPipelineAggregationBuilder = new BucketSelectorPipelineAggregationBuilder(aggName, script, bucketsPaths);
+        currentBuilder = bucketSelectorPipelineAggregationBuilder;
+        aggregationBuilder.add(currentBuilder);
+        return this.children;
     }
 
     @Override
-    public BucketSortPipelineAggregationBuilder bucketSort(R name, List<FieldSortBuilder> sorts) {
+    public Children bucketSort(R name, List<FieldSortBuilder> sorts) {
         String field = getAggregationField(name);
         String aggName = field + AGG_DELIMITER + BucketSortPipelineAggregationBuilder.NAME;
-        return new BucketSortPipelineAggregationBuilder(aggName, sorts);
+        BucketSortPipelineAggregationBuilder bucketSortPipelineAggregationBuilder = new BucketSortPipelineAggregationBuilder(aggName, sorts);
+        currentBuilder = bucketSortPipelineAggregationBuilder;
+        aggregationBuilder.add(currentBuilder);
+        return this.children;
     }
 
     @Override
-    public CumulativeSumPipelineAggregationBuilder cumulativeSum(R name, String bucketsPath) {
+    public Children cumulativeSum(R name, String bucketsPath) {
         String field = getAggregationField(name);
         String aggName = field + AGG_DELIMITER + CumulativeSumPipelineAggregationBuilder.NAME;
-        return new CumulativeSumPipelineAggregationBuilder(aggName, bucketsPath);
+        CumulativeSumPipelineAggregationBuilder cumulativeSumPipelineAggregationBuilder = new CumulativeSumPipelineAggregationBuilder(aggName, bucketsPath);
+        currentBuilder = cumulativeSumPipelineAggregationBuilder;
+        aggregationBuilder.add(currentBuilder);
+        return this.children;
     }
 
     @Override
-    public SerialDiffPipelineAggregationBuilder diff(R name, String bucketsPath) {
+    public Children diff(R name, String bucketsPath) {
         String field = getAggregationField(name);
         String aggName = field + AGG_DELIMITER + SerialDiffPipelineAggregationBuilder.NAME;
-        return new SerialDiffPipelineAggregationBuilder(aggName, bucketsPath);
+        SerialDiffPipelineAggregationBuilder serialDiffPipelineAggregationBuilder = new SerialDiffPipelineAggregationBuilder(aggName, bucketsPath);
+        currentBuilder = serialDiffPipelineAggregationBuilder;
+        aggregationBuilder.add(currentBuilder);
+        return this.children;
     }
 
     @Override
-    public MovFnPipelineAggregationBuilder movingFunction(R name, Script script, String bucketsPaths, int window) {
+    public Children movingFunction(R name, Script script, String bucketsPaths, int window) {
         String field = getAggregationField(name);
         String aggName = field + AGG_DELIMITER + MovFnPipelineAggregationBuilder.NAME;
-        return new MovFnPipelineAggregationBuilder(aggName, bucketsPaths, script, window);
-    }
-
-    @Override
-    public Children add(BaseAggregationBuilder agg) {
-        aggregationBuilder.add(agg);
-        return children;
+        MovFnPipelineAggregationBuilder movFnPipelineAggregationBuilder = new MovFnPipelineAggregationBuilder(aggName, bucketsPaths, script, window);
+        currentBuilder = movFnPipelineAggregationBuilder;
+        aggregationBuilder.add(currentBuilder);
+        return this.children;
     }
 
 }
