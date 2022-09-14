@@ -4,11 +4,13 @@ package com.es.plus.core.service;
 import com.es.plus.annotation.EsId;
 import com.es.plus.annotation.EsIndex;
 import com.es.plus.client.EsPlusClientFacade;
+import com.es.plus.constant.EsConstant;
+import com.es.plus.core.EsReindexHandler;
+import com.es.plus.core.ReindexObjectHandlerImpl;
+import com.es.plus.lock.ELock;
+import com.es.plus.lock.EsLockFactory;
 import com.es.plus.properties.EsIndexParam;
 import com.es.plus.properties.EsParamHolder;
-import com.es.plus.lock.ELock;
-import com.es.plus.core.EsReindexHandler;
-import com.es.plus.lock.EsLockFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
@@ -89,6 +91,10 @@ public abstract class AbstractEsService<T> implements InitializingBean {
                         esPlusClientFacade.createIndexMapping(this.index + SO_SUFFIX, clazz);
                     }
                     logger.info("init es indexResponse={} exists={}", this.index, exists);
+                }
+                boolean locked = esPlusClientFacade.getLock(esIndexParam.getIndex() + EsConstant.REINDEX_LOCK_SUFFIX).isLocked();
+                if (locked) {
+                    ReindexObjectHandlerImpl.ENABLED = true;
                 }
             } finally {
                 if (lock) {

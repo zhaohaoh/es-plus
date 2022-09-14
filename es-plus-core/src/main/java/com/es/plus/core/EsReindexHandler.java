@@ -94,7 +94,7 @@ public class EsReindexHandler {
             esPlusClientFacade.putMapping(currentIndex, clazz);
         } else if (Objects.equals(updateCommend, Commend.REINDEX)) {
             if (GlobalConfigCache.GLOBAL_CONFIG.isIndexAutoMove()) {
-                //执行重平衡前先记录旧索引的时间映射
+                //执行reindex前先记录旧索引的时间映射
                 Map<String, Object> mappins = getUpdateReindexTimeMappins(esIndexMapping);
                 esPlusClientFacade.putMapping(currentIndex, mappins);
 
@@ -117,8 +117,6 @@ public class EsReindexHandler {
         boolean lock = eLock.tryLock();
         boolean release = false;
         try {
-            // 如果需要重建索引 即使没有获取到锁也标记自动注入REINDEX更新时间为开启
-            ReindexObjectHandlerImpl.ENABLED = true;
             if (lock) {
                 release = doReindex(esPlusClientFacade, clazz, esIndexParam, currentIndex, eLock);
             }
