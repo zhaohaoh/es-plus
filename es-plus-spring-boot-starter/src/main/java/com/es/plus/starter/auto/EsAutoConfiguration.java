@@ -29,6 +29,13 @@ public class EsAutoConfiguration implements InitializingBean {
     @Autowired
     private EsProperties esProperties;
 
+    /**
+     * es 外观
+     *
+     * @param restHighLevelClient 其他高水平客户
+     * @param esLock              es锁
+     * @return {@link EsPlusClientFacade}
+     */
     @Bean
     public EsPlusClientFacade esPlusClientFacade(RestHighLevelClient restHighLevelClient, EsLockFactory esLock) {
         ReindexObjectHandlerImpl reindexObjectHandler = new ReindexObjectHandlerImpl(esLock);
@@ -38,11 +45,21 @@ public class EsAutoConfiguration implements InitializingBean {
         return new EsPlusClientFacade(esPlusRestClient, esPlusIndexRestClient,esLock);
     }
 
+    /**
+     * es锁
+     *
+     * @param esLockClient es锁定客户
+     * @return {@link EsLockFactory}
+     */
     @Bean
     public EsLockFactory esLock(ELockClient esLockClient) {
         return new EsLockFactory(esLockClient);
     }
 
+    /**
+     * es 锁客户端
+     *
+     */
     @Bean
     public ELockClient esPlusLockClient(RestHighLevelClient restHighLevelClient) {
         return new EsLockClient(restHighLevelClient);

@@ -1,4 +1,4 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
  com.es.plus.starter.auto.EsAutoConfiguration,\
  com.es.plus.starter.config.BulkProcessorConfig,\
-com.es.plus.starter.auto.EsConfig
+com.es.plus.starter.auto.EsClientConfiguration

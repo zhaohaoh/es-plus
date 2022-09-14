@@ -24,11 +24,12 @@ import java.util.*;
 /**
  * @Author: hzh
  * @Date: 2022/9/6 14:34
+ * 默认注册高级客户端.需要适配其他客户端也在这个类中添加
  */
 @Configuration
 @EnableConfigurationProperties(EsProperties.class)
 @AutoConfigureBefore(ElasticsearchRestClientAutoConfiguration.class)
-public class EsConfig {
+public class EsClientConfiguration {
 
     @Autowired
     private EsProperties esProperties;
