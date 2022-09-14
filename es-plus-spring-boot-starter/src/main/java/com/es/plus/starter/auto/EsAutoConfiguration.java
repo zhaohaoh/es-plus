@@ -1,0 +1,55 @@
+package com.es.plus.starter.auto;
+
+import com.es.plus.client.EsPlusIndexRestClient;
+import com.es.plus.client.EsPlusRestClient;
+import com.es.plus.config.GlobalConfigCache;
+import com.es.plus.core.ReindexObjectHandlerImpl;
+import com.es.plus.starter.properties.EsProperties;
+import com.es.plus.client.EsPlusClientFacade;
+import com.es.plus.lock.EsLockFactory;
+import com.es.plus.lock.EsLockClient;
+import com.es.plus.lock.ELockClient;
+import org.elasticsearch.client.RestHighLevelClient;
+import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Configuration;
+
+
+/**
+ * @Author: hzh
+ * @Date: 2022/6/13 16:04
+ */
+@Configuration
+@ComponentScan(basePackages = "com.es.plus")
+@EnableConfigurationProperties(EsProperties.class)
+public class EsAutoConfiguration implements InitializingBean {
+    @Autowired
+    private EsProperties esProperties;
+
+    @Bean
+    public EsPlusClientFacade esPlusClientFacade(RestHighLevelClient restHighLevelClient, EsLockFactory esLock) {
+        ReindexObjectHandlerImpl reindexObjectHandler = new ReindexObjectHandlerImpl(esLock);
+        EsPlusRestClient esPlusRestClient = new EsPlusRestClient(restHighLevelClient);
+        esPlusRestClient.setReindexObjectHandlerImpl(reindexObjectHandler);
+        EsPlusIndexRestClient esPlusIndexRestClient = new EsPlusIndexRestClient(restHighLevelClient);
+        return new EsPlusClientFacade(esPlusRestClient, esPlusIndexRestClient,esLock);
+    }
+
+    @Bean
+    public EsLockFactory esLock(ELockClient esLockClient) {
+        return new EsLockFactory(esLockClient);
+    }
+
+    @Bean
+    public ELockClient esPlusLockClient(RestHighLevelClient restHighLevelClient) {
+        return new EsLockClient(restHighLevelClient);
+    }
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        GlobalConfigCache.GLOBAL_CONFIG = esProperties.getGlobalConfig();
+    }
+}
