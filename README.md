@@ -6,21 +6,17 @@
 
 ### 服务类继承
 
-![image-20220124165157541](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220124165157541.png)
+[![vv11VU.png](https://s1.ax1x.com/2022/09/14/vv11VU.png)](https://imgse.com/i/vv11VU)
 
 ### 实体类
 
 @EsId必须标注es文档id  不标注默认取id 建议加上
 
-![image-20220124165820266](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220124165820266.png)
+[![vv13aF.png](https://s1.ax1x.com/2022/09/14/vv13aF.png)](https://imgse.com/i/vv13aF)
 
 如果只需要KEYWORD类型必须加上注解。影响term查询
 
 @Esfield非必填。不填自动映射类型。除了NESTED  其他特殊的复杂类型暂不支持
-
-### 手动创建映射
-
-![image-20220124165305737](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220124165305737.png)
 
 ### 查询
 
@@ -30,21 +26,11 @@
 
 建议有参构造
 
-![image-20220125173219733](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220125173219733.png)
+[![vv1854.png](https://s1.ax1x.com/2022/09/14/vv1854.png)](https://imgse.com/i/vv1854)
 
 #### 根据id查询
 
-![image-20220125174157338](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220125174157338.png)
-
-#### 普通查询
-
-![image-20220125172959455](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220125172959455.png)
-
-#### 链式调用
-
-![image-20220125174537789](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220125174537789.png)
-
-
+[![vv1QbT.png](https://s1.ax1x.com/2022/09/14/vv1QbT.png)](https://imgse.com/i/vv1QbT)
 
 #### 聚合查询
 
