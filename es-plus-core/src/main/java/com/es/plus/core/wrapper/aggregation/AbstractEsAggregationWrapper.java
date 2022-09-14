@@ -42,13 +42,19 @@ import org.elasticsearch.search.aggregations.metrics.*;
 import org.elasticsearch.search.aggregations.pipeline.*;
 import org.elasticsearch.search.sort.FieldSortBuilder;
 import org.springframework.util.CollectionUtils;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
+
 import static com.es.plus.constant.EsConstant.AGG_DELIMITER;
 
-
+/**
+ * @Author: hzh
+ * @Date: 2022/9/14 18:06
+ * 抽象聚合封装
+ */
 @SuppressWarnings({"unchecked"})
 public abstract class AbstractEsAggregationWrapper<T, R extends SFunction<T, ?>, Children extends AbstractEsAggregationWrapper<T, R, Children>> extends AbstractLambdaAggregationWrapper<T, R>
         implements IEsAggregationWrapper<Children, R> {
@@ -65,6 +71,7 @@ public abstract class AbstractEsAggregationWrapper<T, R extends SFunction<T, ?>,
         return aggregationBuilder;
     }
 
+    @Override
     public Children subAggregation(Consumer<Children> consumer) {
         final Children children = instance();
         consumer.accept(children);

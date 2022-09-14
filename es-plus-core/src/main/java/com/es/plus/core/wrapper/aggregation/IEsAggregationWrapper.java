@@ -30,12 +30,15 @@ import org.elasticsearch.search.sort.FieldSortBuilder;
 
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 /**
  * @Author: hzh
  * @Date: 2022/1/21 11:10
  */
 public interface IEsAggregationWrapper<Children, R> {
+
+    Children subAggregation(Consumer<Children> consumer);
 
     Children count(R name);
 
