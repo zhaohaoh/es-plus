@@ -1,22 +1,25 @@
 package com.es.plus.core;
 
-import com.es.plus.constant.JdkDataTypeEnum;
-import com.es.plus.exception.EsException;
-import com.es.plus.properties.EsIndexParam;
-import com.es.plus.properties.EsParamHolder;
-import com.es.plus.util.ClassUtils;
-import com.es.plus.constant.EsFieldType;
-import com.es.plus.pojo.EsSettings;
 import com.es.plus.annotation.EsField;
 import com.es.plus.annotation.EsId;
 import com.es.plus.annotation.EsIndex;
+import com.es.plus.constant.EsFieldType;
+import com.es.plus.constant.JdkDataTypeEnum;
+import com.es.plus.exception.EsException;
+import com.es.plus.pojo.EsSettings;
+import com.es.plus.properties.EsIndexParam;
+import com.es.plus.properties.EsParamHolder;
+import com.es.plus.util.ClassUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static com.es.plus.constant.EsConstant.*;
 
@@ -106,8 +109,7 @@ public class EsAnnotationParamResolve {
             String fieldType;
             if (esField == null) {
                 //创建属性对象
-                fieldType = getAutoEsFieldType(field.getType());
-                properties.put(TYPE, fieldType);
+                fieldType = getEsFieldType(field.getType());
             } else {
                 //创建属性对象
                 if (StringUtils.isNotBlank(esField.name())) {
@@ -115,18 +117,53 @@ public class EsAnnotationParamResolve {
                 }
                 fieldType = resolveAnnotationEsField(field, properties, esField);
             }
-            // 字符串类型映射
-            if ((EsFieldType.STRING.name().toLowerCase().equals(fieldType))) {
-                properties.put(TYPE, TEXT);
-                properties.put(FIELDS, EsParamHolder.getFieldsMap());
-                //双类型字符串的映射转换
-                EsParamHolder.putTextKeyword(tClass, fieldName);
-            } else {
-                properties.put(TYPE, fieldType);
+
+            processNestedObjects(field, esField, properties);
+
+            if (StringUtils.isNotBlank(fieldType)) {
+                // 字符串类型映射
+                if ((EsFieldType.STRING.name().toLowerCase().equals(fieldType))) {
+                    properties.put(TYPE, TEXT);
+                    properties.put(FIELDS, EsParamHolder.getFieldsMap());
+                    //双类型字符串的映射转换
+                    EsParamHolder.putTextKeyword(tClass, fieldName);
+                } else {
+                    properties.put(TYPE, fieldType);
+                }
             }
             mappings.put(fieldName, properties);
         }
         return mappings;
+    }
+    // 待完成.这里需要处理数据是否需要递归.但是又要处理fileType还没想清楚
+    private void processNestedObjects(Field field, EsField esField, Map<String, Object> properties) {
+        Class<?> fieldClass = field.getType();
+        if (Collection.class.isAssignableFrom(fieldClass)) {
+            Type genericType = field.getGenericType();
+            ParameterizedType pt = (ParameterizedType) genericType;
+            Type typeArgument = pt.getActualTypeArguments()[0];
+            while (typeArgument instanceof ParameterizedType) {
+                typeArgument = ((ParameterizedType) typeArgument).getActualTypeArguments()[0];
+            }
+            fieldClass = (Class<?>) typeArgument;
+            // 嵌套对象是java基础对象直接put
+            String fieldType = getEsFieldType(fieldClass);
+            if (StringUtils.isBlank(fieldType)) {
+                properties.put(PROPERTIES, fieldType);
+            } else {
+                //否则递归
+                properties.put(PROPERTIES, buildMappingProperties(fieldClass));
+            }
+        } else if (esField.type().equals(EsFieldType.OBJECT) || esField.type().equals(EsFieldType.NESTED)) {
+            // 嵌套对象是java基础对象直接put
+            String fieldType = getEsFieldType(fieldClass);
+            if (StringUtils.isBlank(fieldType)) {
+                properties.put(PROPERTIES, fieldType);
+            } else {
+                //否则递归
+                properties.put(PROPERTIES, buildMappingProperties(fieldClass));
+            }
+        }
     }
 
 
@@ -136,25 +173,10 @@ public class EsAnnotationParamResolve {
     private String resolveAnnotationEsField(Field field, Map<String, Object> properties, EsField esField) {
         Class<?> fieldClass = field.getType();
 
-        // 如果是嵌套类型.并且是集合的获取其泛型
-        if (esField.type().equals(EsFieldType.NESTED) || esField.type().equals(EsFieldType.OBJECT)) {
-            if (Collection.class.isAssignableFrom(fieldClass)) {
-                Type genericType = field.getGenericType();
-                ParameterizedType pt = (ParameterizedType) genericType;
-                Type typeArgument = pt.getActualTypeArguments()[0];
-                while (typeArgument instanceof ParameterizedType) {
-                    typeArgument = ((ParameterizedType) typeArgument).getActualTypeArguments()[0];
-                }
-                fieldClass = (Class<?>) typeArgument;
-                Map<String, Object> mappings = buildMappingProperties(fieldClass);
-                properties.put(PROPERTIES, mappings);
-            }
-        }
-
         // 获取字段类型
         String fieldType;
         if (esField.type().equals(EsFieldType.AUTO)) {
-            fieldType = getAutoEsFieldType(fieldClass);
+            fieldType = getEsFieldType(fieldClass);
         } else {
             fieldType = esField.type().name().toLowerCase();
         }
@@ -186,10 +208,10 @@ public class EsAnnotationParamResolve {
         return fieldType;
     }
 
-    private String getAutoEsFieldType(Class<?> clazz) {
+    private String getEsFieldType(Class<?> clazz) {
         // 否则根据类型推断,String以及找不到的类型一律被当做keyword处理
         JdkDataTypeEnum jdkDataType = JdkDataTypeEnum.getByType(clazz.getSimpleName().toLowerCase());
-        String type;
+        String type = "";
         switch (jdkDataType) {
             case BYTE:
                 type = EsFieldType.BYTE.name();
@@ -213,6 +235,7 @@ public class EsAnnotationParamResolve {
                 type = EsFieldType.DOUBLE.name();
                 break;
             case BIG_DECIMAL:
+                type = EsFieldType.KEYWORD.name();
             case STRING:
                 type = EsFieldType.STRING.name();
                 break;
@@ -232,10 +255,8 @@ public class EsAnnotationParamResolve {
                 type = EsFieldType.DATE.name();
                 break;
             case LIST:
-                type = EsFieldType.TEXT.name();
                 break;
             default:
-                //识别不了返回OBJECT
                 type = EsFieldType.OBJECT.name();
                 break;
         }

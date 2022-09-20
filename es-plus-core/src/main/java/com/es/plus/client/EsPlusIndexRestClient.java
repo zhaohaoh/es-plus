@@ -290,7 +290,7 @@ public class EsPlusIndexRestClient implements EsPlusIndexClient {
         try {
             settingsResult = restHighLevelClient.indices().putSettings(updateSettingsRequest, RequestOptions.DEFAULT);
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new EsException(e);
         }
 
         //成功的话，返回结果是true
@@ -323,7 +323,7 @@ public class EsPlusIndexRestClient implements EsPlusIndexClient {
                     .settings(settings);
             CreateIndexResponse indexResponse = restHighLevelClient.indices().create(indexRequest, RequestOptions.DEFAULT);
         } catch (IOException e) {
-            e.printStackTrace();
+           throw new EsException(e);
         }
     }
 

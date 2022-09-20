@@ -1,7 +1,8 @@
 package com.es.plus.config;
 
-import com.es.plus.util.ClassUtils;
+import com.es.plus.exception.EsException;
 import com.es.plus.pojo.EsUpdateField;
+import com.es.plus.util.ClassUtils;
 
 import java.lang.reflect.Field;
 import java.util.List;
@@ -30,7 +31,7 @@ public interface EsObjectHandler {
         try {
             field.set(object, updateFill.getValue());
         } catch (IllegalAccessException e) {
-            e.printStackTrace();
+            throw new EsException(e);
         }
         return object;
     }
@@ -47,7 +48,7 @@ public interface EsObjectHandler {
         try {
             field.set(object, insertFill.getValue());
         } catch (IllegalAccessException e) {
-            e.printStackTrace();
+            throw new EsException(e);
         }
         return object;
     }

@@ -1,5 +1,6 @@
 package com.es.plus.util;
 
+import com.es.plus.exception.EsException;
 import org.elasticsearch.common.bytes.BytesReference;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
@@ -20,7 +21,7 @@ public class XcontentBuildUtils {
                     .field("tokenizer", tokenizer)
                     .endObject();
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new EsException(e);
         }
         BytesReference.bytes(xContentBuilder);
         return JsonUtils.toMap(xContentBuilder.getOutputStream().toString());
