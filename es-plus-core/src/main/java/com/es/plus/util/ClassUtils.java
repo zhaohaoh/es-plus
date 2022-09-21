@@ -18,6 +18,35 @@ import static java.util.stream.Collectors.toMap;
 public class ClassUtils {
 
     private static final Map<Class<?>, List<Field>> CLASS_FIELD_CACHE = new ConcurrentHashMap<>();
+    /**
+     * 代理 class 的名称
+     */
+    private static final List<String> PROXY_CLASS_NAMES = Arrays.asList("net.sf.cglib.proxy.Factory"
+            // cglib
+            , "org.springframework.cglib.proxy.Factory"
+            , "javassist.util.proxy.ProxyObject"
+            // javassist
+            , "org.apache.ibatis.javassist.util.proxy.ProxyObject");
+
+
+    public static boolean isProxy(Class<?> clazz) {
+        if (clazz != null) {
+            for (Class<?> cls : clazz.getInterfaces()) {
+                if (PROXY_CLASS_NAMES.contains(cls.getName())) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * <p>
+     * 获取当前对象,如果是代理的获取本身
+     */
+    public static Class<?> getClass(Class<?> clazz) {
+        return isProxy(clazz) ? clazz.getSuperclass() : clazz;
+    }
 
     /**
      * 获取该类的所有属性列表
@@ -26,6 +55,7 @@ public class ClassUtils {
      * @return 所有属性列表
      */
     public static List<Field> getFieldList(Class<?> clazz) {
+        clazz = getClass(clazz);
         List<Field> fields = CLASS_FIELD_CACHE.get(clazz);
         if (CollectionUtils.isEmpty(fields)) {
             synchronized (CLASS_FIELD_CACHE) {

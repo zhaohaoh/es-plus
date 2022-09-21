@@ -1,5 +1,6 @@
 package com.es.plus.core.wrapper.aggregation;
 
+import com.es.plus.config.GlobalConfigCache;
 import com.es.plus.core.tools.SFunction;
 import org.elasticsearch.common.geo.GeoDistance;
 import org.elasticsearch.common.geo.GeoPoint;
@@ -497,6 +498,7 @@ public abstract class AbstractEsAggregationWrapper<T, R extends SFunction<T, ?>,
         String aggName = field + AGG_DELIMITER + TermsAggregationBuilder.NAME;
         TermsAggregationBuilder termsAggregationBuilder = new TermsAggregationBuilder(aggName);
         termsAggregationBuilder.field(field);
+        termsAggregationBuilder.size(GlobalConfigCache.GLOBAL_CONFIG.getSearchSize());
         currentBuilder = termsAggregationBuilder;
         aggregationBuilder.add(currentBuilder);
         return this.children;

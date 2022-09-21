@@ -4,6 +4,7 @@ import com.es.plus.config.GlobalConfigCache;
 import com.es.plus.constant.EsConstant;
 import com.es.plus.core.EsAnnotationParamResolve;
 import com.es.plus.exception.EsException;
+import com.es.plus.util.ClassUtils;
 import com.es.plus.util.XcontentBuildUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,7 +56,7 @@ public class EsParamHolder {
     }
 
     public static <T> String getDocId(T obj) {
-        Class<T> clazz = (Class<T>) obj.getClass();
+        Class<T> clazz = (Class<T>) ClassUtils.getClass(obj.getClass());
         try {
             String idFeildName = ID_MAP.get(clazz.getName());
             if (idFeildName == null) {
