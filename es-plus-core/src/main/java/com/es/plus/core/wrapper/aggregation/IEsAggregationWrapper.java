@@ -38,8 +38,20 @@ import java.util.function.Consumer;
  */
 public interface IEsAggregationWrapper<Children, R> {
 
+    /**
+     * 子聚合
+     *
+     * @param consumer 消费者
+     * @return {@link Children}
+     */
     Children subAggregation(Consumer<Children> consumer);
 
+    /**
+     * 统计
+     *
+     * @param name 名字
+     * @return {@link Children}
+     */
     Children count(R name);
 
     /**

@@ -142,7 +142,10 @@ public class EsAnnotationParamResolve {
             fieldType = esField.type().name().toLowerCase();
         }
 
-        if (Collection.class.isAssignableFrom(fieldClass)) {
+        //处理数组集合
+        if (fieldClass.isArray()) {
+            fieldClass = fieldClass.getComponentType();
+        } else if (Collection.class.isAssignableFrom(fieldClass)) {
             Type genericType = field.getGenericType();
             ParameterizedType pt = (ParameterizedType) genericType;
             Type typeArgument = pt.getActualTypeArguments()[0];
@@ -150,11 +153,11 @@ public class EsAnnotationParamResolve {
                 typeArgument = ((ParameterizedType) typeArgument).getActualTypeArguments()[0];
             }
             fieldClass = (Class<?>) typeArgument;
+        }
 
-            // list的自动映射
-            if (esField == null) {
-                fieldType = getEsFieldType(fieldClass);
-            }
+        // list的自动映射
+        if (esField == null) {
+            fieldType = getEsFieldType(fieldClass);
         }
 
         if (EsFieldType.OBJECT.name().equalsIgnoreCase(fieldType) || EsFieldType.NESTED.name().equalsIgnoreCase(fieldType)) {
