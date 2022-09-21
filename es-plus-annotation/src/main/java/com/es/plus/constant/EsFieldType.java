@@ -42,7 +42,7 @@ public enum EsFieldType {
      */
     BOOLEAN,
     /**
-     * 对象 默认是普通内部对象
+     * 普通对象
      */
     OBJECT,
     /**
@@ -60,14 +60,7 @@ public enum EsFieldType {
      */
     KEYWORD,
     //同时创建text和keyword
-    STRING;
-
-    public String convert(String fieldType){
-        if ("int".equalsIgnoreCase(fieldType)){
-            return "integer";
-        }
-        return fieldType;
-    }
+    STRING,
 
 
 }

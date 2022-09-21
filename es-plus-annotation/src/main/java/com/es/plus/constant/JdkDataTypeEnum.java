@@ -16,13 +16,16 @@ public enum JdkDataTypeEnum {
     FLOAT("float"),
     DOUBLE("double"),
     BIG_DECIMAL("bigdecimal"),
+    NUMBER("number"),
     BOOLEAN("boolean"),
     CHAR("char"),
     STRING("string"),
     DATE("date"),
     LOCAL_DATE("localdate"),
     LOCAL_DATE_TIME("localdatetime"),
-    LIST("list");
+    LIST("list"),
+    SET("set"),
+    OBJECT("object");
     @Getter
     private String type;
 
@@ -30,6 +33,6 @@ public enum JdkDataTypeEnum {
         return Arrays.stream(JdkDataTypeEnum.values())
                 .filter(v -> Objects.equals(v.type, typeName))
                 .findFirst()
-                .orElse(STRING);
+                .orElse(OBJECT);
     }
 }

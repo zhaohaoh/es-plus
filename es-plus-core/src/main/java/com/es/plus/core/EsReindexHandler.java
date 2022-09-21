@@ -1,7 +1,10 @@
 package com.es.plus.core;
 
+import com.es.plus.annotation.EsIgnoreReindex;
+import com.es.plus.client.EsPlusClientFacade;
 import com.es.plus.client.EsPlusIndexRestClient;
 import com.es.plus.config.GlobalConfigCache;
+import com.es.plus.constant.Commend;
 import com.es.plus.constant.EsConstant;
 import com.es.plus.constant.EsFieldType;
 import com.es.plus.exception.EsException;
@@ -10,8 +13,6 @@ import com.es.plus.lock.EsReadWriteLock;
 import com.es.plus.pojo.EsSettings;
 import com.es.plus.properties.EsIndexParam;
 import com.es.plus.properties.EsParamHolder;
-import com.es.plus.client.EsPlusClientFacade;
-import com.es.plus.constant.Commend;
 import org.elasticsearch.client.indices.GetIndexResponse;
 import org.elasticsearch.cluster.metadata.MappingMetadata;
 import org.elasticsearch.common.settings.Settings;
@@ -71,9 +72,15 @@ public class EsReindexHandler {
      * 试着重建索引
      *
      * @param esPlusClientFacade es索引执行人
-     * @param clazz           clazz
+     * @param clazz              clazz
      */
     public static void tryReindex(EsPlusClientFacade esPlusClientFacade, Class<?> clazz) {
+        // 忽略处理reindex
+        EsIgnoreReindex annotation = clazz.getAnnotation(EsIgnoreReindex.class);
+        if (annotation != null) {
+            return;
+        }
+
         //获取索引信息
         EsIndexParam esIndexParam = EsParamHolder.getEsIndexParam(clazz);
 
