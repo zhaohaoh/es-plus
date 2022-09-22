@@ -5,7 +5,7 @@ import com.es.plus.pojo.EsResponse;
 import com.es.plus.pojo.PageInfo;
 import com.es.plus.core.wrapper.EsQueryWrapper;
 import com.es.plus.core.wrapper.EsUpdateWrapper;
-import com.es.plus.pojo.EsAggregationsReponse;
+import com.es.plus.pojo.EsAggregationsResponse;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
 
@@ -79,6 +79,6 @@ public interface EsPlusClient {
 
     <T> void scrollByWrapper(EsQueryWrapper<T> esQueryWrapper, Class<T> tClass, String index, int size, int keepTime, ScrollHandler<T> scrollHandler);
 
-    <T> EsAggregationsReponse<T> aggregations(String index, EsQueryWrapper<T> esQueryWrapper);
+    <T> EsAggregationsResponse<T> aggregations(String index, EsQueryWrapper<T> esQueryWrapper);
 
 }

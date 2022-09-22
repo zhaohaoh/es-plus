@@ -505,7 +505,7 @@ public class EsPlusRestClient implements EsPlusClient {
 
     // 聚合
     @Override
-    public <T> EsAggregationsReponse<T> aggregations(String index, EsQueryWrapper<T> esQueryWrapper) {
+    public <T> EsAggregationsResponse<T> aggregations(String index, EsQueryWrapper<T> esQueryWrapper) {
         SearchRequest searchRequest = new SearchRequest();
         //查询条件组合
         BoolQueryBuilder queryBuilder = esQueryWrapper.getQueryBuilder();
@@ -531,7 +531,7 @@ public class EsPlusRestClient implements EsPlusClient {
             throw new EsException("elasticsearch aggregations error");
         }
         Aggregations aggregations = searchResponse.getAggregations();
-        EsAggregationsReponse<T> esAggregationReponse = new EsAggregationsReponse<>();
+        EsAggregationsResponse<T> esAggregationReponse = new EsAggregationsResponse<>();
         esAggregationReponse.setAggregations(aggregations);
         esAggregationReponse.settClass(esQueryWrapper.gettClass());
         return esAggregationReponse;
@@ -637,7 +637,7 @@ public class EsPlusRestClient implements EsPlusClient {
             }
         }
         Aggregations aggregations = searchResponse.getAggregations();
-        EsAggregationsReponse<T> esAggregationsReponse = new EsAggregationsReponse<>();
+        EsAggregationsResponse<T> esAggregationsReponse = new EsAggregationsResponse<>();
         esAggregationsReponse.setAggregations(aggregations);
         esAggregationsReponse.settClass(esQueryWrapper.gettClass());
         return new EsResponse<T>(result, hits.getTotalHits().value, esAggregationsReponse);

@@ -9,7 +9,7 @@ import com.es.plus.pojo.PageInfo;
 import com.es.plus.core.chain.EsChainQueryWrapper;
 import com.es.plus.core.wrapper.EsQueryWrapper;
 import com.es.plus.core.wrapper.EsUpdateWrapper;
-import com.es.plus.pojo.EsAggregationsReponse;
+import com.es.plus.pojo.EsAggregationsResponse;
 import com.es.plus.pojo.EsSettings;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.client.GetAliasesResponse;
@@ -268,7 +268,7 @@ public class EsServiceImpl<T> extends AbstractEsService<T> implements EsService<
     }
 
     @Override
-    public EsAggregationsReponse<T> aggregations(EsQueryWrapper<T> esQueryWrapper) {
+    public EsAggregationsResponse<T> aggregations(EsQueryWrapper<T> esQueryWrapper) {
         return esPlusClientFacade.aggregations(alias, esQueryWrapper);
     }
 

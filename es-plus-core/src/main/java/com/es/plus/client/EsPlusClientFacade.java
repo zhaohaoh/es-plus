@@ -6,7 +6,7 @@ import com.es.plus.core.wrapper.EsUpdateWrapper;
 import com.es.plus.lock.ELock;
 import com.es.plus.lock.EsLockFactory;
 import com.es.plus.lock.EsReadWriteLock;
-import com.es.plus.pojo.EsAggregationsReponse;
+import com.es.plus.pojo.EsAggregationsResponse;
 import com.es.plus.pojo.EsResponse;
 import com.es.plus.pojo.EsSettings;
 import com.es.plus.pojo.PageInfo;
@@ -286,7 +286,7 @@ public class EsPlusClientFacade {
     }
 
 
-    public <T> EsAggregationsReponse<T> aggregations(String index, EsQueryWrapper<T> esQueryWrapper) {
+    public <T> EsAggregationsResponse<T> aggregations(String index, EsQueryWrapper<T> esQueryWrapper) {
         return esPlusClient.aggregations(index, esQueryWrapper);
     }
 

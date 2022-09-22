@@ -5,7 +5,7 @@ import com.es.plus.core.service.EsService;
 import com.es.plus.core.tools.SFunction;
 import com.es.plus.pojo.EsResponse;
 import com.es.plus.pojo.PageInfo;
-import com.es.plus.pojo.EsAggregationsReponse;
+import com.es.plus.pojo.EsAggregationsResponse;
 import com.es.plus.core.wrapper.EsQueryWrapper;
 
 import java.lang.reflect.ParameterizedType;
@@ -29,7 +29,7 @@ public class EsChainQueryWrapper<T> extends AbstractEsChainWrapper<T, SFunction<
         return esService.page(new PageInfo<>(page, size), super.esWrapper);
     }
 
-    public EsAggregationsReponse<T> aggregations() {
+    public EsAggregationsResponse<T> aggregations() {
         return esService.aggregations(super.esWrapper);
     }
 

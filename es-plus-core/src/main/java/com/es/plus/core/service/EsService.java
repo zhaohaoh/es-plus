@@ -8,7 +8,7 @@ import com.es.plus.pojo.PageInfo;
 import com.es.plus.core.chain.EsChainQueryWrapper;
 import com.es.plus.core.wrapper.EsQueryWrapper;
 import com.es.plus.core.wrapper.EsUpdateWrapper;
-import com.es.plus.pojo.EsAggregationsReponse;
+import com.es.plus.pojo.EsAggregationsResponse;
 import com.es.plus.pojo.EsSettings;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
@@ -71,7 +71,7 @@ public interface EsService<T> {
 
     long count(EsQueryWrapper<T> esQueryWrapper);
 
-    EsAggregationsReponse<T> aggregations(EsQueryWrapper<T> esQueryWrapper);
+    EsAggregationsResponse<T> aggregations(EsQueryWrapper<T> esQueryWrapper);
 
     default void scroll(EsQueryWrapper<T> esQueryWrapper, int size, ScrollHandler<T> scrollHandler) {
         scroll(esQueryWrapper, size, 1, scrollHandler);

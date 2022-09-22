@@ -20,11 +20,11 @@ public class EsResponse<T> {
     /**
      * 聚合结果
      */
-    private EsAggregationsReponse<T> esAggregationsReponse;
+    private EsAggregationsResponse<T> esAggregationsReponse;
 
     private Map<String, SearchHits> topHits;
 
-    public EsResponse(List<T> list, long count, EsAggregationsReponse<T> esAggregationReponse) {
+    public EsResponse(List<T> list, long count, EsAggregationsResponse<T> esAggregationReponse) {
         this.list = list;
         this.total = count;
         this.esAggregationsReponse = esAggregationReponse;
@@ -46,11 +46,11 @@ public class EsResponse<T> {
         this.total = total;
     }
 
-    public EsAggregationsReponse<T> getEsAggregationsReponse() {
+    public EsAggregationsResponse<T> getEsAggregationsReponse() {
         return esAggregationsReponse;
     }
 
-    public void setEsAggregationsReponse(EsAggregationsReponse<T> esAggregationsReponse) {
+    public void setEsAggregationsReponse(EsAggregationsResponse<T> esAggregationsReponse) {
         this.esAggregationsReponse = esAggregationsReponse;
     }
 
