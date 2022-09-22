@@ -66,17 +66,7 @@ public abstract class AbstractEsWrapper<T, R extends SFunction<T, ?>, Children e
         return searchType;
     }
 
-    /**
-     * 设置es聚合包装 不能删
-     *
-     * @param esAggregationWrapper es聚合包装
-     */
-    public void setEsAggregationWrapper(EsAggregationWrapper<T> esAggregationWrapper) {
-        this.esAggregationWrapper = esAggregationWrapper;
-        esAggregationWrapper.setClass(tClass);
-    }
-
-    public EsAggregationWrapper<T> getEsAggregationWrapper() {
+    public EsAggregationWrapper<T> esAggregationWrapper() {
         if (esAggregationWrapper == null) {
             esAggregationWrapper = new EsAggregationWrapper<>(tClass);
         }

@@ -27,6 +27,10 @@ public abstract class AbstractEsChainWrapper<T, R extends SFunction<T, ?>, Child
         return esWrapper;
     }
 
+    public EsAggregationWrapper<T> esAggregationWrapper() {
+        return getWrapper().esAggregationWrapper();
+    }
+
     @Override
     public Children must(boolean condition, Consumer<QUERY> consumer) {
         getWrapper().must(condition, consumer);
@@ -378,10 +382,6 @@ public abstract class AbstractEsChainWrapper<T, R extends SFunction<T, ?>, Child
     public Children highLight(String field, String preTag, String postTag) {
         getWrapper().highLight(field, preTag, postTag);
         return children;
-    }
-
-    public EsAggregationWrapper<T> getEsAggregationWrapper() {
-        return getWrapper().getEsAggregationWrapper();
     }
 
 }
