@@ -3,6 +3,7 @@ package com.es.plus.core;
 import com.es.plus.annotation.EsField;
 import com.es.plus.annotation.EsId;
 import com.es.plus.annotation.EsIndex;
+import com.es.plus.config.GlobalConfigCache;
 import com.es.plus.constant.EsFieldType;
 import com.es.plus.constant.JdkDataTypeEnum;
 import com.es.plus.exception.EsException;
@@ -57,7 +58,7 @@ public class EsAnnotationParamResolve {
         esSettings.setNumberOfShards(esIndex.shard());
         esSettings.setNumberOfReplicas(esIndex.replices());
         esSettings.setRefreshInterval(esIndex.initRefreshInterval());
-        esSettings.setMaxResultWindow(esIndex.initMaxResultWindow());
+        esSettings.setMaxResultWindow(Math.max(esIndex.initMaxResultWindow(), GlobalConfigCache.GLOBAL_CONFIG.getSearchSize()));
         if (StringUtils.isNotBlank(esIndex.defaultAnalyzer())) {
             esSettings.setDefaultAnalyzer(esIndex.defaultAnalyzer());
         }

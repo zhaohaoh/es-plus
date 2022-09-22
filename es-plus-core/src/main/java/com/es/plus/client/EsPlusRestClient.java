@@ -512,7 +512,7 @@ public class EsPlusRestClient implements EsPlusClient {
         SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
         sourceBuilder.query(queryBuilder);
         sourceBuilder.size(0);
-        populateGroupField(esQueryWrapper.getEsAggregationWrapper(), sourceBuilder);
+        populateGroupField(esQueryWrapper.esAggregationWrapper(), sourceBuilder);
         //设置索引
         searchRequest.source(sourceBuilder);
         searchRequest.indices(index);
@@ -584,7 +584,7 @@ public class EsPlusRestClient implements EsPlusClient {
                 sourceBuilder.sort(new FieldSortBuilder(order.getName()).order(SortOrder.valueOf(order.getSort())));
             });
         }
-        populateGroupField(esQueryWrapper.getEsAggregationWrapper(), sourceBuilder);
+        populateGroupField(esQueryWrapper.esAggregationWrapper(), sourceBuilder);
         //设置索引
         searchRequest.source(sourceBuilder);
         searchRequest.indices(index);
