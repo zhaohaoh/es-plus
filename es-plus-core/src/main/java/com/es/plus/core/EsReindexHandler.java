@@ -198,6 +198,8 @@ public class EsReindexHandler {
         Map<String, Object> indexParamMappings = esIndexParam.getMappings();
         Map<String, Object> localIndexMapping = new HashMap<>(indexParamMappings);
         localIndexMapping.put(EsConstant.NUMBER_OF_SHARDS, numberOfShards);
+        localIndexMapping.put(EsConstant.MAX_RESULT_WINDOW, esSettings.getMaxResultWindow());
+        // 本地和远程的索引
         boolean equals = localIndexMapping.equals(esIndexMapping);
         // 如果需要更新
         if (!equals) {
@@ -229,6 +231,7 @@ public class EsReindexHandler {
         Map<String, Object> esIndexMapping = mappingMetadata.getSourceAsMap();
         // 设置mapping信息
         esIndexMapping.put(EsConstant.NUMBER_OF_SHARDS, settings.getAsInt(EsConstant.NUMBER_OF_SHARDS, 0));
+        esIndexMapping.put(EsConstant.MAX_RESULT_WINDOW, settings.getAsInt(EsConstant.MAX_RESULT_WINDOW, 100000));
         return esIndexMapping;
     }
 

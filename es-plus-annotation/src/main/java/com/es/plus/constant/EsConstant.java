@@ -61,6 +61,11 @@ public interface EsConstant {
      * 片数量
      */
     String NUMBER_OF_SHARDS = "index.number_of_shards";
+
+    /**
+     * 最大结果窗口数量
+     */
+    String MAX_RESULT_WINDOW = "index.max_result_window";
     /**
      * 数量副本
      */
