@@ -588,7 +588,9 @@ public class EsPlusRestClient implements EsPlusClient {
         //设置索引
         searchRequest.source(sourceBuilder);
         searchRequest.indices(index);
-        searchRequest.searchType(esQueryWrapper.getSearchType());
+        if (esQueryWrapper.getSearchType() != null) {
+            searchRequest.searchType();
+        }
         //查询
         SearchResponse searchResponse = null;
         try {
