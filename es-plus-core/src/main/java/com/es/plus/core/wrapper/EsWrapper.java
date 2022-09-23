@@ -1,24 +1,25 @@
 package com.es.plus.core.wrapper;
 
 
-import com.es.plus.pojo.EsHighLight;
-import com.es.plus.pojo.EsOrder;
-import com.es.plus.pojo.EsSelect;
+import com.es.plus.core.wrapper.aggregation.EsAggregationWrapper;
 import com.es.plus.pojo.EsUpdateField;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 
-import java.util.List;
+public interface EsWrapper<Children, T> {
 
-public interface EsWrapper<T> {
-    List<EsOrder> getEsOrderList();
-
-    EsSelect getEsSelect();
-
-    EsSelect getSelect();
-
-    List<EsHighLight> getEsHighLight();
+    EsAggregationWrapper<T> esAggregationWrapper();
 
     BoolQueryBuilder getQueryBuilder();
+
+    Children must();
+
+    Children should();
+
+    Children filter();
+
+    Children mustNot();
+
+    Children minimumShouldMatch(String minimumShouldMatch);
 
     default EsUpdateField getEsUpdateField() {
         return null;

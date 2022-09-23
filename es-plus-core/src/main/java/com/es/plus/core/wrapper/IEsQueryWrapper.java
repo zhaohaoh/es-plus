@@ -1,5 +1,6 @@
 package com.es.plus.core.wrapper;
 
+import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.index.query.QueryBuilder;
 
 import java.util.Collection;
@@ -10,6 +11,11 @@ import java.util.function.Consumer;
  * @Date: 2022/1/21 11:10
  */
 public interface IEsQueryWrapper<Children, QUERY, R> {
+
+    Children matchAll();
+
+    Children boost(float boost);
+
     default Children must(Consumer<QUERY> consumer) {
         return must(true, consumer);
     }
@@ -126,6 +132,12 @@ public interface IEsQueryWrapper<Children, QUERY, R> {
 
     //TODO 迟点用 根据id查询
     Children ids(boolean condition, Collection<String> ids);
+
+    default Children nestedQuery(R path, Children children, ScoreMode mode) {
+        return nestedQuery(true, path, children, mode);
+    }
+
+    Children nestedQuery(boolean condition, R path, Children children, ScoreMode mode);
 
     default Children gt(R name, Object from) {
         return gt(true, name, from);

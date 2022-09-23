@@ -3,9 +3,14 @@ package com.es.plus.core.chain;
 
 import com.es.plus.core.tools.SFunction;
 import com.es.plus.core.wrapper.AbstractEsWrapper;
+import com.es.plus.core.wrapper.EsExtendsWrapper;
+import com.es.plus.core.wrapper.EsWrapper;
 import com.es.plus.core.wrapper.IEsQueryWrapper;
 import com.es.plus.core.wrapper.aggregation.EsAggregationWrapper;
+import com.es.plus.pojo.EsSelect;
+import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.action.search.SearchType;
+import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 
 import java.util.Collection;
@@ -18,17 +23,23 @@ import java.util.function.Consumer;
  */
 @SuppressWarnings({"unchecked"})
 public abstract class AbstractEsChainWrapper<T, R extends SFunction<T, ?>, Children extends AbstractEsChainWrapper<T, R, Children, QUERY>, QUERY extends AbstractEsWrapper<T, R, QUERY>>
-        implements IEsQueryWrapper<Children, QUERY, R> {
+        implements IEsQueryWrapper<Children, QUERY, R>, EsWrapper<Children, T>, EsExtendsWrapper<Children, R> {
     protected QUERY esWrapper;
     protected Children children = (Children) this;
     protected Class<T> tClass;
 
-    public AbstractEsWrapper<T, R, QUERY> getWrapper() {
+    public QUERY getWrapper() {
         return esWrapper;
     }
 
+    @Override
     public EsAggregationWrapper<T> esAggregationWrapper() {
         return getWrapper().esAggregationWrapper();
+    }
+
+    @Override
+    public EsSelect getSelect() {
+        return getWrapper().getSelect();
     }
 
     @Override
@@ -55,55 +66,64 @@ public abstract class AbstractEsChainWrapper<T, R extends SFunction<T, ?>, Child
         return this.children;
     }
 
+    @Override
     public Children orderBy(String order, R... columns) {
         getWrapper().orderBy(order, columns);
         return children;
     }
 
+    @Override
     public Children orderBy(String order, String... columns) {
         getWrapper().orderBy(order, columns);
         return children;
     }
 
+    @Override
     public Children orderByAsc(String... columns) {
         getWrapper().orderByAsc(columns);
         return children;
     }
 
+    @Override
     public Children orderByDesc(String... columns) {
         getWrapper().orderByDesc(columns);
         return children;
     }
 
+    @Override
     public Children matchAll() {
         getWrapper().matchAll();
         return children;
     }
 
-
+    @Override
     public Children must() {
         getWrapper().must();
         return children;
     }
 
+    @Override
     public Children should() {
         getWrapper().should();
         return children;
     }
 
+    @Override
     public Children filter() {
         getWrapper().filter();
         return children;
     }
 
+    @Override
     public Children mustNot() {
         getWrapper().mustNot();
         return children;
     }
 
-    //match方法中配合or使用，百分比匹配
-    public void minimumShouldMatch(String minimumShouldMatch) {
-        getWrapper().minimumShouldMatch(minimumShouldMatch);
+    @Override
+    public Children nestedQuery(boolean condition, R path, Children children, ScoreMode mode) {
+        getWrapper().nestedQuery(condition, path, children.esWrapper, mode);
+        return this.children;
     }
 
     @Override
@@ -236,6 +256,10 @@ public abstract class AbstractEsChainWrapper<T, R extends SFunction<T, ?>, Child
         return children;
     }
 
+    @Override
+    public BoolQueryBuilder getQueryBuilder() {
+        return getWrapper().getQueryBuilder();
+    }
 
     /**
      * -----------下面的根据name查询，这里违反了设计原则但是方便了
@@ -344,44 +368,66 @@ public abstract class AbstractEsChainWrapper<T, R extends SFunction<T, ?>, Child
         return children;
     }
 
+    @Override
     public Children includes(R... func) {
         getWrapper().excludes(func);
         return children;
     }
 
+    @Override
     public Children includes(String... names) {
         getWrapper().excludes(names);
         return children;
     }
 
+    @Override
     public Children excludes(R... func) {
         getWrapper().excludes(func);
         return children;
     }
 
+    @Override
     public Children excludes(String... names) {
         getWrapper().excludes(names);
         return children;
     }
 
-    public Children boost(Float boost) {
+    @Override
+    public Children boost(float boost) {
         getWrapper().boost(boost);
         return children;
     }
 
+    @Override
     public Children searchType(SearchType searchType) {
         getWrapper().searchType(searchType);
         return children;
     }
 
+    @Override
     public Children highLight(String field) {
         getWrapper().highLight(field);
         return children;
     }
 
+    @Override
     public Children highLight(String field, String preTag, String postTag) {
         getWrapper().highLight(field, preTag, postTag);
         return children;
     }
+
+    //match方法中配合or使用，百分比匹配
+    @Override
+    public Children minimumShouldMatch(String minimumShouldMatch) {
+        getWrapper().minimumShouldMatch(minimumShouldMatch);
+        return children;
+    }
+
+    @Override
+    public Children routings(String... routings) {
+        getWrapper().routings(routings);
+        return this.children;
+    }
+
 
 }

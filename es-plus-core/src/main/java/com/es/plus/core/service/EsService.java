@@ -39,6 +39,8 @@ public interface EsService<T> {
 
     boolean saveOrUpdate(T entity);
 
+    List<BulkItemResponse> saveOrUpdateBatch(Collection<T> entityList);
+
     List<BulkItemResponse> saveBatch(Collection<T> entityList);
 
     List<BulkItemResponse> saveBatch(Collection<T> entityList, int batchSize);

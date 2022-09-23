@@ -185,7 +185,9 @@ public class EsPlusClientFacade {
      *  ----------------------------------------------------------------------------------------------------------
      *  数据操作
      */
-
+    public List<BulkItemResponse> saveOrUpdateBatch(String index, Collection<?> esDataList) {
+        return esPlusClient.saveOrUpdateBatch(index, esDataList);
+    }
     /**
      * 保存
      *
@@ -193,7 +195,7 @@ public class EsPlusClientFacade {
      * @param esDataList 西文数据列表
      * @return {@link List}<{@link BulkItemResponse}>
      */
-    public List<BulkItemResponse> saveBatch(String index, List<?> esDataList) {
+    public List<BulkItemResponse> saveBatch(String index, Collection<?> esDataList) {
         return esPlusClient.saveBatch(index, esDataList);
     }
 
@@ -221,7 +223,7 @@ public class EsPlusClientFacade {
      * @param index 索引
      * @return {@link List}<{@link BulkItemResponse}>
      */
-    public List<BulkItemResponse> updateBatch(String index, List<?> esDataList) {
+    public List<BulkItemResponse> updateBatch(String index, Collection<?> esDataList) {
         return esPlusClient.updateBatch(index, esDataList);
     }
 

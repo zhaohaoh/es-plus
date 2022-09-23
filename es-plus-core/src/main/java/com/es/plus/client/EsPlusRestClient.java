@@ -3,6 +3,7 @@ package com.es.plus.client;
 
 import com.es.plus.core.ReindexObjectHandlerImpl;
 import com.es.plus.core.ScrollHandler;
+import com.es.plus.core.wrapper.EsParamWrapper;
 import com.es.plus.core.wrapper.EsQueryWrapper;
 import com.es.plus.core.wrapper.EsUpdateWrapper;
 import com.es.plus.core.wrapper.aggregation.EsAggregationWrapper;
@@ -68,6 +69,7 @@ import static com.es.plus.constant.EsConstant.DEFAULT_CONFLICTS;
 import static com.es.plus.util.ResolveUtils.isCommonDataType;
 import static com.es.plus.util.ResolveUtils.isWrapClass;
 
+
 /**
  * @Author: hzh
  * @Date: 2022/1/21 11:10
@@ -85,11 +87,58 @@ public class EsPlusRestClient implements EsPlusClient {
         this.restHighLevelClient = restHighLevelClient;
     }
 
+
+    /**
+     * 批处理更新 返回失败数据
+     *
+     * @param index 索引
+     * @return {@link List}<{@link BulkItemResponse}>
+     */
+    @Override
+    public List<BulkItemResponse> saveOrUpdateBatch(String index, Collection<?> esDataList) {
+        boolean enabled = ReindexObjectHandlerImpl.ENABLED;
+        boolean lock = false;
+        List<BulkItemResponse> responses = new ArrayList<>();
+        try {
+            if (enabled) {
+                lock = reindexObjectHandlerImpl.lock(index);
+                if (lock) {
+                    esDataList = esDataList.stream().map(e -> handlerUpdateParamter(e)).collect(Collectors.toList());
+                }
+            }
+            BulkRequest bulkRequest = new BulkRequest();
+            for (Object esData : esDataList) {
+                UpdateRequest updateRequest = new UpdateRequest(index, EsParamHolder.getDocId(esData)).doc(JsonUtils.toJsonStr(esData), XContentType.JSON);
+                updateRequest.retryOnConflict(GLOBAL_CONFIG.getMaxRetries());
+                // 如果没有文档则新增
+                updateRequest.upsert(JsonUtils.toJsonStr(esData), XContentType.JSON);
+                bulkRequest.add(updateRequest);
+            }
+            bulkRequest.setRefreshPolicy(GLOBAL_CONFIG.getRefreshPolicy());
+            BulkResponse res = null;
+            printInfoLog("saveOrUpdateBatch index={} data:{} hasFailures={}", index, JsonUtils.toJsonStr(esDataList));
+            res = restHighLevelClient.bulk(bulkRequest, RequestOptions.DEFAULT);
+            for (BulkItemResponse bulkItemResponse : res.getItems()) {
+                if (bulkItemResponse.isFailed()) {
+                    responses.add(bulkItemResponse);
+                    printErrorLog("saveOrUpdateBatch error" + bulkItemResponse.getId() + " message:" + bulkItemResponse.getFailureMessage());
+                }
+            }
+        } catch (IOException e) {
+            throw new EsException("saveOrUpdateBatch IOException", e);
+        } finally {
+            if (lock) {
+                reindexObjectHandlerImpl.unLock(index);
+            }
+        }
+        return responses;
+    }
+
     /**
      * 保存批量
      */
     @Override
-    public List<BulkItemResponse> saveBatch(String index, List<?> esDataList) {
+    public List<BulkItemResponse> saveBatch(String index, Collection<?> esDataList) {
         boolean enabled = ReindexObjectHandlerImpl.ENABLED;
         boolean lock = false;
         List<BulkItemResponse> failBulkItemResponses = new ArrayList<>();
@@ -205,7 +254,7 @@ public class EsPlusRestClient implements EsPlusClient {
      * @return {@link List}<{@link BulkItemResponse}>
      */
     @Override
-    public List<BulkItemResponse> updateBatch(String index, List<?> esDataList) {
+    public List<BulkItemResponse> updateBatch(String index, Collection<?> esDataList) {
         boolean enabled = ReindexObjectHandlerImpl.ENABLED;
         boolean lock = false;
         List<BulkItemResponse> responses = new ArrayList<>();
@@ -540,11 +589,12 @@ public class EsPlusRestClient implements EsPlusClient {
 
     private <T> EsResponse<T> search(PageInfo<T> pageInfo, EsQueryWrapper<T> esQueryWrapper, Class<T> tClass, String index) {
         SearchRequest searchRequest = new SearchRequest();
+        EsParamWrapper esParamWrapper = esQueryWrapper.getEsParamWrapper();
         //查询条件组合
         BoolQueryBuilder queryBuilder = esQueryWrapper.getQueryBuilder();
         SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
         sourceBuilder.query(queryBuilder);
-        EsSelect esSelect = esQueryWrapper.getEsSelect();
+        EsSelect esSelect = esParamWrapper.getEsSelect();
         if (esSelect != null) {
             if (ArrayUtils.isNotEmpty(esSelect.getIncludes()) || ArrayUtils.isNotEmpty(esSelect.getExcludes())) {
                 sourceBuilder.fetchSource(esSelect.getIncludes(), esSelect.getExcludes());
@@ -558,8 +608,8 @@ public class EsPlusRestClient implements EsPlusClient {
             sourceBuilder.size((int) pageInfo.getSize());
         }
         //设置高亮
-        if (esQueryWrapper.getEsHighLight() != null) {
-            List<EsHighLight> esHighLight = esQueryWrapper.getEsHighLight();
+        if (esParamWrapper.getEsHighLights() != null) {
+            List<EsHighLight> esHighLight = esParamWrapper.getEsHighLights();
             HighlightBuilder highlightBuilder = new HighlightBuilder();
             //设置为0获取全部内容
             highlightBuilder.numOfFragments(0);
@@ -578,8 +628,8 @@ public class EsPlusRestClient implements EsPlusClient {
             sourceBuilder.trackTotalHits(true);
         }
         //排序
-        if (!CollectionUtils.isEmpty(esQueryWrapper.getEsOrderList())) {
-            List<EsOrder> orderFields = esQueryWrapper.getEsOrderList();
+        if (!CollectionUtils.isEmpty(esParamWrapper.getEsOrderList())) {
+            List<EsOrder> orderFields = esParamWrapper.getEsOrderList();
             orderFields.forEach(order -> {
                 sourceBuilder.sort(new FieldSortBuilder(order.getName()).order(SortOrder.valueOf(order.getSort())));
             });
@@ -588,7 +638,7 @@ public class EsPlusRestClient implements EsPlusClient {
         //设置索引
         searchRequest.source(sourceBuilder);
         searchRequest.indices(index);
-        if (esQueryWrapper.getSearchType() != null) {
+        if (esParamWrapper.getSearchType() != null) {
             searchRequest.searchType();
         }
         //查询
@@ -609,7 +659,7 @@ public class EsPlusRestClient implements EsPlusClient {
         SearchHits hits = searchResponse.getHits();
         SearchHit[] hitArray = hits.getHits();
         List<T> result = new ArrayList<>();
-        if (esQueryWrapper.getEsHighLight() != null) {
+        if (esParamWrapper.getEsHighLights() != null) {
             for (SearchHit hit : hitArray) {
                 //获取高亮字段
                 Map<String, HighlightField> highlightFields = hit.getHighlightFields();

@@ -2,12 +2,13 @@ package com.es.plus.core.wrapper;
 
 
 import com.es.plus.core.tools.SFunction;
+import com.es.plus.core.wrapper.aggregation.EsAggregationWrapper;
 import com.es.plus.pojo.EsHighLight;
 import com.es.plus.pojo.EsOrder;
 import com.es.plus.pojo.EsSelect;
 import com.es.plus.properties.EsParamHolder;
-import com.es.plus.core.wrapper.aggregation.EsAggregationWrapper;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.index.query.*;
 import org.elasticsearch.search.sort.SortOrder;
@@ -23,15 +24,8 @@ import java.util.function.Consumer;
  */
 @SuppressWarnings({"unchecked"})
 public abstract class AbstractEsWrapper<T, R extends SFunction<T, ?>, Children extends AbstractEsWrapper<T, R, Children>> extends AbstractLambdaEsWrapper<T, R>
-        implements IEsQueryWrapper<Children, Children, R>, EsWrapper<T> {
+        implements IEsQueryWrapper<Children, Children, R>, EsWrapper<Children,T>, EsExtendsWrapper<Children, R> {
     protected AbstractEsWrapper() {
-    }
-
-    protected List<EsOrder> esOrderList;
-
-    @Override
-    public List<EsOrder> getEsOrderList() {
-        return esOrderList;
     }
 
     protected Class<T> tClass;
@@ -48,24 +42,15 @@ public abstract class AbstractEsWrapper<T, R extends SFunction<T, ?>, Children e
     protected abstract Children instance();
 
     /*
-     *高亮
-     */
-    protected List<EsHighLight> esHighLights;
-    /*
      *聚合封装
      */
     protected EsAggregationWrapper<T> esAggregationWrapper;
 
     private List<QueryBuilder> queryBuilders = queryBuilder.must();
-    //查询结果包含字段
-    private EsSelect esSelect;
-    //查询结果包含字段
-    private SearchType searchType;
 
-    public SearchType getSearchType() {
-        return searchType;
-    }
+    private final EsParamWrapper esParamWrapper = new EsParamWrapper();
 
+    @Override
     public EsAggregationWrapper<T> esAggregationWrapper() {
         if (esAggregationWrapper == null) {
             esAggregationWrapper = new EsAggregationWrapper<>(tClass);
@@ -73,26 +58,19 @@ public abstract class AbstractEsWrapper<T, R extends SFunction<T, ?>, Children e
         return esAggregationWrapper;
     }
 
+    /**
+     * 得到es param包装
+     *
+     * @return {@link EsParamWrapper}
+     */
+    public EsParamWrapper getEsParamWrapper() {
+        return esParamWrapper;
+    }
+
     @Override
     protected String nameToString(R function) {
         return super.nameToString(function);
     }
-
-
-    @Override
-    public EsSelect getEsSelect() {
-        return esSelect;
-    }
-
-    public void setEsSelect(EsSelect esSelect) {
-        this.esSelect = esSelect;
-    }
-
-    @Override
-    public List<EsHighLight> getEsHighLight() {
-        return esHighLights;
-    }
-
 
     @Override
     public BoolQueryBuilder getQueryBuilder() {
@@ -102,18 +80,20 @@ public abstract class AbstractEsWrapper<T, R extends SFunction<T, ?>, Children e
     //获取select的字段
     @Override
     public EsSelect getSelect() {
-        EsSelect esSelect = this.getEsSelect();
+        EsSelect esSelect = esParamWrapper.getEsSelect();
         if (esSelect == null) {
-            this.setEsSelect(new EsSelect());
+            esParamWrapper.setEsSelect(new EsSelect());
         }
-        return this.getEsSelect();
+        return esParamWrapper.getEsSelect();
     }
 
+    @Override
     public Children matchAll() {
         queryBuilder.must(QueryBuilders.matchAllQuery());
         return this.children;
     }
 
+    @Override
     public Children boost(float boost) {
         currentBuilder.boost(boost);
         return this.children;
@@ -151,6 +131,7 @@ public abstract class AbstractEsWrapper<T, R extends SFunction<T, ?>, Children e
         return this.children;
     }
 
+    @Override
     public Children must() {
         if (queryBuilders != queryBuilder.must()) {
             queryBuilders = queryBuilder.must();
@@ -158,6 +139,7 @@ public abstract class AbstractEsWrapper<T, R extends SFunction<T, ?>, Children e
         return children;
     }
 
+    @Override
     public Children should() {
         if (queryBuilders != queryBuilder.should()) {
             queryBuilders = queryBuilder.should();
@@ -165,6 +147,7 @@ public abstract class AbstractEsWrapper<T, R extends SFunction<T, ?>, Children e
         return children;
     }
 
+    @Override
     public Children filter() {
         if (queryBuilders != queryBuilder.filter()) {
             queryBuilders = queryBuilder.filter();
@@ -172,6 +155,7 @@ public abstract class AbstractEsWrapper<T, R extends SFunction<T, ?>, Children e
         return children;
     }
 
+    @Override
     public Children mustNot() {
         if (queryBuilders != queryBuilder.mustNot()) {
             queryBuilders = queryBuilder.mustNot();
@@ -179,12 +163,6 @@ public abstract class AbstractEsWrapper<T, R extends SFunction<T, ?>, Children e
         return children;
     }
 
-    //match方法中配合or使用，百分比匹配
-    public void minimumShouldMatch(String minimumShouldMatch) {
-        if (currentBuilder instanceof MatchQueryBuilder) {
-            ((MatchQueryBuilder) currentBuilder).minimumShouldMatch(minimumShouldMatch);
-        }
-    }
 
     @Override
     public Children query(boolean condition, QueryBuilder queryBuilder) {
@@ -363,6 +341,16 @@ public abstract class AbstractEsWrapper<T, R extends SFunction<T, ?>, Children e
     }
 
     @Override
+    public Children nestedQuery(boolean condition, R path, Children children, ScoreMode mode) {
+        if (condition) {
+            NestedQueryBuilder nestedQueryBuilder = QueryBuilders.nestedQuery(nameToString(path), children.getQueryBuilder(), mode);
+            currentBuilder = nestedQueryBuilder;
+            queryBuilders.add(nestedQueryBuilder);
+        }
+        return this.children;
+    }
+
+    @Override
     public Children gt(boolean condition, R name, Object from) {
         if (condition) {
             queryBuilders.add(QueryBuilders.rangeQuery(nameToString(name)).gt(from));
@@ -395,17 +383,17 @@ public abstract class AbstractEsWrapper<T, R extends SFunction<T, ?>, Children e
     }
 
     @Override
-    public Children between(boolean condition, R name, Object from, Object to) {
+    public Children between(boolean condition, R name, Object from, Object to, boolean include) {
         if (condition) {
-            queryBuilders.add(QueryBuilders.rangeQuery(nameToString(name)).from(from, true).to(to, true));
+            queryBuilders.add(QueryBuilders.rangeQuery(nameToString(name)).from(from, include).to(to, include));
         }
         return children;
     }
 
     @Override
-    public Children between(boolean condition, R name, Object from, Object to, boolean include) {
+    public Children between(boolean condition, R name, Object from, Object to) {
         if (condition) {
-            queryBuilders.add(QueryBuilders.rangeQuery(nameToString(name)).from(from, include).to(to, include));
+            queryBuilders.add(QueryBuilders.rangeQuery(nameToString(name)).from(from, true).to(to, true));
         }
         return children;
     }
@@ -565,6 +553,7 @@ public abstract class AbstractEsWrapper<T, R extends SFunction<T, ?>, Children e
         return children;
     }
 
+    @Override
     public Children includes(R... func) {
         String[] includes = nameToString(func);
         EsSelect esSelect = getSelect();
@@ -572,12 +561,14 @@ public abstract class AbstractEsWrapper<T, R extends SFunction<T, ?>, Children e
         return (Children) this;
     }
 
+    @Override
     public Children includes(String... names) {
         EsSelect esSelect = getSelect();
         esSelect.setIncludes(names);
         return (Children) this;
     }
 
+    @Override
     public Children excludes(R... func) {
         String[] includes = nameToString(func);
         EsSelect esSelect = getSelect();
@@ -585,90 +576,109 @@ public abstract class AbstractEsWrapper<T, R extends SFunction<T, ?>, Children e
         return (Children) this;
     }
 
+    @Override
     public Children excludes(String... names) {
         EsSelect esSelect = getSelect();
         esSelect.setExcludes(names);
         return (Children) this;
     }
 
-
+    @Override
     public Children orderBy(String order, R... columns) {
-        if (esOrderList == null) {
-            esOrderList = new ArrayList<>();
+        if (esParamWrapper.getEsOrderList() == null) {
+            esParamWrapper.setEsOrderList(new ArrayList<>());
         }
         String[] arr = nameToString(columns);
         for (String name : arr) {
             EsOrder esOrder = new EsOrder();
             esOrder.setName(name);
             esOrder.setSort(order);
-            esOrderList.add(esOrder);
+            esParamWrapper.getEsOrderList().add(esOrder);
         }
         return children;
     }
 
-
+    @Override
     public Children orderBy(String order, String... columns) {
-        if (esOrderList == null) {
-            esOrderList = new ArrayList<>();
+        if (esParamWrapper.getEsOrderList() == null) {
+            esParamWrapper.setEsOrderList(new ArrayList<>());
         }
         for (String name : columns) {
             EsOrder esOrder = new EsOrder();
             esOrder.setName(name);
             esOrder.setSort(order);
-            esOrderList.add(esOrder);
+            esParamWrapper.getEsOrderList().add(esOrder);
         }
         return children;
     }
 
-
+    @Override
     public Children orderByAsc(String... columns) {
-        if (esOrderList == null) {
-            esOrderList = new ArrayList<>();
+        if (esParamWrapper.getEsOrderList() == null) {
+            esParamWrapper.setEsOrderList(new ArrayList<>());
         }
         for (String name : columns) {
             EsOrder esOrder = new EsOrder();
             esOrder.setName(name);
             esOrder.setSort(SortOrder.ASC.name());
-            esOrderList.add(esOrder);
+            esParamWrapper.getEsOrderList().add(esOrder);
         }
         return children;
     }
 
-
+    @Override
     public Children orderByDesc(String... columns) {
-        if (esOrderList == null) {
-            esOrderList = new ArrayList<>();
+        if (esParamWrapper.getEsOrderList() == null) {
+            esParamWrapper.setEsOrderList(new ArrayList<>());
         }
         for (String name : columns) {
             EsOrder esOrder = new EsOrder();
             esOrder.setName(name);
             esOrder.setSort(SortOrder.DESC.name());
-            esOrderList.add(esOrder);
+            esParamWrapper.getEsOrderList().add(esOrder);
         }
         return children;
     }
 
-    public void searchType(SearchType searchType) {
-        this.searchType = searchType;
+    @Override
+    public Children searchType(SearchType searchType) {
+        esParamWrapper.setSearchType(searchType);
+        return children;
     }
 
-
+    @Override
     public Children highLight(String field) {
-        if (esHighLights == null) {
-            esHighLights = new ArrayList<>();
+        if (esParamWrapper.getEsHighLights() == null) {
+            esParamWrapper.setEsHighLights(new ArrayList<>());
         }
         EsHighLight esHighLight = new EsHighLight(field);
-        esHighLights.add(esHighLight);
+        esParamWrapper.getEsHighLights().add(esHighLight);
         return children;
     }
 
+    @Override
     public Children highLight(String field, String preTag, String postTag) {
-        if (esHighLights == null) {
-            esHighLights = new ArrayList<>();
+        if (esParamWrapper.getEsHighLights() == null) {
+            esParamWrapper.setEsHighLights(new ArrayList<>());
         }
         EsHighLight esHighLight = new EsHighLight(preTag, postTag, field);
-        esHighLights.add(esHighLight);
+        esParamWrapper.getEsHighLights().add(esHighLight);
         return children;
     }
 
+    @Override
+    public Children routings(String... routings) {
+        esParamWrapper.setRoutings(routings);
+        return children;
+    }
+
+
+    //match方法中配合or使用，百分比匹配
+    @Override
+    public Children minimumShouldMatch(String minimumShouldMatch) {
+        if (currentBuilder instanceof MatchQueryBuilder) {
+            ((MatchQueryBuilder) currentBuilder).minimumShouldMatch(minimumShouldMatch);
+        }
+        return children;
+    }
 }

@@ -30,4 +30,6 @@ public class EsQueryWrapper<T> extends AbstractEsWrapper<T, SFunction<T, ?>, EsQ
     public Class<T> gettClass() {
         return super.tClass;
     }
+
+
 }

@@ -91,10 +91,15 @@ public class EsServiceImpl<T> extends AbstractEsService<T> implements EsService<
 
     @Override
     public boolean saveOrUpdate(T entity) {
-        if (!esPlusClientFacade.save(alias, entity)) {
-            return updateById(entity);
+        if (!updateById(entity)) {
+            return esPlusClientFacade.save(alias, entity);
         }
         return true;
+    }
+
+    @Override
+    public List<BulkItemResponse> saveOrUpdateBatch(Collection<T> entityList) {
+        return esPlusClientFacade.saveOrUpdateBatch(index, entityList);
     }
 
     @Override
@@ -187,7 +192,7 @@ public class EsServiceImpl<T> extends AbstractEsService<T> implements EsService<
         return failBulkItemResponses;
     }
 
-    private List<BulkItemResponse> doUpdateBatch(List<T> list) {
+    private List<BulkItemResponse> doUpdateBatch(Collection<T> list) {
         return esPlusClientFacade.updateBatch(alias, list);
     }
 

@@ -14,13 +14,21 @@ import java.util.*;
 public interface EsPlusClient {
 
     /**
+     * 保存或更新批
+     *
+     * @param index      索引
+     * @param esDataList 西文数据列表
+     * @return {@link List}<{@link BulkItemResponse}>
+     */
+    List<BulkItemResponse> saveOrUpdateBatch(String index, Collection<?> esDataList);
+    /**
      * 保存批
      *
      * @param index      索引
      * @param esDataList 西文数据列表
      * @return {@link List}<{@link BulkItemResponse}>
      */
-    List<BulkItemResponse> saveBatch(String index, List<?> esDataList);
+    List<BulkItemResponse> saveBatch(String index, Collection<?> esDataList);
 
     /**
      * 保存
@@ -42,7 +50,7 @@ public interface EsPlusClient {
      * @param index 索引
      * @return {@link List}<{@link BulkItemResponse}>
      */
-    List<BulkItemResponse> updateBatch(String index, List<?> esDataList);
+    List<BulkItemResponse> updateBatch(String index, Collection<?> esDataList);
 
     /**
      * 更新包装
