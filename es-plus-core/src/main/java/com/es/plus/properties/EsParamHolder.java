@@ -1,6 +1,8 @@
 package com.es.plus.properties;
 
+import com.es.plus.annotation.EsIndex;
 import com.es.plus.config.GlobalConfigCache;
+import com.es.plus.constant.DefaultClass;
 import com.es.plus.constant.EsConstant;
 import com.es.plus.core.EsAnnotationParamResolve;
 import com.es.plus.exception.EsException;
@@ -89,14 +91,26 @@ public class EsParamHolder {
      * @return {@link EsIndexParam}
      */
     public static EsIndexParam getEsIndexParam(Class<?> clazz) {
-        return ESINDEXPARAM_MAP.computeIfAbsent(clazz.getName(), s -> {
-            EsIndexParam indexParam = ES_ANNOTATION_PARAM_RESOLVE.buildEsIndexParam(clazz, GlobalConfigCache.GLOBAL_CONFIG.getGlobalSuffix());
+        // 如果是子文档获取其父文档的属性
+        EsIndex annotation = clazz.getAnnotation(EsIndex.class);
+        if (annotation != null && annotation.parentClass() != DefaultClass.class) {
+            clazz = annotation.parentClass();
+        }
+        Class<?> finalClazz = clazz;
+        EsIndexParam esIndexParam = ESINDEXPARAM_MAP.computeIfAbsent(clazz.getName(), s -> {
+            EsIndexParam indexParam = ES_ANNOTATION_PARAM_RESOLVE.buildEsIndexParam(finalClazz, GlobalConfigCache.GLOBAL_CONFIG.getGlobalSuffix());
             Map<String, Object> mapping = new HashMap<>(1);
-            Map<String, Object> mappingProperties = ES_ANNOTATION_PARAM_RESOLVE.buildMappingProperties(clazz);
+            Map<String, Object> mappingProperties = ES_ANNOTATION_PARAM_RESOLVE.buildMappingProperties(finalClazz);
+            // 子文档属性
+            if (indexParam.getChildClass() != null) {
+                Map<String, Object> childProperties = ES_ANNOTATION_PARAM_RESOLVE.buildMappingProperties(indexParam.getChildClass());
+                childProperties.forEach(mappingProperties::putIfAbsent);
+            }
             mapping.put(PROPERTIES, mappingProperties);
             indexParam.setMappings(mapping);
             return indexParam;
         });
+        return esIndexParam;
     }
 
     public static String getStringKeyword(Class<?> clazz, String name) {

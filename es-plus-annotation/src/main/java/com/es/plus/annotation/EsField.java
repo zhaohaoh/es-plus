@@ -6,6 +6,7 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+
 /**
  * @Author: hzh
  * @Date: 2022/9/5 15:04
@@ -56,6 +57,13 @@ public @interface EsField {
     boolean store() default false;
 
     /**
+     * 设置text可以进行聚合操作
+     *
+     * @return 是否设置可聚合
+     */
+    boolean fieldData() default false;
+
+    /**
      * 存在
      *
      * @return boolean
@@ -68,4 +76,25 @@ public @interface EsField {
      * @return {@link String}
      */
     String format() default "";
+
+    /**
+     * 全局序数 提高聚合性能 适用于聚合字段和父子文档
+     *
+     * @return boolean
+     */
+    boolean eagerGlobalOrdinals() default false;
+
+    /**
+     * 父
+     *
+     * @return {@link String}
+     */
+    String parent() default "";
+
+    /**
+     * 子
+     *
+     * @return {@link String}
+     */
+    String child() default "";
 }

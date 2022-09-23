@@ -1,5 +1,7 @@
 package com.es.plus.annotation;
 
+import com.es.plus.constant.DefaultClass;
+
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -28,4 +30,8 @@ public @interface EsIndex {
     String defaultAnalyzer() default "";
 
     String alias() default "";
+
+    Class<?> childClass() default DefaultClass.class;
+
+    Class<?> parentClass() default DefaultClass.class;
 }

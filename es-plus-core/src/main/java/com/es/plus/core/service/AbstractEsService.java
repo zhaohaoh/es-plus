@@ -4,6 +4,7 @@ package com.es.plus.core.service;
 import com.es.plus.annotation.EsId;
 import com.es.plus.annotation.EsIndex;
 import com.es.plus.client.EsPlusClientFacade;
+import com.es.plus.constant.DefaultClass;
 import com.es.plus.constant.EsConstant;
 import com.es.plus.core.EsReindexHandler;
 import com.es.plus.core.ReindexObjectHandlerImpl;
@@ -63,16 +64,20 @@ public abstract class AbstractEsService<T> implements InitializingBean {
         try {
             Type tClazz = ((ParameterizedType) this.getClass().getGenericSuperclass()).getActualTypeArguments()[0];
             clazz = (Class<T>) tClazz;
+            Class<?> indexClass = clazz;
             EsIndex annotation = clazz.getAnnotation(EsIndex.class);
+
             //添加id字段映射
-            Field[] fields = clazz.getDeclaredFields();
+            Field[] fields = indexClass.getDeclaredFields();
             for (Field field : fields) {
                 if (field.getAnnotation(EsId.class) != null) {
                     EsParamHolder.put(clazz, field.getName());
                 }
             }
+
+
             //添加索引信息
-            EsIndexParam esIndexParam = EsParamHolder.getEsIndexParam(clazz);
+            EsIndexParam esIndexParam = EsParamHolder.getEsIndexParam(indexClass);
 
             this.alias = esIndexParam.getAlias();
 
@@ -80,15 +85,21 @@ public abstract class AbstractEsService<T> implements InitializingBean {
 
             type = annotation.type();
 
+            // 如果是子文档不执行创建索引的相关操作
+            Class<?> parentClass = annotation.parentClass();
+            if (parentClass != DefaultClass.class) {
+                return;
+            }
+
             ELock eLock = esLockFactory.getLock(index);
             boolean lock = eLock.tryLock();
             try {
                 if (lock) {
                     boolean exists = esPlusClientFacade.indexExists(this.alias);
                     if (exists) {
-                        EsReindexHandler.tryReindex(esPlusClientFacade, clazz);
+                        EsReindexHandler.tryReindex(esPlusClientFacade, indexClass);
                     } else {
-                        esPlusClientFacade.createIndexMapping(this.index + SO_SUFFIX, clazz);
+                        esPlusClientFacade.createIndexMapping(this.index + SO_SUFFIX, indexClass);
                     }
                     logger.info("init es indexResponse={} exists={}", this.index, exists);
                 }

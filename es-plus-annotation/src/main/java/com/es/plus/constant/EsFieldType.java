@@ -3,7 +3,7 @@ package com.es.plus.constant;
 public enum EsFieldType {
     /**
      * 文本
-     *///es字段枚举类型
+     */
     TEXT,
     /**
      * 字节
@@ -61,6 +61,11 @@ public enum EsFieldType {
     KEYWORD,
     //同时创建text和keyword
     STRING,
+
+    /**
+     * 父子文档
+     */
+    JOIN;
 
 
 }

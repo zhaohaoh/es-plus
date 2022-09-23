@@ -11,6 +11,15 @@ public class EsIndexParam {
     private String alias;
     private EsSettings esSettings;
     private Map<String, Object> mappings;
+    private Class<?> childClass;
+
+    public Class<?> getChildClass() {
+        return childClass;
+    }
+
+    public void setChildClass(Class<?> childClass) {
+        this.childClass = childClass;
+    }
 
     public Map<String, Object> getMappings() {
         return mappings;

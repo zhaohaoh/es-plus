@@ -9,8 +9,10 @@ import com.es.plus.core.wrapper.EsUpdateWrapper;
 import com.es.plus.core.wrapper.aggregation.EsAggregationWrapper;
 import com.es.plus.exception.EsException;
 import com.es.plus.pojo.*;
+import com.es.plus.properties.EsIndexParam;
 import com.es.plus.properties.EsParamHolder;
 import com.es.plus.util.BeanUtils;
+import com.es.plus.util.FieldUtils;
 import com.es.plus.util.JsonUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -96,9 +98,14 @@ public class EsPlusRestClient implements EsPlusClient {
      */
     @Override
     public List<BulkItemResponse> saveOrUpdateBatch(String index, Collection<?> esDataList) {
+        List<BulkItemResponse> responses = new ArrayList<>();
+        if (CollectionUtils.isEmpty(esDataList)) {
+            return responses;
+        }
+        boolean childIndex = isChildIndex(esDataList.stream().findFirst().get());
+
         boolean enabled = ReindexObjectHandlerImpl.ENABLED;
         boolean lock = false;
-        List<BulkItemResponse> responses = new ArrayList<>();
         try {
             if (enabled) {
                 lock = reindexObjectHandlerImpl.lock(index);
@@ -110,8 +117,12 @@ public class EsPlusRestClient implements EsPlusClient {
             for (Object esData : esDataList) {
                 UpdateRequest updateRequest = new UpdateRequest(index, EsParamHolder.getDocId(esData)).doc(JsonUtils.toJsonStr(esData), XContentType.JSON);
                 updateRequest.retryOnConflict(GLOBAL_CONFIG.getMaxRetries());
+                updateRequest.setRefreshPolicy(GLOBAL_CONFIG.getRefreshPolicy());
                 // 如果没有文档则新增
                 updateRequest.upsert(JsonUtils.toJsonStr(esData), XContentType.JSON);
+                if (childIndex) {
+                    updateRequest.routing(FieldUtils.getStrFieldValue(esData, "parent"));
+                }
                 bulkRequest.add(updateRequest);
             }
             bulkRequest.setRefreshPolicy(GLOBAL_CONFIG.getRefreshPolicy());
@@ -134,14 +145,29 @@ public class EsPlusRestClient implements EsPlusClient {
         return responses;
     }
 
+    private boolean isChildIndex(Object esData) {
+        Class<?> clazz = esData.getClass();
+        EsIndexParam esIndexParam = EsParamHolder.getEsIndexParam(clazz);
+        if (esIndexParam.getChildClass().equals(clazz)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     /**
      * 保存批量
      */
     @Override
     public List<BulkItemResponse> saveBatch(String index, Collection<?> esDataList) {
+        List<BulkItemResponse> failBulkItemResponses = new ArrayList<>();
+        if (CollectionUtils.isEmpty(esDataList)) {
+            return failBulkItemResponses;
+        }
         boolean enabled = ReindexObjectHandlerImpl.ENABLED;
         boolean lock = false;
-        List<BulkItemResponse> failBulkItemResponses = new ArrayList<>();
+
+        boolean childIndex = isChildIndex(esDataList.stream().findFirst().get());
         try {
             if (enabled) {
                 lock = reindexObjectHandlerImpl.lock(index);
@@ -155,6 +181,9 @@ public class EsPlusRestClient implements EsPlusClient {
             for (Object esData : esDataList) {
                 IndexRequest indexRequest = new IndexRequest(index);
                 indexRequest.id(EsParamHolder.getDocId(esData)).source(JsonUtils.toJsonStr(esData), XContentType.JSON);
+                if (childIndex) {
+                    indexRequest.routing(FieldUtils.getStrFieldValue(esData, "parent"));
+                }
                 bulkRequest.add(indexRequest);
             }
             bulkRequest.setRefreshPolicy(GLOBAL_CONFIG.getRefreshPolicy());
@@ -201,6 +230,7 @@ public class EsPlusRestClient implements EsPlusClient {
     public boolean update(String index, Object esData) {
         boolean enabled = ReindexObjectHandlerImpl.ENABLED;
         boolean lock = false;
+        boolean childIndex = isChildIndex(esData);
         try {
             if (enabled) {
                 lock = reindexObjectHandlerImpl.lock(index);
@@ -213,7 +243,9 @@ public class EsPlusRestClient implements EsPlusClient {
             //乐观锁重试次数
             updateRequest.retryOnConflict(GLOBAL_CONFIG.getMaxRetries());
             updateRequest.setRefreshPolicy(GLOBAL_CONFIG.getRefreshPolicy());
-
+            if (childIndex) {
+                updateRequest.routing(FieldUtils.getStrFieldValue(esData, "parent"));
+            }
             UpdateResponse updateResponse = restHighLevelClient.update(updateRequest, RequestOptions.DEFAULT);
             if (updateResponse.getResult() == DocWriteResponse.Result.DELETED) {
                 printErrorLog("update index={} data={}  error reason: doc  deleted", index, JsonUtils.toJsonStr(esData));
@@ -255,9 +287,14 @@ public class EsPlusRestClient implements EsPlusClient {
      */
     @Override
     public List<BulkItemResponse> updateBatch(String index, Collection<?> esDataList) {
+        List<BulkItemResponse> responses = new ArrayList<>();
+        if (CollectionUtils.isEmpty(esDataList)) {
+            return responses;
+        }
         boolean enabled = ReindexObjectHandlerImpl.ENABLED;
         boolean lock = false;
-        List<BulkItemResponse> responses = new ArrayList<>();
+
+        boolean childIndex = isChildIndex(esDataList.stream().findFirst().get());
         try {
             if (enabled) {
                 lock = reindexObjectHandlerImpl.lock(index);
@@ -269,6 +306,9 @@ public class EsPlusRestClient implements EsPlusClient {
             for (Object esData : esDataList) {
                 UpdateRequest updateRequest = new UpdateRequest(index, EsParamHolder.getDocId(esData)).doc(JsonUtils.toJsonStr(esData), XContentType.JSON);
                 updateRequest.retryOnConflict(GLOBAL_CONFIG.getMaxRetries());
+                if (childIndex) {
+                    updateRequest.routing(FieldUtils.getStrFieldValue(esData, "parent"));
+                }
                 bulkRequest.add(updateRequest);
             }
             bulkRequest.setRefreshPolicy(GLOBAL_CONFIG.getRefreshPolicy());
@@ -342,6 +382,11 @@ public class EsPlusRestClient implements EsPlusClient {
             request.setConflicts(DEFAULT_CONFLICTS);
             request.setQuery(esUpdateWrapper.getQueryBuilder());
             request.setBatchSize(GLOBAL_CONFIG.getBatchSize());
+            String[] routings = esUpdateWrapper.getEsParamWrapper().getRoutings();
+            if (routings != null) {
+                request.setRouting(routings[0]);
+            }
+
             request.setIndicesOptions(IndicesOptions.LENIENT_EXPAND_OPEN);
             Script painless = new Script(ScriptType.INLINE, "painless", scipt, params);
             request.setScript(painless);
@@ -388,6 +433,11 @@ public class EsPlusRestClient implements EsPlusClient {
             // 一次批处理的大小.因为是滚动处理的
             request.setBatchSize(GLOBAL_CONFIG.getBatchSize());
             request.setIndicesOptions(IndicesOptions.LENIENT_EXPAND_OPEN);
+            String[] routings = esUpdateWrapper.getEsParamWrapper().getRoutings();
+            if (routings != null) {
+                request.setRouting(routings[0]);
+            }
+
             Script painless = new Script(ScriptType.INLINE, "painless", script.toString(), params);
             request.setScript(painless);
 
@@ -434,6 +484,11 @@ public class EsPlusRestClient implements EsPlusClient {
         request.setTimeout(TimeValue.timeValueMinutes(30));
         // 更新时版本冲突
         request.setConflicts(DEFAULT_CONFLICTS);
+        String[] routings = esUpdateWrapper.getEsParamWrapper().getRoutings();
+        if (routings != null) {
+            request.setRouting(routings[0]);
+        }
+
         try {
             SearchSourceBuilder source = request.getSearchRequest().source();
             printInfoLog("delete body:" + source.toString());
@@ -464,12 +519,16 @@ public class EsPlusRestClient implements EsPlusClient {
 
     @Override
     public boolean deleteBatch(String index, Collection<String> esDataList) {
+        if (CollectionUtils.isEmpty(esDataList)) {
+            return false;
+        }
         log.info("Es deleteBatch index={} ids={}", index, esDataList);
         BulkRequest bulkRequest = new BulkRequest();
         esDataList.forEach(id -> {
             DeleteRequest deleteRequest = new DeleteRequest(index, id);
             bulkRequest.add(deleteRequest);
         });
+
         bulkRequest.setRefreshPolicy(GLOBAL_CONFIG.getRefreshPolicy());
         try {
             BulkResponse bulkResponse = restHighLevelClient.bulk(bulkRequest, RequestOptions.DEFAULT);

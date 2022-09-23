@@ -38,6 +38,15 @@ public interface EsConstant {
      */
     String PROPERTIES = "properties";
     /**
+     * 属性
+     */
+    String RELATIONS = "relations";
+
+    /**
+     * 全球序数
+     */
+    String EAGER_GLOBAL_ORDINALS = "eager_global_ordinals";
+    /**
      * 字段
      */
     String FIELDS = "fields";
@@ -96,7 +105,7 @@ public interface EsConstant {
     /**
      * LOCK过期时间的key
      */
-    String GLOBAL_LOCK_EXPIRETIME =  "lockExpireTime";
+    String GLOBAL_LOCK_EXPIRETIME = "lockExpireTime";
     /**
      * LOCK过期时间 秒
      */

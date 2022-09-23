@@ -4,6 +4,7 @@ import com.es.plus.annotation.EsField;
 import com.es.plus.annotation.EsId;
 import com.es.plus.annotation.EsIndex;
 import com.es.plus.config.GlobalConfigCache;
+import com.es.plus.constant.DefaultClass;
 import com.es.plus.constant.EsFieldType;
 import com.es.plus.constant.JdkDataTypeEnum;
 import com.es.plus.exception.EsException;
@@ -80,6 +81,13 @@ public class EsAnnotationParamResolve {
             esSettings.setAnalysis(analysis);
         }
         esIndexParam.setEsSettings(esSettings);
+
+        //父子文档
+        Class<?> childClass = esIndex.childClass();
+        if (childClass != DefaultClass.class) {
+            esIndexParam.setChildClass(childClass);
+        }
+
         return esIndexParam;
     }
 
@@ -165,6 +173,12 @@ public class EsAnnotationParamResolve {
             properties.put(PROPERTIES, buildMappingProperties(fieldClass));
         }
 
+        if (fieldType.equalsIgnoreCase(EsFieldType.JOIN.name())) {
+            Map<String, Object> relation = new HashMap<>(1);
+            relation.put(esField.parent(), esField.child());
+            properties.put(RELATIONS, relation);
+        }
+
         if (fieldType.equalsIgnoreCase(EsFieldType.OBJECT.name())) {
             fieldType = "";
         }
@@ -197,6 +211,14 @@ public class EsAnnotationParamResolve {
         //获取是否被索引
         if (esField.type() != EsFieldType.NESTED && !esField.index()) {
             properties.put(INDEX, false);
+        }
+
+        if (esField.type() == EsFieldType.TEXT && esField.fieldData()) {
+            properties.put(INDEX, true);
+        }
+
+        if (esField.eagerGlobalOrdinals()) {
+            properties.put(EAGER_GLOBAL_ORDINALS, true);
         }
 
         //获取格式化
