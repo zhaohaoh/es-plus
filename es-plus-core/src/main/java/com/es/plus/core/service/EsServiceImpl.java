@@ -30,7 +30,6 @@ import static com.es.plus.constant.EsConstant.SO_SUFFIX;
 @SuppressWarnings({"unchecked"})
 public class EsServiceImpl<T> extends AbstractEsService<T> implements EsService<T> {
 
-    private final int DEFAULT_BATCH_SIZE = GlobalConfigCache.GLOBAL_CONFIG.getBatchSize();
 
     @Override
     public EsQueryWrapper<T> esQueryWrapper() {
@@ -104,7 +103,7 @@ public class EsServiceImpl<T> extends AbstractEsService<T> implements EsService<
 
     @Override
     public List<BulkItemResponse> saveBatch(Collection<T> entityList) {
-        return saveBatch(entityList, DEFAULT_BATCH_SIZE);
+        return saveBatch(entityList, GlobalConfigCache.GLOBAL_CONFIG.getBatchSize());
     }
 
     @Override
@@ -166,7 +165,7 @@ public class EsServiceImpl<T> extends AbstractEsService<T> implements EsService<
 
     @Override
     public List<BulkItemResponse> updateBatch(Collection<T> entityList) {
-        return updateBatch(entityList, DEFAULT_BATCH_SIZE);
+        return updateBatch(entityList, GlobalConfigCache.GLOBAL_CONFIG.getBatchSize());
     }
 
     /**

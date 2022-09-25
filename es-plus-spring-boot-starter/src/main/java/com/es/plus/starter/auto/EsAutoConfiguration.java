@@ -1,27 +1,30 @@
 package com.es.plus.starter.auto;
 
+import com.es.plus.client.EsPlusClientFacade;
 import com.es.plus.client.EsPlusIndexRestClient;
 import com.es.plus.client.EsPlusRestClient;
 import com.es.plus.config.GlobalConfigCache;
 import com.es.plus.core.ReindexObjectHandlerImpl;
-import com.es.plus.starter.properties.EsProperties;
-import com.es.plus.client.EsPlusClientFacade;
-import com.es.plus.lock.EsLockFactory;
-import com.es.plus.lock.EsLockClient;
 import com.es.plus.lock.ELockClient;
+import com.es.plus.lock.EsLockClient;
+import com.es.plus.lock.EsLockFactory;
+import com.es.plus.starter.properties.EsProperties;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.AutoConfigureOrder;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.Ordered;
 
 
 /**
  * @Author: hzh
  * @Date: 2022/6/13 16:04
  */
+@AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
 @Configuration
 @ComponentScan(basePackages = "com.es.plus")
 @EnableConfigurationProperties(EsProperties.class)
