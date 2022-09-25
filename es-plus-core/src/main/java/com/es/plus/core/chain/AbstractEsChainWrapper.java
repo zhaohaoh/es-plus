@@ -67,6 +67,24 @@ public abstract class AbstractEsChainWrapper<T, R extends SFunction<T, ?>, Child
     }
 
     @Override
+    public Children hasChild(boolean condition, String childType, ScoreMode scoreMode, Consumer<QUERY> consumer) {
+        getWrapper().hasChild(condition, childType, scoreMode, consumer);
+        return this.children;
+    }
+
+    @Override
+    public Children hasParent(boolean condition, String parentType, Boolean scoreMode, Consumer<QUERY> consumer) {
+        getWrapper().hasParent(condition, parentType, scoreMode, consumer);
+        return this.children;
+    }
+
+    @Override
+    public Children parentIdQuery(boolean condition, String childType, String id) {
+        getWrapper().parentIdQuery(condition, childType, id);
+        return this.children;
+    }
+
+    @Override
     public Children orderBy(String order, R... columns) {
         getWrapper().orderBy(order, columns);
         return children;
