@@ -62,7 +62,7 @@ public class EsParamHolder {
         try {
             String idFeildName = ID_MAP.get(clazz.getName());
             if (idFeildName == null) {
-                idFeildName = "id";
+                idFeildName = GlobalConfigCache.GLOBAL_CONFIG.getGlobalEsId();
             }
             if (obj instanceof Map) {
                 return String.valueOf(((Map<?, ?>) obj).get(idFeildName));
@@ -75,13 +75,21 @@ public class EsParamHolder {
             }
             return String.valueOf(id);
         } catch (NoSuchFieldException | IllegalAccessException e) {
-            logger.error("es getId error ", e);
         }
-        throw new EsException("elasticsearch doc id not found");
+        // es自动生成id
+        return null;
     }
 
     public static void put(Class<?> clazz, String id) {
         ID_MAP.put(clazz.getName(), id);
+    }
+
+    public static boolean isChildIndex(Class<?> clazz) {
+        EsIndex annotation = clazz.getAnnotation(EsIndex.class);
+        if (annotation != null && annotation.parentClass() != DefaultClass.class) {
+            return true;
+        }
+        return false;
     }
 
     /**

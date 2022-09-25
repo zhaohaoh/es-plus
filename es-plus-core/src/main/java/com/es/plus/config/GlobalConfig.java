@@ -46,5 +46,9 @@ public class GlobalConfig {
      * 更新最大尝试次数
      */
     private int maxRetries = 3;
+    /**
+     * 全局默认esId的字段
+     */
+    private String globalEsId = "id";
 
 }
