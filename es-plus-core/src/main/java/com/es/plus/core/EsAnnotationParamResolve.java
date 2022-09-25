@@ -192,6 +192,7 @@ public class EsAnnotationParamResolve {
         if (fieldType.equalsIgnoreCase(EsFieldType.JOIN.name())) {
             Map<String, Object> relation = new HashMap<>(1);
             relation.put(esField.parent(), esField.child());
+            properties.put(EAGER_GLOBAL_ORDINALS, Boolean.TRUE);
             properties.put(RELATIONS, relation);
         }
 
