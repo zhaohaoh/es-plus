@@ -8,6 +8,7 @@ import com.es.plus.core.EsAnnotationParamResolve;
 import com.es.plus.exception.EsException;
 import com.es.plus.util.ClassUtils;
 import com.es.plus.util.XcontentBuildUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.CollectionUtils;
@@ -63,6 +64,9 @@ public class EsParamHolder {
             String idFeildName = ID_MAP.get(clazz.getName());
             if (idFeildName == null) {
                 idFeildName = GlobalConfigCache.GLOBAL_CONFIG.getGlobalEsId();
+                if (StringUtils.isBlank(idFeildName)) {
+                    return null;
+                }
             }
             if (obj instanceof Map) {
                 return String.valueOf(((Map<?, ?>) obj).get(idFeildName));
