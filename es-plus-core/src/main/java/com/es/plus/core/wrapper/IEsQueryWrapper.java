@@ -40,6 +40,24 @@ public interface IEsQueryWrapper<Children, QUERY, R> {
 
     Children filters(boolean condition, Consumer<QUERY> consumer);
 
+    default Children hasChild(String childType, ScoreMode scoreMode, Consumer<QUERY> consumer) {
+        return hasChild(true, childType, scoreMode, consumer);
+    }
+
+    Children hasChild(boolean condition, String childType, ScoreMode scoreMode, Consumer<QUERY> consumer);
+
+    default Children hasParent(String parentType, Boolean scoreMod, Consumer<QUERY> consumer) {
+        return hasParent(true, parentType, scoreMod, consumer);
+    }
+
+    Children hasParent(boolean condition, String parentType, Boolean scoreMode, Consumer<QUERY> consumer);
+
+    default Children parentIdQuery(String childType, String id) {
+        return parentIdQuery(true, childType, id);
+    }
+
+    Children parentIdQuery(boolean condition, String childType, String id);
+
     default Children query(QueryBuilder queryBuilder) {
         return query(true, queryBuilder);
     }

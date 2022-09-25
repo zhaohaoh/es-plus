@@ -11,6 +11,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.index.query.*;
+import org.elasticsearch.join.query.HasChildQueryBuilder;
+import org.elasticsearch.join.query.HasParentQueryBuilder;
+import org.elasticsearch.join.query.ParentIdQueryBuilder;
 import org.elasticsearch.search.sort.SortOrder;
 
 import java.util.ArrayList;
@@ -24,7 +27,7 @@ import java.util.function.Consumer;
  */
 @SuppressWarnings({"unchecked"})
 public abstract class AbstractEsWrapper<T, R extends SFunction<T, ?>, Children extends AbstractEsWrapper<T, R, Children>> extends AbstractLambdaEsWrapper<T, R>
-        implements IEsQueryWrapper<Children, Children, R>, EsWrapper<Children,T>, EsExtendsWrapper<Children, R> {
+        implements IEsQueryWrapper<Children, Children, R>, EsWrapper<Children, T>, EsExtendsWrapper<Children, R> {
     protected AbstractEsWrapper() {
     }
 
@@ -128,6 +131,39 @@ public abstract class AbstractEsWrapper<T, R extends SFunction<T, ?>, Children e
         final Children children = instance();
         consumer.accept(children);
         this.children.queryBuilder.filter(children.queryBuilder);
+        return this.children;
+    }
+
+    /**
+     * 根据子文档条件查询父文档  待优化自动获取type
+     */
+    @Override
+    public Children hasChild(boolean condition, String childType, ScoreMode scoreMode, Consumer<Children> consumer) {
+        final Children children = instance();
+        consumer.accept(children);
+        HasChildQueryBuilder hasParentQueryBuilder = new HasChildQueryBuilder(childType, children.queryBuilder, scoreMode);
+        queryBuilders.add(hasParentQueryBuilder);
+        currentBuilder = hasParentQueryBuilder;
+        return this.children;
+    }
+    /**
+     * 根据父文档条件查询子文档 待优化自动获取type
+     */
+    @Override
+    public Children hasParent(boolean condition,String parentType, Boolean scoreMode, Consumer<Children> consumer) {
+        final Children children = instance();
+        consumer.accept(children);
+        HasParentQueryBuilder hasParentQueryBuilder = new HasParentQueryBuilder(parentType, children.queryBuilder, scoreMode);
+        queryBuilders.add(hasParentQueryBuilder);
+        currentBuilder = hasParentQueryBuilder;
+        return this.children;
+    }
+
+    @Override
+    public Children parentIdQuery(boolean condition, String childType, String id) {
+        ParentIdQueryBuilder parentIdQueryBuilder = new ParentIdQueryBuilder(childType, id);
+        queryBuilders.add(parentIdQueryBuilder);
+        currentBuilder = parentIdQueryBuilder;
         return this.children;
     }
 
