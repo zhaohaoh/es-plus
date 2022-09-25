@@ -1,6 +1,7 @@
 package com.es.plus.config;
 
 
+import com.es.plus.constant.Analyzer;
 import lombok.Data;
 import org.elasticsearch.action.support.WriteRequest;
 
@@ -47,8 +48,12 @@ public class GlobalConfig {
      */
     private int maxRetries = 3;
     /**
-     * 全局默认esId的字段
+     * 全局默认自动获取esId的字段
      */
     private String globalEsId = "id";
+    /**
+     * 全局索引分词器
+     */
+    private String defaultAnalyzer = Analyzer.EP_STANDARD;
 
 }

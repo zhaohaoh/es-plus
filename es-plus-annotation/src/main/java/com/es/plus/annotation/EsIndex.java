@@ -11,7 +11,7 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface EsIndex {
 
-    String index();
+    String index() default "";
 
     String type() default "_doc";
 

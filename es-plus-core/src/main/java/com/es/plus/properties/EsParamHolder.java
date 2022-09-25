@@ -7,7 +7,6 @@ import com.es.plus.constant.EsConstant;
 import com.es.plus.core.EsAnnotationParamResolve;
 import com.es.plus.exception.EsException;
 import com.es.plus.util.ClassUtils;
-import com.es.plus.util.XcontentBuildUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,13 +40,6 @@ public class EsParamHolder {
 
 
     static {
-        Map<String, Object> map = XcontentBuildUtils.buildAnalyzer("custom", new String[]{"stemmer", "lowercase", "asciifolding"}, "standard");
-        Map<String, Object> simple = XcontentBuildUtils.buildAnalyzer("simple", new String[]{"stemmer", "lowercase", "asciifolding"}, "simple");
-        Map<String, Object> ik_max_word = XcontentBuildUtils.buildAnalyzer("es_ik_max_word", new String[]{"stemmer", "lowercase", "unique", "asciifolding"}, "ik_max_word");
-        EsParamHolder.putAnalysis("custom", map);
-        EsParamHolder.putAnalysis("simple", simple);
-        EsParamHolder.putAnalysis("ik_max_word", ik_max_word);
-
         Map<String, Object> keywordsMap = new HashMap<>();
         keywordsMap.put(EsConstant.TYPE, "keyword");
         keywordsMap.put("ignore_above", 256);
@@ -88,13 +80,6 @@ public class EsParamHolder {
         ID_MAP.put(clazz.getName(), id);
     }
 
-    public static boolean isChildIndex(Class<?> clazz) {
-        EsIndex annotation = clazz.getAnnotation(EsIndex.class);
-        if (annotation != null && annotation.parentClass() != DefaultClass.class) {
-            return true;
-        }
-        return false;
-    }
 
     /**
      * 得到es索引参数
@@ -124,6 +109,7 @@ public class EsParamHolder {
         });
         return esIndexParam;
     }
+
 
     public static String getStringKeyword(Class<?> clazz, String name) {
         Map<String, String> map = CONVERT_KEYWORD_MAP.get(clazz.getName());

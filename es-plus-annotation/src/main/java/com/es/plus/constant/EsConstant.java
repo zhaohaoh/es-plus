@@ -2,6 +2,9 @@ package com.es.plus.constant;
 
 
 public interface EsConstant {
+    /* 框架缩写
+     */
+    String EP = "ep";
     /* 字段属性
      */
     String TYPE = "type";

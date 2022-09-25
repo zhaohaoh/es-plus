@@ -44,10 +44,13 @@ public class EsAnnotationParamResolve {
         if (esIndex == null) {
             return null;
         }
+        EsIndexParam esIndexParam = new EsIndexParam();
+
+
         if (StringUtils.isBlank(esIndex.index())) {
             throw new EsException("es entity annotation @EsIndex no has index");
         }
-        EsIndexParam esIndexParam = new EsIndexParam();
+
         esIndexParam.setIndex(esIndex.index() + esSuffix);
         if (StringUtils.isNotBlank(esIndex.alias())) {
             esIndexParam.setAlias(esIndex.alias() + esSuffix);
@@ -71,7 +74,7 @@ public class EsAnnotationParamResolve {
         if (ArrayUtils.isNotEmpty(analyzers)) {
             Map<String, Object> analysis = new HashMap<>();
             Map<String, Object> child = new HashMap<>();
-            analysis.put("analyzer", child);
+            analysis.put(ANALYZER, child);
             for (String analyzerName : analyzers) {
                 Map map = EsParamHolder.getAnalysis(analyzerName);
                 if (map != null) {
@@ -79,7 +82,20 @@ public class EsAnnotationParamResolve {
                 }
             }
             esSettings.setAnalysis(analysis);
+        } else {
+            String defaultAnalyzer = GlobalConfigCache.GLOBAL_CONFIG.getDefaultAnalyzer();
+            if (StringUtils.isNotBlank(defaultAnalyzer)) {
+                Map<String, Object> analysis = new HashMap<>();
+                Map<String, Object> child = new HashMap<>();
+                analysis.put(ANALYZER, child);
+                Map map = EsParamHolder.getAnalysis(defaultAnalyzer);
+                if (map != null) {
+                    child.put(defaultAnalyzer, map);
+                }
+                esSettings.setAnalysis(analysis);
+            }
         }
+
         esIndexParam.setEsSettings(esSettings);
 
         //父子文档

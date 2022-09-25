@@ -121,7 +121,7 @@ public class EsPlusRestClient implements EsPlusClient {
                 // 如果没有文档则新增
                 updateRequest.upsert(JsonUtils.toJsonStr(esData), XContentType.JSON);
                 if (childIndex) {
-                    updateRequest.routing(FieldUtils.getStrFieldValue(esData, "joinField","parent"));
+                    updateRequest.routing(FieldUtils.getStrFieldValue(esData, "joinField", "parent"));
                 }
                 bulkRequest.add(updateRequest);
             }
@@ -148,7 +148,7 @@ public class EsPlusRestClient implements EsPlusClient {
     private boolean isChildIndex(Object esData) {
         Class<?> clazz = esData.getClass();
         EsIndexParam esIndexParam = EsParamHolder.getEsIndexParam(clazz);
-        if (esIndexParam.getChildClass().equals(clazz)) {
+        if (esIndexParam.getChildClass() != null && esIndexParam.getChildClass().equals(clazz)) {
             return true;
         } else {
             return false;
@@ -182,7 +182,7 @@ public class EsPlusRestClient implements EsPlusClient {
                 IndexRequest indexRequest = new IndexRequest(index);
                 indexRequest.id(EsParamHolder.getDocId(esData)).source(JsonUtils.toJsonStr(esData), XContentType.JSON);
                 if (childIndex) {
-                    indexRequest.routing(FieldUtils.getStrFieldValue(esData, "joinField","parent"));
+                    indexRequest.routing(FieldUtils.getStrFieldValue(esData, "joinField", "parent"));
                 }
                 bulkRequest.add(indexRequest);
             }
@@ -244,7 +244,7 @@ public class EsPlusRestClient implements EsPlusClient {
             updateRequest.retryOnConflict(GLOBAL_CONFIG.getMaxRetries());
             updateRequest.setRefreshPolicy(GLOBAL_CONFIG.getRefreshPolicy());
             if (childIndex) {
-                updateRequest.routing(FieldUtils.getStrFieldValue(esData, "joinField","parent"));
+                updateRequest.routing(FieldUtils.getStrFieldValue(esData, "joinField", "parent"));
             }
             UpdateResponse updateResponse = restHighLevelClient.update(updateRequest, RequestOptions.DEFAULT);
             if (updateResponse.getResult() == DocWriteResponse.Result.DELETED) {
@@ -307,7 +307,7 @@ public class EsPlusRestClient implements EsPlusClient {
                 UpdateRequest updateRequest = new UpdateRequest(index, EsParamHolder.getDocId(esData)).doc(JsonUtils.toJsonStr(esData), XContentType.JSON);
                 updateRequest.retryOnConflict(GLOBAL_CONFIG.getMaxRetries());
                 if (childIndex) {
-                    updateRequest.routing(FieldUtils.getStrFieldValue(esData, "joinField","parent"));
+                    updateRequest.routing(FieldUtils.getStrFieldValue(esData, "joinField", "parent"));
                 }
                 bulkRequest.add(updateRequest);
             }

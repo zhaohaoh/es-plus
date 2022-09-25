@@ -5,6 +5,9 @@ import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.NestedConfigurationProperty;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @Data
 @ConfigurationProperties("es-plus")
 public class EsProperties {
@@ -74,4 +77,10 @@ public class EsProperties {
      */
     @NestedConfigurationProperty
     private GlobalConfig globalConfig = new GlobalConfig();
+
+    /**
+     * 分词器
+     */
+    @NestedConfigurationProperty
+    private Map<String, AnalysisProperties> analysis = new HashMap<>();
 }

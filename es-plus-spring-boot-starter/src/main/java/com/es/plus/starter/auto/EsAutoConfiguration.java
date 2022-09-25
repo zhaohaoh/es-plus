@@ -8,7 +8,10 @@ import com.es.plus.core.ReindexObjectHandlerImpl;
 import com.es.plus.lock.ELockClient;
 import com.es.plus.lock.EsLockClient;
 import com.es.plus.lock.EsLockFactory;
+import com.es.plus.properties.EsParamHolder;
+import com.es.plus.starter.properties.AnalysisProperties;
 import com.es.plus.starter.properties.EsProperties;
+import com.es.plus.util.XcontentBuildUtils;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +21,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
+
+import java.util.Map;
+
+import static com.es.plus.constant.Analyzer.*;
 
 
 /**
@@ -45,7 +52,7 @@ public class EsAutoConfiguration implements InitializingBean {
         EsPlusRestClient esPlusRestClient = new EsPlusRestClient(restHighLevelClient);
         esPlusRestClient.setReindexObjectHandlerImpl(reindexObjectHandler);
         EsPlusIndexRestClient esPlusIndexRestClient = new EsPlusIndexRestClient(restHighLevelClient);
-        return new EsPlusClientFacade(esPlusRestClient, esPlusIndexRestClient,esLock);
+        return new EsPlusClientFacade(esPlusRestClient, esPlusIndexRestClient, esLock);
     }
 
     /**
@@ -61,7 +68,6 @@ public class EsAutoConfiguration implements InitializingBean {
 
     /**
      * es 锁客户端
-     *
      */
     @Bean
     public ELockClient esPlusLockClient(RestHighLevelClient restHighLevelClient) {
@@ -71,5 +77,75 @@ public class EsAutoConfiguration implements InitializingBean {
     @Override
     public void afterPropertiesSet() throws Exception {
         GlobalConfigCache.GLOBAL_CONFIG = esProperties.getGlobalConfig();
+
+        // 内置分词器初始化
+        Map<String, AnalysisProperties> analysis = esProperties.getAnalysis();
+        analysis.computeIfAbsent(EP_STANDARD, a -> {
+            AnalysisProperties analysisProperties = new AnalysisProperties();
+            analysisProperties.setFilters(new String[]{STEMMER, LOWERCASE, UNIQUE, ASCIIFOLDING});
+            analysisProperties.setTokenizer(STANDARD);
+            return analysisProperties;
+        });
+        analysis.computeIfAbsent(EP_IK_MAX_WORD, a -> {
+            AnalysisProperties analysisProperties = new AnalysisProperties();
+            analysisProperties.setFilters(new String[]{STEMMER, LOWERCASE, UNIQUE, ASCIIFOLDING});
+            analysisProperties.setTokenizer(IK_MAX_WORD);
+            return analysisProperties;
+        });
+        analysis.computeIfAbsent(EP_IK_SMART, a -> {
+            AnalysisProperties analysisProperties = new AnalysisProperties();
+            analysisProperties.setFilters(new String[]{STEMMER, LOWERCASE, UNIQUE, ASCIIFOLDING});
+            analysisProperties.setTokenizer(IK_SMART);
+            return analysisProperties;
+        });
+        analysis.computeIfAbsent(EP_KEYWORD, a -> {
+            AnalysisProperties analysisProperties = new AnalysisProperties();
+            analysisProperties.setFilters(new String[]{STEMMER, LOWERCASE, UNIQUE, ASCIIFOLDING});
+            analysisProperties.setTokenizer(KEYWORD);
+            return analysisProperties;
+        });
+        analysis.computeIfAbsent(EP_SIMPLE, a -> {
+            AnalysisProperties analysisProperties = new AnalysisProperties();
+            analysisProperties.setFilters(new String[]{STEMMER, LOWERCASE, UNIQUE, ASCIIFOLDING});
+            analysisProperties.setTokenizer(SIMPLE);
+            return analysisProperties;
+        });
+
+        analysis.computeIfAbsent(EP_LANGUAGE, a -> {
+            AnalysisProperties analysisProperties = new AnalysisProperties();
+            analysisProperties.setFilters(new String[]{STEMMER, LOWERCASE, UNIQUE, ASCIIFOLDING});
+            analysisProperties.setTokenizer(LANGUAGE);
+            return analysisProperties;
+        });
+        analysis.computeIfAbsent(EP_PATTERN, a -> {
+            AnalysisProperties analysisProperties = new AnalysisProperties();
+            analysisProperties.setFilters(new String[]{STEMMER, LOWERCASE, UNIQUE, ASCIIFOLDING});
+            analysisProperties.setTokenizer(PATTERN);
+            return analysisProperties;
+        });
+        analysis.computeIfAbsent(EP_SNOWBALL, a -> {
+            AnalysisProperties analysisProperties = new AnalysisProperties();
+            analysisProperties.setFilters(new String[]{STEMMER, LOWERCASE, UNIQUE, ASCIIFOLDING});
+            analysisProperties.setTokenizer(SNOWBALL);
+            return analysisProperties;
+        });
+        analysis.computeIfAbsent(EP_STOP, a -> {
+            AnalysisProperties analysisProperties = new AnalysisProperties();
+            analysisProperties.setFilters(new String[]{STEMMER, LOWERCASE, UNIQUE, ASCIIFOLDING});
+            analysisProperties.setTokenizer(STOP);
+            return analysisProperties;
+        });
+        analysis.computeIfAbsent(EP_WHITESPACE, a -> {
+            AnalysisProperties analysisProperties = new AnalysisProperties();
+            analysisProperties.setFilters(new String[]{STEMMER, LOWERCASE, UNIQUE, ASCIIFOLDING});
+            analysisProperties.setTokenizer(WHITESPACE);
+            return analysisProperties;
+        });
+
+        analysis.forEach((analyzerName, analyzer) -> {
+            Map<String, Object> analyzerMap = XcontentBuildUtils.buildAnalyzer(analyzerName, analyzer.getFilters(), analyzer.getTokenizer());
+            EsParamHolder.putAnalysis(analyzerName, analyzerMap);
+        });
+
     }
 }

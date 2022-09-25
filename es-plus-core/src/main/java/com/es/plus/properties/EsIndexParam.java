@@ -13,6 +13,7 @@ public class EsIndexParam {
     private Map<String, Object> mappings;
     private Class<?> childClass;
 
+
     public Class<?> getChildClass() {
         return childClass;
     }
