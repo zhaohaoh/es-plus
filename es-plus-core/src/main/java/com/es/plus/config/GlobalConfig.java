@@ -15,7 +15,7 @@ public class GlobalConfig {
     /**
      * 自动开启索引迁移
      */
-    private boolean indexAutoMove = true;
+    private boolean indexAutoMove = false;
 
     /**
      * 自动开启索引迁移是否异步

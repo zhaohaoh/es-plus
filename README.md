@@ -1,55 +1,125 @@
-# es-plus
+## 什么是 Es-Plus
 
-##  框架实现elasticsearch简单封装
+Es-Plus 是Elasticsearch Api增强工具 - 只做增强不做改变，简化`CRUD`操作.
 
-## 简单案例
+## 特点
 
-### 服务类继承
+- **无侵入**：Es-Plus 在 rest-high-level-client 的基础上进行扩展，只做增强不做改变.支持原生rest-high-level-client
+- **融合mybatis-plus语法和ES-Rest-Api**: 适用于习惯mybatis-plus语法和会原生es语句操作的人群
+- **优雅的聚合封装**：让es的聚合操作变得更简易
+- **内置es所有分词器**：提供es所有的分词器和可配置定义filters
+- **自动reindex功能**：es索引库属性的改变会导致es需要重建索引.重建索引的数据迁移由框架自动完成.使用了读写锁,确保reindex过程中额外生成的数据也能同步(但会有删除数据的冗余)
+-
 
-[![vv11VU.png](https://s1.ax1x.com/2022/09/14/vv11VU.png)](https://imgse.com/i/vv11VU)
+## 引入
+``` xml
+      <dependency>
+            <groupId>io.github.zhaohaoh</groupId>
+            <artifactId>es-plus-spring-boot-starter</artifactId>
+            <version>Latest Version</version>
+        </dependency>
+```
 
-### 实体类
+## 快速开始
 
-@EsId必须标注es文档id  不标注默认取id 建议加上
+### 实体类 没有配置@EsField会根据java自动映射.获取不到映射则设置为Object
+```java
+@Data
+@EsIndex(index = "sys_user1")
+public class SysUser  {
+    @EsId
+    private Long id;
+    @EsField(type = EsFieldType.STRING) 
+    private String username;
+    
+    /**
+     * 昵称
+     */ 
+    private String nickName;
 
-[![vv13aF.png](https://s1.ax1x.com/2022/09/14/vv13aF.png)](https://imgse.com/i/vv13aF)
-
-如果只需要KEYWORD类型必须加上注解。影响term查询
-
-@Esfield非必填。不填自动映射类型。除了NESTED  其他特殊的复杂类型暂不支持
+    private String phone;
+    
+    /**
+     * 真实姓名
+     */ 
+    private String realName;
+    
+    /**
+     * 是否锁定
+     */  
+    private Integer lockState; 
+    @EsField(type = EsFieldType.NESTED)
+    private SysRole  sysRole; 
+    
+    private List<Long> ids;
+}
+```
 
 ### 查询
-
-#### 不建议的方式
-
-不建议直接无参构造new对象。会导致term lamda表达式查询的问题。除非都用字符串匹配name.
-
-建议有参构造
-
-[![vv1854.png](https://s1.ax1x.com/2022/09/14/vv1854.png)](https://imgse.com/i/vv1854)
-
-#### 根据id查询
-
-[![vv1QbT.png](https://s1.ax1x.com/2022/09/14/vv1QbT.png)](https://imgse.com/i/vv1QbT)
-
-#### 聚合查询
-
 ```java
-// 构建es查询对象
-EsQueryWrapper<SysUser> esQueryWrapper = new EsQueryWrapper<>(SysUser.class);
-// 获取es聚合查询对象
-EsAggregationWrapper<SysUser>esAggregationWrapper=esQueryWrapper.getEsAggregationWrapper();
-// 时间范围聚合
-DateHistogramAggregationBuilder dateAggBuilder = esAggregationWrapper
-    .dateHistogram(SysUser::getDate)
-	.fixedInterval(DateHistogramInterval.days(100));
-// 时间范围聚合后进行求和
-dateAggBuilder.subAggregation(esAggregationWrapper.sum(SysUser::getNum));
-// 年龄最大值聚合
-MaxAggregationBuilder max = esAggregationWrapper.max(SysUser::getAge);
-// 添加前面的聚合
-esAggregationWrapper.add(dateAggBuilder)
-    .add(max)
-    // 增加一个对前面的时间范围聚合求平均值
-    .add(esAggregationWrapper.avgBucket(SysUser::getNum, "date_date_histogram>num_sum"));
+@Service
+public class SysUserEsService extends EsServiceImpl<SysUser>{
+    public void search() {
+        // 声明语句嵌套关系是must
+        EsResponse<SysUser> esResponse = esChainQueryWrapper().must()
+                .terms(SysUser::getUsername, "admin", "hzh", "shi")
+                // 多个must嵌套
+                .must(a ->
+                        // 声明内部语句关系的should
+                        a.should()
+                                .term(SysUser::getRealName, "dasdsad")
+                                .term(SysUser::getPhone, "1386859111"))
+                // 查询
+                .list();
+        List<SysUser> list = esResponse.getList();
+    }
+
+    public void agg() {
+        // 声明语句嵌套关系是must
+        EsChainQueryWrapper<SysUser> esChainQueryWrapper = esChainQueryWrapper().must()
+                .terms(SysUser::getUsername, "admin", "hzh", "shi")
+                // 多个must嵌套
+                .must(a ->
+                        // 声明内部语句关系的should
+                        a.should()
+                                .term(SysUser::getRealName, "dasdsad")
+                                .term(SysUser::getPhone, "1386859111"));
+
+        esChainQueryWrapper.esLamdaAggregationWrapper()
+                // terms聚合并且指定数量10000
+                .terms(SysUser::getUsername, a -> a.size(10000))
+                // 在terms聚合的基础上统计lock数量
+                .subAggregation(t -> t.count(SysUser::getLockSate));
+        EsResponse<SysUser> esResponse = esChainQueryWrapper
+                // 查询
+                .list();
+        List<SysUser> list = esResponse.getList();
+
+        EsAggregationsResponse<SysUser> esAggregationsReponse = esResponse.getEsAggregationsReponse();
+        
+        // 以下方法选一种
+        Terms terms = esAggregationsReponse.getTerms(SysUser::getUsername);
+        Map<String, Long> termsAsMap = esAggregationsReponse.getTermsAsMap(SysUser::getUsername);
+    }
+}
 ```
+
+## 自动Reindex
+#### 如何开启:
+es-plus.global-config.index-auto-move=true
+#### 开启异步reindex
+es-plus.global-config.reindex-async=true
+#### 注意事项
+reindex会有部分删除数据的冗余.但是通过锁保证了新增和更新数据的错误.但是依然建议在业务低峰期执行.
+
+- [流程图](https://github.com/zhaohaoh/es-plus/blob/master/reindex%E6%B5%81%E7%A8%8B%E5%9B%BE.md)
+ 
+## 作者
+ 微信:huangzhaohao1995
+ 框架试运行 有问题私聊
+
+# 版权 | License
+
+[Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)
+
+
