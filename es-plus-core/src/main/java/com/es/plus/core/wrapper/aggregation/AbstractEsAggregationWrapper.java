@@ -1,7 +1,6 @@
 package com.es.plus.core.wrapper.aggregation;
 
 import com.es.plus.config.GlobalConfigCache;
-import com.es.plus.core.tools.SFunction;
 import org.elasticsearch.common.geo.GeoDistance;
 import org.elasticsearch.common.geo.GeoPoint;
 import org.elasticsearch.index.query.QueryBuilder;
@@ -58,7 +57,7 @@ import static com.es.plus.constant.EsConstant.AGG_DELIMITER;
  * 抽象聚合封装
  */
 @SuppressWarnings({"unchecked"})
-public abstract class AbstractEsAggregationWrapper<T, R extends SFunction<T, ?>, Children extends AbstractEsAggregationWrapper<T, R, Children>> extends AbstractLambdaAggregationWrapper<T, R>
+public abstract class AbstractEsAggregationWrapper<T, R, Children extends AbstractEsAggregationWrapper<T, R, Children>> extends AbstractLambdaAggregationWrapper<T, R>
         implements IEsAggregationWrapper<Children, R>, IEsAggregationFuncWrapper<Children, R> {
     protected AbstractEsAggregationWrapper() {
     }

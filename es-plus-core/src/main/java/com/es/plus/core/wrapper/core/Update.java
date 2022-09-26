@@ -13,7 +13,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package com.es.plus.core.wrapper;
+package com.es.plus.core.wrapper.core;
 
 import java.io.Serializable;
 import java.util.Map;

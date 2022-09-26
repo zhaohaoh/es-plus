@@ -1,8 +1,8 @@
 package com.es.plus.client;
 
 import com.es.plus.core.ScrollHandler;
-import com.es.plus.core.wrapper.EsQueryWrapper;
-import com.es.plus.core.wrapper.EsUpdateWrapper;
+import com.es.plus.core.wrapper.core.EsQueryWrapper;
+import com.es.plus.core.wrapper.core.EsUpdateWrapper;
 import com.es.plus.lock.ELock;
 import com.es.plus.lock.EsLockFactory;
 import com.es.plus.lock.EsReadWriteLock;

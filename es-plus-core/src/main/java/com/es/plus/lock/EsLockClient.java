@@ -4,7 +4,7 @@ import com.es.plus.config.GlobalConfigCache;
 import com.es.plus.exception.EsException;
 import com.es.plus.properties.EsParamHolder;
 import com.es.plus.util.JsonUtils;
-import com.es.plus.core.wrapper.EsQueryWrapper;
+import com.es.plus.core.wrapper.core.EsQueryWrapper;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.update.UpdateRequest;

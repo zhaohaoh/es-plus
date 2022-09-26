@@ -1,4 +1,4 @@
-package com.es.plus.core;
+package com.es.plus.core.process;
 
 import com.es.plus.annotation.EsField;
 import com.es.plus.annotation.EsId;
@@ -30,7 +30,7 @@ import static com.es.plus.constant.EsConstant.*;
  * @Author: hzh
  * @Date: 2022/1/21 11:10
  */
-public class EsAnnotationParamResolve {
+public class EsAnnotationParamProcess {
 
     /**
      * 构建es参数

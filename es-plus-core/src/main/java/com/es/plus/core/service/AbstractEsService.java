@@ -6,8 +6,8 @@ import com.es.plus.annotation.EsIndex;
 import com.es.plus.client.EsPlusClientFacade;
 import com.es.plus.constant.DefaultClass;
 import com.es.plus.constant.EsConstant;
-import com.es.plus.core.EsReindexHandler;
-import com.es.plus.core.ReindexObjectHandlerImpl;
+import com.es.plus.core.process.EsReindexProcess;
+import com.es.plus.core.process.ReindexObjectProcess;
 import com.es.plus.lock.ELock;
 import com.es.plus.lock.EsLockFactory;
 import com.es.plus.properties.EsIndexParam;
@@ -97,7 +97,7 @@ public abstract class AbstractEsService<T> implements InitializingBean {
                 if (lock) {
                     boolean exists = esPlusClientFacade.indexExists(this.alias);
                     if (exists) {
-                        EsReindexHandler.tryReindex(esPlusClientFacade, indexClass);
+                        EsReindexProcess.tryReindex(esPlusClientFacade, indexClass);
                     } else {
                         esPlusClientFacade.createIndexMapping(this.index + SO_SUFFIX, indexClass);
                     }
@@ -105,7 +105,7 @@ public abstract class AbstractEsService<T> implements InitializingBean {
                 }
                 boolean locked = esPlusClientFacade.getLock(esIndexParam.getIndex() + EsConstant.REINDEX_LOCK_SUFFIX).isLocked();
                 if (locked) {
-                    ReindexObjectHandlerImpl.ENABLED = true;
+                    ReindexObjectProcess.ENABLED = true;
                 }
             } finally {
                 if (lock) {

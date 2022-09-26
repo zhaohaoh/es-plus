@@ -6,7 +6,7 @@ import com.es.plus.core.tools.SFunction;
 import com.es.plus.pojo.EsResponse;
 import com.es.plus.pojo.PageInfo;
 import com.es.plus.pojo.EsAggregationsResponse;
-import com.es.plus.core.wrapper.EsQueryWrapper;
+import com.es.plus.core.wrapper.core.EsQueryWrapper;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;

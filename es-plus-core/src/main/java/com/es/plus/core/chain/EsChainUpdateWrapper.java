@@ -3,8 +3,8 @@ package com.es.plus.core.chain;
 
 import com.es.plus.core.service.EsService;
 import com.es.plus.core.tools.SFunction;
-import com.es.plus.core.wrapper.EsUpdateWrapper;
-import com.es.plus.core.wrapper.Update;
+import com.es.plus.core.wrapper.core.EsUpdateWrapper;
+import com.es.plus.core.wrapper.core.Update;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
 

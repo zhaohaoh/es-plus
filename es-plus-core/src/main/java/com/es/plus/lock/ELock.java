@@ -1,6 +1,6 @@
 package com.es.plus.lock;
 
-import com.es.plus.core.wrapper.EsQueryWrapper;
+import com.es.plus.core.wrapper.core.EsQueryWrapper;
 import com.es.plus.exception.EsException;
 import com.es.plus.util.LockLogUtils;
 import org.elasticsearch.ElasticsearchException;

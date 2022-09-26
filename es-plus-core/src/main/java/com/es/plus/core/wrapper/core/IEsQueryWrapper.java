@@ -1,4 +1,4 @@
-package com.es.plus.core.wrapper;
+package com.es.plus.core.wrapper.core;
 
 import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.index.query.QueryBuilder;

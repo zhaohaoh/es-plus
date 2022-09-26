@@ -1,4 +1,4 @@
-package com.es.plus.core;
+package com.es.plus.core.process;
 
 import com.es.plus.annotation.EsIgnoreReindex;
 import com.es.plus.client.EsPlusClientFacade;
@@ -39,7 +39,7 @@ import java.util.concurrent.locks.Lock;
  * @author hzh
  * @date 2022/09/03
  */
-public class EsReindexHandler {
+public class EsReindexProcess {
     private static final Logger log = LoggerFactory.getLogger(EsPlusIndexRestClient.class);
     // 重建索引的最多有10个就已经很多了
     private static final ThreadPoolExecutor reindexExecutor = new ThreadPoolExecutor(1, 10,

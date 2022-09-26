@@ -1,4 +1,4 @@
-package com.es.plus.core;
+package com.es.plus.core.process;
 
 import com.es.plus.exception.EsException;
 import com.es.plus.pojo.EsUpdateField;
@@ -17,13 +17,13 @@ import static com.es.plus.constant.EsConstant.*;
  * @Author: hzh
  * @Date: 2022/9/9 10:04
  */
-public class ReindexObjectHandlerImpl {
-    private static final Logger logger = LoggerFactory.getLogger(ReindexObjectHandlerImpl.class);
+public class ReindexObjectProcess {
+    private static final Logger logger = LoggerFactory.getLogger(ReindexObjectProcess.class);
     public static boolean ENABLED = false;
 
     private EsLockFactory esLockClient;
 
-    public ReindexObjectHandlerImpl(EsLockFactory esLockClient) {
+    public ReindexObjectProcess(EsLockFactory esLockClient) {
         this.esLockClient = esLockClient;
     }
 

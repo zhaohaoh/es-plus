@@ -1,6 +1,6 @@
 package com.es.plus.lock;
 
-import com.es.plus.core.wrapper.EsQueryWrapper;
+import com.es.plus.core.wrapper.core.EsQueryWrapper;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.script.Script;

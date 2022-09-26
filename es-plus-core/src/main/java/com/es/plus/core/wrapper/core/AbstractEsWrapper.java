@@ -1,8 +1,9 @@
-package com.es.plus.core.wrapper;
+package com.es.plus.core.wrapper.core;
 
 
 import com.es.plus.core.tools.SFunction;
 import com.es.plus.core.wrapper.aggregation.EsAggregationWrapper;
+import com.es.plus.core.wrapper.aggregation.EsLamdaAggregationWrapper;
 import com.es.plus.pojo.EsHighLight;
 import com.es.plus.pojo.EsOrder;
 import com.es.plus.pojo.EsSelect;
@@ -38,20 +39,31 @@ public abstract class AbstractEsWrapper<T, R extends SFunction<T, ?>, Children e
     protected BoolQueryBuilder queryBuilder = QueryBuilders.boolQuery();
 
     protected QueryBuilder currentBuilder;
-
+    /*
+     *聚合封装
+     */
+    protected EsLamdaAggregationWrapper<T> esLamdaAggregationWrapper;
+    /*
+     *聚合封装
+     */
+    protected EsAggregationWrapper<T> esAggregationWrapper;
     /*
      *实例
      */
     protected abstract Children instance();
 
-    /*
-     *聚合封装
-     */
-    protected EsAggregationWrapper<T> esAggregationWrapper;
 
     private List<QueryBuilder> queryBuilders = queryBuilder.must();
 
     private final EsParamWrapper esParamWrapper = new EsParamWrapper();
+
+    @Override
+    public EsLamdaAggregationWrapper<T> esLamdaAggregationWrapper() {
+        if (esLamdaAggregationWrapper == null) {
+            esLamdaAggregationWrapper = new EsLamdaAggregationWrapper<>(tClass);
+        }
+        return esLamdaAggregationWrapper;
+    }
 
     @Override
     public EsAggregationWrapper<T> esAggregationWrapper() {
@@ -60,6 +72,7 @@ public abstract class AbstractEsWrapper<T, R extends SFunction<T, ?>, Children e
         }
         return esAggregationWrapper;
     }
+
 
     /**
      * 得到es param包装
@@ -146,11 +159,12 @@ public abstract class AbstractEsWrapper<T, R extends SFunction<T, ?>, Children e
         currentBuilder = hasParentQueryBuilder;
         return this.children;
     }
+
     /**
      * 根据父文档条件查询子文档 待优化自动获取type
      */
     @Override
-    public Children hasParent(boolean condition,String parentType, Boolean scoreMode, Consumer<Children> consumer) {
+    public Children hasParent(boolean condition, String parentType, Boolean scoreMode, Consumer<Children> consumer) {
         final Children children = instance();
         consumer.accept(children);
         HasParentQueryBuilder hasParentQueryBuilder = new HasParentQueryBuilder(parentType, children.queryBuilder, scoreMode);

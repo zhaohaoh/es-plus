@@ -2,11 +2,12 @@ package com.es.plus.core.chain;
 
 
 import com.es.plus.core.tools.SFunction;
-import com.es.plus.core.wrapper.AbstractEsWrapper;
-import com.es.plus.core.wrapper.EsExtendsWrapper;
-import com.es.plus.core.wrapper.EsWrapper;
-import com.es.plus.core.wrapper.IEsQueryWrapper;
 import com.es.plus.core.wrapper.aggregation.EsAggregationWrapper;
+import com.es.plus.core.wrapper.aggregation.EsLamdaAggregationWrapper;
+import com.es.plus.core.wrapper.core.AbstractEsWrapper;
+import com.es.plus.core.wrapper.core.EsExtendsWrapper;
+import com.es.plus.core.wrapper.core.EsWrapper;
+import com.es.plus.core.wrapper.core.IEsQueryWrapper;
 import com.es.plus.pojo.EsSelect;
 import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.action.search.SearchType;
@@ -30,6 +31,11 @@ public abstract class AbstractEsChainWrapper<T, R extends SFunction<T, ?>, Child
 
     public QUERY getWrapper() {
         return esWrapper;
+    }
+
+    @Override
+    public EsLamdaAggregationWrapper<T> esLamdaAggregationWrapper() {
+        return getWrapper().esLamdaAggregationWrapper();
     }
 
     @Override

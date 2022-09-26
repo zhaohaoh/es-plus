@@ -4,7 +4,7 @@ import com.es.plus.client.EsPlusClientFacade;
 import com.es.plus.client.EsPlusIndexRestClient;
 import com.es.plus.client.EsPlusRestClient;
 import com.es.plus.config.GlobalConfigCache;
-import com.es.plus.core.ReindexObjectHandlerImpl;
+import com.es.plus.core.process.ReindexObjectProcess;
 import com.es.plus.lock.ELockClient;
 import com.es.plus.lock.EsLockClient;
 import com.es.plus.lock.EsLockFactory;
@@ -48,7 +48,7 @@ public class EsAutoConfiguration implements InitializingBean {
      */
     @Bean
     public EsPlusClientFacade esPlusClientFacade(RestHighLevelClient restHighLevelClient, EsLockFactory esLock) {
-        ReindexObjectHandlerImpl reindexObjectHandler = new ReindexObjectHandlerImpl(esLock);
+        ReindexObjectProcess reindexObjectHandler = new ReindexObjectProcess(esLock);
         EsPlusRestClient esPlusRestClient = new EsPlusRestClient(restHighLevelClient);
         esPlusRestClient.setReindexObjectHandlerImpl(reindexObjectHandler);
         EsPlusIndexRestClient esPlusIndexRestClient = new EsPlusIndexRestClient(restHighLevelClient);

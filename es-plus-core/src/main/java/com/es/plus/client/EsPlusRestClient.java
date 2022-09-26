@@ -1,12 +1,13 @@
 package com.es.plus.client;
 
 
-import com.es.plus.core.ReindexObjectHandlerImpl;
+import com.es.plus.core.process.ReindexObjectProcess;
 import com.es.plus.core.ScrollHandler;
-import com.es.plus.core.wrapper.EsParamWrapper;
-import com.es.plus.core.wrapper.EsQueryWrapper;
-import com.es.plus.core.wrapper.EsUpdateWrapper;
 import com.es.plus.core.wrapper.aggregation.EsAggregationWrapper;
+import com.es.plus.core.wrapper.core.EsParamWrapper;
+import com.es.plus.core.wrapper.core.EsQueryWrapper;
+import com.es.plus.core.wrapper.core.EsUpdateWrapper;
+import com.es.plus.core.wrapper.aggregation.EsLamdaAggregationWrapper;
 import com.es.plus.exception.EsException;
 import com.es.plus.pojo.*;
 import com.es.plus.properties.EsIndexParam;
@@ -79,9 +80,9 @@ import static com.es.plus.util.ResolveUtils.isWrapClass;
 public class EsPlusRestClient implements EsPlusClient {
     private static final Logger log = LoggerFactory.getLogger(EsPlusRestClient.class);
     private final RestHighLevelClient restHighLevelClient;
-    private ReindexObjectHandlerImpl reindexObjectHandlerImpl;
+    private ReindexObjectProcess reindexObjectHandlerImpl;
 
-    public void setReindexObjectHandlerImpl(ReindexObjectHandlerImpl reindexObjectHandlerImpl) {
+    public void setReindexObjectHandlerImpl(ReindexObjectProcess reindexObjectHandlerImpl) {
         this.reindexObjectHandlerImpl = reindexObjectHandlerImpl;
     }
 
@@ -104,7 +105,7 @@ public class EsPlusRestClient implements EsPlusClient {
         }
         boolean childIndex = isChildIndex(esDataList.stream().findFirst().get());
 
-        boolean enabled = ReindexObjectHandlerImpl.ENABLED;
+        boolean enabled = ReindexObjectProcess.ENABLED;
         boolean lock = false;
         try {
             if (enabled) {
@@ -164,7 +165,7 @@ public class EsPlusRestClient implements EsPlusClient {
         if (CollectionUtils.isEmpty(esDataList)) {
             return failBulkItemResponses;
         }
-        boolean enabled = ReindexObjectHandlerImpl.ENABLED;
+        boolean enabled = ReindexObjectProcess.ENABLED;
         boolean lock = false;
 
         boolean childIndex = isChildIndex(esDataList.stream().findFirst().get());
@@ -228,7 +229,7 @@ public class EsPlusRestClient implements EsPlusClient {
      */
     @Override
     public boolean update(String index, Object esData) {
-        boolean enabled = ReindexObjectHandlerImpl.ENABLED;
+        boolean enabled = ReindexObjectProcess.ENABLED;
         boolean lock = false;
         boolean childIndex = isChildIndex(esData);
         try {
@@ -291,7 +292,7 @@ public class EsPlusRestClient implements EsPlusClient {
         if (CollectionUtils.isEmpty(esDataList)) {
             return responses;
         }
-        boolean enabled = ReindexObjectHandlerImpl.ENABLED;
+        boolean enabled = ReindexObjectProcess.ENABLED;
         boolean lock = false;
 
         boolean childIndex = isChildIndex(esDataList.stream().findFirst().get());
@@ -367,7 +368,7 @@ public class EsPlusRestClient implements EsPlusClient {
                 sb.append("ctx._source.");
                 sb.append(name).append(" = params.").append(name).append(";");
             }
-            if (ReindexObjectHandlerImpl.ENABLED) {
+            if (ReindexObjectProcess.ENABLED) {
                 lock = reindexObjectHandlerImpl.lock(index);
                 // 自定义字段处理
                 if (lock) {
@@ -418,7 +419,7 @@ public class EsPlusRestClient implements EsPlusClient {
             script.append("ctx._source.");
             script.append(name).append(" += params.").append(name).append(";");
         }
-        if (ReindexObjectHandlerImpl.ENABLED) {
+        if (ReindexObjectProcess.ENABLED) {
             lock = reindexObjectHandlerImpl.lock(index);
             // 自定义字段处理
             if (lock) {
@@ -620,7 +621,7 @@ public class EsPlusRestClient implements EsPlusClient {
         SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
         sourceBuilder.query(queryBuilder);
         sourceBuilder.size(0);
-        populateGroupField(esQueryWrapper.esAggregationWrapper(), sourceBuilder);
+        populateGroupField(esQueryWrapper, sourceBuilder);
         //设置索引
         searchRequest.source(sourceBuilder);
         searchRequest.indices(index);
@@ -693,7 +694,7 @@ public class EsPlusRestClient implements EsPlusClient {
                 sourceBuilder.sort(new FieldSortBuilder(order.getName()).order(SortOrder.valueOf(order.getSort())));
             });
         }
-        populateGroupField(esQueryWrapper.esAggregationWrapper(), sourceBuilder);
+        populateGroupField(esQueryWrapper, sourceBuilder);
         //设置索引
         searchRequest.source(sourceBuilder);
         searchRequest.indices(index);
@@ -704,12 +705,11 @@ public class EsPlusRestClient implements EsPlusClient {
         SearchResponse searchResponse = null;
         try {
             long start = System.currentTimeMillis();
-            printInfoLog("search index={} body:{}", index, sourceBuilder);
             searchResponse = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
             long end = System.currentTimeMillis();
-            printInfoLog("search Time={}", end - start);
+            printInfoLog("search index={} body:{} Time={}", index, sourceBuilder, end - start);
         } catch (Exception e) {
-            throw new EsException("es-plus search error", e);
+            throw new EsException("es-plus search body=" + sourceBuilder, e);
         }
         if (searchResponse.status().getStatus() != 200) {
             throw new EsException("es-plus search error:" + searchResponse.status().getStatus());
@@ -754,8 +754,18 @@ public class EsPlusRestClient implements EsPlusClient {
 
 
     //填充分组字段
-    private void populateGroupField(EsAggregationWrapper<?> esAggregationWrapper, SearchSourceBuilder sourceBuilder) {
-        if (esAggregationWrapper.getAggregationBuilder() != null) {
+    private void populateGroupField(EsQueryWrapper<?> esQueryWrapper, SearchSourceBuilder sourceBuilder) {
+        EsLamdaAggregationWrapper<?> esLamdaAggregationWrapper = esQueryWrapper.esLamdaAggregationWrapper();
+        EsAggregationWrapper<?> esAggregationWrapper = esQueryWrapper.esAggregationWrapper();
+        if (esLamdaAggregationWrapper.getAggregationBuilder() != null) {
+            for (BaseAggregationBuilder aggregation : esLamdaAggregationWrapper.getAggregationBuilder()) {
+                if (aggregation instanceof AggregationBuilder) {
+                    sourceBuilder.aggregation((AggregationBuilder) aggregation);
+                } else {
+                    sourceBuilder.aggregation((PipelineAggregationBuilder) aggregation);
+                }
+            }
+        } else {
             for (BaseAggregationBuilder aggregation : esAggregationWrapper.getAggregationBuilder()) {
                 if (aggregation instanceof AggregationBuilder) {
                     sourceBuilder.aggregation((AggregationBuilder) aggregation);

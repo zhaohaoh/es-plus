@@ -4,7 +4,7 @@ import com.es.plus.annotation.EsIndex;
 import com.es.plus.config.GlobalConfigCache;
 import com.es.plus.constant.DefaultClass;
 import com.es.plus.constant.EsConstant;
-import com.es.plus.core.EsAnnotationParamResolve;
+import com.es.plus.core.process.EsAnnotationParamProcess;
 import com.es.plus.exception.EsException;
 import com.es.plus.util.ClassUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -26,7 +26,7 @@ import static com.es.plus.constant.EsConstant.PROPERTIES;
 public class EsParamHolder {
     private static final Logger logger = LoggerFactory.getLogger(EsParamHolder.class);
     // 属性解析器
-    private static final EsAnnotationParamResolve ES_ANNOTATION_PARAM_RESOLVE = new EsAnnotationParamResolve();
+    private static final EsAnnotationParamProcess ES_ANNOTATION_PARAM_RESOLVE = new EsAnnotationParamProcess();
     // id的map
     private static final Map<String, String> ID_MAP = new ConcurrentHashMap<>();
     // 转换keyword
