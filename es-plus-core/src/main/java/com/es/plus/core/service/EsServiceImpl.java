@@ -3,10 +3,10 @@ package com.es.plus.core.service;
 
 import com.es.plus.config.GlobalConfigCache;
 import com.es.plus.core.ScrollHandler;
-import com.es.plus.core.chain.EsChainUpdateWrapper;
+import com.es.plus.core.wrapper.chain.EsChainUpdateWrapper;
 import com.es.plus.pojo.EsResponse;
 import com.es.plus.pojo.PageInfo;
-import com.es.plus.core.chain.EsChainQueryWrapper;
+import com.es.plus.core.wrapper.chain.EsChainQueryWrapper;
 import com.es.plus.core.wrapper.core.EsQueryWrapper;
 import com.es.plus.core.wrapper.core.EsUpdateWrapper;
 import com.es.plus.pojo.EsAggregationsResponse;

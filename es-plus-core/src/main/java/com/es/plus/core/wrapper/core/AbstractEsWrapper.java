@@ -11,6 +11,10 @@ import com.es.plus.properties.EsParamHolder;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.action.search.SearchType;
+import org.elasticsearch.common.geo.GeoPoint;
+import org.elasticsearch.common.geo.ShapeRelation;
+import org.elasticsearch.common.unit.DistanceUnit;
+import org.elasticsearch.geometry.Geometry;
 import org.elasticsearch.index.query.*;
 import org.elasticsearch.join.query.HasChildQueryBuilder;
 import org.elasticsearch.join.query.HasParentQueryBuilder;
@@ -47,6 +51,7 @@ public abstract class AbstractEsWrapper<T, R extends SFunction<T, ?>, Children e
      *聚合封装
      */
     protected EsAggregationWrapper<T> esAggregationWrapper;
+
     /*
      *实例
      */
@@ -212,7 +217,6 @@ public abstract class AbstractEsWrapper<T, R extends SFunction<T, ?>, Children e
         }
         return children;
     }
-
 
     @Override
     public Children query(boolean condition, QueryBuilder queryBuilder) {
@@ -444,6 +448,58 @@ public abstract class AbstractEsWrapper<T, R extends SFunction<T, ?>, Children e
     public Children between(boolean condition, R name, Object from, Object to) {
         if (condition) {
             queryBuilders.add(QueryBuilders.rangeQuery(nameToString(name)).from(from, true).to(to, true));
+        }
+        return children;
+    }
+
+
+    @Override
+    public Children geoBoundingBox(boolean condition, R name, GeoPoint topLeft, GeoPoint bottomRight) {
+        if (condition) {
+            GeoBoundingBoxQueryBuilder geoBoundingBox = new GeoBoundingBoxQueryBuilder(nameToString(name));
+            geoBoundingBox.setCorners(topLeft, bottomRight);
+            currentBuilder = geoBoundingBox;
+            queryBuilders.add(geoBoundingBox);
+        }
+        return children;
+    }
+
+    @Override
+    public Children geoDistance(boolean condition, R name, String distance, DistanceUnit distanceUnit, GeoPoint centralGeoPoint) {
+        if (condition) {
+            GeoDistanceQueryBuilder geoDistanceQueryBuilder = new GeoDistanceQueryBuilder(nameToString(name));
+            geoDistanceQueryBuilder.distance(distance, distanceUnit);
+            geoDistanceQueryBuilder.point(centralGeoPoint);
+            currentBuilder = geoDistanceQueryBuilder;
+            queryBuilders.add(geoDistanceQueryBuilder);
+        }
+        return children;
+    }
+
+    @Override
+    public Children geoPolygon(boolean condition, R name, List<GeoPoint> geoPoints) {
+        if (condition) {
+            GeoPolygonQueryBuilder geoDistanceQueryBuilder = new GeoPolygonQueryBuilder(nameToString(name), geoPoints);
+            currentBuilder = geoDistanceQueryBuilder;
+            queryBuilders.add(geoDistanceQueryBuilder);
+        }
+        return children;
+    }
+
+    @Override
+    public Children geoShape(boolean condition, R name, String indexedShapeId, Geometry geometry, ShapeRelation shapeRelation) {
+        if (condition) {
+            GeoShapeQueryBuilder geoDistanceQueryBuilder;
+            if (StringUtils.isNotBlank(indexedShapeId)) {
+                geoDistanceQueryBuilder = new GeoShapeQueryBuilder(nameToString(name), indexedShapeId);
+            } else {
+                geoDistanceQueryBuilder = new GeoShapeQueryBuilder(nameToString(name), geometry);
+            }
+            if (shapeRelation != null) {
+                geoDistanceQueryBuilder.relation(shapeRelation);
+            }
+            currentBuilder = geoDistanceQueryBuilder;
+            queryBuilders.add(geoDistanceQueryBuilder);
         }
         return children;
     }

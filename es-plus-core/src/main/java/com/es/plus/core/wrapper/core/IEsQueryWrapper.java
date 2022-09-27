@@ -1,9 +1,14 @@
 package com.es.plus.core.wrapper.core;
 
 import org.apache.lucene.search.join.ScoreMode;
+import org.elasticsearch.common.geo.GeoPoint;
+import org.elasticsearch.common.geo.ShapeRelation;
+import org.elasticsearch.common.unit.DistanceUnit;
+import org.elasticsearch.geometry.Geometry;
 import org.elasticsearch.index.query.QueryBuilder;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.function.Consumer;
 
 /**
@@ -193,6 +198,30 @@ public interface IEsQueryWrapper<Children, QUERY, R> {
 
     Children between(boolean condition, R name, Object from, Object to, boolean include);
 
+    default Children geoBoundingBox(R name, GeoPoint topLeft, GeoPoint bottomRight) {
+        return geoBoundingBox(true, name, topLeft, bottomRight);
+    }
+
+    Children geoBoundingBox(boolean condition, R name, GeoPoint topLeft, GeoPoint bottomRight);
+
+    default Children geoDistance(R name, String distance, DistanceUnit distanceUnit, GeoPoint centralGeoPoint) {
+        return geoDistance(true, name, distance, distanceUnit, centralGeoPoint);
+    }
+
+    Children geoDistance(boolean condition, R name, String distance, DistanceUnit distanceUnit, GeoPoint centralGeoPoint);
+
+    default Children geoPolygon(R name, List<GeoPoint> geoPoints) {
+        return geoPolygon(true, name, geoPoints);
+    }
+
+    Children geoPolygon(boolean condition, R name, List<GeoPoint> geoPoints);
+
+    default Children geoShape(R name, String indexedShapeId, Geometry geometry, ShapeRelation shapeRelation) {
+        return geoShape(true, name, indexedShapeId, geometry, shapeRelation);
+    }
+
+    Children geoShape(boolean condition, R name, String indexedShapeId, Geometry geometry, ShapeRelation shapeRelation);
+
 
     //根据name查询，这里违反了设计原则但是方便了
     default Children exists(String name) {
@@ -256,6 +285,11 @@ public interface IEsQueryWrapper<Children, QUERY, R> {
     //有纠错能力的模糊查询。
     Children fuzzy(boolean condition, String name, String value);
 
+    default Children nestedQuery(String path, Children children, ScoreMode mode) {
+        return nestedQuery(true, path, children, mode);
+    }
+
+    Children nestedQuery(boolean condition, String path, Children children, ScoreMode mode);
 
     default Children gt(String name, Object from) {
         return gt(true, name, from);
@@ -292,4 +326,28 @@ public interface IEsQueryWrapper<Children, QUERY, R> {
     }
 
     Children between(boolean condition, String name, Object from, Object to, boolean include);
+
+    default Children geoBoundingBox(String name, GeoPoint topLeft, GeoPoint bottomRight) {
+        return geoBoundingBox(true, name, topLeft, bottomRight);
+    }
+
+    Children geoBoundingBox(boolean condition, String name, GeoPoint topLeft, GeoPoint bottomRight);
+
+    default Children geoDistance(String name, String distance, DistanceUnit distanceUnit, GeoPoint centralGeoPoint) {
+        return geoDistance(true, name, distance, distanceUnit, centralGeoPoint);
+    }
+
+    Children geoDistance(boolean condition, String name, String distance, DistanceUnit distanceUnit, GeoPoint centralGeoPoint);
+
+    default Children geoPolygon(String name, List<GeoPoint> geoPoints) {
+        return geoPolygon(true, name, geoPoints);
+    }
+
+    Children geoPolygon(boolean condition, String name, List<GeoPoint> geoPoints);
+
+    default Children geoShape(String name, String indexedShapeId, Geometry geometry, ShapeRelation shapeRelation) {
+        return geoShape(true, name, indexedShapeId, geometry, shapeRelation);
+    }
+
+    Children geoShape(boolean condition, String name, String indexedShapeId, Geometry geometry, ShapeRelation shapeRelation);
 }

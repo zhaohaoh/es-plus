@@ -1,4 +1,4 @@
-package com.es.plus.core.chain;
+package com.es.plus.core.wrapper.chain;
 
 
 import com.es.plus.core.tools.SFunction;
@@ -11,10 +11,15 @@ import com.es.plus.core.wrapper.core.IEsQueryWrapper;
 import com.es.plus.pojo.EsSelect;
 import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.action.search.SearchType;
+import org.elasticsearch.common.geo.GeoPoint;
+import org.elasticsearch.common.geo.ShapeRelation;
+import org.elasticsearch.common.unit.DistanceUnit;
+import org.elasticsearch.geometry.Geometry;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.function.Consumer;
 
 /**
@@ -281,6 +286,30 @@ public abstract class AbstractEsChainWrapper<T, R extends SFunction<T, ?>, Child
     }
 
     @Override
+    public Children geoBoundingBox(boolean condition, R name, GeoPoint topLeft, GeoPoint bottomRight) {
+        getWrapper().geoBoundingBox(condition, name, topLeft, bottomRight);
+        return children;
+    }
+
+    @Override
+    public Children geoDistance(boolean condition, R name, String distance, DistanceUnit distanceUnit, GeoPoint centralGeoPoint) {
+        getWrapper().geoDistance(condition, name, distance, distanceUnit, centralGeoPoint);
+        return children;
+    }
+
+    @Override
+    public Children geoPolygon(boolean condition, R name, List<GeoPoint> geoPoints) {
+        getWrapper().geoPolygon(condition, name, geoPoints);
+        return children;
+    }
+
+    @Override
+    public Children geoShape(boolean condition, R name, String indexedShapeId, Geometry geometry, ShapeRelation shapeRelation) {
+        getWrapper().geoShape(condition, name, indexedShapeId, geometry, shapeRelation);
+        return children;
+    }
+
+    @Override
     public BoolQueryBuilder getQueryBuilder() {
         return getWrapper().getQueryBuilder();
     }
@@ -389,6 +418,36 @@ public abstract class AbstractEsChainWrapper<T, R extends SFunction<T, ?>, Child
     @Override
     public Children between(boolean condition, String name, Object from, Object to, boolean include) {
         getWrapper().between(condition, name, from, to, include);
+        return children;
+    }
+
+    @Override
+    public Children nestedQuery(boolean condition, String path, Children children, ScoreMode mode) {
+        getWrapper().nestedQuery(condition, path, children.esWrapper, mode);
+        return children;
+    }
+
+    @Override
+    public Children geoBoundingBox(boolean condition, String name, GeoPoint topLeft, GeoPoint bottomRight) {
+        getWrapper().geoBoundingBox(condition, name, topLeft, bottomRight);
+        return children;
+    }
+
+    @Override
+    public Children geoDistance(boolean condition, String name, String distance, DistanceUnit distanceUnit, GeoPoint centralGeoPoint) {
+        getWrapper().geoDistance(condition, name, distance, distanceUnit, centralGeoPoint);
+        return children;
+    }
+
+    @Override
+    public Children geoPolygon(boolean condition, String name, List<GeoPoint> geoPoints) {
+        getWrapper().geoPolygon(condition, name, geoPoints);
+        return children;
+    }
+
+    @Override
+    public Children geoShape(boolean condition, String name, String indexedShapeId, Geometry geometry, ShapeRelation shapeRelation) {
+        getWrapper().geoShape(condition, name, indexedShapeId, geometry, shapeRelation);
         return children;
     }
 
