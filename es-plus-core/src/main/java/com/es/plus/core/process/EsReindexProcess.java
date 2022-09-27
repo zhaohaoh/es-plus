@@ -122,7 +122,7 @@ public class EsReindexProcess {
         }
         log.info("EsExecutorUtil tryReindex Commend:{}", updateCommend);
     }
-
+    //有事临时编写的代码
     private static boolean settingsUpdate(GetIndexResponse indexResponse, String currentIndex, Class<?> clazz, EsPlusClientFacade esPlusClientFacade) {
         EsIndexParam esIndexParam = EsParamHolder.getEsIndexParam(clazz);
         EsSettings esSettings = esIndexParam.getEsSettings();
