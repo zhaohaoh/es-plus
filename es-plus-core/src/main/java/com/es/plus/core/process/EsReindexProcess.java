@@ -136,11 +136,11 @@ public class EsReindexProcess {
             return true;
         }
         EsSettings newEsSettings = null;
-        if (maxResultWindow != map.get("max_result_window")) {
+        if (!maxResultWindow.equals(map.get("max_result_window"))) {
             newEsSettings = new EsSettings();
             newEsSettings.setMaxResultWindow((Integer) map.get("max_result_window"));
         }
-        if (refreshInterval != map.get("refresh_interval")) {
+        if (!refreshInterval.equals(map.get("refresh_interval"))) {
             if (newEsSettings == null) {
                 newEsSettings = new EsSettings();
             }
