@@ -70,4 +70,5 @@ public class SamplesEsService extends EsServiceImpl<SamplesEsDTO> {
         Terms terms = esAggregationsReponse.getTerms(SamplesEsDTO::getUsername);
         Map<String, Long> termsAsMap = esAggregationsReponse.getTermsAsMap(SamplesEsDTO::getUsername);
     }
+
 }

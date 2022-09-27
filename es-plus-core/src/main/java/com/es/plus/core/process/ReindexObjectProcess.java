@@ -21,7 +21,7 @@ public class ReindexObjectProcess {
     private static final Logger logger = LoggerFactory.getLogger(ReindexObjectProcess.class);
     public static boolean ENABLED = false;
 
-    private EsLockFactory esLockClient;
+    private final EsLockFactory esLockClient;
 
     public ReindexObjectProcess(EsLockFactory esLockClient) {
         this.esLockClient = esLockClient;
