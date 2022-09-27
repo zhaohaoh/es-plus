@@ -8,6 +8,7 @@
         <module>es-plus-spring-boot-starter</module>
         <module>es-plus-annotation</module>
         <module>es-plus-core</module>
+        <module>es-plus-samples</module>
     </modules>
     <groupId>io.github.zhaohaoh</groupId>
     <artifactId>es-plus</artifactId>

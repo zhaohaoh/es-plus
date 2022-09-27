@@ -4,10 +4,7 @@ package com.es.plus.core.wrapper.chain;
 import com.es.plus.core.tools.SFunction;
 import com.es.plus.core.wrapper.aggregation.EsAggregationWrapper;
 import com.es.plus.core.wrapper.aggregation.EsLamdaAggregationWrapper;
-import com.es.plus.core.wrapper.core.AbstractEsWrapper;
-import com.es.plus.core.wrapper.core.EsExtendsWrapper;
-import com.es.plus.core.wrapper.core.EsWrapper;
-import com.es.plus.core.wrapper.core.IEsQueryWrapper;
+import com.es.plus.core.wrapper.core.*;
 import com.es.plus.pojo.EsSelect;
 import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.action.search.SearchType;
@@ -21,6 +18,7 @@ import org.elasticsearch.index.query.QueryBuilder;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 /**
  * @Author: hzh
@@ -150,8 +148,8 @@ public abstract class AbstractEsChainWrapper<T, R extends SFunction<T, ?>, Child
     }
 
     @Override
-    public Children nestedQuery(boolean condition, R path, Children children, ScoreMode mode) {
-        getWrapper().nestedQuery(condition, path, children.esWrapper, mode);
+    public Children nestedQuery(boolean condition, R path, Supplier<EsQueryWrapper<?>> sp, ScoreMode mode) {
+        getWrapper().nestedQuery(condition, path, sp, mode);
         return this.children;
     }
 
@@ -422,8 +420,8 @@ public abstract class AbstractEsChainWrapper<T, R extends SFunction<T, ?>, Child
     }
 
     @Override
-    public Children nestedQuery(boolean condition, String path, Children children, ScoreMode mode) {
-        getWrapper().nestedQuery(condition, path, children.esWrapper, mode);
+    public Children nestedQuery(boolean condition, String path, Supplier<EsQueryWrapper<?>> sp, ScoreMode mode) {
+        getWrapper().nestedQuery(condition, path, sp, mode);
         return children;
     }
 

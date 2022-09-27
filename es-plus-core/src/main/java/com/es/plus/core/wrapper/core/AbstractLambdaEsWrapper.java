@@ -23,6 +23,11 @@ public abstract class AbstractLambdaEsWrapper<T, R extends SFunction<T, ?>> {
         return getColumn(lambda);
     }
 
+    protected Class<?> getImplClass(R function) {
+        SerializedLambda lambda = LambdaUtils.resolve(function);
+        return lambda.getImplClass();
+    }
+
     private String getColumn(SerializedLambda lambda) {
         return methodToProperty(lambda.getImplMethodName());
     }

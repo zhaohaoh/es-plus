@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 /**
  * @Author: hzh
@@ -395,11 +396,12 @@ public abstract class AbstractEsWrapper<T, R extends SFunction<T, ?>, Children e
     }
 
     @Override
-    public Children nestedQuery(boolean condition, R path, Children children, ScoreMode mode) {
+    public Children nestedQuery(boolean condition, R path, Supplier<EsQueryWrapper<?>> sp, ScoreMode mode) {
         if (condition) {
-            NestedQueryBuilder nestedQueryBuilder = QueryBuilders.nestedQuery(nameToString(path), children.getQueryBuilder(), mode);
+            EsQueryWrapper<?> esQueryWrapper = sp.get();
+            NestedQueryBuilder nestedQueryBuilder = QueryBuilders.nestedQuery(nameToString(path), esQueryWrapper.getQueryBuilder(), mode);
             currentBuilder = nestedQueryBuilder;
-            queryBuilders.add(nestedQueryBuilder);
+            this.queryBuilders.add(nestedQueryBuilder);
         }
         return this.children;
     }
@@ -655,6 +657,68 @@ public abstract class AbstractEsWrapper<T, R extends SFunction<T, ?>, Children e
     public Children between(boolean condition, String name, Object from, Object to, boolean include) {
         if (condition) {
             queryBuilders.add(QueryBuilders.rangeQuery(name).from(from, include).to(to, include));
+        }
+        return children;
+    }
+
+    @Override
+    public Children nestedQuery(boolean condition, String path, Supplier<EsQueryWrapper<?>> sp, ScoreMode mode) {
+        if (condition) {
+            EsQueryWrapper<?> esQueryWrapper = sp.get();
+            NestedQueryBuilder nestedQueryBuilder = QueryBuilders.nestedQuery(path, esQueryWrapper.getQueryBuilder(), mode);
+            currentBuilder = nestedQueryBuilder;
+            queryBuilders.add(nestedQueryBuilder);
+        }
+        return this.children;
+    }
+
+    @Override
+    public Children geoBoundingBox(boolean condition, String name, GeoPoint topLeft, GeoPoint bottomRight) {
+        if (condition) {
+            GeoBoundingBoxQueryBuilder geoBoundingBox = new GeoBoundingBoxQueryBuilder(name);
+            geoBoundingBox.setCorners(topLeft, bottomRight);
+            currentBuilder = geoBoundingBox;
+            queryBuilders.add(geoBoundingBox);
+        }
+        return children;
+    }
+
+    @Override
+    public Children geoDistance(boolean condition, String name, String distance, DistanceUnit distanceUnit, GeoPoint centralGeoPoint) {
+        if (condition) {
+            GeoDistanceQueryBuilder geoDistanceQueryBuilder = new GeoDistanceQueryBuilder(name);
+            geoDistanceQueryBuilder.distance(distance, distanceUnit);
+            geoDistanceQueryBuilder.point(centralGeoPoint);
+            currentBuilder = geoDistanceQueryBuilder;
+            queryBuilders.add(geoDistanceQueryBuilder);
+        }
+        return children;
+    }
+
+    @Override
+    public Children geoPolygon(boolean condition, String name, List<GeoPoint> geoPoints) {
+        if (condition) {
+            GeoPolygonQueryBuilder geoDistanceQueryBuilder = new GeoPolygonQueryBuilder(name, geoPoints);
+            currentBuilder = geoDistanceQueryBuilder;
+            queryBuilders.add(geoDistanceQueryBuilder);
+        }
+        return children;
+    }
+
+    @Override
+    public Children geoShape(boolean condition, String name, String indexedShapeId, Geometry geometry, ShapeRelation shapeRelation) {
+        if (condition) {
+            GeoShapeQueryBuilder geoDistanceQueryBuilder;
+            if (StringUtils.isNotBlank(indexedShapeId)) {
+                geoDistanceQueryBuilder = new GeoShapeQueryBuilder(name, indexedShapeId);
+            } else {
+                geoDistanceQueryBuilder = new GeoShapeQueryBuilder(name, geometry);
+            }
+            if (shapeRelation != null) {
+                geoDistanceQueryBuilder.relation(shapeRelation);
+            }
+            currentBuilder = geoDistanceQueryBuilder;
+            queryBuilders.add(geoDistanceQueryBuilder);
         }
         return children;
     }

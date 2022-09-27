@@ -10,6 +10,7 @@ import org.elasticsearch.index.query.QueryBuilder;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 /**
  * @Author: hzh
@@ -156,11 +157,11 @@ public interface IEsQueryWrapper<Children, QUERY, R> {
     //TODO 迟点用 根据id查询
     Children ids(boolean condition, Collection<String> ids);
 
-    default Children nestedQuery(R path, Children children, ScoreMode mode) {
-        return nestedQuery(true, path, children, mode);
+    default Children nestedQuery(R path, Supplier<EsQueryWrapper<?>> sp, ScoreMode mode) {
+        return nestedQuery(true, path, sp, mode);
     }
 
-    Children nestedQuery(boolean condition, R path, Children children, ScoreMode mode);
+    Children nestedQuery(boolean condition, R path, Supplier<EsQueryWrapper<?>> sp, ScoreMode mode);
 
     default Children gt(R name, Object from) {
         return gt(true, name, from);
@@ -285,11 +286,11 @@ public interface IEsQueryWrapper<Children, QUERY, R> {
     //有纠错能力的模糊查询。
     Children fuzzy(boolean condition, String name, String value);
 
-    default Children nestedQuery(String path, Children children, ScoreMode mode) {
-        return nestedQuery(true, path, children, mode);
+    default Children nestedQuery(String path, Supplier<EsQueryWrapper<?>> sp, ScoreMode mode) {
+        return nestedQuery(true, path, sp, mode);
     }
 
-    Children nestedQuery(boolean condition, String path, Children children, ScoreMode mode);
+    Children nestedQuery(boolean condition, String path, Supplier<EsQueryWrapper<?>> sp, ScoreMode mode);
 
     default Children gt(String name, Object from) {
         return gt(true, name, from);

@@ -82,62 +82,62 @@ public class EsAutoConfiguration implements InitializingBean {
         Map<String, AnalysisProperties> analysis = esProperties.getAnalysis();
         analysis.computeIfAbsent(EP_STANDARD, a -> {
             AnalysisProperties analysisProperties = new AnalysisProperties();
-            analysisProperties.setFilters(new String[]{STEMMER, LOWERCASE, UNIQUE, ASCIIFOLDING});
+            analysisProperties.setFilters(new String[]{STEMMER, LOWERCASE, ASCIIFOLDING});
             analysisProperties.setTokenizer(STANDARD);
             return analysisProperties;
         });
         analysis.computeIfAbsent(EP_IK_MAX_WORD, a -> {
             AnalysisProperties analysisProperties = new AnalysisProperties();
-            analysisProperties.setFilters(new String[]{STEMMER, LOWERCASE, UNIQUE, ASCIIFOLDING});
+            analysisProperties.setFilters(new String[]{STEMMER, LOWERCASE, ASCIIFOLDING});
             analysisProperties.setTokenizer(IK_MAX_WORD);
             return analysisProperties;
         });
         analysis.computeIfAbsent(EP_IK_SMART, a -> {
             AnalysisProperties analysisProperties = new AnalysisProperties();
-            analysisProperties.setFilters(new String[]{STEMMER, LOWERCASE, UNIQUE, ASCIIFOLDING});
+            analysisProperties.setFilters(new String[]{STEMMER, LOWERCASE, ASCIIFOLDING});
             analysisProperties.setTokenizer(IK_SMART);
             return analysisProperties;
         });
         analysis.computeIfAbsent(EP_KEYWORD, a -> {
             AnalysisProperties analysisProperties = new AnalysisProperties();
-            analysisProperties.setFilters(new String[]{STEMMER, LOWERCASE, UNIQUE, ASCIIFOLDING});
+            analysisProperties.setFilters(new String[]{STEMMER, LOWERCASE, ASCIIFOLDING});
             analysisProperties.setTokenizer(KEYWORD);
             return analysisProperties;
         });
         analysis.computeIfAbsent(EP_SIMPLE, a -> {
             AnalysisProperties analysisProperties = new AnalysisProperties();
-            analysisProperties.setFilters(new String[]{STEMMER, LOWERCASE, UNIQUE, ASCIIFOLDING});
+            analysisProperties.setFilters(new String[]{STEMMER, LOWERCASE, ASCIIFOLDING});
             analysisProperties.setTokenizer(SIMPLE);
             return analysisProperties;
         });
 
         analysis.computeIfAbsent(EP_LANGUAGE, a -> {
             AnalysisProperties analysisProperties = new AnalysisProperties();
-            analysisProperties.setFilters(new String[]{STEMMER, LOWERCASE, UNIQUE, ASCIIFOLDING});
+            analysisProperties.setFilters(new String[]{STEMMER, LOWERCASE, ASCIIFOLDING});
             analysisProperties.setTokenizer(LANGUAGE);
             return analysisProperties;
         });
         analysis.computeIfAbsent(EP_PATTERN, a -> {
             AnalysisProperties analysisProperties = new AnalysisProperties();
-            analysisProperties.setFilters(new String[]{STEMMER, LOWERCASE, UNIQUE, ASCIIFOLDING});
+            analysisProperties.setFilters(new String[]{STEMMER, LOWERCASE, ASCIIFOLDING});
             analysisProperties.setTokenizer(PATTERN);
             return analysisProperties;
         });
         analysis.computeIfAbsent(EP_SNOWBALL, a -> {
             AnalysisProperties analysisProperties = new AnalysisProperties();
-            analysisProperties.setFilters(new String[]{STEMMER, LOWERCASE, UNIQUE, ASCIIFOLDING});
+            analysisProperties.setFilters(new String[]{STEMMER, LOWERCASE, ASCIIFOLDING});
             analysisProperties.setTokenizer(SNOWBALL);
             return analysisProperties;
         });
         analysis.computeIfAbsent(EP_STOP, a -> {
             AnalysisProperties analysisProperties = new AnalysisProperties();
-            analysisProperties.setFilters(new String[]{STEMMER, LOWERCASE, UNIQUE, ASCIIFOLDING});
+            analysisProperties.setFilters(new String[]{STEMMER, LOWERCASE, ASCIIFOLDING});
             analysisProperties.setTokenizer(STOP);
             return analysisProperties;
         });
         analysis.computeIfAbsent(EP_WHITESPACE, a -> {
             AnalysisProperties analysisProperties = new AnalysisProperties();
-            analysisProperties.setFilters(new String[]{STEMMER, LOWERCASE, UNIQUE, ASCIIFOLDING});
+            analysisProperties.setFilters(new String[]{STEMMER, LOWERCASE, ASCIIFOLDING});
             analysisProperties.setTokenizer(WHITESPACE);
             return analysisProperties;
         });

@@ -45,7 +45,7 @@ public class EsClientConfiguration {
 
         String schema = esProperties.getSchema();
         List<HttpHost> hostList = new ArrayList<>();
-        Arrays.stream(esProperties.getAddress().split(",")).forEach(item -> hostList.add(new HttpHost(item.split(":")[0],
+        Arrays.stream(address.split(",")).forEach(item -> hostList.add(new HttpHost(item.split(":")[0],
                 Integer.parseInt(item.split(":")[1]), schema)));
 
         // 转换成 HttpHost 数组
