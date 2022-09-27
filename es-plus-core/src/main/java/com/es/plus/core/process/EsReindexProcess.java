@@ -11,7 +11,6 @@ import com.es.plus.exception.EsException;
 import com.es.plus.lock.ELock;
 import com.es.plus.lock.EsReadWriteLock;
 import com.es.plus.pojo.EsSettings;
-import com.es.plus.properties.EsIndexMappings;
 import com.es.plus.properties.EsIndexParam;
 import com.es.plus.properties.EsParamHolder;
 import com.es.plus.util.JsonUtils;
@@ -35,6 +34,8 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
+
+import static com.es.plus.constant.EsConstant.NUMBER_OF_SHARDS;
 
 /**
  * es执行人工具封装
@@ -93,14 +94,13 @@ public class EsReindexProcess {
         // 获取当前索引
         String currentIndex = getIndexResponse.getIndices()[0];
 
-        settingsUpdate(getIndexResponse, currentIndex, clazz);
+//        settingsUpdate(getIndexResponse, currentIndex, clazz, esPlusClientFacade);
 
         //获取旧索引映射
-        EsIndexMappings currentEsMapping = getCurrentEsMapping(getIndexResponse, currentIndex);
-
+        Map<String, Object> currentEsMapping = getCurrentEsMapping(getIndexResponse, currentIndex);
 
         //索引是否改变
-        String updateCommend = getMappingUpdateCommend(currentEsMapping.getMappings(), clazz);
+        String updateCommend = getMappingUpdateCommend(currentEsMapping, clazz);
 
         //执行对应操作
         if (Objects.equals(updateCommend, Commend.MAPPING_UPDATE)) {
@@ -108,7 +108,7 @@ public class EsReindexProcess {
         } else if (Objects.equals(updateCommend, Commend.REINDEX)) {
             if (GlobalConfigCache.GLOBAL_CONFIG.isIndexAutoMove()) {
                 //执行reindex前先记录旧索引的时间映射
-                Map<String, Object> mappins = getUpdateReindexTimeMappins(currentEsMapping.getMappings());
+                Map<String, Object> mappins = getUpdateReindexTimeMappins(currentEsMapping);
                 esPlusClientFacade.putMapping(currentIndex, mappins);
 
                 if (GlobalConfigCache.GLOBAL_CONFIG.isReindexAsync()) {
@@ -122,17 +122,45 @@ public class EsReindexProcess {
         log.info("EsExecutorUtil tryReindex Commend:{}", updateCommend);
     }
 
-    private static void settingsUpdate(GetIndexResponse indexResponse, String currentIndex, Class<?> clazz) {
+    private static boolean settingsUpdate(GetIndexResponse indexResponse, String currentIndex, Class<?> clazz, EsPlusClientFacade esPlusClientFacade) {
         EsIndexParam esIndexParam = EsParamHolder.getEsIndexParam(clazz);
         EsSettings esSettings = esIndexParam.getEsSettings();
-
         Settings settings = indexResponse.getSettings().get(currentIndex);
-
         String s = JsonUtils.toJsonStr(esSettings);
         Map<String, Object> map = JsonUtils.toMap(s);
+        Integer shards = settings.getAsInt(NUMBER_OF_SHARDS, 5);
+        if (shards != map.get("number_of_shards")) {
+            return true;
+        }
+        String str = JsonUtils.toJsonStr(map);
+        esSettings.setNumberOfShards(null);
+        esPlusClientFacade.updateSettings(currentIndex, esSettings);
+//        Map<String, Object> map = JsonUtils.toMap(JsonUtils.toJsonStr(esSettings));
 
-        Settings.Builder builder = Settings.builder().loadFromSource(s, XContentType.JSON);
-        Settings build = builder.build();
+//        Class<? extends Settings> settingsClass = settings.getClass();
+//        try {
+//            Field field = settingsClass.getDeclaredField("settings");
+//            Map<String, Object> data = (Map<String, Object>) field.get(settings);
+//            data.forEach((k, v) -> {
+//                data.put(StringUtils.substringAfter(k, "index."), v);
+//                data.remove(k);
+//            });
+//
+//            map.forEach((k, v) -> {
+//
+//                if (k.equals(NUMBER_OF_SHARDS)) {
+//                    boolean reindex = map.get(k) != data.get(k);
+//                }
+//                if (k.equals(MAX_RESULT_WINDOW)) {
+//                    boolean reindex = map.get(k) != data.get(k);
+//                }
+//
+//            });
+//
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+        return true;
     }
 
     public static void main(String[] args) {
@@ -221,13 +249,8 @@ public class EsReindexProcess {
     public static String getMappingUpdateCommend(Map<String, Object> esIndexMapping, Class<?> clazz) {
         // 获取索引信息
         EsIndexParam esIndexParam = EsParamHolder.getEsIndexParam(clazz);
-        EsSettings esSettings = esIndexParam.getEsSettings();
-        Integer numberOfShards = esSettings.getNumberOfShards();
         // 新map添加NUMBER_OF_SHARDS
         Map<String, Object> localIndexMapping = esIndexParam.getMappings();
-//        Map<String, Object> localIndexMapping = new HashMap<>(indexParamMappings);
-//        localIndexMapping.put(EsConstant.NUMBER_OF_SHARDS, numberOfShards);
-//        localIndexMapping.put(EsConstant.MAX_RESULT_WINDOW, esSettings.getMaxResultWindow());
         // 本地和远程的索引
         boolean equals = localIndexMapping.equals(esIndexMapping);
         // 如果需要更新
@@ -254,20 +277,18 @@ public class EsReindexProcess {
         return Commend.NO_EXECUTE;
     }
 
-    public static EsIndexMappings getCurrentEsMapping(GetIndexResponse indexResponse, String index) {
-        EsIndexMappings esIndexMappings = new EsIndexMappings();
-        Settings settings = indexResponse.getSettings().get(index);
+    public static Map<String, Object> getCurrentEsMapping(GetIndexResponse indexResponse, String index) {
+
+        //   Settings settings = indexResponse.getSettings().get(index);
         MappingMetadata mappingMetadata = indexResponse.getMappings().get(index);
         // 设置mapping信息
         Map<String, Object> esIndexMapping = mappingMetadata.getSourceAsMap();
-        esIndexMappings.setMappings(esIndexMapping);
 
         //设置索引配置
-        Map<String, Object> indexSettings = new HashMap<>();
-        indexSettings.put(EsConstant.NUMBER_OF_SHARDS, settings.getAsInt(EsConstant.NUMBER_OF_SHARDS, 0));
-        indexSettings.put(EsConstant.MAX_RESULT_WINDOW, settings.getAsInt(EsConstant.MAX_RESULT_WINDOW, 100000));
-        esIndexMappings.setIndexSettings(indexSettings);
-        return esIndexMappings;
+//        Map<String, Object> indexSettings = new HashMap<>();
+//        indexSettings.put(EsConstant.NUMBER_OF_SHARDS, settings.getAsInt(EsConstant.NUMBER_OF_SHARDS, 0));
+//        indexSettings.put(EsConstant.MAX_RESULT_WINDOW, settings.getAsInt(EsConstant.MAX_RESULT_WINDOW, 100000));
+        return esIndexMapping;
     }
 
     private static String getReindexName(String currentIndex) {
