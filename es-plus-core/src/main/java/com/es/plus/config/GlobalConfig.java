@@ -5,7 +5,11 @@ import com.es.plus.constant.Analyzer;
 import lombok.Data;
 import org.elasticsearch.action.support.WriteRequest;
 
-
+/**
+ * @Author: hzh
+ * @Date: 2022/11/1 10:21
+ * es全局配置策略
+ */
 @Data
 public class GlobalConfig {
     /**
@@ -15,7 +19,7 @@ public class GlobalConfig {
     /**
      * 自动开启索引迁移
      */
-    private boolean indexAutoMove = false;
+    private boolean autoReindex = false;
 
     /**
      * 自动开启索引迁移是否异步
@@ -31,14 +35,14 @@ public class GlobalConfig {
      */
     private WriteRequest.RefreshPolicy refreshPolicy = WriteRequest.RefreshPolicy.WAIT_UNTIL;
     /**
-     * 最大更新文档数
+     * 最大更新文档数 默认100万
      */
-    private int maxDocs = Integer.MAX_VALUE;
+    private int maxDocs = 1000000;
 
     /**
-     * 最大查询文档数量
+     * 最大查询文档数量 默认100万
      */
-    private int searchSize = Integer.MAX_VALUE;
+    private int searchSize = 1000000;
     /*
      * 批量执行的数量和scoll的批次数量
      */

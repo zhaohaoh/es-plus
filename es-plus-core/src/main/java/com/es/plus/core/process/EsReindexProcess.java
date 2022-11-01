@@ -95,6 +95,7 @@ public class EsReindexProcess {
         // 获取当前索引
         String currentIndex = getIndexResponse.getIndices()[0];
 
+        //重新更新配置
         boolean reindex = settingsUpdate(getIndexResponse, currentIndex, clazz, esPlusClientFacade);
 
         //获取旧索引映射
@@ -107,7 +108,7 @@ public class EsReindexProcess {
         if (Objects.equals(updateCommend, Commend.MAPPING_UPDATE)) {
             esPlusClientFacade.putMapping(currentIndex, clazz);
         } else if (Objects.equals(updateCommend, Commend.REINDEX) || reindex) {
-            if (GlobalConfigCache.GLOBAL_CONFIG.isIndexAutoMove()) {
+            if (GlobalConfigCache.GLOBAL_CONFIG.isAutoReindex()) {
                 //执行reindex前先记录旧索引的时间映射
                 Map<String, Object> mappins = getUpdateReindexTimeMappins(currentEsMapping);
                 esPlusClientFacade.putMapping(currentIndex, mappins);
@@ -122,30 +123,31 @@ public class EsReindexProcess {
         }
         log.info("EsExecutorUtil tryReindex Commend:{}", updateCommend);
     }
+
     //有事临时编写的代码
     private static boolean settingsUpdate(GetIndexResponse indexResponse, String currentIndex, Class<?> clazz, EsPlusClientFacade esPlusClientFacade) {
         EsIndexParam esIndexParam = EsParamHolder.getEsIndexParam(clazz);
         EsSettings esSettings = esIndexParam.getEsSettings();
         Settings settings = indexResponse.getSettings().get(currentIndex);
-        String s = JsonUtils.toJsonStr(esSettings);
-        Map<String, Object> map = JsonUtils.toMap(s);
+        String json = JsonUtils.toJsonStr(esSettings);
+        Map<String, Object> localSettings = JsonUtils.toMap(json);
         Integer shards = settings.getAsInt(NUMBER_OF_SHARDS, 5);
         Integer maxResultWindow = settings.getAsInt(MAX_RESULT_WINDOW, 10000);
         String refreshInterval = settings.get("index.refresh_interval", "1s");
-        if (shards != map.get("number_of_shards")) {
+        if (shards != localSettings.get("number_of_shards")) {
             return true;
         }
         EsSettings newEsSettings = null;
-        if (!maxResultWindow.equals(map.get("max_result_window"))) {
+        if (!maxResultWindow.equals(localSettings.get("max_result_window"))) {
             newEsSettings = new EsSettings();
-            newEsSettings.setMaxResultWindow((Integer) map.get("max_result_window"));
+            newEsSettings.setMaxResultWindow((Integer) localSettings.get("max_result_window"));
         }
-        if (!refreshInterval.equals(map.get("refresh_interval"))) {
+        if (!refreshInterval.equals(localSettings.get("refresh_interval"))) {
             if (newEsSettings == null) {
                 newEsSettings = new EsSettings();
             }
-            newEsSettings.setMaxResultWindow((Integer) map.get("max_result_window"));
-            newEsSettings.setRefreshInterval((String) map.get("refresh_interval"));
+            newEsSettings.setMaxResultWindow((Integer) localSettings.get("max_result_window"));
+            newEsSettings.setRefreshInterval((String) localSettings.get("refresh_interval"));
         }
         if (newEsSettings != null) {
             esPlusClientFacade.updateSettings(currentIndex, newEsSettings);

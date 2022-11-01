@@ -51,6 +51,9 @@ public class EsServiceImpl<T> extends AbstractEsService<T> implements EsService<
         return new EsChainUpdateWrapper<>(this);
     }
 
+    /**
+     * 创建索引
+     */
     @Override
     public void createIndex() {
         GetAliasesResponse aliasIndex = esPlusClientFacade.getAliasIndex(alias);
@@ -60,6 +63,9 @@ public class EsServiceImpl<T> extends AbstractEsService<T> implements EsService<
         esPlusClientFacade.createIndex(this.index + SO_SUFFIX, clazz);
     }
 
+    /**
+     * 创建索引及映射
+     */
     @Override
     public void createIndexMapping() {
         GetAliasesResponse aliasIndex = esPlusClientFacade.getAliasIndex(alias);
@@ -69,6 +75,9 @@ public class EsServiceImpl<T> extends AbstractEsService<T> implements EsService<
         esPlusClientFacade.createIndexMapping(this.index + SO_SUFFIX, clazz);
     }
 
+    /**
+     * 创建映射
+     */
     @Override
     public void createMapping() {
         GetAliasesResponse aliasIndex = esPlusClientFacade.getAliasIndex(alias);
@@ -78,16 +87,25 @@ public class EsServiceImpl<T> extends AbstractEsService<T> implements EsService<
         esPlusClientFacade.putMapping(alias, clazz);
     }
 
+    /**
+     * 更新设置
+     */
     @Override
     public boolean updateSettings(EsSettings esSettings) {
         return esPlusClientFacade.updateSettings(alias, esSettings);
     }
 
+    /**
+     * 保存
+     */
     @Override
     public boolean save(T entity) {
         return esPlusClientFacade.save(alias, entity);
     }
 
+    /**
+     * 保存或更新
+     */
     @Override
     public boolean saveOrUpdate(T entity) {
         if (!updateById(entity)) {
@@ -96,16 +114,32 @@ public class EsServiceImpl<T> extends AbstractEsService<T> implements EsService<
         return true;
     }
 
+    /**
+     * 批量保存或更新
+     */
     @Override
     public List<BulkItemResponse> saveOrUpdateBatch(Collection<T> entityList) {
         return esPlusClientFacade.saveOrUpdateBatch(index, entityList);
     }
 
+    /**
+     * 批量保存
+     *
+     * @param entityList 实体列表
+     * @return {@link List}<{@link BulkItemResponse}>
+     */
     @Override
     public List<BulkItemResponse> saveBatch(Collection<T> entityList) {
         return saveBatch(entityList, GlobalConfigCache.GLOBAL_CONFIG.getBatchSize());
     }
 
+    /**
+     * 批量保存
+     *
+     * @param entityList 实体列表
+     * @param batchSize  批量大小
+     * @return {@link List}<{@link BulkItemResponse}>
+     */
     @Override
     public List<BulkItemResponse> saveBatch(Collection<T> entityList, int batchSize) {
         List<T> list = new ArrayList<>();
@@ -114,12 +148,17 @@ public class EsServiceImpl<T> extends AbstractEsService<T> implements EsService<
         for (T t : entityList) {
             list.add(t);
             if (i % batchSize == 0) {
-                esPlusClientFacade.saveBatch(alias, list);
+                List<BulkItemResponse> bulkItemResponses = esPlusClientFacade.saveBatch(alias, list);
+                failBulkItemResponses.addAll(bulkItemResponses);
                 list.clear();
             }
             i++;
         }
-        esPlusClientFacade.saveBatch(alias, list);
+        if (CollectionUtils.isEmpty(list)) {
+            return failBulkItemResponses;
+        }
+        List<BulkItemResponse> bulkItemResponses = esPlusClientFacade.saveBatch(alias, list);
+        failBulkItemResponses.addAll(bulkItemResponses);
         return failBulkItemResponses;
     }
 
@@ -134,6 +173,12 @@ public class EsServiceImpl<T> extends AbstractEsService<T> implements EsService<
         return esPlusClientFacade.delete(alias, id.toString());
     }
 
+    /**
+     * 删除由ids
+     *
+     * @param idList id列表
+     * @return boolean
+     */
     @Override
     public boolean removeByIds(Collection<? extends Serializable> idList) {
         if (CollectionUtils.isEmpty(idList)) {
@@ -143,11 +188,22 @@ public class EsServiceImpl<T> extends AbstractEsService<T> implements EsService<
         return esPlusClientFacade.deleteBatch(alias, ids);
     }
 
+    /**
+     * 删除
+     *
+     * @param esUpdateWrapper es更新包装
+     * @return {@link BulkByScrollResponse}
+     */
     @Override
     public BulkByScrollResponse remove(EsUpdateWrapper<T> esUpdateWrapper) {
         return esPlusClientFacade.deleteByQuery(alias, esUpdateWrapper);
     }
 
+    /**
+     * 删除所有
+     *
+     * @return {@link BulkByScrollResponse}
+     */
     @Override
     public BulkByScrollResponse removeAll() {
         return esPlusClientFacade.deleteByQuery(alias, esUpdateWrapper().matchAll());
@@ -163,6 +219,12 @@ public class EsServiceImpl<T> extends AbstractEsService<T> implements EsService<
         return esPlusClientFacade.update(alias, entity);
     }
 
+    /**
+     * 批处理更新
+     *
+     * @param entityList 实体列表
+     * @return {@link List}<{@link BulkItemResponse}>
+     */
     @Override
     public List<BulkItemResponse> updateBatch(Collection<T> entityList) {
         return updateBatch(entityList, GlobalConfigCache.GLOBAL_CONFIG.getBatchSize());
@@ -187,6 +249,9 @@ public class EsServiceImpl<T> extends AbstractEsService<T> implements EsService<
             }
             i++;
         }
+        if (CollectionUtils.isEmpty(list)) {
+            return failBulkItemResponses;
+        }
         failBulkItemResponses.addAll(doUpdateBatch(list));
         return failBulkItemResponses;
     }
@@ -195,11 +260,20 @@ public class EsServiceImpl<T> extends AbstractEsService<T> implements EsService<
         return esPlusClientFacade.updateBatch(alias, list);
     }
 
+    /**
+     * 更新包装
+     *
+     * @param esUpdateWrapper es更新包装
+     * @return {@link BulkByScrollResponse}
+     */
     @Override
     public BulkByScrollResponse updateByWrapper(EsUpdateWrapper<T> esUpdateWrapper) {
         return esPlusClientFacade.updateByWrapper(alias, esUpdateWrapper);
     }
 
+    /**
+     * 删除索引
+     */
     @Override
     public void deleteIndex() {
         // 查出别名下所有索引删除
