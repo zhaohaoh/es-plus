@@ -22,6 +22,29 @@ Es-Plus 是Elasticsearch Api增强工具 - 只做增强不做改变，简化`CRU
 
 ## 快速开始
 
+###   application.peoperties配置
+
+```properties
+# es地址 多个逗号分隔
+es-plus.address=xxx.xxx.xxx.xxx:9200
+# 是否异步reindex
+es-plus.global-config.reindex-async=false
+# 是否开启自动reindex. 如果没有开启也会自动对新增的字段添加映射
+es-plus.global-config.index-auto-move=false
+# 查询最大数量的限制
+es-plus.global-config.search-size=5000
+# 索引添加统一的环境后缀 测试环境
+es-plus.global-config.global-suffix=_test
+# 索引全局默认分词器    默认值ep_standard   可选 #ep_ik_max_word,ep_ik_smart,ep_simple,ep_keyword,ep_stop,ep_whitespace,ep_pattern,ep_language,ep_snowball
+es-plus.global-config.default-analyzer=ep_ik_max_word
+# 自定义全局refresh策略
+es-plus.global-config.refresh-policy=wait_until
+# 全局默认获取es的id的字段 默认id
+es-plus.global-config.global-es-id=id
+es-plus.username=
+es-plus.password=
+```
+
 ### 实体类 没有配置@EsField会根据java自动映射.获取不到映射则设置为Object
 ```java
 @Data
@@ -106,14 +129,14 @@ public class SysUserEsService extends EsServiceImpl<SysUser>{
 
 ## 自动Reindex
 #### 如何开启:
-es-plus.global-config.index-auto-move=true
+es-plus.global-config.auto-reindex=true
 #### 开启异步reindex
 es-plus.global-config.reindex-async=true
 #### 注意事项
 reindex会有部分删除数据的冗余.但是通过锁保证了新增和更新数据的错误.但是依然建议在业务低峰期执行.
 
 - [流程图](https://github.com/zhaohaoh/es-plus/blob/master/reindex%E6%B5%81%E7%A8%8B%E5%9B%BE.md)
- 
+
 ## 作者
  微信:huangzhaohao1995
  框架试运行 有问题私聊
