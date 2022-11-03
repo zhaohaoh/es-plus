@@ -75,18 +75,73 @@ public interface EsPlusClient {
      */
     boolean delete(String index, String id);
 
+    /**
+     * 删除,查询
+     *
+     * @param index           指数
+     * @param esUpdateWrapper es更新包装
+     * @return {@link BulkByScrollResponse}
+     */
     <T> BulkByScrollResponse deleteByQuery(String index, EsUpdateWrapper<T> esUpdateWrapper);
 
+    /**
+     * 删除批处理
+     *
+     * @param index      指数
+     * @param esDataList 西文数据列表
+     * @return boolean
+     */
     boolean deleteBatch(String index, Collection<String> esDataList);
 
+    /**
+     * 统计数
+     *
+     * @param esQueryWrapper es查询包装
+     * @param index          指数
+     * @return long
+     */
     <T> long count(EsQueryWrapper<T> esQueryWrapper, String index);
 
+    /**
+     * 搜索包装
+     *
+     * @param esQueryWrapper es查询包装
+     * @param tClass         t类
+     * @param index          指数
+     * @return {@link EsResponse}<{@link T}>
+     */
     <T> EsResponse<T> searchByWrapper(EsQueryWrapper<T> esQueryWrapper, Class<T> tClass, String index);
 
+    /**
+     * 搜索页面包装
+     *
+     * @param pageInfo       页面信息
+     * @param esQueryWrapper es查询包装
+     * @param tClass         t类
+     * @param index          指数
+     * @return {@link EsResponse}<{@link T}>
+     */
     <T> EsResponse<T> searchPageByWrapper(PageInfo<T> pageInfo, EsQueryWrapper<T> esQueryWrapper, Class<T> tClass, String index);
 
+    /**
+     * 滚动查询包装
+     *
+     * @param esQueryWrapper es查询包装
+     * @param tClass         t类
+     * @param index          指数
+     * @param size           大小
+     * @param keepTime       保持时间
+     * @param scrollHandler  滚动处理程序
+     */
     <T> void scrollByWrapper(EsQueryWrapper<T> esQueryWrapper, Class<T> tClass, String index, int size, int keepTime, ScrollHandler<T> scrollHandler);
 
+    /**
+     * 聚合
+     *
+     * @param index          指数
+     * @param esQueryWrapper es查询包装
+     * @return {@link EsAggregationsResponse}<{@link T}>
+     */
     <T> EsAggregationsResponse<T> aggregations(String index, EsQueryWrapper<T> esQueryWrapper);
 
 }
