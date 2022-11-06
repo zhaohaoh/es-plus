@@ -64,7 +64,6 @@
     </distributionManagement>
 
     <build>
-        <pluginManagement>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
@@ -141,7 +140,6 @@
                 </executions>
             </plugin>
         </plugins>
-        </pluginManagement>
     </build>
 
     <dependencyManagement>
