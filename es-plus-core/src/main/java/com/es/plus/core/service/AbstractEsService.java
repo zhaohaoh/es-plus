@@ -4,10 +4,13 @@ package com.es.plus.core.service;
 import com.es.plus.annotation.EsId;
 import com.es.plus.annotation.EsIndex;
 import com.es.plus.client.EsPlusClientFacade;
+import com.es.plus.config.GlobalConfigCache;
 import com.es.plus.constant.DefaultClass;
 import com.es.plus.constant.EsConstant;
 import com.es.plus.core.process.EsReindexProcess;
 import com.es.plus.core.process.ReindexObjectProcess;
+import com.es.plus.enums.ConnectFailHandle;
+import com.es.plus.exception.EsException;
 import com.es.plus.lock.ELock;
 import com.es.plus.lock.EsLockFactory;
 import com.es.plus.properties.EsIndexParam;
@@ -20,6 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.net.ConnectException;
 
 import static com.es.plus.constant.EsConstant.SO_SUFFIX;
 
@@ -60,7 +64,7 @@ public abstract class AbstractEsService<T> implements InitializingBean {
 
     @Override
     @SuppressWarnings({"unchecked"})
-    public void afterPropertiesSet() throws Exception {
+    public void afterPropertiesSet() {
         try {
             Type tClazz = ((ParameterizedType) this.getClass().getGenericSuperclass()).getActualTypeArguments()[0];
             clazz = (Class<T>) tClazz;
@@ -75,7 +79,6 @@ public abstract class AbstractEsService<T> implements InitializingBean {
                 }
             }
 
-
             //添加索引信息
             EsIndexParam esIndexParam = EsParamHolder.getEsIndexParam(indexClass);
 
@@ -88,6 +91,11 @@ public abstract class AbstractEsService<T> implements InitializingBean {
             // 如果是子文档不执行创建索引的相关操作
             Class<?> parentClass = annotation.parentClass();
             if (parentClass != DefaultClass.class) {
+                return;
+            }
+
+            //启动时不初始化
+            if (!GlobalConfigCache.GLOBAL_CONFIG.isStartInit()) {
                 return;
             }
 
@@ -113,7 +121,15 @@ public abstract class AbstractEsService<T> implements InitializingBean {
                 }
             }
         } catch (Exception e) {
-            logger.error("es-plus tryLock Or createIndex OR tryReindex Exception:", e);
+            if (e.getLocalizedMessage().contains("ConnectException")) {
+                if (GlobalConfigCache.GLOBAL_CONFIG.getConnectFailHandle().equals(ConnectFailHandle.THROW_EXCEPTION)) {
+                    throw new EsException(e);
+                } else {
+                    GlobalConfigCache.GLOBAL_CONFIG.setStartInit(false);
+                }
+            } else {
+                logger.error("es-plus tryLock Or createIndex OR tryReindex Exception:", e);
+            }
         }
     }
 

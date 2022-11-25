@@ -2,6 +2,7 @@ package com.es.plus.config;
 
 
 import com.es.plus.constant.Analyzer;
+import com.es.plus.enums.ConnectFailHandle;
 import lombok.Data;
 import org.elasticsearch.action.support.WriteRequest;
 
@@ -59,5 +60,15 @@ public class GlobalConfig {
      * 全局索引分词器
      */
     private String defaultAnalyzer = Analyzer.EP_STANDARD;
+
+    /**
+     * 启动检查
+     */
+    private ConnectFailHandle connectFailHandle = ConnectFailHandle.THROW_EXCEPTION;
+
+    /**
+     * 启动时初始化
+     */
+    private boolean startInit = true;
 
 }

@@ -72,6 +72,7 @@ public class EsProperties {
 
     private Integer maxConnectPerRoute;
 
+
     /**
      * 全局配置
      */
