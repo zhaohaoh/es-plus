@@ -7,11 +7,21 @@ import com.es.plus.core.wrapper.core.EsQueryWrapper;
 import com.es.plus.core.wrapper.core.EsUpdateWrapper;
 import com.es.plus.pojo.EsAggregationsResponse;
 import org.elasticsearch.action.bulk.BulkItemResponse;
+import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
 
 import java.util.*;
 
 public interface EsPlusClient {
+    /**
+     * 是否在执行reindex
+     */
+    boolean getReindexState();
+
+    /**
+     * 设置reindex状态
+     */
+    void setReindexState(boolean reindexState);
 
     /**
      * 保存或更新批
@@ -21,6 +31,7 @@ public interface EsPlusClient {
      * @return {@link List}<{@link BulkItemResponse}>
      */
     List<BulkItemResponse> saveOrUpdateBatch(String index, Collection<?> esDataList);
+
     /**
      * 保存批
      *

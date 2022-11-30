@@ -41,16 +41,8 @@ import static com.es.plus.constant.EsConstant.*;
 public class EsPlusIndexRestClient implements EsPlusIndexClient {
     private static final Logger log = LoggerFactory.getLogger(EsPlusIndexRestClient.class);
     private final RestHighLevelClient restHighLevelClient;
-    @Autowired
-    private EsLockFactory esLockFactory;
 
-    public EsLockFactory getEsLockFactory() {
-        return esLockFactory;
-    }
 
-    public RestHighLevelClient getRestHighLevelClient() {
-        return restHighLevelClient;
-    }
 
     public EsPlusIndexRestClient(RestHighLevelClient restHighLevelClient) {
         this.restHighLevelClient = restHighLevelClient;

@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 /**
  * @Author: hzh
  * @Date: 2022/9/8 11:50
+ *  本来希望做成自动注入字段 未使用
  */
 public interface EsObjectHandler {
 

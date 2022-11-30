@@ -217,6 +217,8 @@ public class EsReindexProcess {
         try {
             esPlusClientFacade.updateAlias(currentIndex, reindexName, esIndexParam.getAlias());
         } finally {
+            //解放锁的状态 其他服务在进行新增修改操作的时候修改状态
+            esPlusClientFacade.getEsPlusClient().setReindexState(false);
             eLock.unlock();
             lock.unlock();
             release = true;

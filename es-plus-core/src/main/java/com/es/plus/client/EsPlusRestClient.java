@@ -1,7 +1,6 @@
 package com.es.plus.client;
 
 
-import com.es.plus.core.process.ReindexObjectProcess;
 import com.es.plus.core.ScrollHandler;
 import com.es.plus.core.wrapper.aggregation.EsAggregationWrapper;
 import com.es.plus.core.wrapper.core.EsParamWrapper;
@@ -9,6 +8,7 @@ import com.es.plus.core.wrapper.core.EsQueryWrapper;
 import com.es.plus.core.wrapper.core.EsUpdateWrapper;
 import com.es.plus.core.wrapper.aggregation.EsLamdaAggregationWrapper;
 import com.es.plus.exception.EsException;
+import com.es.plus.lock.EsLockFactory;
 import com.es.plus.pojo.*;
 import com.es.plus.properties.EsIndexParam;
 import com.es.plus.properties.EsParamHolder;
@@ -65,10 +65,13 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Lock;
 import java.util.stream.Collectors;
 
 import static com.es.plus.config.GlobalConfigCache.GLOBAL_CONFIG;
-import static com.es.plus.constant.EsConstant.DEFAULT_CONFLICTS;
+import static com.es.plus.constant.EsConstant.*;
+import static com.es.plus.constant.EsConstant.REINDEX_UPDATE_LOCK;
 import static com.es.plus.util.ResolveUtils.isCommonDataType;
 import static com.es.plus.util.ResolveUtils.isWrapClass;
 
@@ -80,14 +83,23 @@ import static com.es.plus.util.ResolveUtils.isWrapClass;
 public class EsPlusRestClient implements EsPlusClient {
     private static final Logger log = LoggerFactory.getLogger(EsPlusRestClient.class);
     private final RestHighLevelClient restHighLevelClient;
-    private ReindexObjectProcess reindexObjectHandlerImpl;
+    private boolean reindexState = false;
+    private final EsLockFactory esLockFactory;
 
-    public void setReindexObjectHandlerImpl(ReindexObjectProcess reindexObjectHandlerImpl) {
-        this.reindexObjectHandlerImpl = reindexObjectHandlerImpl;
+    @Override
+    public boolean getReindexState() {
+        return reindexState;
     }
 
-    public EsPlusRestClient(RestHighLevelClient restHighLevelClient) {
+    @Override
+    public void setReindexState(boolean reindexState) {
+        this.reindexState = reindexState;
+    }
+
+
+    public EsPlusRestClient(RestHighLevelClient restHighLevelClient, EsLockFactory esLockFactory) {
         this.restHighLevelClient = restHighLevelClient;
+        this.esLockFactory = esLockFactory;
     }
 
 
@@ -105,11 +117,10 @@ public class EsPlusRestClient implements EsPlusClient {
         }
         boolean childIndex = isChildIndex(esDataList.stream().findFirst().get());
 
-        boolean enabled = ReindexObjectProcess.ENABLED;
         boolean lock = false;
         try {
-            if (enabled) {
-                lock = reindexObjectHandlerImpl.lock(index);
+            if (reindexState) {
+                lock = lock(index);
                 if (lock) {
                     esDataList = esDataList.stream().map(e -> handlerUpdateParamter(e)).collect(Collectors.toList());
                 }
@@ -140,7 +151,7 @@ public class EsPlusRestClient implements EsPlusClient {
             throw new EsException("saveOrUpdateBatch IOException", e);
         } finally {
             if (lock) {
-                reindexObjectHandlerImpl.unLock(index);
+                unLock(index);
             }
         }
         return responses;
@@ -165,13 +176,13 @@ public class EsPlusRestClient implements EsPlusClient {
         if (CollectionUtils.isEmpty(esDataList)) {
             return failBulkItemResponses;
         }
-        boolean enabled = ReindexObjectProcess.ENABLED;
+
         boolean lock = false;
 
         boolean childIndex = isChildIndex(esDataList.stream().findFirst().get());
         try {
-            if (enabled) {
-                lock = reindexObjectHandlerImpl.lock(index);
+            if (reindexState) {
+                lock = lock(index);
                 if (lock) {
                     esDataList = esDataList.stream().map(e -> handlerSaveParamter(e)).collect(Collectors.toList());
                     esDataList = esDataList.stream().map(e -> handlerUpdateParamter(e)).collect(Collectors.toList());
@@ -202,7 +213,7 @@ public class EsPlusRestClient implements EsPlusClient {
             throw new EsException("SaveBatch IOException", e);
         } finally {
             if (lock) {
-                reindexObjectHandlerImpl.unLock(index);
+                unLock(index);
             }
         }
         return failBulkItemResponses;
@@ -229,12 +240,12 @@ public class EsPlusRestClient implements EsPlusClient {
      */
     @Override
     public boolean update(String index, Object esData) {
-        boolean enabled = ReindexObjectProcess.ENABLED;
+
         boolean lock = false;
         boolean childIndex = isChildIndex(esData);
         try {
-            if (enabled) {
-                lock = reindexObjectHandlerImpl.lock(index);
+            if (reindexState) {
+                lock = lock(index);
                 if (lock) {
                     esData = handlerUpdateParamter(esData);
                 }
@@ -273,7 +284,7 @@ public class EsPlusRestClient implements EsPlusClient {
             throw new EsException("update error", e);
         } finally {
             if (lock) {
-                reindexObjectHandlerImpl.unLock(index);
+                unLock(index);
             }
         }
         return true;
@@ -292,13 +303,13 @@ public class EsPlusRestClient implements EsPlusClient {
         if (CollectionUtils.isEmpty(esDataList)) {
             return responses;
         }
-        boolean enabled = ReindexObjectProcess.ENABLED;
+
         boolean lock = false;
 
         boolean childIndex = isChildIndex(esDataList.stream().findFirst().get());
         try {
-            if (enabled) {
-                lock = reindexObjectHandlerImpl.lock(index);
+            if (reindexState) {
+                lock = lock(index);
                 if (lock) {
                     esDataList = esDataList.stream().map(e -> handlerUpdateParamter(e)).collect(Collectors.toList());
                 }
@@ -326,7 +337,7 @@ public class EsPlusRestClient implements EsPlusClient {
             throw new EsException("updateBatch IOException", e);
         } finally {
             if (lock) {
-                reindexObjectHandlerImpl.unLock(index);
+                unLock(index);
             }
         }
         return responses;
@@ -368,8 +379,8 @@ public class EsPlusRestClient implements EsPlusClient {
                 sb.append("ctx._source.");
                 sb.append(name).append(" = params.").append(name).append(";");
             }
-            if (ReindexObjectProcess.ENABLED) {
-                lock = reindexObjectHandlerImpl.lock(index);
+            if (reindexState) {
+                lock = lock(index);
                 // 自定义字段处理
                 if (lock) {
                     handleObjectScript(sb, params);
@@ -400,7 +411,7 @@ public class EsPlusRestClient implements EsPlusClient {
             throw new EsException("updateByWrapper IOException", e);
         } finally {
             if (lock) {
-                reindexObjectHandlerImpl.unLock(index);
+                unLock(index);
             }
         }
     }
@@ -419,8 +430,8 @@ public class EsPlusRestClient implements EsPlusClient {
             script.append("ctx._source.");
             script.append(name).append(" += params.").append(name).append(";");
         }
-        if (ReindexObjectProcess.ENABLED) {
-            lock = reindexObjectHandlerImpl.lock(index);
+        if (reindexState) {
+            lock = lock(index);
             // 自定义字段处理
             if (lock) {
                 handleObjectScript(script, params);
@@ -451,7 +462,7 @@ public class EsPlusRestClient implements EsPlusClient {
             throw new EsException("updateByWrapper increment IOException", e);
         } finally {
             if (lock) {
-                reindexObjectHandlerImpl.unLock(index);
+                unLock(index);
             }
         }
     }
@@ -786,19 +797,70 @@ public class EsPlusRestClient implements EsPlusClient {
     }
 
     protected void handleObjectScript(StringBuilder sb, Map<String, Object> params) {
-        EsUpdateField.Field updateFill = reindexObjectHandlerImpl.updateFill();
+        EsUpdateField.Field updateFill = updateFill();
         sb.append("ctx._source." + updateFill.getName()).append(" = params.").append(updateFill.getName()).append(";");
         params.put(updateFill.getName(), updateFill.getValue());
     }
 
     protected Object handlerSaveParamter(Object esData) {
-        esData = reindexObjectHandlerImpl.setInsertFeild(esData);
         return esData;
     }
 
     protected Object handlerUpdateParamter(Object esData) {
-        esData = reindexObjectHandlerImpl.setUpdateFeild(esData);
+        esData = setUpdateFeild(esData);
         return esData;
+    }
+
+    public EsUpdateField.Field updateFill() {
+        return new EsUpdateField.Field(REINDEX_TIME_FILED, System.currentTimeMillis());
+    }
+
+    public boolean lock(String index) {
+        // 是在reindex索引重建.则获取更新锁  此处加上读写锁的原因如下
+        // 1如果只有下面的锁的isLocked判断.那么判断还有锁.执行后续代码.但是刚好重建索引结束那么mappins就变了.并发问题,
+        //  2如果对操作全加锁则并发度低.
+        Lock readLock = esLockFactory.getReadWrtieLock(index + REINDEX_UPDATE_LOCK).readLock();
+        boolean success = false;
+        try {
+            success = readLock.tryLock(3, TimeUnit.SECONDS);
+
+            //获取reindex的锁
+            boolean isLock = esLockFactory.getLock(index + REINDEX_LOCK_SUFFIX).isLocked();
+
+            //如果不是锁定的直接释放
+            if (!isLock) {
+                //已经执行完reindex操作 那么释放更新锁
+                reindexState = false;
+                log.info("enabledReindex = false");
+                if (success) {
+                    readLock.unlock();
+                }
+                return false;
+            }
+
+            //如果获取锁失败并且是锁定的直接抛异常
+            if (!success) {
+                throw new EsException("index:" + index + " tryLock:" + REINDEX_UPDATE_LOCK + " fail");
+            }
+        } catch (InterruptedException ignored) {
+        }
+        return success;
+    }
+
+    //释放reindex锁
+    public void unLock(String index) {
+        Lock readLock = esLockFactory.getReadWrtieLock(index + REINDEX_UPDATE_LOCK).readLock();
+        readLock.unlock();
+    }
+
+    public Object setUpdateFeild(Object object) {
+        EsUpdateField.Field updateFill = updateFill();
+        if (updateFill == null) {
+            return object;
+        }
+        Map<String, Object> beanToMap = BeanUtils.beanToMap(object);
+        beanToMap.put(updateFill.getName(), updateFill.getValue());
+        return beanToMap;
     }
 
 }

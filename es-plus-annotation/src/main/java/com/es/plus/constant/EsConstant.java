@@ -59,9 +59,6 @@ public interface EsConstant {
      */
     String IGNORE_ABOVE = "ignore_above";
 
-    /* 字段属性
-     */
-    String REINDEX_LOCK_SUFFIX = "_reindex_lock";
 
     /* 字段属性
      */
@@ -124,7 +121,12 @@ public interface EsConstant {
     String REINDEX_TIME_FILED = "reindexTime";
 
     /**
-     * 重建索引时的执行锁
+     * 重建索引时的锁 决定索引是否在reindex
+     */
+    String REINDEX_LOCK_SUFFIX = "_reindex_lock";
+
+    /**
+     * 重建索引时的执行锁  重建索引时。插入更新数据需要获取的读写锁
      */
     String REINDEX_UPDATE_LOCK = "_reindex_update_lock";
 

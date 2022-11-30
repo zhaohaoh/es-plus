@@ -11,10 +11,10 @@ import java.util.Map;
 @Data
 @ConfigurationProperties("es-plus")
 public class EsProperties {
+
     /**
      * 集群地址，多个用,隔开
      */
-
     private String address;
 
     /**
@@ -61,17 +61,15 @@ public class EsProperties {
      */
 
     private Integer connectionRequestTimeOut;
+
     /**
      * 最大连接数
      */
-
     private Integer maxConnectNum;
     /**
      * 最大路由连接数
      */
-
     private Integer maxConnectPerRoute;
-
 
     /**
      * 全局配置

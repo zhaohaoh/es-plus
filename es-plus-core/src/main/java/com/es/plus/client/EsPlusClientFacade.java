@@ -36,6 +36,24 @@ public class EsPlusClientFacade {
     }
 
     /**
+     * 得到内部索引es客户端
+     *
+     * @return {@link EsPlusClient}
+     */
+    public EsPlusIndexClient getEsPlusIndexClient() {
+        return esPlusIndexClient;
+    }
+
+    /**
+     * 得到内部es客户端
+     *
+     * @return {@link EsPlusClient}
+     */
+    public EsPlusClient getEsPlusClient() {
+        return esPlusClient;
+    }
+
+    /**
      * 获取锁
      */
     public ELock getLock(String key) {

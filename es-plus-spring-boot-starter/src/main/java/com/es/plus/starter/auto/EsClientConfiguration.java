@@ -96,5 +96,4 @@ public class EsClientConfiguration {
         return new RestHighLevelClient(builder);
     }
 
-
 }
