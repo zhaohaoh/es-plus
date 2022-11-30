@@ -131,18 +131,19 @@ public class EsReindexProcess {
         Settings settings = indexResponse.getSettings().get(currentIndex);
         String json = JsonUtils.toJsonStr(esSettings);
         Map<String, Object> localSettings = JsonUtils.toMap(json);
-        Integer shards = settings.getAsInt(NUMBER_OF_SHARDS, 5);
-        Integer maxResultWindow = settings.getAsInt(MAX_RESULT_WINDOW, 10000);
-        String refreshInterval = settings.get("index.refresh_interval", "1s");
-        if (shards != localSettings.get("number_of_shards")) {
+        Integer remoteShards = settings.getAsInt(NUMBER_OF_SHARDS, 5);
+        Integer remoteMaxResultWindow = settings.getAsInt(MAX_RESULT_WINDOW, 10000);
+        String remoteRefreshInterval = settings.get("index.refresh_interval", "1s");
+        if (remoteShards != localSettings.get("number_of_shards")) {
             return true;
         }
+        //以下几个字段的变更对esSettings进行更新。但不reindex
         EsSettings newEsSettings = null;
-        if (!maxResultWindow.equals(localSettings.get("max_result_window"))) {
+        if (!remoteMaxResultWindow.equals(localSettings.get("max_result_window"))) {
             newEsSettings = new EsSettings();
             newEsSettings.setMaxResultWindow((Integer) localSettings.get("max_result_window"));
         }
-        if (!refreshInterval.equals(localSettings.get("refresh_interval"))) {
+        if (!remoteRefreshInterval.equals(localSettings.get("refresh_interval"))) {
             if (newEsSettings == null) {
                 newEsSettings = new EsSettings();
             }
