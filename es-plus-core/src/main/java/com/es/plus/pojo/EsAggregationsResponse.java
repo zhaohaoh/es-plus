@@ -2,7 +2,7 @@ package com.es.plus.pojo;
 
 import com.es.plus.constant.EsConstant;
 import com.es.plus.core.tools.SFunction;
-import com.es.plus.core.wrapper.aggregation.AbstractLambdaAggregationWrapper;
+import com.es.plus.core.wrapper.aggregation.AbstractLambdaAggWrapper;
 import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.aggregations.Aggregations;
 import org.elasticsearch.search.aggregations.bucket.adjacency.AdjacencyMatrix;
@@ -31,7 +31,7 @@ import java.util.Map;
  * @Author: hzh
  * @Date: 2022/6/21 12:31
  */
-public class EsAggregationsResponse<T> extends AbstractLambdaAggregationWrapper<T, SFunction<T, ?>> {
+public class EsAggregationsResponse<T> extends AbstractLambdaAggWrapper<T, SFunction<T, ?>> {
     private Aggregations aggregations;
 
     public void settClass(Class<T> tClass) {

@@ -1,7 +1,7 @@
 package com.es.plus.core.wrapper.aggregation;
 
 
-public class EsAggWrapper<T> extends AbstractEsAggregationWrapper<T, String, EsAggWrapper<T>> {
+public class EsAggWrapper<T> extends AbstractEsAggWrapper<T, String, EsAggWrapper<T>> {
 
     public void setClass(Class<T> tClass) {
         super.tClass = tClass;

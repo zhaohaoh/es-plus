@@ -47,7 +47,7 @@ import java.util.function.Function;
  * @Author: hzh
  * @Date: 2022/1/21 11:10
  */
-public interface IEsAggregationFuncWrapper<Children, R> {
+public interface IEsAggFuncWrapper<Children, R> {
 
     /**
      * 子聚合

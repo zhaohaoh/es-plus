@@ -36,7 +36,7 @@ import java.util.function.Consumer;
  * @Author: hzh
  * @Date: 2022/1/21 11:10
  */
-public interface IEsAggregationWrapper<Children, R> {
+public interface IEsAggWrapper<Children, R> {
 
     /**
      * 子聚合

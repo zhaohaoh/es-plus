@@ -10,7 +10,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.util.Locale;
 
-public abstract class AbstractLambdaAggregationWrapper<T, R> {
+public abstract class AbstractLambdaAggWrapper<T, R> {
 
     protected Class<T> tClass;
 

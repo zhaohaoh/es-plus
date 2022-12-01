@@ -57,9 +57,9 @@ import static com.es.plus.constant.EsConstant.AGG_DELIMITER;
  * 抽象聚合封装
  */
 @SuppressWarnings({"unchecked"})
-public abstract class AbstractEsAggregationWrapper<T, R, Children extends AbstractEsAggregationWrapper<T, R, Children>> extends AbstractLambdaAggregationWrapper<T, R>
-        implements IEsAggregationWrapper<Children, R>, IEsAggregationFuncWrapper<Children, R> {
-    protected AbstractEsAggregationWrapper() {
+public abstract class AbstractEsAggWrapper<T, R, Children extends AbstractEsAggWrapper<T, R, Children>> extends AbstractLambdaAggWrapper<T, R>
+        implements IEsAggWrapper<Children, R>, IEsAggFuncWrapper<Children, R> {
+    protected AbstractEsAggWrapper() {
     }
 
     protected abstract Children instance();

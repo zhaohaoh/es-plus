@@ -4,7 +4,7 @@ package com.es.plus.core.wrapper.aggregation;
  * @Author: hzh
  * @Date: 2022/6/14 12:31
  */
-public interface EsAggregationQuery<Children, R> {
+public interface EsAggQuery<Children, R> {
     void minDocCount(R name, Object... value);
 
     void order(R name, Object... value);
