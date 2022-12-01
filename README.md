@@ -108,7 +108,7 @@ public class SysUserEsService extends EsServiceImpl<SysUser>{
                                 .term(SysUser::getRealName, "dasdsad")
                                 .term(SysUser::getPhone, "1386859111"));
 
-        esChainQueryWrapper.esLamdaAggregationWrapper()
+        esChainQueryWrapper.esLambdaAggWrapper()
                 // terms聚合并且指定数量10000
                 .terms(SysUser::getUsername, a -> a.size(10000))
                 // 在terms聚合的基础上统计lock数量
@@ -139,7 +139,6 @@ reindex会有部分删除数据的冗余.但是通过锁保证了新增和更新
 
 ## 作者
  微信:huangzhaohao1995
- 框架试运行 有问题私聊
 
 # 版权 | License
 

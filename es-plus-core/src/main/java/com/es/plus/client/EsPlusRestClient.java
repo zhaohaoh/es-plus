@@ -2,11 +2,11 @@ package com.es.plus.client;
 
 
 import com.es.plus.core.ScrollHandler;
-import com.es.plus.core.wrapper.aggregation.EsAggregationWrapper;
+import com.es.plus.core.wrapper.aggregation.EsAggWrapper;
 import com.es.plus.core.wrapper.core.EsParamWrapper;
 import com.es.plus.core.wrapper.core.EsQueryWrapper;
 import com.es.plus.core.wrapper.core.EsUpdateWrapper;
-import com.es.plus.core.wrapper.aggregation.EsLamdaAggregationWrapper;
+import com.es.plus.core.wrapper.aggregation.EsLambdaAggWrapper;
 import com.es.plus.exception.EsException;
 import com.es.plus.lock.EsLockFactory;
 import com.es.plus.pojo.*;
@@ -766,10 +766,10 @@ public class EsPlusRestClient implements EsPlusClient {
 
     //填充分组字段
     private void populateGroupField(EsQueryWrapper<?> esQueryWrapper, SearchSourceBuilder sourceBuilder) {
-        EsLamdaAggregationWrapper<?> esLamdaAggregationWrapper = esQueryWrapper.esLamdaAggregationWrapper();
-        EsAggregationWrapper<?> esAggregationWrapper = esQueryWrapper.esAggregationWrapper();
-        if (esLamdaAggregationWrapper.getAggregationBuilder() != null) {
-            for (BaseAggregationBuilder aggregation : esLamdaAggregationWrapper.getAggregationBuilder()) {
+        EsLambdaAggWrapper<?> esLambdaAggWrapper = esQueryWrapper.esLambdaAggWrapper();
+        EsAggWrapper<?> esAggregationWrapper = esQueryWrapper.esAggWrapper();
+        if (esLambdaAggWrapper.getAggregationBuilder() != null) {
+            for (BaseAggregationBuilder aggregation : esLambdaAggWrapper.getAggregationBuilder()) {
                 if (aggregation instanceof AggregationBuilder) {
                     sourceBuilder.aggregation((AggregationBuilder) aggregation);
                 } else {

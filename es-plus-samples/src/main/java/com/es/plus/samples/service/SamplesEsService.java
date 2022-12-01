@@ -56,7 +56,7 @@ public class SamplesEsService extends EsServiceImpl<SamplesEsDTO> {
         // 声明语句嵌套关系是must
         EsChainQueryWrapper<SamplesEsDTO> esChainQueryWrapper = esChainQueryWrapper().must()
                 .ge(SamplesEsDTO::getId, 1);
-        esChainQueryWrapper.esLamdaAggregationWrapper()
+        esChainQueryWrapper.esLambdaAggWrapper()
                 // terms聚合并且指定数量10000
                 .terms(SamplesEsDTO::getUsername, a -> a.size(1000))
                 // 在terms聚合的基础上统计lock数量

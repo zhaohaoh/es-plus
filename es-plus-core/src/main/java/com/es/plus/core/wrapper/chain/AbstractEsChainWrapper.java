@@ -2,8 +2,8 @@ package com.es.plus.core.wrapper.chain;
 
 
 import com.es.plus.core.tools.SFunction;
-import com.es.plus.core.wrapper.aggregation.EsAggregationWrapper;
-import com.es.plus.core.wrapper.aggregation.EsLamdaAggregationWrapper;
+import com.es.plus.core.wrapper.aggregation.EsAggWrapper;
+import com.es.plus.core.wrapper.aggregation.EsLambdaAggWrapper;
 import com.es.plus.core.wrapper.core.*;
 import com.es.plus.pojo.EsSelect;
 import org.apache.lucene.search.join.ScoreMode;
@@ -37,13 +37,13 @@ public abstract class AbstractEsChainWrapper<T, R extends SFunction<T, ?>, Child
     }
 
     @Override
-    public EsLamdaAggregationWrapper<T> esLamdaAggregationWrapper() {
-        return getWrapper().esLamdaAggregationWrapper();
+    public EsLambdaAggWrapper<T> esLambdaAggWrapper() {
+        return getWrapper().esLambdaAggWrapper();
     }
 
     @Override
-    public EsAggregationWrapper<T> esAggregationWrapper() {
-        return getWrapper().esAggregationWrapper();
+    public EsAggWrapper<T> esAggWrapper() {
+        return getWrapper().esAggWrapper();
     }
 
     @Override

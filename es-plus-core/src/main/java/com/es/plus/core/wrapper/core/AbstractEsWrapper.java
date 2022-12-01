@@ -2,8 +2,8 @@ package com.es.plus.core.wrapper.core;
 
 
 import com.es.plus.core.tools.SFunction;
-import com.es.plus.core.wrapper.aggregation.EsAggregationWrapper;
-import com.es.plus.core.wrapper.aggregation.EsLamdaAggregationWrapper;
+import com.es.plus.core.wrapper.aggregation.EsAggWrapper;
+import com.es.plus.core.wrapper.aggregation.EsLambdaAggWrapper;
 import com.es.plus.pojo.EsHighLight;
 import com.es.plus.pojo.EsOrder;
 import com.es.plus.pojo.EsSelect;
@@ -47,11 +47,11 @@ public abstract class AbstractEsWrapper<T, R extends SFunction<T, ?>, Children e
     /*
      *聚合封装
      */
-    protected EsLamdaAggregationWrapper<T> esLamdaAggregationWrapper;
+    protected EsLambdaAggWrapper<T> esLambdaAggWrapper;
     /*
      *聚合封装
      */
-    protected EsAggregationWrapper<T> esAggregationWrapper;
+    protected EsAggWrapper<T> esAggregationWrapper;
 
     /*
      *实例
@@ -64,17 +64,17 @@ public abstract class AbstractEsWrapper<T, R extends SFunction<T, ?>, Children e
     private final EsParamWrapper esParamWrapper = new EsParamWrapper();
 
     @Override
-    public EsLamdaAggregationWrapper<T> esLamdaAggregationWrapper() {
-        if (esLamdaAggregationWrapper == null) {
-            esLamdaAggregationWrapper = new EsLamdaAggregationWrapper<>(tClass);
+    public EsLambdaAggWrapper<T> esLambdaAggWrapper() {
+        if (esLambdaAggWrapper == null) {
+            esLambdaAggWrapper = new EsLambdaAggWrapper<>(tClass);
         }
-        return esLamdaAggregationWrapper;
+        return esLambdaAggWrapper;
     }
 
     @Override
-    public EsAggregationWrapper<T> esAggregationWrapper() {
+    public EsAggWrapper<T> esAggWrapper() {
         if (esAggregationWrapper == null) {
-            esAggregationWrapper = new EsAggregationWrapper<>(tClass);
+            esAggregationWrapper = new EsAggWrapper<>(tClass);
         }
         return esAggregationWrapper;
     }
