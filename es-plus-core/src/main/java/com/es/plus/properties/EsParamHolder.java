@@ -65,7 +65,7 @@ public class EsParamHolder {
             }
             Field field = clazz.getDeclaredField(idFeildName);
             field.setAccessible(true);
-            Long id = (Long) field.get(obj);
+            Object id = field.get(obj);
             if (id == null) {
                 throw new EsException("elasticsearch doc id not found");
             }
