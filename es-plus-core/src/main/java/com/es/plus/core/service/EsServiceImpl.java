@@ -11,6 +11,7 @@ import com.es.plus.core.wrapper.core.EsQueryWrapper;
 import com.es.plus.core.wrapper.core.EsUpdateWrapper;
 import com.es.plus.pojo.EsAggregationsResponse;
 import com.es.plus.pojo.EsSettings;
+import com.es.plus.util.CollectionUtil;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.client.GetAliasesResponse;
 import org.elasticsearch.index.query.QueryBuilders;
@@ -142,23 +143,21 @@ public class EsServiceImpl<T> extends AbstractEsService<T> implements EsService<
      */
     @Override
     public List<BulkItemResponse> saveBatch(Collection<T> entityList, int batchSize) {
-        List<T> list = new ArrayList<>();
         List<BulkItemResponse> failBulkItemResponses = new ArrayList<>();
-        int i = 1;
-        for (T t : entityList) {
-            list.add(t);
-            if (i % batchSize == 0) {
-                List<BulkItemResponse> bulkItemResponses = esPlusClientFacade.saveBatch(alias, list);
-                failBulkItemResponses.addAll(bulkItemResponses);
-                list.clear();
-            }
-            i++;
-        }
-        if (CollectionUtils.isEmpty(list)) {
+        if (CollectionUtils.isEmpty(entityList)) {
             return failBulkItemResponses;
         }
-        List<BulkItemResponse> bulkItemResponses = esPlusClientFacade.saveBatch(alias, list);
-        failBulkItemResponses.addAll(bulkItemResponses);
+        if (entityList.size() > batchSize) {
+            List<Collection<T>> collections = CollectionUtil.splitList(entityList, batchSize);
+            collections.forEach(list -> {
+                        List<BulkItemResponse> bulkItemResponses = esPlusClientFacade.saveBatch(alias, list);
+                        failBulkItemResponses.addAll(bulkItemResponses);
+                    }
+            );
+        } else {
+            List<BulkItemResponse> bulkItemResponses = esPlusClientFacade.saveBatch(alias, entityList);
+            failBulkItemResponses.addAll(bulkItemResponses);
+        }
         return failBulkItemResponses;
     }
 
@@ -239,20 +238,18 @@ public class EsServiceImpl<T> extends AbstractEsService<T> implements EsService<
     @Override
     public List<BulkItemResponse> updateBatch(Collection<T> entityList, int batchSize) {
         List<BulkItemResponse> failBulkItemResponses = new ArrayList<>();
-        List<T> list = new ArrayList<>();
-        int i = 1;
-        for (T t : entityList) {
-            list.add(t);
-            if (i % batchSize == 0) {
-                failBulkItemResponses.addAll(doUpdateBatch(list));
-                list.clear();
-            }
-            i++;
-        }
-        if (CollectionUtils.isEmpty(list)) {
+        if (CollectionUtils.isEmpty(entityList)) {
             return failBulkItemResponses;
         }
-        failBulkItemResponses.addAll(doUpdateBatch(list));
+        if (entityList.size() > batchSize) {
+            List<Collection<T>> collections = CollectionUtil.splitList(entityList, batchSize);
+            collections.forEach(list -> {
+                        failBulkItemResponses.addAll(doUpdateBatch(list));
+                    }
+            );
+        } else {
+            failBulkItemResponses.addAll(doUpdateBatch(entityList));
+        }
         return failBulkItemResponses;
     }
 
