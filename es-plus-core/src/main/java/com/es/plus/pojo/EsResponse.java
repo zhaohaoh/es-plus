@@ -1,12 +1,16 @@
 package com.es.plus.pojo;
 
 
+import lombok.Data;
+import org.elasticsearch.action.search.ShardSearchFailure;
 import org.elasticsearch.search.SearchHits;
+import org.elasticsearch.search.profile.ProfileShardResult;
 
 import java.util.List;
 import java.util.Map;
 
 
+@Data
 public class EsResponse<T> {
     /**
      * 数据集合
@@ -22,43 +26,21 @@ public class EsResponse<T> {
      */
     private EsAggregationsResponse<T> esAggregationsReponse;
 
-    private Map<String, SearchHits> topHits;
+    /**
+     * 分析结果
+     */
+    private Map<String, ProfileShardResult> profileResults;
+
+
+    private int totalShards;
+    private int successfulShards;
+    private int skippedShards;
+    private ShardSearchFailure[] shardFailures;
+    private long tookInMillis;
 
     public EsResponse(List<T> list, long count, EsAggregationsResponse<T> esAggregationReponse) {
         this.list = list;
         this.total = count;
         this.esAggregationsReponse = esAggregationReponse;
-    }
-
-    public List<T> getList() {
-        return list;
-    }
-
-    public void setList(List<T> list) {
-        this.list = list;
-    }
-
-    public long getTotal() {
-        return total;
-    }
-
-    public void setTotal(long total) {
-        this.total = total;
-    }
-
-    public EsAggregationsResponse<T> getEsAggregationsReponse() {
-        return esAggregationsReponse;
-    }
-
-    public void setEsAggregationsReponse(EsAggregationsResponse<T> esAggregationsReponse) {
-        this.esAggregationsReponse = esAggregationsReponse;
-    }
-
-    public Map<String, SearchHits> getTopHits() {
-        return topHits;
-    }
-
-    public void setTopHits(Map<String, SearchHits> topHits) {
-        this.topHits = topHits;
     }
 }

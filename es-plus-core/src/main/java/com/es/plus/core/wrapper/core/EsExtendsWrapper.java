@@ -63,4 +63,8 @@ public interface EsExtendsWrapper<Children, R> {
      *高亮字段
      */
     Children highLight(String field, String preTag, String postTag);
+    /**
+     *性能分析
+     */
+    Children profile(boolean profile);
 }

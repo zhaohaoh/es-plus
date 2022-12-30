@@ -347,6 +347,18 @@ public class EsServiceImpl<T> extends AbstractEsService<T> implements EsService<
         return esPlusClientFacade.aggregations(alias, esQueryWrapper);
     }
 
+    /**
+     * 性能分析
+     *
+     * @param esQueryWrapper es查询包装
+     * @return {@link EsResponse}<{@link T}>
+     */
+    @Override
+    public EsResponse<T> profile(EsQueryWrapper<T> esQueryWrapper) {
+        EsQueryWrapper<T> profile = esQueryWrapper.profile(true);
+        return esPlusClientFacade.searchByWrapper(profile, clazz, alias);
+    }
+
 
     @Override
     public void scroll(EsQueryWrapper<T> esQueryWrapper, int size, int keepTime, ScrollHandler<T> scrollHandler) {

@@ -110,6 +110,12 @@ public abstract class AbstractEsWrapper<T, R extends SFunction<T, ?>, Children e
     }
 
     @Override
+    public Children profile(boolean profile) {
+        esParamWrapper.setProfile(profile);
+        return this.children;
+    }
+
+    @Override
     public Children matchAll() {
         queryBuilder.must(QueryBuilders.matchAllQuery());
         return this.children;
@@ -146,7 +152,7 @@ public abstract class AbstractEsWrapper<T, R extends SFunction<T, ?>, Children e
     }
 
     @Override
-    public Children filters(boolean condition, Consumer<Children> consumer) {
+    public Children filter(boolean condition, Consumer<Children> consumer) {
         final Children children = instance();
         consumer.accept(children);
         this.children.queryBuilder.filter(children.queryBuilder);

@@ -53,6 +53,7 @@ import org.elasticsearch.search.aggregations.PipelineAggregationBuilder;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightField;
+import org.elasticsearch.search.profile.ProfileShardResult;
 import org.elasticsearch.search.sort.FieldSortBuilder;
 import org.elasticsearch.search.sort.SortOrder;
 import org.slf4j.Logger;
@@ -671,6 +672,10 @@ public class EsPlusRestClient implements EsPlusClient {
                 sourceBuilder.fetchSource(esSelect.getIncludes(), esSelect.getExcludes());
             }
         }
+        boolean profile = esQueryWrapper.getEsParamWrapper().isProfile();
+        if (profile) {
+            sourceBuilder.profile(profile);
+        }
         sourceBuilder.size(GLOBAL_CONFIG.getSearchSize());
         //是否需要分页查询
         if (pageInfo != null) {
@@ -760,7 +765,17 @@ public class EsPlusRestClient implements EsPlusClient {
         EsAggregationsResponse<T> esAggregationsReponse = new EsAggregationsResponse<>();
         esAggregationsReponse.setAggregations(aggregations);
         esAggregationsReponse.settClass(esQueryWrapper.gettClass());
-        return new EsResponse<T>(result, hits.getTotalHits().value, esAggregationsReponse);
+        EsResponse<T> tEsResponse = new EsResponse<>(result, hits.getTotalHits().value, esAggregationsReponse);
+        tEsResponse.setShardFailures(searchResponse.getShardFailures());
+        tEsResponse.setSkippedShards(searchResponse.getSkippedShards());
+        tEsResponse.setTookInMillis(searchResponse.getTook().getMillis());
+        tEsResponse.setSuccessfulShards(searchResponse.getSuccessfulShards());
+        tEsResponse.setTotalShards(searchResponse.getTotalShards());
+        if (profile) {
+            Map<String, ProfileShardResult> profileResults = searchResponse.getProfileResults();
+            tEsResponse.setProfileResults(profileResults);
+        }
+        return tEsResponse;
     }
 
 

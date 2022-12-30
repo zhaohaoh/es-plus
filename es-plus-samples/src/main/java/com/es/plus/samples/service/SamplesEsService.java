@@ -43,9 +43,9 @@ public class SamplesEsService extends EsServiceImpl<SamplesEsDTO> {
                 // 多个must嵌套
                 .must(a ->
                         // 声明内部语句关系的should
-                        a.should()
+                        a.must()
                                 .term(SamplesEsDTO::getNickName, "dasdsad")
-                                .term(SamplesEsDTO::getPhone, "1386859111"))
+                                .term(SamplesEsDTO::getPhone, "1386859111")).profile(true)
                 // 查询
                 .list();
         List<SamplesEsDTO> list = esResponse.getList();

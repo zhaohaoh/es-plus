@@ -30,4 +30,10 @@ public class Test {
     public void testSearch() {
         samplesEsService.nested();
     }
+
+
+    @org.junit.jupiter.api.Test
+    public void s() {
+        samplesEsService.search();
+    }
 }

@@ -75,6 +75,14 @@ public interface EsService<T> {
 
     EsAggregationsResponse<T> aggregations(EsQueryWrapper<T> esQueryWrapper);
 
+    /**
+     * 性能分析
+     *
+     * @param esQueryWrapper es查询包装
+     * @return {@link EsResponse}<{@link T}>
+     */
+    EsResponse<T> profile(EsQueryWrapper<T> esQueryWrapper);
+
     default void scroll(EsQueryWrapper<T> esQueryWrapper, int size, ScrollHandler<T> scrollHandler) {
         scroll(esQueryWrapper, size, 1, scrollHandler);
     }

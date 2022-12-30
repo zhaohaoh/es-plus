@@ -40,11 +40,11 @@ public interface IEsQueryWrapper<Children, QUERY, R> {
 
     Children mustNot(boolean condition, Consumer<QUERY> consumer);
 
-    default Children filters(Consumer<QUERY> consumer) {
-        return filters(true, consumer);
+    default Children filter(Consumer<QUERY> consumer) {
+        return filter(true, consumer);
     }
 
-    Children filters(boolean condition, Consumer<QUERY> consumer);
+    Children filter(boolean condition, Consumer<QUERY> consumer);
 
     default Children hasChild(String childType, ScoreMode scoreMode, Consumer<QUERY> consumer) {
         return hasChild(true, childType, scoreMode, consumer);

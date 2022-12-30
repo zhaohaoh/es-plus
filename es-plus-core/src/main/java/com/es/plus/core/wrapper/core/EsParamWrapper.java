@@ -31,4 +31,8 @@ public class EsParamWrapper {
      * es排序列表
      */
     protected List<EsOrder> esOrderList;
+    /**
+     * es排序列表
+     */
+    protected boolean profile;
 }
