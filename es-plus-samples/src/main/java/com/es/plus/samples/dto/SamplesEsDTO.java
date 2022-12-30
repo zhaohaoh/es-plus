@@ -21,7 +21,7 @@ public class SamplesEsDTO {
     private String email;
     @EsField(copyTo = "keyword")
     private String phone;
-    @EsField(type = EsFieldType.TEXT)
+    @EsField(type = EsFieldType.KEYWORD)
     private String keyword;
 
     private String password;

@@ -68,7 +68,7 @@ public @interface EsField {
      * 类似联合索引
      * 例:keyword字段要查询 name nicknam username phone 等字段。组合为一个keyword字段。磁盘空间占用变大。性能也变更好。
      * 因为无需多次检索FST的树
-     * 可指定多个用,分割
+     * 对整合后的字段聚合的话，会得到多个字段的聚合结果  目标对象text和keyword类型都能使用
      */
     String[] copyTo() default {};
 
