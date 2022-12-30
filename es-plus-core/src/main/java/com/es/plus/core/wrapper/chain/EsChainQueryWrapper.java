@@ -46,4 +46,11 @@ public class EsChainQueryWrapper<T> extends AbstractEsChainWrapper<T, SFunction<
         esService.scroll(super.esWrapper, size, 1, scrollHandler);
     }
 
+    /**
+     * 性能分析
+     */
+    public EsResponse<T> profile() {
+        return esService.profile(super.esWrapper);
+    }
+
 }

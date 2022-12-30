@@ -109,11 +109,6 @@ public abstract class AbstractEsWrapper<T, R extends SFunction<T, ?>, Children e
         return esParamWrapper.getEsSelect();
     }
 
-    @Override
-    public Children profile(boolean profile) {
-        esParamWrapper.setProfile(profile);
-        return this.children;
-    }
 
     @Override
     public Children matchAll() {

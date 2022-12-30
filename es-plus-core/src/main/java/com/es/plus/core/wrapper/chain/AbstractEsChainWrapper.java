@@ -52,12 +52,6 @@ public abstract class AbstractEsChainWrapper<T, R extends SFunction<T, ?>, Child
     }
 
     @Override
-    public Children profile(boolean profile) {
-        getWrapper().profile(profile);
-        return this.children;
-    }
-
-    @Override
     public Children must(boolean condition, Consumer<QUERY> consumer) {
         getWrapper().must(condition, consumer);
         return this.children;

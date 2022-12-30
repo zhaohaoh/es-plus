@@ -33,7 +33,12 @@ public class Test {
 
 
     @org.junit.jupiter.api.Test
-    public void s() {
+    public void search() {
         samplesEsService.search();
+    }
+
+    @org.junit.jupiter.api.Test
+    public void profile() {
+        samplesEsService.profile1();
     }
 }

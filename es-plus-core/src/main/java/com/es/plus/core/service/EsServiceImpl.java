@@ -355,8 +355,8 @@ public class EsServiceImpl<T> extends AbstractEsService<T> implements EsService<
      */
     @Override
     public EsResponse<T> profile(EsQueryWrapper<T> esQueryWrapper) {
-        EsQueryWrapper<T> profile = esQueryWrapper.profile(true);
-        return esPlusClientFacade.searchByWrapper(profile, clazz, alias);
+        esQueryWrapper.getEsParamWrapper().setProfile(true);
+        return esPlusClientFacade.searchByWrapper(esQueryWrapper, clazz, alias);
     }
 
 

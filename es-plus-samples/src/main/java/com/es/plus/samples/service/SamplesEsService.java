@@ -45,8 +45,7 @@ public class SamplesEsService extends EsServiceImpl<SamplesEsDTO> {
                         // 声明内部语句关系的should
                         a.must()
                                 .term(SamplesEsDTO::getNickName, "dasdsad")
-                                .term(SamplesEsDTO::getPhone, "1386859111")).profile(true)
-                // 查询
+                                .term(SamplesEsDTO::getPhone, "1386859111"))
                 .list();
         List<SamplesEsDTO> list = esResponse.getList();
 
@@ -71,4 +70,16 @@ public class SamplesEsService extends EsServiceImpl<SamplesEsDTO> {
         Map<String, Long> termsAsMap = esAggregationsReponse.getTermsAsMap(SamplesEsDTO::getUsername);
     }
 
+    public void profile1() {
+        // 声明语句嵌套关系是must
+        EsResponse<SamplesEsDTO> esResponse = esChainQueryWrapper().must()
+                .terms(SamplesEsDTO::getUsername, "admin", "hzh", "shi")
+                // 多个must嵌套
+                .must(a ->
+                        // 声明内部语句关系的should
+                        a.must()
+                                .term(SamplesEsDTO::getNickName, "dasdsad")
+                                .term(SamplesEsDTO::getPhone, "1386859111")).profile();
+        System.out.println(esResponse);
+    }
 }
