@@ -38,6 +38,11 @@ public class Test {
     }
 
     @org.junit.jupiter.api.Test
+    public void test() {
+        samplesEsService.test();
+    }
+
+    @org.junit.jupiter.api.Test
     public void profile() {
         samplesEsService.profile1();
     }

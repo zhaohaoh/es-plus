@@ -19,10 +19,8 @@ import org.springframework.util.CollectionUtils;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.es.plus.constant.EsConstant.*;
 
@@ -232,6 +230,11 @@ public class EsAnnotationParamProcess {
 
         if (esField.type() == EsFieldType.TEXT && esField.fieldData()) {
             properties.put(INDEX, true);
+        }
+
+        if (ArrayUtils.isNotEmpty(esField.copyTo())) {
+            List<String> copyTo = Arrays.stream(esField.copyTo()).collect(Collectors.toList());
+            properties.put(COPY_TO, copyTo);
         }
 
         if (esField.eagerGlobalOrdinals()) {

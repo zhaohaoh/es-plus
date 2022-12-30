@@ -82,4 +82,10 @@ public class SamplesEsService extends EsServiceImpl<SamplesEsDTO> {
                                 .term(SamplesEsDTO::getPhone, "1386859111")).profile();
         System.out.println(esResponse);
     }
+
+    public void test() {
+        EsResponse<SamplesEsDTO> hzh = esChainQueryWrapper().must().match(SamplesEsDTO::getKeyword, "hzh").list();
+
+        System.out.println(hzh);
+    }
 }

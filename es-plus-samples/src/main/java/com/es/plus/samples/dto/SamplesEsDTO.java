@@ -15,14 +15,20 @@ public class SamplesEsDTO {
     // id  不添加注解也会默认获取.
     @EsId
     private Long id;
+    @EsField(copyTo = "keyword")
     private String username;
+    @EsField(copyTo = "keyword")
     private String email;
+    @EsField(copyTo = "keyword")
     private String phone;
+    @EsField(type = EsFieldType.TEXT)
+    private String keyword;
 
     private String password;
     /**
      * 身份证
      */
+    @EsField(copyTo = "keyword")
     private String idCard;
 
     /**
@@ -33,6 +39,7 @@ public class SamplesEsDTO {
 
 
     private String avatar;
+    @EsField(copyTo = "keyword")
     private String nickName;
 
     private Boolean lockState;

@@ -33,6 +33,10 @@ public interface EsConstant {
      */
     String INDEX = "index";
     /**
+     * 复制字段到指定字段进行冗余
+     */
+    String COPY_TO = "copy_to";
+    /**
      * 时间格式
      */
     String FORMAT = "format";
