@@ -399,7 +399,9 @@ public class EsPlusRestClient implements EsPlusClient {
             if (routings != null) {
                 request.setRouting(routings[0]);
             }
-
+            request.setMaxRetries(GLOBAL_CONFIG.getMaxRetries());
+            //一般需要加上requests_per_second来控制.若不加可能执行时间比较长，造成es瞬间io巨大，属于危险操作.此参数用于限流。真实查询数据是batchsize控制
+            request.setRequestsPerSecond(GLOBAL_CONFIG.getBatchSize());
             request.setIndicesOptions(IndicesOptions.LENIENT_EXPAND_OPEN);
             Script painless = new Script(ScriptType.INLINE, "painless", scipt, params);
             request.setScript(painless);
