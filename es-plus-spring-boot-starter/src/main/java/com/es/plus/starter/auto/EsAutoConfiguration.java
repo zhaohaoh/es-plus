@@ -8,6 +8,7 @@ import com.es.plus.lock.ELockClient;
 import com.es.plus.lock.EsLockClient;
 import com.es.plus.lock.EsLockFactory;
 import com.es.plus.properties.EsParamHolder;
+import com.es.plus.starter.config.ClientContext;
 import com.es.plus.starter.properties.AnalysisProperties;
 import com.es.plus.starter.properties.EsProperties;
 import com.es.plus.util.XcontentBuildUtils;
@@ -49,7 +50,9 @@ public class EsAutoConfiguration implements InitializingBean {
     public EsPlusClientFacade esPlusClientFacade(RestHighLevelClient restHighLevelClient, EsLockFactory esLock) {
         EsPlusRestClient esPlusRestClient = new EsPlusRestClient(restHighLevelClient, esLock);
         EsPlusIndexRestClient esPlusIndexRestClient = new EsPlusIndexRestClient(restHighLevelClient);
-        return new EsPlusClientFacade(esPlusRestClient, esPlusIndexRestClient, esLock);
+        EsPlusClientFacade esPlusClientFacade = new EsPlusClientFacade(esPlusRestClient, esPlusIndexRestClient, esLock);
+        ClientContext.addClient("master", esPlusClientFacade);
+        return esPlusClientFacade;
     }
 
     /**

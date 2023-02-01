@@ -1,21 +1,13 @@
 package com.es.plus.starter.properties;
 
-import com.es.plus.config.GlobalConfig;
 import lombok.Data;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.boot.context.properties.NestedConfigurationProperty;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * @Author: hzh
- * @Date: 2023/2/1 16:52
+ * @Date: 2023/2/1 16:54
  */
 @Data
-@ConfigurationProperties("es-plus")
-public class EsProperties {
-
+public class ClientProperties {
     /**
      * 集群地址，多个用,隔开
      */
@@ -74,20 +66,4 @@ public class EsProperties {
      * 最大路由连接数
      */
     private Integer maxConnectPerRoute;
-
-    /**
-     * 多数据源客户端配置  默认上面的是master
-     */
-    private Map<String, ClientProperties> clientProperties;
-    /**
-     * 全局配置
-     */
-    @NestedConfigurationProperty
-    private GlobalConfig globalConfig = new GlobalConfig();
-
-    /**
-     * 分词器
-     */
-    @NestedConfigurationProperty
-    private Map<String, AnalysisProperties> analysis = new HashMap<>();
 }
