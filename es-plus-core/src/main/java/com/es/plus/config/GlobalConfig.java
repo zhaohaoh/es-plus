@@ -67,7 +67,7 @@ public class GlobalConfig {
     private ConnectFailHandle connectFailHandle = ConnectFailHandle.THROW_EXCEPTION;
 
     /**
-     * 启动时初始化
+     * 启动时初始化 如果启动检查失败会忽略初始化
      */
     private boolean startInit = true;
 

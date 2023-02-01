@@ -1,5 +1,7 @@
 package com.es.plus.client;
 
+import com.es.plus.config.GlobalConfig;
+import com.es.plus.config.GlobalConfigCache;
 import com.es.plus.core.ScrollHandler;
 import com.es.plus.core.wrapper.core.EsQueryWrapper;
 import com.es.plus.core.wrapper.core.EsUpdateWrapper;
@@ -15,6 +17,8 @@ import org.elasticsearch.client.GetAliasesResponse;
 import org.elasticsearch.client.indices.GetIndexResponse;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
+
+import javax.annotation.PostConstruct;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -89,6 +93,13 @@ public class EsPlusClientFacade {
         esPlusIndexClient.putMapping(index, tClass);
     }
 
+    @PostConstruct
+    public void init() {
+        boolean ping = esPlusIndexClient.ping();
+        if (!ping) {
+            GlobalConfigCache.GLOBAL_CONFIG.setStartInit(false);
+        }
+    }
 
     /**
      * 映射
@@ -199,13 +210,13 @@ public class EsPlusClientFacade {
 
 
     /**
-     *
-     *  ----------------------------------------------------------------------------------------------------------
-     *  数据操作
+     * ----------------------------------------------------------------------------------------------------------
+     * 数据操作
      */
     public List<BulkItemResponse> saveOrUpdateBatch(String index, Collection<?> esDataList) {
         return esPlusClient.saveOrUpdateBatch(index, esDataList);
     }
+
     /**
      * 保存
      *

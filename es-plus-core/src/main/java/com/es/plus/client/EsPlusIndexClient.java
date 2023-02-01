@@ -107,4 +107,9 @@ public interface EsPlusIndexClient {
      */
     boolean updateSettings(String index, EsSettings esSettings);
 
+    /**
+     * 连接
+     */
+    boolean ping();
+
 }

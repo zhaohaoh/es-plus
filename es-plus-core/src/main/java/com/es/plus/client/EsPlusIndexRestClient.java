@@ -26,9 +26,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
+
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+
 import static com.es.plus.config.GlobalConfigCache.GLOBAL_CONFIG;
 import static com.es.plus.constant.EsConstant.*;
 
@@ -41,7 +43,6 @@ import static com.es.plus.constant.EsConstant.*;
 public class EsPlusIndexRestClient implements EsPlusIndexClient {
     private static final Logger log = LoggerFactory.getLogger(EsPlusIndexRestClient.class);
     private final RestHighLevelClient restHighLevelClient;
-
 
 
     public EsPlusIndexRestClient(RestHighLevelClient restHighLevelClient) {
@@ -289,6 +290,18 @@ public class EsPlusIndexRestClient implements EsPlusIndexClient {
         return settingsResult.isAcknowledged();
     }
 
+    /**
+     * 连接
+     */
+    @Override
+    public boolean ping() {
+        try {
+            return restHighLevelClient.ping(RequestOptions.DEFAULT);
+        } catch (IOException e) {
+            return false;
+        }
+    }
+
 
     /**
      * 索引请求
@@ -315,7 +328,7 @@ public class EsPlusIndexRestClient implements EsPlusIndexClient {
                     .settings(settings);
             CreateIndexResponse indexResponse = restHighLevelClient.indices().create(indexRequest, RequestOptions.DEFAULT);
         } catch (IOException e) {
-           throw new EsException(e);
+            throw new EsException(e);
         }
     }
 
