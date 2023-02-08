@@ -31,6 +31,10 @@ public class Test {
         samplesEsService.nested();
     }
 
+    @org.junit.jupiter.api.Test
+    public void agg() {
+        samplesEsService.agg();
+    }
 
     @org.junit.jupiter.api.Test
     public void search() {
@@ -48,7 +52,12 @@ public class Test {
     }
 
     @org.junit.jupiter.api.Test
-    public void update() {
+    public void newUpdate() {
         samplesEsService.update();
+    }
+
+    @org.junit.jupiter.api.Test
+    public void newSelect() {
+        samplesEsService.newSelect();
     }
 }

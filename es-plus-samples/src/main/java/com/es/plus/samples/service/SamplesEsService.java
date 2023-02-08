@@ -106,6 +106,11 @@ public class SamplesEsService extends EsServiceImpl<SamplesEsDTO> {
         Map<String,Object> map=new HashMap<>();
         map.put("username","fsdfsfds");
         map.put("id","d73d1b4e46244b0db766987759d6e");
-       Es.chainUpdate(Map.class).index("sys_user2ttt").save(map);
+       Es.chainUpdate(Map.class).index("sys_user2ttt").update(map);
+    }
+
+    public void newSelect() {
+        EsResponse<SamplesEsDTO> hzh = Es.chainLambdaQuery(SamplesEsDTO.class).term(SamplesEsDTO::getUsername, "hzh").list();
+        System.out.println(hzh);
     }
 }
