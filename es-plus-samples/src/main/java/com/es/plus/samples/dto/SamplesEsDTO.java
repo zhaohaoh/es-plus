@@ -3,6 +3,7 @@ package com.es.plus.samples.dto;
 import com.es.plus.annotation.EsField;
 import com.es.plus.annotation.EsId;
 import com.es.plus.annotation.EsIndex;
+import com.es.plus.constant.Analyzer;
 import com.es.plus.constant.EsFieldType;
 import lombok.Data;
 
@@ -15,7 +16,7 @@ public class SamplesEsDTO {
     // id  不添加注解也会默认获取.
     @EsId
     private Long id;
-    @EsField(type = EsFieldType.KEYWORD,normalizer = "")
+    @EsField(type = EsFieldType.KEYWORD,normalizer = Analyzer.EP_NORMALIZER)
     private String username;
     @EsField(copyTo = "keyword")
     private String email;

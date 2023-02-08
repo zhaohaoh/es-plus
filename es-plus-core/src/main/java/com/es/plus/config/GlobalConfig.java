@@ -62,7 +62,7 @@ public class GlobalConfig {
      */
     private String defaultAnalyzer = Analyzer.EP_STANDARD;
     /**
-     * 全局keyword处理器 默认会对所有keyword字段生效-搜索字段转小写
+     * 全局keyword处理器  keyword搜索字段转小写 必须在字段上加上normalizer = Analyzer.EP_NORMALIZER才生效
      */
     private String defaultNormalizer = Analyzer.EP_NORMALIZER;
     /**
