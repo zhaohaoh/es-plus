@@ -1,4 +1,4 @@
-package com.es.plus.starter.config;
+package com.es.plus.pojo;
 
 import com.es.plus.client.EsPlusClientFacade;
 import java.util.Map;

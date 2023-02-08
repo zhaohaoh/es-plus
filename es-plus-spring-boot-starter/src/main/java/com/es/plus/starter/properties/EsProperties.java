@@ -86,8 +86,13 @@ public class EsProperties {
     private GlobalConfig globalConfig = new GlobalConfig();
 
     /**
-     * 分词器
+     * 分词处理器
      */
     @NestedConfigurationProperty
     private Map<String, AnalysisProperties> analysis = new HashMap<>();
+    /**
+     * keyword处理器
+     */
+    @NestedConfigurationProperty
+    private Map<String, AnalysisProperties> normalizers = new HashMap<>();
 }

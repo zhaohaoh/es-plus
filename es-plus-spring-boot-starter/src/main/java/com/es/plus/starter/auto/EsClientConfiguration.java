@@ -6,7 +6,7 @@ import com.es.plus.client.EsPlusRestClient;
 import com.es.plus.exception.EsException;
 import com.es.plus.lock.EsLockClient;
 import com.es.plus.lock.EsLockFactory;
-import com.es.plus.starter.config.ClientContext;
+import com.es.plus.pojo.ClientContext;
 import com.es.plus.starter.properties.ClientProperties;
 import com.es.plus.starter.properties.EsProperties;
 import org.apache.commons.lang3.StringUtils;
@@ -18,7 +18,6 @@ import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestClientBuilder;
 import org.elasticsearch.client.RestHighLevelClient;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
@@ -27,6 +26,7 @@ import org.springframework.boot.autoconfigure.elasticsearch.ElasticsearchRestCli
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.util.CollectionUtils;
 
 import java.util.*;
 
@@ -112,6 +112,9 @@ public class EsClientConfiguration implements InitializingBean {
     public void afterPropertiesSet() throws Exception {
         //设置主客户端属性 以spring的客户端为主
         Map<String, ClientProperties> clientProperties = esProperties.getClientProperties();
+        if (CollectionUtils.isEmpty(clientProperties)) {
+            return;
+        }
         clientProperties.forEach((k, v) -> {
             RestHighLevelClient restHighLevelClient = getRestHighLevelClient(v);
             EsLockClient esLockClient = new EsLockClient(restHighLevelClient);

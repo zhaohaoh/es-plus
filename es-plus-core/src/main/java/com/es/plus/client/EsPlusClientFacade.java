@@ -1,14 +1,12 @@
 package com.es.plus.client;
 
-import com.es.plus.config.GlobalConfig;
 import com.es.plus.config.GlobalConfigCache;
 import com.es.plus.core.ScrollHandler;
-import com.es.plus.core.wrapper.core.EsQueryWrapper;
-import com.es.plus.core.wrapper.core.EsUpdateWrapper;
+import com.es.plus.core.params.EsParamWrapper;
 import com.es.plus.lock.ELock;
 import com.es.plus.lock.EsLockFactory;
 import com.es.plus.lock.EsReadWriteLock;
-import com.es.plus.pojo.EsAggregationsResponse;
+import com.es.plus.pojo.EsAggsResponse;
 import com.es.plus.pojo.EsResponse;
 import com.es.plus.pojo.EsSettings;
 import com.es.plus.pojo.PageInfo;
@@ -73,6 +71,17 @@ public class EsPlusClientFacade {
 
 
     /**
+     * 初始化ping 如果设置为false启动时不创建索引
+     */
+    @PostConstruct
+    public void init() {
+        boolean ping = esPlusIndexClient.ping();
+        if (!ping) {
+            GlobalConfigCache.GLOBAL_CONFIG.setStartInit(false);
+        }
+    }
+
+    /**
      * 创建索引
      *
      * @param index  指数
@@ -93,13 +102,6 @@ public class EsPlusClientFacade {
         esPlusIndexClient.putMapping(index, tClass);
     }
 
-    @PostConstruct
-    public void init() {
-        boolean ping = esPlusIndexClient.ping();
-        if (!ping) {
-            GlobalConfigCache.GLOBAL_CONFIG.setStartInit(false);
-        }
-    }
 
     /**
      * 映射
@@ -259,7 +261,7 @@ public class EsPlusClientFacade {
     /**
      * 更新包装
      */
-    public <T> BulkByScrollResponse updateByWrapper(String index, EsUpdateWrapper<T> esUpdateWrapper) {
+    public <T> BulkByScrollResponse updateByWrapper(String index, EsParamWrapper<T> esUpdateWrapper) {
         return esPlusClient.updateByWrapper(index, esUpdateWrapper);
     }
 
@@ -271,7 +273,7 @@ public class EsPlusClientFacade {
      * @param esUpdateWrapper es更新包装
      * @return {@link BulkByScrollResponse}
      */
-    public <T> BulkByScrollResponse increment(String index, EsUpdateWrapper<T> esUpdateWrapper) {
+    public <T> BulkByScrollResponse increment(String index, EsParamWrapper<T> esUpdateWrapper) {
         return esPlusClient.increment(index, esUpdateWrapper);
     }
 
@@ -287,7 +289,7 @@ public class EsPlusClientFacade {
     }
 
 
-    public <T> BulkByScrollResponse deleteByQuery(String index, EsUpdateWrapper<T> esUpdateWrapper) {
+    public <T> BulkByScrollResponse deleteByQuery(String index, EsParamWrapper<T> esUpdateWrapper) {
         return esPlusClient.deleteByQuery(index, esUpdateWrapper);
     }
 
@@ -297,28 +299,28 @@ public class EsPlusClientFacade {
     }
 
 
-    public <T> long count(EsQueryWrapper<T> esQueryWrapper, String index) {
-        return esPlusClient.count(esQueryWrapper, index);
+    public <T> long count(EsParamWrapper<T> esParamWrapper, String index) {
+        return esPlusClient.count(esParamWrapper, index);
     }
 
 
-    public <T> EsResponse<T> searchByWrapper(EsQueryWrapper<T> esQueryWrapper, Class<T> tClass, String index) {
-        return esPlusClient.searchByWrapper(esQueryWrapper, tClass, index);
+    public <T> EsResponse<T> searchByWrapper(EsParamWrapper<T> esParamWrapper, Class<T> tClass, String index) {
+        return esPlusClient.searchByWrapper(esParamWrapper, tClass, index);
     }
 
 
-    public <T> EsResponse<T> searchPageByWrapper(PageInfo<T> pageInfo, EsQueryWrapper<T> esQueryWrapper, Class<T> tClass, String index) {
-        return esPlusClient.searchPageByWrapper(pageInfo, esQueryWrapper, tClass, index);
+    public <T> EsResponse<T> searchPageByWrapper(PageInfo<T> pageInfo, EsParamWrapper<T> esParamWrapper, Class<T> tClass, String index) {
+        return esPlusClient.searchPageByWrapper(pageInfo, esParamWrapper, tClass, index);
     }
 
 
-    public <T> void scrollByWrapper(EsQueryWrapper<T> esQueryWrapper, Class<T> tClass, String index, int size, int keepTime, ScrollHandler<T> scrollHandler) {
-        esPlusClient.scrollByWrapper(esQueryWrapper, tClass, index, size, keepTime, scrollHandler);
+    public <T> void scrollByWrapper(EsParamWrapper<T> esParamWrapper, Class<T> tClass, String index, int size, int keepTime, ScrollHandler<T> scrollHandler) {
+        esPlusClient.scrollByWrapper(esParamWrapper, tClass, index, size, keepTime, scrollHandler);
     }
 
 
-    public <T> EsAggregationsResponse<T> aggregations(String index, EsQueryWrapper<T> esQueryWrapper) {
-        return esPlusClient.aggregations(index, esQueryWrapper);
+    public <T> EsAggsResponse<T> aggregations(String index, EsParamWrapper<T> esParamWrapper, Class<T> tClass) {
+        return esPlusClient.aggregations(index, esParamWrapper,tClass);
     }
 
 }

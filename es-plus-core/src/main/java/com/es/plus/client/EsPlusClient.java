@@ -1,13 +1,11 @@
 package com.es.plus.client;
 
 import com.es.plus.core.ScrollHandler;
+import com.es.plus.core.params.EsParamWrapper;
 import com.es.plus.pojo.EsResponse;
 import com.es.plus.pojo.PageInfo;
-import com.es.plus.core.wrapper.core.EsQueryWrapper;
-import com.es.plus.core.wrapper.core.EsUpdateWrapper;
-import com.es.plus.pojo.EsAggregationsResponse;
+import com.es.plus.pojo.EsAggsResponse;
 import org.elasticsearch.action.bulk.BulkItemResponse;
-import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
 
 import java.util.*;
@@ -66,7 +64,7 @@ public interface EsPlusClient {
     /**
      * 更新包装
      */
-    <T> BulkByScrollResponse updateByWrapper(String index, EsUpdateWrapper<T> esUpdateWrapper);
+    <T> BulkByScrollResponse updateByWrapper(String index, EsParamWrapper<T> esUpdateWrapper);
 
     /**
      * 增量
@@ -75,7 +73,7 @@ public interface EsPlusClient {
      * @param esUpdateWrapper es更新包装
      * @return {@link BulkByScrollResponse}
      */
-    <T> BulkByScrollResponse increment(String index, EsUpdateWrapper<T> esUpdateWrapper);
+    <T> BulkByScrollResponse increment(String index, EsParamWrapper<T> esUpdateWrapper);
 
     /**
      * 删除
@@ -93,7 +91,7 @@ public interface EsPlusClient {
      * @param esUpdateWrapper es更新包装
      * @return {@link BulkByScrollResponse}
      */
-    <T> BulkByScrollResponse deleteByQuery(String index, EsUpdateWrapper<T> esUpdateWrapper);
+    <T> BulkByScrollResponse deleteByQuery(String index, EsParamWrapper<T> esUpdateWrapper);
 
     /**
      * 删除批处理
@@ -111,7 +109,7 @@ public interface EsPlusClient {
      * @param index          指数
      * @return long
      */
-    <T> long count(EsQueryWrapper<T> esQueryWrapper, String index);
+    <T> long count(EsParamWrapper<T> esParamWrapper, String index);
 
     /**
      * 搜索包装
@@ -121,7 +119,7 @@ public interface EsPlusClient {
      * @param index          指数
      * @return {@link EsResponse}<{@link T}>
      */
-    <T> EsResponse<T> searchByWrapper(EsQueryWrapper<T> esQueryWrapper, Class<T> tClass, String index);
+    <T> EsResponse<T> searchByWrapper(EsParamWrapper<T> esParamWrapper, Class<T> tClass, String index);
 
     /**
      * 搜索页面包装
@@ -132,7 +130,7 @@ public interface EsPlusClient {
      * @param index          指数
      * @return {@link EsResponse}<{@link T}>
      */
-    <T> EsResponse<T> searchPageByWrapper(PageInfo<T> pageInfo, EsQueryWrapper<T> esQueryWrapper, Class<T> tClass, String index);
+    <T> EsResponse<T> searchPageByWrapper(PageInfo<T> pageInfo, EsParamWrapper<T> esParamWrapper, Class<T> tClass, String index);
 
     /**
      * 滚动查询包装
@@ -144,15 +142,15 @@ public interface EsPlusClient {
      * @param keepTime       保持时间
      * @param scrollHandler  滚动处理程序
      */
-    <T> void scrollByWrapper(EsQueryWrapper<T> esQueryWrapper, Class<T> tClass, String index, int size, int keepTime, ScrollHandler<T> scrollHandler);
+    <T> void scrollByWrapper(EsParamWrapper<T> esParamWrapper, Class<T> tClass, String index, int size, int keepTime, ScrollHandler<T> scrollHandler);
 
     /**
      * 聚合
      *
      * @param index          指数
      * @param esQueryWrapper es查询包装
-     * @return {@link EsAggregationsResponse}<{@link T}>
+     * @return {@link EsAggsResponse}<{@link T}>
      */
-    <T> EsAggregationsResponse<T> aggregations(String index, EsQueryWrapper<T> esQueryWrapper);
+    <T> EsAggsResponse<T> aggregations(String index, EsParamWrapper<T> esParamWrapper, Class<T> tClass);
 
 }

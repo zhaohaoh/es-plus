@@ -15,7 +15,7 @@ public class SamplesEsDTO {
     // id  不添加注解也会默认获取.
     @EsId
     private Long id;
-    @EsField(copyTo = "keyword")
+    @EsField(type = EsFieldType.KEYWORD,normalizer = "")
     private String username;
     @EsField(copyTo = "keyword")
     private String email;

@@ -46,4 +46,9 @@ public class Test {
     public void profile() {
         samplesEsService.profile1();
     }
+
+    @org.junit.jupiter.api.Test
+    public void update() {
+        samplesEsService.update();
+    }
 }

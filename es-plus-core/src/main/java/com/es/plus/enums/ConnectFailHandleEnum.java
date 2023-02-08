@@ -8,7 +8,7 @@ import lombok.AllArgsConstructor;
  *   启动时连接失败处理
  */
 @AllArgsConstructor
-public enum ConnectFailHandle {
+public enum ConnectFailHandleEnum {
     //忽略失败异常继续启动
     IGNORE
     // 抛出异常

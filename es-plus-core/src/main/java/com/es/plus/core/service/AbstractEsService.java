@@ -8,7 +8,7 @@ import com.es.plus.config.GlobalConfigCache;
 import com.es.plus.constant.DefaultClass;
 import com.es.plus.constant.EsConstant;
 import com.es.plus.core.process.EsReindexProcess;
-import com.es.plus.enums.ConnectFailHandle;
+import com.es.plus.enums.ConnectFailHandleEnum;
 import com.es.plus.exception.EsException;
 import com.es.plus.lock.ELock;
 import com.es.plus.lock.EsLockFactory;
@@ -101,7 +101,7 @@ public abstract class AbstractEsService<T> implements InitializingBean {
             tryCreateOrReindex(indexClass, esIndexParam);
         } catch (Exception e) {
             if (e.getLocalizedMessage().contains("ConnectException")) {
-                if (GlobalConfigCache.GLOBAL_CONFIG.getConnectFailHandle().equals(ConnectFailHandle.THROW_EXCEPTION)) {
+                if (GlobalConfigCache.GLOBAL_CONFIG.getConnectFailHandle().equals(ConnectFailHandleEnum.THROW_EXCEPTION)) {
                     throw new EsException(e);
                 } else {
                     GlobalConfigCache.GLOBAL_CONFIG.setStartInit(false);
@@ -124,7 +124,7 @@ public abstract class AbstractEsService<T> implements InitializingBean {
                 } else {
                     esPlusClientFacade.createIndexMapping(this.index + SO_SUFFIX, indexClass);
                 }
-                logger.info("init es indexResponse={} exists={}", this.index, exists);
+                logger.info("init es-plus indexResponse={} exists={}", this.index, exists);
             }
         } finally {
             if (lock) {

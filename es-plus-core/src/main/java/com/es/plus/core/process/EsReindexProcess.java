@@ -24,10 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.StopWatch;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -137,6 +134,11 @@ public class EsReindexProcess {
         if (remoteShards != localSettings.get("number_of_shards")) {
             return true;
         }
+        Map<String, Object> analysis = esSettings.getAnalysis();
+        if (analysisChange(settings, analysis)) {
+            return true;
+        }
+
         //以下几个字段的变更对esSettings进行更新。但不reindex
         EsSettings newEsSettings = null;
         if (!remoteMaxResultWindow.equals(localSettings.get("max_result_window"))) {
@@ -154,6 +156,44 @@ public class EsReindexProcess {
             esPlusClientFacade.updateSettings(currentIndex, newEsSettings);
         }
         return false;
+    }
+
+    private static boolean analysisChange(Settings settings, Map<String, Object> analysis) {
+        Map<StringBuilder, Object> analysisList = new HashMap<>();
+        buildAnalysis(analysis, analysisList, new StringBuilder("index.analysis."));
+
+        Settings settingsByPrefix = settings.getByPrefix("index.analysis.");
+        Set<String> strings = settingsByPrefix.keySet();
+        //如果es的配置比本地的多的话要reindex
+        if (strings.size() > analysisList.size()) {
+            return true;
+        }
+
+        for (Map.Entry<StringBuilder, Object> entry : analysisList.entrySet()) {
+            String value = settings.get(entry.getKey().toString());
+            if (value == null) {
+                return true;
+            }
+            if (!value.equals(entry.getValue().toString())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static void buildAnalysis(Map<String, Object> analysis, Map<StringBuilder, Object> sbs, StringBuilder sb) {
+        analysis.forEach((k, v) -> {
+            StringBuilder builder = new StringBuilder(sb);
+            builder.append(k);
+            if (v instanceof Map) {
+                builder.append(".");
+                buildAnalysis((Map<String, Object>) v, sbs, builder);
+            } else {
+                if (v != null) {
+                    sbs.put(builder, v);
+                }
+            }
+        });
     }
 
     public static void main(String[] args) {

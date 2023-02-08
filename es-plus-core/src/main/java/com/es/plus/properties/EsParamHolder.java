@@ -5,6 +5,7 @@ import com.es.plus.config.GlobalConfigCache;
 import com.es.plus.constant.DefaultClass;
 import com.es.plus.constant.EsConstant;
 import com.es.plus.core.process.EsAnnotationParamProcess;
+import com.es.plus.enums.EsIdType;
 import com.es.plus.exception.EsException;
 import com.es.plus.util.ClassUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -15,6 +16,7 @@ import org.springframework.util.CollectionUtils;
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static com.es.plus.constant.EsConstant.PROPERTIES;
@@ -31,7 +33,7 @@ public class EsParamHolder {
     private static final Map<String, String> ID_MAP = new ConcurrentHashMap<>();
     // 转换keyword
     private static final Map<String, Map<String, String>> CONVERT_KEYWORD_MAP = new ConcurrentHashMap<>();
-    // 分词器
+    // 分词处理器
     private static final Map<String, Map> ANALYSIS_MAP = new ConcurrentHashMap<>();
     // settings的映射
     private static final Map<String, EsIndexParam> ESINDEXPARAM_MAP = new ConcurrentHashMap<>();
@@ -53,27 +55,38 @@ public class EsParamHolder {
     public static <T> String getDocId(T obj) {
         Class<T> clazz = (Class<T>) ClassUtils.getClass(obj.getClass());
         try {
+            //如果对象字段获取不到id走自动生成
             String idFeildName = ID_MAP.get(clazz.getName());
             if (idFeildName == null) {
                 idFeildName = GlobalConfigCache.GLOBAL_CONFIG.getGlobalEsId();
-                if (StringUtils.isBlank(idFeildName)) {
-                    return null;
+            }
+            //如果map字段获取不到id走自动生成
+            if (obj instanceof Map) {
+                Object id = ((Map<?, ?>) obj).get(idFeildName);
+                if (id == null) {
+                    String uuid = UUID.randomUUID().toString().replace("-", "");
+                    ((Map) obj).put(idFeildName, uuid);
+                    return uuid;
+                } else {
+                    return String.valueOf(id);
                 }
             }
-            if (obj instanceof Map) {
-                return String.valueOf(((Map<?, ?>) obj).get(idFeildName));
-            }
+            //有对象字段直接走对象字段 为空则抛出异常
             Field field = clazz.getDeclaredField(idFeildName);
             field.setAccessible(true);
             Object id = field.get(obj);
+            //如果没有值则自动生成uuid注入
             if (id == null) {
-                throw new EsException("elasticsearch doc id not found");
+                if (EsIdType.UUID.equals(GlobalConfigCache.GLOBAL_CONFIG.getEsIdType())) {
+                    String uuid = UUID.randomUUID().toString().replace("-", "");
+                    field.set(obj, uuid);
+                }
             }
             return String.valueOf(id);
         } catch (NoSuchFieldException | IllegalAccessException e) {
         }
         // es自动生成id
-        return null;
+        return UUID.randomUUID().toString().replace("-", "");
     }
 
     public static void put(Class<?> clazz, String id) {
@@ -96,6 +109,9 @@ public class EsParamHolder {
         Class<?> finalClazz = clazz;
         EsIndexParam esIndexParam = ESINDEXPARAM_MAP.computeIfAbsent(clazz.getName(), s -> {
             EsIndexParam indexParam = ES_ANNOTATION_PARAM_RESOLVE.buildEsIndexParam(finalClazz, GlobalConfigCache.GLOBAL_CONFIG.getGlobalSuffix());
+            if (indexParam == null) {
+                return null;
+            }
             Map<String, Object> mapping = new HashMap<>(1);
             Map<String, Object> mappingProperties = ES_ANNOTATION_PARAM_RESOLVE.buildMappingProperties(finalClazz);
             // 子文档属性
@@ -129,6 +145,10 @@ public class EsParamHolder {
     }
 
     public static void putAnalysis(String name, Map map) {
+        Map value = ANALYSIS_MAP.get(name);
+        if (value != null) {
+            throw new EsException("analysis config is exists");
+        }
         ANALYSIS_MAP.put(name, map);
     }
 

@@ -11,20 +11,18 @@ import java.util.Map;
  * @Author: hzh
  * @Date: 2022/1/21 11:10
  */
-public class EsUpdateWrapper<T> extends AbstractEsWrapper<T, SFunction<T, ?>, EsUpdateWrapper<T>> implements Update<EsUpdateWrapper<T>, SFunction<T, ?>> {
-    private final EsUpdateField esUpdateField = new EsUpdateField();
+public class EsUpdateWrapper<T> extends AbstractEsWrapper<T, String, EsUpdateWrapper<T>> implements Update<EsUpdateWrapper<T>,String> {
 
-    @Override
-    public EsUpdateWrapper<T> set(String name, Object value) {
-        List<EsUpdateField.Field> fields = esUpdateField.getFields();
+
+    public EsUpdateWrapper<T> doSet(String name, Object value) {
+        List<EsUpdateField.Field> fields = getEsUpdateField().getFields();
         EsUpdateField.Field field = new EsUpdateField.Field(name, value);
         fields.add(field);
         return this;
     }
 
-    @Override
-    public EsUpdateWrapper<T> increment(String name, Long value) {
-        List<EsUpdateField.Field> fields = esUpdateField.getIncrementFields();
+    public EsUpdateWrapper<T> doIncrement(String name, Long value) {
+        List<EsUpdateField.Field> fields = getEsUpdateField().getIncrementFields();
         EsUpdateField.Field field = new EsUpdateField.Field(name, value);
         fields.add(field);
         return this;
@@ -33,7 +31,7 @@ public class EsUpdateWrapper<T> extends AbstractEsWrapper<T, SFunction<T, ?>, Es
     @Override
     public EsUpdateWrapper<T> setScipt(boolean condition, String scipt, Map<String, Object> sciptParams) {
         if (condition) {
-            esUpdateField.setScipt(scipt,sciptParams);
+            getEsUpdateField().setScipt(scipt,sciptParams);
         }
         return this;
     }
@@ -52,26 +50,26 @@ public class EsUpdateWrapper<T> extends AbstractEsWrapper<T, SFunction<T, ?>, Es
 
     @Override
     public EsUpdateField getEsUpdateField() {
-        return esUpdateField;
+        return getEsUpdateField();
     }
 
     @Override
-    public EsUpdateWrapper<T> set(SFunction<T, ?> column, Object val) {
-        return set(nameToString(column), val);
+    public EsUpdateWrapper<T> set(String column, Object val) {
+        return doSet(column, val);
     }
 
     @Override
-    public EsUpdateWrapper<T> set(boolean condition, SFunction<T, ?> column, Object val) {
+    public EsUpdateWrapper<T> set(boolean condition, String column, Object val) {
         if (condition) {
-            set(nameToString(column), val);
+            doSet(column, val);
         }
         return this;
     }
 
     @Override
-    public EsUpdateWrapper<T> increment(boolean condition, SFunction<T, ?> column, Long val) {
+    public EsUpdateWrapper<T> increment(boolean condition, String column, Long val) {
         if (condition) {
-            increment(nameToString(column), val);
+            doIncrement(column, val);
         }
         return this;
     }

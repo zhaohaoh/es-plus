@@ -8,7 +8,7 @@ import com.es.plus.lock.ELockClient;
 import com.es.plus.lock.EsLockClient;
 import com.es.plus.lock.EsLockFactory;
 import com.es.plus.properties.EsParamHolder;
-import com.es.plus.starter.config.ClientContext;
+import com.es.plus.pojo.ClientContext;
 import com.es.plus.starter.properties.AnalysisProperties;
 import com.es.plus.starter.properties.EsProperties;
 import com.es.plus.util.XcontentBuildUtils;
@@ -22,9 +22,12 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import static com.es.plus.constant.Analyzer.*;
+import static com.es.plus.constant.EsConstant.*;
+import static com.es.plus.constant.EsConstant.NORMALIZER;
 
 
 /**
@@ -142,9 +145,22 @@ public class EsAutoConfiguration implements InitializingBean {
             return analysisProperties;
         });
 
+        Map<String, AnalysisProperties> normalizers = esProperties.getNormalizers();
+        normalizers.computeIfAbsent(EP_NORMALIZER, a -> {
+            AnalysisProperties analysisProperties = new AnalysisProperties();
+            analysisProperties.setFilters(new String[]{LOWERCASE});
+            return analysisProperties;
+        });
+
         analysis.forEach((analyzerName, analyzer) -> {
             Map<String, Object> analyzerMap = XcontentBuildUtils.buildAnalyzer(analyzer.getTokenizer(), analyzer.getFilters(), analyzer.getTokenizer());
             EsParamHolder.putAnalysis(analyzerName, analyzerMap);
+        });
+
+
+        normalizers.forEach((name, normalizer) -> {
+            Map<String, Object> map = XcontentBuildUtils.buildAnalyzer(normalizer.getTokenizer(), normalizer.getFilters(), normalizer.getTokenizer());
+            EsParamHolder.putAnalysis(name, map);
         });
 
     }

@@ -6,5 +6,5 @@ import lombok.Data;
 public class EsPLusTerms<T> {
     private Long docCount;
     private Long docCountError;
-    private EsAggregationsResponse<T> esAggregationsReponse;
+    private EsAggsResponse<T> esAggregationsReponse;
 }

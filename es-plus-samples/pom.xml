@@ -18,6 +18,11 @@
     </properties>
     <dependencies>
         <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-webmvc</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
             <groupId>io.github.zhaohaoh</groupId>
             <artifactId>es-plus-spring-boot-starter</artifactId>
             <version>${project.version}</version>

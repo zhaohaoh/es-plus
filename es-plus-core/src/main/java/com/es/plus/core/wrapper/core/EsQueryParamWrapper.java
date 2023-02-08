@@ -9,7 +9,7 @@ import org.elasticsearch.action.search.SearchType;
 import java.util.List;
 
 @Data
-public class EsParamWrapper {
+public class EsQueryParamWrapper {
     /**
      * es查询结果包含字段
      */

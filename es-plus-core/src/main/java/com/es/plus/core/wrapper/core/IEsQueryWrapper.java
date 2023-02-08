@@ -225,130 +225,130 @@ public interface IEsQueryWrapper<Children, QUERY, R> {
 
 
     //根据name查询，这里违反了设计原则但是方便了
-    default Children exists(String name) {
-        return exists(true, name);
-    }
-
-    Children exists(boolean condition, String name);
-
-    default Children term(String name, Object value) {
-        return term(true, name, value);
-    }
-
-    Children term(boolean condition, String name, Object value);
-
-    default Children terms(String name, Object value) {
-        return terms(true, name, value);
-    }
-
-    Children terms(boolean condition, String name, Object... value);
-
-    default Children terms(String name, Collection<Object> values) {
-        return terms(true, name, values);
-    }
-
-    Children terms(boolean condition, String name, Collection<Object> values);
-
-    default Children match(String name, Object value) {
-        return match(true, name, value);
-    }
-
-    Children match(boolean condition, String name, Object value);
-
-    default Children matchPhrase(String name, Object value) {
-        return matchPhrase(true, name, value);
-    }
-
-    Children matchPhrase(boolean condition, String name, Object value);
-
-    default Children multiMatch(Object value, String... name) {
-        return multiMatch(true, value, name);
-    }
-
-    Children multiMatch(boolean condition, Object value, String... name);
-
-    default Children matchPhrasePrefix(String name, Object value) {
-        return matchPhrasePrefix(true, name, value);
-    }
-
-    Children matchPhrasePrefix(boolean condition, String name, Object value);
-
-    default Children wildcard(String name, String value) {
-        return wildcard(true, name, value);
-    }
-
-    Children wildcard(boolean condition, String name, String value);
-
-    default Children fuzzy(String name, String value) {
-        return fuzzy(true, name, value);
-    }
-
-    //有纠错能力的模糊查询。
-    Children fuzzy(boolean condition, String name, String value);
-
-    default Children nestedQuery(String path, Supplier<EsQueryWrapper<?>> sp, ScoreMode mode) {
-        return nestedQuery(true, path, sp, mode);
-    }
-
-    Children nestedQuery(boolean condition, String path, Supplier<EsQueryWrapper<?>> sp, ScoreMode mode);
-
-    default Children gt(String name, Object from) {
-        return gt(true, name, from);
-    }
-
-    Children gt(boolean condition, String name, Object from);
-
-    default Children ge(String name, Object from) {
-        return ge(true, name, from);
-    }
-
-    Children ge(boolean condition, String name, Object from);
-
-    default Children lt(String name, Object to) {
-        return lt(true, name, to);
-    }
-
-    Children lt(boolean condition, String name, Object to);
-
-    default Children le(String name, Object to) {
-        return le(true, name, to);
-    }
-
-    Children le(boolean condition, String name, Object to);
-
-    default Children between(String name, Object from, Object to) {
-        return between(true, name, from, to);
-    }
-
-    Children between(boolean condition, String name, Object from, Object to);
-
-    default Children between(String name, Object from, Object to, boolean include) {
-        return between(true, name, from, to, include);
-    }
-
-    Children between(boolean condition, String name, Object from, Object to, boolean include);
-
-    default Children geoBoundingBox(String name, GeoPoint topLeft, GeoPoint bottomRight) {
-        return geoBoundingBox(true, name, topLeft, bottomRight);
-    }
-
-    Children geoBoundingBox(boolean condition, String name, GeoPoint topLeft, GeoPoint bottomRight);
-
-    default Children geoDistance(String name, String distance, DistanceUnit distanceUnit, GeoPoint centralGeoPoint) {
-        return geoDistance(true, name, distance, distanceUnit, centralGeoPoint);
-    }
-
-    Children geoDistance(boolean condition, String name, String distance, DistanceUnit distanceUnit, GeoPoint centralGeoPoint);
-
-    default Children geoPolygon(String name, List<GeoPoint> geoPoints) {
-        return geoPolygon(true, name, geoPoints);
-    }
-
-    Children geoPolygon(boolean condition, String name, List<GeoPoint> geoPoints);
-
-    default Children geoShape(String name, String indexedShapeId, Geometry geometry, ShapeRelation shapeRelation) {
-        return geoShape(true, name, indexedShapeId, geometry, shapeRelation);
-    }
-
-    Children geoShape(boolean condition, String name, String indexedShapeId, Geometry geometry, ShapeRelation shapeRelation);
+//    default Children exists(String name) {
+//        return exists(true, name);
+//    }
+//
+//    Children exists(boolean condition, String name);
+//
+//    default Children term(String name, Object value) {
+//        return term(true, name, value);
+//    }
+//
+//    Children term(boolean condition, String name, Object value);
+//
+//    default Children terms(String name, Object value) {
+//        return terms(true, name, value);
+//    }
+//
+//    Children terms(boolean condition, String name, Object... value);
+//
+//    default Children terms(String name, Collection<Object> values) {
+//        return terms(true, name, values);
+//    }
+//
+//    Children terms(boolean condition, String name, Collection<Object> values);
+//
+//    default Children match(String name, Object value) {
+//        return match(true, name, value);
+//    }
+//
+//    Children match(boolean condition, String name, Object value);
+//
+//    default Children matchPhrase(String name, Object value) {
+//        return matchPhrase(true, name, value);
+//    }
+//
+//    Children matchPhrase(boolean condition, String name, Object value);
+//
+//    default Children multiMatch(Object value, String... name) {
+//        return multiMatch(true, value, name);
+//    }
+//
+//    Children multiMatch(boolean condition, Object value, String... name);
+//
+//    default Children matchPhrasePrefix(String name, Object value) {
+//        return matchPhrasePrefix(true, name, value);
+//    }
+//
+//    Children matchPhrasePrefix(boolean condition, String name, Object value);
+//
+//    default Children wildcard(String name, String value) {
+//        return wildcard(true, name, value);
+//    }
+//
+//    Children wildcard(boolean condition, String name, String value);
+//
+//    default Children fuzzy(String name, String value) {
+//        return fuzzy(true, name, value);
+//    }
+//
+//    //有纠错能力的模糊查询。
+//    Children fuzzy(boolean condition, String name, String value);
+//
+//    default Children nestedQuery(String path, Supplier<EsQueryWrapper<?>> sp, ScoreMode mode) {
+//        return nestedQuery(true, path, sp, mode);
+//    }
+//
+//    Children nestedQuery(boolean condition, String path, Supplier<EsQueryWrapper<?>> sp, ScoreMode mode);
+//
+//    default Children gt(String name, Object from) {
+//        return gt(true, name, from);
+//    }
+//
+//    Children gt(boolean condition, String name, Object from);
+//
+//    default Children ge(String name, Object from) {
+//        return ge(true, name, from);
+//    }
+//
+//    Children ge(boolean condition, String name, Object from);
+//
+//    default Children lt(String name, Object to) {
+//        return lt(true, name, to);
+//    }
+//
+//    Children lt(boolean condition, String name, Object to);
+//
+//    default Children le(String name, Object to) {
+//        return le(true, name, to);
+//    }
+//
+//    Children le(boolean condition, String name, Object to);
+//
+//    default Children between(String name, Object from, Object to) {
+//        return between(true, name, from, to);
+//    }
+//
+//    Children between(boolean condition, String name, Object from, Object to);
+//
+//    default Children between(String name, Object from, Object to, boolean include) {
+//        return between(true, name, from, to, include);
+//    }
+//
+//    Children between(boolean condition, String name, Object from, Object to, boolean include);
+//
+//    default Children geoBoundingBox(String name, GeoPoint topLeft, GeoPoint bottomRight) {
+//        return geoBoundingBox(true, name, topLeft, bottomRight);
+//    }
+//
+//    Children geoBoundingBox(boolean condition, String name, GeoPoint topLeft, GeoPoint bottomRight);
+//
+//    default Children geoDistance(String name, String distance, DistanceUnit distanceUnit, GeoPoint centralGeoPoint) {
+//        return geoDistance(true, name, distance, distanceUnit, centralGeoPoint);
+//    }
+//
+//    Children geoDistance(boolean condition, String name, String distance, DistanceUnit distanceUnit, GeoPoint centralGeoPoint);
+//
+//    default Children geoPolygon(String name, List<GeoPoint> geoPoints) {
+//        return geoPolygon(true, name, geoPoints);
+//    }
+//
+//    Children geoPolygon(boolean condition, String name, List<GeoPoint> geoPoints);
+//
+//    default Children geoShape(String name, String indexedShapeId, Geometry geometry, ShapeRelation shapeRelation) {
+//        return geoShape(true, name, indexedShapeId, geometry, shapeRelation);
+//    }
+//
+//    Children geoShape(boolean condition, String name, String indexedShapeId, Geometry geometry, ShapeRelation shapeRelation);
 }
