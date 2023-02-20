@@ -2,9 +2,6 @@ package com.es.plus.core.wrapper.chain;
 
 
 import com.es.plus.client.EsPlusClientFacade;
-import com.es.plus.core.service.EsService;
-import com.es.plus.core.tools.SFunction;
-import com.es.plus.core.wrapper.core.EsLambdaUpdateWrapper;
 import com.es.plus.core.wrapper.core.EsUpdateWrapper;
 import com.es.plus.core.wrapper.core.Update;
 import com.es.plus.pojo.ClientContext;
@@ -13,8 +10,7 @@ import com.es.plus.properties.EsParamHolder;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
 
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -60,11 +56,11 @@ public class EsChainUpdateWrapper<T> extends AbstractEsChainWrapper<T, String, E
         return esPlusClientFacade.increment(index, esWrapper.getEsParamWrapper());
     }
 
-    public List<BulkItemResponse> updateBatch(List<T> t) {
+    public List<BulkItemResponse> updateBatch(Collection<T> t) {
         return esPlusClientFacade.updateBatch(index, t);
     }
 
-    public List<BulkItemResponse> saveBatch(List<T> t) {
+    public List<BulkItemResponse> saveBatch(Collection<T> t) {
         return esPlusClientFacade.saveBatch(index, t);
     }
 
