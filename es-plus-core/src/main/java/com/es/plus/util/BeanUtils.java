@@ -31,6 +31,9 @@ public class BeanUtils {
     }
 
     public static <T> T mapToBean(Map<String, Object> map, Class<T> clazz) {
+        if (clazz.equals(Map.class)) {
+            return (T) map;
+        }
         T bean = null;
         try {
             bean = clazz.newInstance();
