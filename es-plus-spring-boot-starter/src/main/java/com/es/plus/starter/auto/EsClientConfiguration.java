@@ -1,11 +1,7 @@
 package com.es.plus.starter.auto;
 
 import com.es.plus.client.EsPlusClientFacade;
-import com.es.plus.client.EsPlusIndexRestClient;
-import com.es.plus.client.EsPlusRestClient;
 import com.es.plus.exception.EsException;
-import com.es.plus.lock.EsLockClient;
-import com.es.plus.lock.EsLockFactory;
 import com.es.plus.pojo.ClientContext;
 import com.es.plus.starter.properties.ClientProperties;
 import com.es.plus.starter.properties.EsProperties;
@@ -117,11 +113,7 @@ public class EsClientConfiguration implements InitializingBean {
         }
         clientProperties.forEach((k, v) -> {
             RestHighLevelClient restHighLevelClient = getRestHighLevelClient(v);
-            EsLockClient esLockClient = new EsLockClient(restHighLevelClient);
-            EsLockFactory esLockFactory = new EsLockFactory(esLockClient);
-            EsPlusRestClient esPlusRestClient = new EsPlusRestClient(restHighLevelClient, esLockFactory);
-            EsPlusIndexRestClient esPlusIndexRestClient = new EsPlusIndexRestClient(restHighLevelClient);
-            EsPlusClientFacade esPlusClientFacade = new EsPlusClientFacade(esPlusRestClient, esPlusIndexRestClient, esLockFactory);
+            EsPlusClientFacade esPlusClientFacade = ClientContext.buildEsPlusClientFacade(restHighLevelClient);
             ClientContext.addClient(k, esPlusClientFacade);
         });
     }

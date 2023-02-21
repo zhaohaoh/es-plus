@@ -1,6 +1,12 @@
 package com.es.plus.pojo;
 
 import com.es.plus.client.EsPlusClientFacade;
+import com.es.plus.client.EsPlusIndexRestClient;
+import com.es.plus.client.EsPlusRestClient;
+import com.es.plus.lock.EsLockClient;
+import com.es.plus.lock.EsLockFactory;
+import org.elasticsearch.client.RestHighLevelClient;
+
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -29,5 +35,19 @@ public class ClientContext {
      */
     public static EsPlusClientFacade getClient(String name) {
         return CLIENT_MAP.get(name);
+    }
+
+    /**
+     * 构建es端外观
+     *
+     * @return {@link EsPlusClientFacade}
+     */
+    public static EsPlusClientFacade buildEsPlusClientFacade(RestHighLevelClient restHighLevelClient) {
+        EsLockClient esLockClient = new EsLockClient(restHighLevelClient);
+        EsLockFactory esLockFactory = new EsLockFactory(esLockClient);
+        EsPlusRestClient esPlusRestClient = new EsPlusRestClient(restHighLevelClient, esLockFactory);
+        EsPlusIndexRestClient esPlusIndexRestClient = new EsPlusIndexRestClient(restHighLevelClient);
+        EsPlusClientFacade esPlusClientFacade = new EsPlusClientFacade(esPlusRestClient, esPlusIndexRestClient, esLockFactory);
+        return esPlusClientFacade;
     }
 }
