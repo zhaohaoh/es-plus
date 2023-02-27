@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("Sample")
+@RequestMapping("sample")
 public class SamplesController {
     @Autowired
     private SamplesEsService samplesEsService;

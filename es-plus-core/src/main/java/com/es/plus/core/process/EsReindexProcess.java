@@ -14,6 +14,7 @@ import com.es.plus.pojo.EsSettings;
 import com.es.plus.properties.EsIndexParam;
 import com.es.plus.properties.EsParamHolder;
 import com.es.plus.util.JsonUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.elasticsearch.client.indices.GetIndexResponse;
 import org.elasticsearch.cluster.metadata.MappingMetadata;
 import org.elasticsearch.common.settings.Settings;
@@ -24,7 +25,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.StopWatch;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -86,8 +90,16 @@ public class EsReindexProcess {
         //获取索引信息
         EsIndexParam esIndexParam = EsParamHolder.getEsIndexParam(clazz);
 
-        //根据别名获取索引结果
+
+        //根据别名获取索引结果 获取不到则通过索引名获取并且修改成目前的别名
         GetIndexResponse getIndexResponse = esPlusClientFacade.getIndex(esIndexParam.getAlias());
+        if (getIndexResponse == null || ArrayUtils.isEmpty(getIndexResponse.getIndices())) {
+            getIndexResponse = esPlusClientFacade.getIndex(esIndexParam.getIndex());
+            if (getIndexResponse != null && ArrayUtils.isNotEmpty(getIndexResponse.getIndices())) {
+                esPlusClientFacade.createAlias(getIndexResponse.getIndices()[0], esIndexParam.getAlias());
+            }
+        }
+
 
         // 获取当前索引
         String currentIndex = getIndexResponse.getIndices()[0];
@@ -233,8 +245,7 @@ public class EsReindexProcess {
         String reindexName = getReindexName(currentIndex);
 
         //创建没有别名的新索引
-        esPlusClientFacade.deleteAndCreateIndexWithoutAlias(reindexName, clazz);
-
+        esPlusClientFacade.createIndexWithoutAlias(reindexName, clazz);
 
         log.info("es-plus doReindex Begin currentIndex:{} newIndex:{}", currentIndex, reindexName);
 
@@ -256,7 +267,7 @@ public class EsReindexProcess {
         Lock lock = readWrtieLock.writeLock();
         lock.lock();
         try {
-            esPlusClientFacade.updateAlias(currentIndex, reindexName, esIndexParam.getAlias());
+            esPlusClientFacade.replaceAlias(currentIndex, reindexName, esIndexParam.getAlias());
         } finally {
             //解放锁的状态 其他服务在进行新增修改操作的时候修改状态
             esPlusClientFacade.getEsPlusClient().setReindexState(false);
@@ -264,7 +275,6 @@ public class EsReindexProcess {
             lock.unlock();
             release = true;
         }
-
 
         // 第二次迁移残留数据
         reindex = esPlusClientFacade.reindex(currentIndex, reindexName, QueryBuilders.rangeQuery(EsConstant.REINDEX_TIME_FILED).gte(currentTimeMillis));

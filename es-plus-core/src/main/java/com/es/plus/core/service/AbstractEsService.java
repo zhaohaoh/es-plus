@@ -118,7 +118,8 @@ public abstract class AbstractEsService<T> implements InitializingBean {
         boolean lock = eLock.tryLock();
         try {
             if (lock) {
-                boolean exists = esPlusClientFacade.indexExists(this.alias);
+                //取索引名判断，会同时判断索引名和别名
+                boolean exists = esPlusClientFacade.indexExists(this.index) || esPlusClientFacade.indexExists(alias);
                 if (exists) {
                     EsReindexProcess.tryReindex(esPlusClientFacade, indexClass);
                 } else {

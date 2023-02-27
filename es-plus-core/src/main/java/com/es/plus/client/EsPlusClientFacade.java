@@ -131,8 +131,8 @@ public class EsPlusClientFacade {
      * @param index  指数
      * @param tClass t类
      */
-    public void deleteAndCreateIndexWithoutAlias(String index, Class<?> tClass) {
-        esPlusIndexClient.deleteAndCreateIndexWithoutAlias(index, tClass);
+    public void createIndexWithoutAlias(String index, Class<?> tClass) {
+        esPlusIndexClient.createIndexWithoutAlias(index, tClass);
     }
 
 
@@ -182,8 +182,8 @@ public class EsPlusClientFacade {
      * @param alias        别名
      * @return boolean
      */
-    public boolean updateAlias(String oldIndexName, String reindexName, String alias) {
-        return esPlusIndexClient.updateAlias(oldIndexName, reindexName, alias);
+    public boolean replaceAlias(String oldIndexName, String reindexName, String alias) {
+        return esPlusIndexClient.replaceAlias(oldIndexName, reindexName, alias);
     }
 
 
@@ -323,4 +323,11 @@ public class EsPlusClientFacade {
         return esPlusClient.aggregations(index, esParamWrapper,tClass);
     }
 
+    public void createAlias(String currentIndex, String alias) {
+        esPlusIndexClient.createAlias(currentIndex,alias);
+    }
+
+    public void removeAlias(String index, String alias) {
+        esPlusIndexClient.removeAlias(index,alias);
+    }
 }

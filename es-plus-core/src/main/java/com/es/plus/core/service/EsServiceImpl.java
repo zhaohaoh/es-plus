@@ -119,7 +119,7 @@ public class EsServiceImpl<T> extends AbstractEsService<T> implements EsService<
      */
     @Override
     public List<BulkItemResponse> saveOrUpdateBatch(Collection<T> entityList) {
-        return esPlusClientFacade.saveOrUpdateBatch(index, entityList);
+        return esPlusClientFacade.saveOrUpdateBatch(alias, entityList);
     }
 
     /**
