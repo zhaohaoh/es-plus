@@ -10,6 +10,7 @@ import com.es.plus.pojo.PageInfo;
 import com.es.plus.pojo.EsAggsResponse;
 import com.es.plus.properties.EsIndexParam;
 import com.es.plus.properties.EsParamHolder;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * @Author: hzh
@@ -23,7 +24,7 @@ public class EsChainLambdaQueryWrapper<T> extends AbstractEsChainWrapper<T, SFun
         super.esWrapper = new EsLambdaQueryWrapper<>(tClass);
         EsIndexParam esIndexParam = EsParamHolder.getEsIndexParam(super.tClass);
         if (esIndexParam != null) {
-            index = esIndexParam.getIndex();
+            index = StringUtils.isBlank(esIndexParam.getAlias())? esIndexParam.getIndex():esIndexParam.getAlias();
         }
     }
 
@@ -32,7 +33,7 @@ public class EsChainLambdaQueryWrapper<T> extends AbstractEsChainWrapper<T, SFun
         super.esWrapper = new EsLambdaQueryWrapper<>(tClass);
         EsIndexParam esIndexParam = EsParamHolder.getEsIndexParam(super.tClass);
         if (esIndexParam != null) {
-            index = esIndexParam.getIndex();
+            index = StringUtils.isBlank(esIndexParam.getAlias())? esIndexParam.getIndex():esIndexParam.getAlias();
         }
         if (esPlusClientFacade != null) {
             this.esPlusClientFacade = esPlusClientFacade;

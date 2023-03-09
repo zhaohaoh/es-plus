@@ -55,7 +55,7 @@ public class SamplesEsService extends EsServiceImpl<SamplesEsDTO> {
         List<SamplesEsDTO> list = esResponse.getList();
         System.out.println(list);
 
-        EsChainQueryWrapper<Map> term = Es.chainQuery(Map.class).index("sys_user2ttt").must().match("username", "HZH").term("email", "abc");
+        EsChainQueryWrapper<Map> term = Es.chainQuery(Map.class).index("sys_user2ttt_alias").must().match("username", "HZH").term("email", "abc");
         term.esAggWrapper().terms("keyword");
         EsResponse<Map> list1 = term.list();
         Map<String, Long> username1 = list1.getEsAggsResponse().getTermsAsMap("keyword");

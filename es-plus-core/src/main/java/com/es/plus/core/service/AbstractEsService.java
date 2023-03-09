@@ -82,7 +82,7 @@ public abstract class AbstractEsService<T> implements InitializingBean {
             this.index = esIndexParam.getIndex();
 
             //有别名取别名，没有别名就取索引名。  本框架别名就是真实操作的索引名，优先取别名进行查询
-            this.alias = StringUtils.isBlank(alias) ? this.alias = index : esIndexParam.getAlias();
+            this.alias = StringUtils.isBlank(esIndexParam.getAlias()) ? this.alias = index : esIndexParam.getAlias();
 
             type = annotation.type();
 

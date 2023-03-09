@@ -9,6 +9,7 @@ import com.es.plus.pojo.EsResponse;
 import com.es.plus.pojo.PageInfo;
 import com.es.plus.properties.EsIndexParam;
 import com.es.plus.properties.EsParamHolder;
+import org.apache.commons.lang3.StringUtils;
 
 public class EsChainQueryWrapper<T> extends AbstractEsChainWrapper<T, String, EsChainQueryWrapper<T>, EsQueryWrapper<T>> {
     private EsPlusClientFacade esPlusClientFacade = ClientContext.getClient("master");
@@ -18,7 +19,7 @@ public class EsChainQueryWrapper<T> extends AbstractEsChainWrapper<T, String, Es
         super.esWrapper = new EsQueryWrapper<>(tClass);
         EsIndexParam esIndexParam = EsParamHolder.getEsIndexParam(super.tClass);
         if (esIndexParam != null) {
-            index = esIndexParam.getIndex();
+            index = StringUtils.isBlank(esIndexParam.getAlias())? esIndexParam.getIndex():esIndexParam.getAlias();
         }
     }
 
@@ -27,7 +28,7 @@ public class EsChainQueryWrapper<T> extends AbstractEsChainWrapper<T, String, Es
         super.esWrapper = new EsQueryWrapper<>(tClass);
         EsIndexParam esIndexParam = EsParamHolder.getEsIndexParam(super.tClass);
         if (esIndexParam != null) {
-            index = esIndexParam.getIndex();
+            index = StringUtils.isBlank(esIndexParam.getAlias())? esIndexParam.getIndex():esIndexParam.getAlias();
         }
         if (esPlusClientFacade != null) {
             this.esPlusClientFacade = esPlusClientFacade;

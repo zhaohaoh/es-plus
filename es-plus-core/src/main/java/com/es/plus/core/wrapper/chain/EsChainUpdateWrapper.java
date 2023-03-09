@@ -7,6 +7,7 @@ import com.es.plus.core.wrapper.core.Update;
 import com.es.plus.pojo.ClientContext;
 import com.es.plus.properties.EsIndexParam;
 import com.es.plus.properties.EsParamHolder;
+import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
 
@@ -28,7 +29,7 @@ public class EsChainUpdateWrapper<T> extends AbstractEsChainWrapper<T, String, E
         super.esWrapper = new EsUpdateWrapper<>(tClass);
         EsIndexParam esIndexParam = EsParamHolder.getEsIndexParam(super.tClass);
         if (esIndexParam != null) {
-            index = esIndexParam.getIndex();
+            index = StringUtils.isBlank(esIndexParam.getAlias())? esIndexParam.getIndex():esIndexParam.getAlias();
         }
     }
 
@@ -37,7 +38,7 @@ public class EsChainUpdateWrapper<T> extends AbstractEsChainWrapper<T, String, E
         super.esWrapper = new EsUpdateWrapper<>(tClass);
         EsIndexParam esIndexParam = EsParamHolder.getEsIndexParam(super.tClass);
         if (esIndexParam != null) {
-            index = esIndexParam.getIndex();
+            index = StringUtils.isBlank(esIndexParam.getAlias())? esIndexParam.getIndex():esIndexParam.getAlias();
         }
         if (esPlusClientFacade != null) {
             this.esPlusClientFacade = esPlusClientFacade;
