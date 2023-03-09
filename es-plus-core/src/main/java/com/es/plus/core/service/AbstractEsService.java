@@ -14,6 +14,7 @@ import com.es.plus.lock.ELock;
 import com.es.plus.lock.EsLockFactory;
 import com.es.plus.properties.EsIndexParam;
 import com.es.plus.properties.EsParamHolder;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
@@ -22,8 +23,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-
-import static com.es.plus.constant.EsConstant.SO_SUFFIX;
 
 /**
  * @Author: hzh
@@ -40,7 +39,7 @@ public abstract class AbstractEsService<T> implements InitializingBean {
      */
     protected String alias;
     /**
-     * 索引,这里存的是别名
+     * 索引
      */
     protected String index;
 
@@ -80,9 +79,10 @@ public abstract class AbstractEsService<T> implements InitializingBean {
             //添加索引信息
             EsIndexParam esIndexParam = EsParamHolder.getEsIndexParam(indexClass);
 
-            this.alias = esIndexParam.getAlias();
-
             this.index = esIndexParam.getIndex();
+
+            //有别名取别名，没有别名就取索引名。  本框架别名就是真实操作的索引名，优先取别名进行查询
+            this.alias = StringUtils.isBlank(alias) ? this.alias = index : esIndexParam.getAlias();
 
             type = annotation.type();
 
@@ -123,7 +123,7 @@ public abstract class AbstractEsService<T> implements InitializingBean {
                 if (exists) {
                     EsReindexProcess.tryReindex(esPlusClientFacade, indexClass);
                 } else {
-                    esPlusClientFacade.createIndexMapping(this.index + SO_SUFFIX, indexClass);
+                    esPlusClientFacade.createIndexMapping(this.index, indexClass);
                 }
                 logger.info("init es-plus indexResponse={} exists={}", this.index, exists);
             }

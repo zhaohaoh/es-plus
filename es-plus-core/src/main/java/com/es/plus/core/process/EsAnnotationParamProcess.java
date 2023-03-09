@@ -22,7 +22,6 @@ import java.lang.reflect.Type;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.es.plus.constant.Analyzer.*;
 import static com.es.plus.constant.Analyzer.ANALYZER;
 import static com.es.plus.constant.EsConstant.*;
 
@@ -54,8 +53,6 @@ public class EsAnnotationParamProcess {
         esIndexParam.setIndex(esIndex.index() + esSuffix);
         if (StringUtils.isNotBlank(esIndex.alias())) {
             esIndexParam.setAlias(esIndex.alias() + esSuffix);
-        } else {
-            esIndexParam.setAlias(esIndex.index() + esSuffix);
         }
         // 索引配置
         EsSettings esSettings = new EsSettings();

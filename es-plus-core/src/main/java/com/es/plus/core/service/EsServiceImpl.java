@@ -3,14 +3,14 @@ package com.es.plus.core.service;
 
 import com.es.plus.config.GlobalConfigCache;
 import com.es.plus.core.ScrollHandler;
-import com.es.plus.core.wrapper.chain.EsChainUpdateWrapper;
-import com.es.plus.pojo.EsResponse;
-import com.es.plus.pojo.PageInfo;
 import com.es.plus.core.wrapper.chain.EsChainLambdaQueryWrapper;
+import com.es.plus.core.wrapper.chain.EsChainUpdateWrapper;
 import com.es.plus.core.wrapper.core.EsQueryWrapper;
 import com.es.plus.core.wrapper.core.EsUpdateWrapper;
 import com.es.plus.pojo.EsAggsResponse;
+import com.es.plus.pojo.EsResponse;
 import com.es.plus.pojo.EsSettings;
+import com.es.plus.pojo.PageInfo;
 import com.es.plus.util.CollectionUtil;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.client.GetAliasesResponse;
@@ -21,8 +21,6 @@ import org.springframework.util.CollectionUtils;
 import java.io.Serializable;
 import java.util.*;
 import java.util.stream.Collectors;
-
-import static com.es.plus.constant.EsConstant.SO_SUFFIX;
 
 /**
  * @Author: hzh
@@ -60,7 +58,7 @@ public class EsServiceImpl<T> extends AbstractEsService<T> implements EsService<
         if (!CollectionUtils.isEmpty(aliasIndex.getAliases())) {
             return;
         }
-        esPlusClientFacade.createIndex(this.index + SO_SUFFIX, clazz);
+        esPlusClientFacade.createIndex(this.index, clazz);
     }
 
     /**
@@ -72,7 +70,7 @@ public class EsServiceImpl<T> extends AbstractEsService<T> implements EsService<
         if (!CollectionUtils.isEmpty(aliasIndex.getAliases())) {
             return;
         }
-        esPlusClientFacade.createIndexMapping(this.index + SO_SUFFIX, clazz);
+        esPlusClientFacade.createIndexMapping(this.index, clazz);
     }
 
     /**

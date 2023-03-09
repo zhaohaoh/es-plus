@@ -1,6 +1,6 @@
 package com.es.plus.core.process;
 
-import com.es.plus.annotation.EsIgnoreReindex;
+import com.es.plus.annotation.EsIndex;
 import com.es.plus.client.EsPlusClientFacade;
 import com.es.plus.client.EsPlusIndexRestClient;
 import com.es.plus.config.GlobalConfigCache;
@@ -15,6 +15,7 @@ import com.es.plus.properties.EsIndexParam;
 import com.es.plus.properties.EsParamHolder;
 import com.es.plus.util.JsonUtils;
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.client.indices.GetIndexResponse;
 import org.elasticsearch.cluster.metadata.MappingMetadata;
 import org.elasticsearch.common.settings.Settings;
@@ -81,11 +82,6 @@ public class EsReindexProcess {
      * @param clazz              clazz
      */
     public static void tryReindex(EsPlusClientFacade esPlusClientFacade, Class<?> clazz) {
-        // 忽略处理reindex
-        EsIgnoreReindex annotation = clazz.getAnnotation(EsIgnoreReindex.class);
-        if (annotation != null) {
-            return;
-        }
 
         //获取索引信息
         EsIndexParam esIndexParam = EsParamHolder.getEsIndexParam(clazz);
@@ -117,6 +113,14 @@ public class EsReindexProcess {
         if (Objects.equals(updateCommend, Commend.MAPPING_UPDATE)) {
             esPlusClientFacade.putMapping(currentIndex, clazz);
         } else if (Objects.equals(updateCommend, Commend.REINDEX) || reindex) {
+            // 忽略处理reindex
+            EsIndex annotation = clazz.getAnnotation(EsIndex.class);
+            if (!annotation.tryReindex()) {
+                return;
+            }
+            if (StringUtils.isBlank(annotation.alias())) {
+                throw new EsException(annotation.index() + " tryReindex alias Cannot be null");
+            }
             if (GlobalConfigCache.GLOBAL_CONFIG.isAutoReindex()) {
                 //执行reindex前先记录旧索引的时间映射
                 Map<String, Object> mappins = getUpdateReindexTimeMappins(currentEsMapping);

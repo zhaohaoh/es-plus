@@ -31,6 +31,11 @@ public @interface EsIndex {
 
     String alias() default "";
 
+    /**
+     * 试着重建索引
+     */
+    boolean tryReindex() default false;
+
     Class<?> childClass() default DefaultClass.class;
 
     Class<?> parentClass() default DefaultClass.class;
