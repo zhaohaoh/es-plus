@@ -60,7 +60,6 @@ public class SamplesEsService extends EsServiceImpl<SamplesEsDTO> {
         EsResponse<Map> list1 = term.list();
         Map<String, Long> username1 = list1.getEsAggsResponse().getTermsAsMap("keyword");
         System.out.println(username1);
-
     }
 
 
