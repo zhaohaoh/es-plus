@@ -269,7 +269,7 @@ public class EsReindexProcess {
 
         stopWatch.stop();
 
-        log.info("es-plus doReindex End currentIndex:{} newIndex:{} totalTimeSeconds:{}", currentIndex, reindexName, stopWatch.getTotalTimeSeconds());
+        log.info("es-plus first reindex End currentIndex:{} newIndex:{} totalTimeSeconds:{}", currentIndex, reindexName, stopWatch.getTotalTimeSeconds());
 
         // 新索引添加别名  切换了别名索引对于所有服务就已经可用.此时就需要执行释放锁
         EsReadWriteLock readWrtieLock = esPlusClientFacade.getReadWrtieLock(esIndexParam.getIndex() + EsConstant.REINDEX_UPDATE_LOCK);
@@ -291,6 +291,9 @@ public class EsReindexProcess {
 
         //删除老索引
         esPlusClientFacade.deleteIndex(currentIndex);
+
+
+        log.info("es-plus doReindex All End currentIndex:{} newIndex:{}", currentIndex, reindexName);
 
     }
 
