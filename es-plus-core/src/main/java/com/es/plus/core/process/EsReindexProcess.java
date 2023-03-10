@@ -14,7 +14,6 @@ import com.es.plus.pojo.EsSettings;
 import com.es.plus.properties.EsIndexParam;
 import com.es.plus.properties.EsParamHolder;
 import com.es.plus.util.JsonUtils;
-import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.client.indices.GetIndexResponse;
 import org.elasticsearch.cluster.metadata.MappingMetadata;
@@ -88,10 +87,13 @@ public class EsReindexProcess {
 
 
         //根据别名获取索引结果 获取不到则通过索引名获取并且修改成目前的别名
-        GetIndexResponse getIndexResponse = esPlusClientFacade.getIndex(esIndexParam.getAlias());
-        if (getIndexResponse == null || ArrayUtils.isEmpty(getIndexResponse.getIndices())) {
+        GetIndexResponse getIndexResponse = null;
+        if (StringUtils.isBlank(esIndexParam.getAlias())) {
             getIndexResponse = esPlusClientFacade.getIndex(esIndexParam.getIndex());
-            if (getIndexResponse != null && ArrayUtils.isNotEmpty(getIndexResponse.getIndices())) {
+        } else {
+            getIndexResponse = esPlusClientFacade.getIndex(esIndexParam.getAlias());
+            if (getIndexResponse == null) {
+                getIndexResponse = esPlusClientFacade.getIndex(esIndexParam.getIndex());
                 esPlusClientFacade.createAlias(getIndexResponse.getIndices()[0], esIndexParam.getAlias());
             }
         }
@@ -228,20 +230,23 @@ public class EsReindexProcess {
     private static void tryLockReindex(EsPlusClientFacade esPlusClientFacade, Class<?> clazz, EsIndexParam esIndexParam, String currentIndex) {
         ELock eLock = esPlusClientFacade.getLock(esIndexParam.getIndex() + EsConstant.REINDEX_LOCK_SUFFIX);
         boolean lock = eLock.tryLock();
-        boolean release = false;
         try {
             if (lock) {
-                release = doReindex(esPlusClientFacade, clazz, esIndexParam, currentIndex, eLock);
+                //如果能找到当前索引才需要执行reindex，否则已经执行过
+                if (esPlusClientFacade.getIndex(currentIndex) != null) {
+                    doReindex(esPlusClientFacade, clazz, esIndexParam, currentIndex);
+                }
             }
         } finally {
-            if (!release) {
+            //上面是否已经释放。如果上面的方法释放了这里不释放
+            if (lock) {
                 eLock.unlock();
             }
         }
     }
 
-    private static boolean doReindex(EsPlusClientFacade esPlusClientFacade, Class<?> clazz, EsIndexParam esIndexParam, String currentIndex, ELock eLock) {
-        boolean release;
+    private static void doReindex(EsPlusClientFacade esPlusClientFacade, Class<?> clazz, EsIndexParam esIndexParam, String currentIndex) {
+
         //记录重建索引前的时间戳
         long currentTimeMillis = System.currentTimeMillis();
 
@@ -275,9 +280,7 @@ public class EsReindexProcess {
         } finally {
             //解放锁的状态 其他服务在进行新增修改操作的时候修改状态
             esPlusClientFacade.getEsPlusClient().setReindexState(false);
-            eLock.unlock();
             lock.unlock();
-            release = true;
         }
 
         // 第二次迁移残留数据
@@ -289,7 +292,6 @@ public class EsReindexProcess {
         //删除老索引
         esPlusClientFacade.deleteIndex(currentIndex);
 
-        return release;
     }
 
     /**

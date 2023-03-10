@@ -393,7 +393,7 @@ public class EsPlusIndexRestClient implements EsPlusIndexClient {
                 indexRequest
                         .settings(settings)
                         .mapping(esIndexParam.getMappings());
-                printInfoLog("doCreateIndexMapping settings={},mappings:{}", settings.build().toString(), JsonUtils.toJsonStr(esIndexParam.getMappings()));
+                printInfoLog("doCreateIndexMapping index={} settings={},mappings:{}", indexRequest.index(),settings.build().toString(), JsonUtils.toJsonStr(esIndexParam.getMappings()));
                 CreateIndexResponse indexResponse = restHighLevelClient.indices().create(indexRequest, RequestOptions.DEFAULT);
             }
         } catch (IOException e) {

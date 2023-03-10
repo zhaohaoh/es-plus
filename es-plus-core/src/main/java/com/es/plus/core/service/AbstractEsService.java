@@ -100,7 +100,7 @@ public abstract class AbstractEsService<T> implements InitializingBean {
             //尝试创建或重建索引
             tryCreateOrReindex(indexClass, esIndexParam);
         } catch (Exception e) {
-            if (e.getLocalizedMessage().contains("ConnectException")) {
+            if (StringUtils.isNotBlank(e.getLocalizedMessage()) && e.getLocalizedMessage().contains("ConnectException")) {
                 if (GlobalConfigCache.GLOBAL_CONFIG.getConnectFailHandle().equals(ConnectFailHandleEnum.THROW_EXCEPTION)) {
                     throw new EsException(e);
                 } else {
@@ -132,7 +132,7 @@ public abstract class AbstractEsService<T> implements InitializingBean {
                 eLock.unlock();
             }
         }
-        // 改变索引必须重启所有服务这里有才不会出现问题。正常k8s服务集群都是多台顺序重启.
+        // 改变索引必须重启所有服务这里才不会出现问题。正常k8s服务集群都是多台顺序重启.
         // 不管有没有获取到上面的执行锁。都要判断reindex的状态。此处是为了多es实例。如果一个实例在reindex的状态。其他实例要能够感知到并设置锁定状态
         boolean locked = esPlusClientFacade.getLock(esIndexParam.getIndex() + EsConstant.REINDEX_LOCK_SUFFIX).isLocked();
         if (locked) {

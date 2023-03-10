@@ -770,17 +770,17 @@ public class EsPlusRestClient implements EsPlusClient {
         EsAggsResponse<T> esAggsResponse = new EsAggsResponse<>();
         esAggsResponse.setAggregations(aggregations);
         esAggsResponse.settClass(tClass);
-        EsResponse<T> tEsResponse = new EsResponse<>(result, hits.getTotalHits().value, esAggsResponse);
-        tEsResponse.setShardFailures(searchResponse.getShardFailures());
-        tEsResponse.setSkippedShards(searchResponse.getSkippedShards());
-        tEsResponse.setTookInMillis(searchResponse.getTook().getMillis());
-        tEsResponse.setSuccessfulShards(searchResponse.getSuccessfulShards());
-        tEsResponse.setTotalShards(searchResponse.getTotalShards());
+        EsResponse<T> esResponse = new EsResponse<>(result, hits.getTotalHits().value, esAggsResponse);
+        esResponse.setShardFailures(searchResponse.getShardFailures());
+        esResponse.setSkippedShards(searchResponse.getSkippedShards());
+        esResponse.setTookInMillis(searchResponse.getTook().getMillis());
+        esResponse.setSuccessfulShards(searchResponse.getSuccessfulShards());
+        esResponse.setTotalShards(searchResponse.getTotalShards());
         if (profile) {
             Map<String, ProfileShardResult> profileResults = searchResponse.getProfileResults();
-            tEsResponse.setProfileResults(profileResults);
+            esResponse.setProfileResults(profileResults);
         }
-        return tEsResponse;
+        return esResponse;
     }
 
 
@@ -808,10 +808,22 @@ public class EsPlusRestClient implements EsPlusClient {
     }
 
 
+    /**
+     * 打印信息日志
+     *
+     * @param format 格式
+     * @param params 参数个数
+     */
     private void printInfoLog(String format, Object... params) {
         log.info("es-plus " + format, params);
     }
 
+    /**
+     * 打印错误日志
+     *
+     * @param format 格式
+     * @param params 参数个数
+     */
     private void printErrorLog(String format, Object... params) {
         log.error("es-plus " + format, params);
     }

@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 
 
 @Data
-@EsIndex(index = "sys_user2ttt",alias = "sys_user2ttt_alias")
+@EsIndex(index = "sys_user2ttt" )
 public class SamplesEsDTO {
     // id  不添加注解也会默认获取.
     @EsId
