@@ -332,6 +332,14 @@ public class EsServiceImpl<T> extends AbstractEsService<T> implements EsService<
     }
 
     @Override
+    public EsResponse<T> searchAfter(PageInfo<T> pageInfo, EsQueryWrapper<T> esQueryWrapper) {
+        if (esQueryWrapper == null) {
+            esQueryWrapper = matchAll();
+        }
+        return esPlusClientFacade.searchAfter(pageInfo, esQueryWrapper.getEsParamWrapper(), clazz, alias);
+    }
+
+    @Override
     public long count(EsQueryWrapper<T> esQueryWrapper) {
         if (esQueryWrapper == null) {
             esQueryWrapper = matchAll();

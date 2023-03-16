@@ -43,6 +43,10 @@ public class EsChainQueryWrapper<T> extends AbstractEsChainWrapper<T, String, Es
         return esPlusClientFacade.searchPageByWrapper(new PageInfo<>(page, size), super.esWrapper.getEsParamWrapper(), tClass, index);
     }
 
+    public EsResponse<T> searchAfter(PageInfo<T> pageInfo) {
+        return esPlusClientFacade.searchAfter(pageInfo, super.esWrapper.getEsParamWrapper(), tClass, index);
+    }
+
     public EsAggsResponse<T> aggregations() {
         return esPlusClientFacade.aggregations(index, super.esWrapper.getEsParamWrapper(), tClass);
     }

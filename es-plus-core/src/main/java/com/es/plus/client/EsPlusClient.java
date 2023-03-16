@@ -105,7 +105,7 @@ public interface EsPlusClient {
     /**
      * 统计数
      *
-     * @param esQueryWrapper es查询包装
+     * @param esParamWrapper es查询包装
      * @param index          指数
      * @return long
      */
@@ -114,7 +114,7 @@ public interface EsPlusClient {
     /**
      * 搜索包装
      *
-     * @param esQueryWrapper es查询包装
+     * @param esParamWrapper es查询包装
      * @param tClass         t类
      * @param index          指数
      * @return {@link EsResponse}<{@link T}>
@@ -125,7 +125,7 @@ public interface EsPlusClient {
      * 搜索页面包装
      *
      * @param pageInfo       页面信息
-     * @param esQueryWrapper es查询包装
+     * @param esParamWrapper es查询包装
      * @param tClass         t类
      * @param index          指数
      * @return {@link EsResponse}<{@link T}>
@@ -135,7 +135,7 @@ public interface EsPlusClient {
     /**
      * 滚动查询包装
      *
-     * @param esQueryWrapper es查询包装
+     * @param esParamWrapper es查询包装
      * @param tClass         t类
      * @param index          指数
      * @param size           大小
@@ -148,9 +148,19 @@ public interface EsPlusClient {
      * 聚合
      *
      * @param index          指数
-     * @param esQueryWrapper es查询包装
+     * @param esParamWrapper es查询包装
      * @return {@link EsAggsResponse}<{@link T}>
      */
     <T> EsAggsResponse<T> aggregations(String index, EsParamWrapper<T> esParamWrapper, Class<T> tClass);
 
+    /**
+     * 搜索后
+     *
+     * @param pageInfo       页面信息
+     * @param esParamWrapper es参数包装器
+     * @param tClass         t类
+     * @param index          索引
+     * @return {@link EsResponse}<{@link T}>
+     */
+    <T> EsResponse<T> searchAfter(PageInfo<T> pageInfo, EsParamWrapper<T> esParamWrapper, Class<T> tClass, String index);
 }

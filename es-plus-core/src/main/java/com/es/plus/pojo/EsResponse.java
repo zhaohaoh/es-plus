@@ -30,6 +30,14 @@ public class EsResponse<T> {
      */
     private Map<String, ProfileShardResult> profileResults;
 
+    /**
+     * SearchAfter搜索查询起始值
+     */
+    private Object[] firstSortValues;
+    /**
+     * SearchAfter搜索查询结束值
+     */
+    private Object[] tailSortValues;
 
     private int totalShards;
     private int successfulShards;

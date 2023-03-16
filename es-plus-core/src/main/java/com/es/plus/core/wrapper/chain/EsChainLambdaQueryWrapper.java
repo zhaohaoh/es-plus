@@ -5,9 +5,9 @@ import com.es.plus.core.ScrollHandler;
 import com.es.plus.core.tools.SFunction;
 import com.es.plus.core.wrapper.core.EsLambdaQueryWrapper;
 import com.es.plus.pojo.ClientContext;
+import com.es.plus.pojo.EsAggsResponse;
 import com.es.plus.pojo.EsResponse;
 import com.es.plus.pojo.PageInfo;
-import com.es.plus.pojo.EsAggsResponse;
 import com.es.plus.properties.EsIndexParam;
 import com.es.plus.properties.EsParamHolder;
 import org.apache.commons.lang3.StringUtils;
@@ -46,6 +46,10 @@ public class EsChainLambdaQueryWrapper<T> extends AbstractEsChainWrapper<T, SFun
 
     public EsResponse<T> page(long page, long size) {
         return esPlusClientFacade.searchPageByWrapper(new PageInfo<>(page, size), esWrapper.getEsParamWrapper(), tClass, index);
+    }
+
+    public EsResponse<T> searchAfter(PageInfo<T> pageInfo) {
+        return esPlusClientFacade.searchAfter(pageInfo, esWrapper.getEsParamWrapper(), tClass, index);
     }
 
     public EsAggsResponse<T> aggregations() {

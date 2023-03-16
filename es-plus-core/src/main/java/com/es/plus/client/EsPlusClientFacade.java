@@ -289,44 +289,125 @@ public class EsPlusClientFacade {
     }
 
 
+    /**
+     * 删除根据查询
+     *
+     * @param index           指数
+     * @param esUpdateWrapper es更新包装
+     * @return {@link BulkByScrollResponse}
+     */
     public <T> BulkByScrollResponse deleteByQuery(String index, EsParamWrapper<T> esUpdateWrapper) {
         return esPlusClient.deleteByQuery(index, esUpdateWrapper);
     }
 
 
+    /**
+     * 删除批处理
+     *
+     * @param index      指数
+     * @param esDataList 数据列表
+     * @return boolean
+     */
     public boolean deleteBatch(String index, Collection<String> esDataList) {
         return esPlusClient.deleteBatch(index, esDataList);
     }
 
 
+    /**
+     * 统计
+     *
+     * @param esParamWrapper es param包装
+     * @param index          索引
+     * @return long
+     */
     public <T> long count(EsParamWrapper<T> esParamWrapper, String index) {
         return esPlusClient.count(esParamWrapper, index);
     }
 
 
+    /**
+     * 搜索根据包装器
+     *
+     * @param esParamWrapper es param包装
+     * @param tClass         t类
+     * @param index          索引
+     * @return {@link EsResponse}<{@link T}>
+     */
     public <T> EsResponse<T> searchByWrapper(EsParamWrapper<T> esParamWrapper, Class<T> tClass, String index) {
         return esPlusClient.searchByWrapper(esParamWrapper, tClass, index);
     }
 
 
+    /**
+     * 搜索分页根据包装器
+     *
+     * @param pageInfo       页面信息
+     * @param esParamWrapper es param包装
+     * @param tClass         t类
+     * @param index          索引
+     * @return {@link EsResponse}<{@link T}>
+     */
     public <T> EsResponse<T> searchPageByWrapper(PageInfo<T> pageInfo, EsParamWrapper<T> esParamWrapper, Class<T> tClass, String index) {
         return esPlusClient.searchPageByWrapper(pageInfo, esParamWrapper, tClass, index);
     }
 
+    /**
+     * 搜索翻页 也可以向前搜索，只要更改排序即可
+     * 此方法可以代替实现深度分页
+     *
+     * @param pageInfo       页面信息
+     * @param esParamWrapper es param包装
+     * @param tClass         t类
+     * @param index          索引
+     * @return {@link EsResponse}<{@link T}>
+     */
+    public <T> EsResponse<T> searchAfter(PageInfo<T> pageInfo, EsParamWrapper<T> esParamWrapper, Class<T> tClass, String index) {
+        return esPlusClient.searchAfter(pageInfo, esParamWrapper, tClass, index);
+    }
 
+    /**
+     * 滚动根据包装器
+     *
+     * @param esParamWrapper es param包装
+     * @param tClass         t类
+     * @param index          指数
+     * @param size           大小
+     * @param keepTime       保持时间
+     * @param scrollHandler  滚动处理程序
+     */
     public <T> void scrollByWrapper(EsParamWrapper<T> esParamWrapper, Class<T> tClass, String index, int size, int keepTime, ScrollHandler<T> scrollHandler) {
         esPlusClient.scrollByWrapper(esParamWrapper, tClass, index, size, keepTime, scrollHandler);
     }
 
 
+    /**
+     * 聚合
+     *
+     * @param index          指数
+     * @param esParamWrapper es param包装
+     * @param tClass         t类
+     * @return {@link EsAggsResponse}<{@link T}>
+     */
     public <T> EsAggsResponse<T> aggregations(String index, EsParamWrapper<T> esParamWrapper, Class<T> tClass) {
         return esPlusClient.aggregations(index, esParamWrapper,tClass);
     }
 
+    /**
+     * 创建别名
+     *
+     * @param currentIndex 目前指数
+     * @param alias        别名
+     */
     public void createAlias(String currentIndex, String alias) {
         esPlusIndexClient.createAlias(currentIndex,alias);
     }
 
+    /**
+     * 删除别名
+     *
+     * @param index 指数
+     * @param alias 别名
+     */
     public void removeAlias(String index, String alias) {
         esPlusIndexClient.removeAlias(index,alias);
     }

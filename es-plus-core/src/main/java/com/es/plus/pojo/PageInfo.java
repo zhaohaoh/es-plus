@@ -27,6 +27,8 @@ public class PageInfo<T> {
 
     private String keyword;
 
+    private Object[] searchAfterValues;
+
     public PageInfo() {
     }
     public PageInfo(long page, long size) {

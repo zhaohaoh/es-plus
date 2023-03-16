@@ -71,6 +71,9 @@ public interface EsService<T> {
 
     EsResponse<T> page(PageInfo<T> pageInfo, EsQueryWrapper<T> esQueryWrapper);
 
+
+    EsResponse<T> searchAfter(PageInfo<T> pageInfo, EsQueryWrapper<T> esQueryWrapper);
+
     long count(EsQueryWrapper<T> esQueryWrapper);
 
     EsAggsResponse<T> aggregations(EsQueryWrapper<T> esQueryWrapper);

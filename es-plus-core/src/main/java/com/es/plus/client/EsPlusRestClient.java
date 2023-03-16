@@ -4,8 +4,8 @@ package com.es.plus.client;
 import com.es.plus.core.ScrollHandler;
 import com.es.plus.core.params.EsParamWrapper;
 import com.es.plus.core.wrapper.aggregation.EsAggWrapper;
-import com.es.plus.core.wrapper.core.EsQueryParamWrapper;
 import com.es.plus.core.wrapper.aggregation.EsLambdaAggWrapper;
+import com.es.plus.core.wrapper.core.EsQueryParamWrapper;
 import com.es.plus.exception.EsException;
 import com.es.plus.lock.EsLockFactory;
 import com.es.plus.pojo.*;
@@ -71,7 +71,6 @@ import java.util.stream.Collectors;
 
 import static com.es.plus.config.GlobalConfigCache.GLOBAL_CONFIG;
 import static com.es.plus.constant.EsConstant.*;
-import static com.es.plus.constant.EsConstant.REINDEX_UPDATE_LOCK;
 import static com.es.plus.util.ResolveUtils.isCommonDataType;
 import static com.es.plus.util.ResolveUtils.isWrapClass;
 
@@ -663,65 +662,30 @@ public class EsPlusRestClient implements EsPlusClient {
         return esAggregationReponse;
     }
 
-
-    private <T> EsResponse<T> search(PageInfo<T> pageInfo, EsParamWrapper<T> esParamWrapper, Class<T> tClass, String index) {
+    @Override
+    public <T> EsResponse<T> searchAfter(PageInfo<T> pageInfo, EsParamWrapper<T> esParamWrapper, Class<T> tClass, String index) {
         SearchRequest searchRequest = new SearchRequest();
+
         EsQueryParamWrapper esQueryParamWrapper = esParamWrapper.getEsQueryParamWrapper();
-        //查询条件组合
-        BoolQueryBuilder queryBuilder = esParamWrapper.getQueryBuilder();
-        SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
-        sourceBuilder.query(queryBuilder);
-        EsSelect esSelect = esQueryParamWrapper.getEsSelect();
-        if (esSelect != null) {
-            if (ArrayUtils.isNotEmpty(esSelect.getIncludes()) || ArrayUtils.isNotEmpty(esSelect.getExcludes())) {
-                sourceBuilder.fetchSource(esSelect.getIncludes(), esSelect.getExcludes());
-            }
+
+        //获取查询语句源数据
+        SearchSourceBuilder sourceBuilder = getSearchSourceBuilder(pageInfo, esParamWrapper);
+
+        if (pageInfo.getSearchAfterValues() != null) {
+            sourceBuilder.searchAfter(pageInfo.getSearchAfterValues());
         }
-        boolean profile = esQueryParamWrapper.isProfile();
-        if (profile) {
-            sourceBuilder.profile(profile);
-        }
-        sourceBuilder.size(GLOBAL_CONFIG.getSearchSize());
-        //是否需要分页查询
-        if (pageInfo != null) {
-            //设置分页属性
-            sourceBuilder.from((int) ((pageInfo.getPage() - 1) * pageInfo.getSize()));
-            sourceBuilder.size((int) pageInfo.getSize());
-        }
-        //设置高亮
-        if (esQueryParamWrapper.getEsHighLights() != null) {
-            List<EsHighLight> esHighLight = esQueryParamWrapper.getEsHighLights();
-            HighlightBuilder highlightBuilder = new HighlightBuilder();
-            //设置为0获取全部内容
-            highlightBuilder.numOfFragments(0);
-            for (EsHighLight highLight : esHighLight) {
-                //高亮字段
-                highlightBuilder.field(highLight.getField());
-                //高亮前后缀
-                highlightBuilder.preTags(highLight.getPreTag())
-                        .postTags(highLight.getPostTag())
-                        .fragmentSize(highLight.getFragmentSize());
-                sourceBuilder.highlighter(highlightBuilder);
-            }
-        }
-        //超过1万条加了才能返回
-        if (GLOBAL_CONFIG.isTrackTotalHits()) {
-            sourceBuilder.trackTotalHits(true);
-        }
-        //排序
-        if (!CollectionUtils.isEmpty(esQueryParamWrapper.getEsOrderList())) {
-            List<EsOrder> orderFields = esQueryParamWrapper.getEsOrderList();
-            orderFields.forEach(order -> {
-                sourceBuilder.sort(new FieldSortBuilder(order.getName()).order(SortOrder.valueOf(order.getSort())));
-            });
-        }
-        populateGroupField(esParamWrapper, sourceBuilder);
-        //设置索引
+
+        //设置查询语句源数据
         searchRequest.source(sourceBuilder);
+
+        //设置索引
         searchRequest.indices(index);
+
+
         if (esQueryParamWrapper.getSearchType() != null) {
             searchRequest.searchType();
         }
+
         //查询
         SearchResponse searchResponse = null;
         try {
@@ -735,6 +699,50 @@ public class EsPlusRestClient implements EsPlusClient {
         if (searchResponse.status().getStatus() != 200) {
             throw new EsException("es-plus search error:" + searchResponse.status().getStatus());
         }
+
+        EsResponse<T> esResponse = gettEsResponse(tClass, esQueryParamWrapper, searchResponse);
+
+        return esResponse;
+    }
+
+
+    private <T> EsResponse<T> search(PageInfo<T> pageInfo, EsParamWrapper<T> esParamWrapper, Class<T> tClass, String index) {
+        SearchRequest searchRequest = new SearchRequest();
+
+        EsQueryParamWrapper esQueryParamWrapper = esParamWrapper.getEsQueryParamWrapper();
+
+        //获取查询语句源数据
+        SearchSourceBuilder sourceBuilder = getSearchSourceBuilder(pageInfo, esParamWrapper);
+
+        //设置查询语句源数据
+        searchRequest.source(sourceBuilder);
+
+        //设置索引
+        searchRequest.indices(index);
+
+
+        if (esQueryParamWrapper.getSearchType() != null) {
+            searchRequest.searchType();
+        }
+
+        //查询
+        SearchResponse searchResponse = null;
+        try {
+            long start = System.currentTimeMillis();
+            searchResponse = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
+            long end = System.currentTimeMillis();
+            printInfoLog("search index={} body:{} Time={}", index, sourceBuilder, end - start);
+        } catch (Exception e) {
+            throw new EsException("es-plus search body=" + sourceBuilder, e);
+        }
+        if (searchResponse.status().getStatus() != 200) {
+            throw new EsException("es-plus search error:" + searchResponse.status().getStatus());
+        }
+        EsResponse<T> esResponse = gettEsResponse(tClass, esQueryParamWrapper, searchResponse);
+        return esResponse;
+    }
+
+    private <T> EsResponse<T> gettEsResponse(Class<T> tClass, EsQueryParamWrapper esQueryParamWrapper, SearchResponse searchResponse) {
         //获取结果集
         SearchHits hits = searchResponse.getHits();
         SearchHit[] hitArray = hits.getHits();
@@ -766,23 +774,89 @@ public class EsPlusRestClient implements EsPlusClient {
                 result.add(JsonUtils.toBean(hit.getSourceAsString(), tClass));
             }
         }
+
+        //设置聚合结果
         Aggregations aggregations = searchResponse.getAggregations();
         EsAggsResponse<T> esAggsResponse = new EsAggsResponse<>();
         esAggsResponse.setAggregations(aggregations);
         esAggsResponse.settClass(tClass);
+
+        //设置返回结果
         EsResponse<T> esResponse = new EsResponse<>(result, hits.getTotalHits().value, esAggsResponse);
         esResponse.setShardFailures(searchResponse.getShardFailures());
         esResponse.setSkippedShards(searchResponse.getSkippedShards());
         esResponse.setTookInMillis(searchResponse.getTook().getMillis());
         esResponse.setSuccessfulShards(searchResponse.getSuccessfulShards());
         esResponse.setTotalShards(searchResponse.getTotalShards());
-        if (profile) {
+        if (ArrayUtils.isNotEmpty(hitArray)){
+            esResponse.setFirstSortValues(hitArray[0].getSortValues());
+            esResponse.setTailSortValues(hitArray[hitArray.length - 1].getSortValues());
+        }
+
+        //profile是性能分析类似mysql的explain
+        if (esQueryParamWrapper.isProfile()) {
             Map<String, ProfileShardResult> profileResults = searchResponse.getProfileResults();
             esResponse.setProfileResults(profileResults);
         }
         return esResponse;
     }
 
+    private <T> SearchSourceBuilder getSearchSourceBuilder(PageInfo<T> pageInfo, EsParamWrapper<T> esParamWrapper) {
+        EsQueryParamWrapper esQueryParamWrapper = esParamWrapper.getEsQueryParamWrapper();
+        //查询条件组合
+        BoolQueryBuilder queryBuilder = esParamWrapper.getQueryBuilder();
+        SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
+        sourceBuilder.query(queryBuilder);
+        EsSelect esSelect = esQueryParamWrapper.getEsSelect();
+        if (esSelect != null) {
+            if (ArrayUtils.isNotEmpty(esSelect.getIncludes()) || ArrayUtils.isNotEmpty(esSelect.getExcludes())) {
+                sourceBuilder.fetchSource(esSelect.getIncludes(), esSelect.getExcludes());
+            }
+        }
+        boolean profile = esQueryParamWrapper.isProfile();
+        if (profile) {
+            sourceBuilder.profile(profile);
+        }
+
+        //是否需要分页查询
+        if (pageInfo != null) {
+            //设置分页属性
+            sourceBuilder.from((int) ((pageInfo.getPage() - 1) * pageInfo.getSize()));
+            sourceBuilder.size((int) pageInfo.getSize());
+        } else {
+            sourceBuilder.size(GLOBAL_CONFIG.getSearchSize());
+        }
+
+        //设置高亮
+        if (esQueryParamWrapper.getEsHighLights() != null) {
+            List<EsHighLight> esHighLight = esQueryParamWrapper.getEsHighLights();
+            HighlightBuilder highlightBuilder = new HighlightBuilder();
+            //设置为0获取全部内容
+            highlightBuilder.numOfFragments(0);
+            for (EsHighLight highLight : esHighLight) {
+                //高亮字段
+                highlightBuilder.field(highLight.getField());
+                //高亮前后缀
+                highlightBuilder.preTags(highLight.getPreTag())
+                        .postTags(highLight.getPostTag())
+                        .fragmentSize(highLight.getFragmentSize());
+                sourceBuilder.highlighter(highlightBuilder);
+            }
+        }
+        //超过1万条加了才能返回
+        if (GLOBAL_CONFIG.isTrackTotalHits()) {
+            sourceBuilder.trackTotalHits(true);
+        }
+        //排序
+        if (!CollectionUtils.isEmpty(esQueryParamWrapper.getEsOrderList())) {
+            List<EsOrder> orderFields = esQueryParamWrapper.getEsOrderList();
+            orderFields.forEach(order -> {
+                sourceBuilder.sort(new FieldSortBuilder(order.getName()).order(SortOrder.valueOf(order.getSort())));
+            });
+        }
+        populateGroupField(esParamWrapper, sourceBuilder);
+        return sourceBuilder;
+    }
 
     //填充分组字段
     private <T> void populateGroupField(EsParamWrapper<T> esParamWrapper, SearchSourceBuilder sourceBuilder) {

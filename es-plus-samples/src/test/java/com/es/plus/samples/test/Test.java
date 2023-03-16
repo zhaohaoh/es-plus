@@ -21,7 +21,7 @@ public class Test {
         samplesNestedDTO.setEmail("abc");
         samplesEsDTO.setSamplesNesteds(samplesNestedDTO);
         samplesEsDTO.setSamplesNesteds(samplesNestedDTO);
-        samplesEsDTO.setId(1L);
+        samplesEsDTO.setId(3L);
         samplesEsService.save(samplesEsDTO);
     }
 
@@ -59,5 +59,10 @@ public class Test {
     @org.junit.jupiter.api.Test
     public void newSelect() {
         samplesEsService.newSelect();
+    }
+
+    @org.junit.jupiter.api.Test
+    public void searhAfter() {
+        samplesEsService.searhAfter();
     }
 }

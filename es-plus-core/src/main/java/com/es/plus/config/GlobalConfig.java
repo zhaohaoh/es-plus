@@ -37,9 +37,9 @@ public class GlobalConfig {
      */
     private WriteRequest.RefreshPolicy refreshPolicy = WriteRequest.RefreshPolicy.WAIT_UNTIL;
     /**
-     * 最大更新文档数 默认100万
+     * 最大更新文档数 默认10万
      */
-    private int maxDocs = 1000000;
+    private int maxDocs = 100000;
 
     /**
      * 最大查询文档数量 默认10万

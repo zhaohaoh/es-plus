@@ -7,6 +7,7 @@ import com.es.plus.core.wrapper.chain.EsChainQueryWrapper;
 import com.es.plus.core.wrapper.core.EsQueryWrapper;
 import com.es.plus.pojo.EsAggsResponse;
 import com.es.plus.pojo.EsResponse;
+import com.es.plus.pojo.PageInfo;
 import com.es.plus.samples.dto.SamplesEsDTO;
 import com.es.plus.samples.dto.SamplesNestedDTO;
 import org.apache.lucene.search.join.ScoreMode;
@@ -111,5 +112,24 @@ public class SamplesEsService extends EsServiceImpl<SamplesEsDTO> {
     public void newSelect() {
         EsResponse<SamplesEsDTO> hzh = Es.chainLambdaQuery(SamplesEsDTO.class).term(SamplesEsDTO::getUsername, "hzh").list();
         System.out.println(hzh);
+    }
+
+    public void searhAfter() {
+        PageInfo<SamplesEsDTO> pageInfo = new PageInfo<>();
+        pageInfo.setSize(3);
+
+        EsResponse<SamplesEsDTO> samplesEsDTOEsResponse = Es.chainLambdaQuery(SamplesEsDTO.class)
+                .orderBy("asc", SamplesEsDTO::getId).searchAfter(pageInfo);
+
+
+        pageInfo.setSearchAfterValues(samplesEsDTOEsResponse.getTailSortValues());
+        EsResponse<SamplesEsDTO> samplesEsDTOEsResponse1 = Es.chainLambdaQuery(SamplesEsDTO.class)
+                .orderBy("DESC", SamplesEsDTO::getId).searchAfter(pageInfo);
+
+
+        System.out.println(samplesEsDTOEsResponse);
+
+        System.out.println(samplesEsDTOEsResponse1);
+
     }
 }

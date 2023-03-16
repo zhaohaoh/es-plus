@@ -278,9 +278,9 @@ public class EsReindexProcess {
         try {
             esPlusClientFacade.replaceAlias(currentIndex, reindexName, esIndexParam.getAlias());
         } finally {
+            lock.unlock();
             //解放锁的状态 其他服务在进行新增修改操作的时候修改状态
             esPlusClientFacade.getEsPlusClient().setReindexState(false);
-            lock.unlock();
         }
 
         // 第二次迁移残留数据
@@ -292,9 +292,7 @@ public class EsReindexProcess {
         //删除老索引
         esPlusClientFacade.deleteIndex(currentIndex);
 
-
         log.info("es-plus doReindex All End currentIndex:{} newIndex:{}", currentIndex, reindexName);
-
     }
 
     /**
