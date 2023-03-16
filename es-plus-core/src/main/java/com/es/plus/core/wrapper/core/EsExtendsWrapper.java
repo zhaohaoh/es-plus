@@ -39,6 +39,12 @@ public interface EsExtendsWrapper<Children, R> {
      * 排序
      */
     Children orderBy(String order, R... columns);
+
+    /**
+     * 排序
+     */
+    Children orderBy(String order, R column);
+
     /**
      * 排序
      */

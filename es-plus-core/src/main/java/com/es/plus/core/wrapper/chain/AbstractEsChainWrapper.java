@@ -2,8 +2,6 @@ package com.es.plus.core.wrapper.chain;
 
 
 import com.es.plus.config.GlobalConfigCache;
-import com.es.plus.core.params.EsParamWrapper;
-import com.es.plus.core.tools.SFunction;
 import com.es.plus.core.wrapper.aggregation.EsAggWrapper;
 import com.es.plus.core.wrapper.aggregation.EsLambdaAggWrapper;
 import com.es.plus.core.wrapper.core.*;
@@ -107,6 +105,12 @@ public abstract class AbstractEsChainWrapper<T, R, Children extends AbstractEsCh
     @Override
     public Children orderBy(String order, R... columns) {
         getWrapper().orderBy(order, columns);
+        return children;
+    }
+
+    @Override
+    public Children orderBy(String order, R column) {
+        getWrapper().orderBy(order, column);
         return children;
     }
 

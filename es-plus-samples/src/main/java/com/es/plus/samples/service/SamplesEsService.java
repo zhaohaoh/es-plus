@@ -126,7 +126,6 @@ public class SamplesEsService extends EsServiceImpl<SamplesEsDTO> {
         EsResponse<SamplesEsDTO> samplesEsDTOEsResponse1 = Es.chainLambdaQuery(SamplesEsDTO.class)
                 .orderBy("DESC", SamplesEsDTO::getId).searchAfter(pageInfo);
 
-
         System.out.println(samplesEsDTOEsResponse);
 
         System.out.println(samplesEsDTOEsResponse1);

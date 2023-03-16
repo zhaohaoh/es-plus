@@ -2,7 +2,6 @@ package com.es.plus.core.wrapper.core;
 
 
 import com.es.plus.core.params.EsParamWrapper;
-import com.es.plus.core.statics.Es;
 import com.es.plus.core.wrapper.aggregation.EsAggWrapper;
 import com.es.plus.core.wrapper.aggregation.EsLambdaAggWrapper;
 import com.es.plus.pojo.EsHighLight;
@@ -538,6 +537,19 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
             esOrder.setSort(order);
             getEsQueryParamWrapper().getEsOrderList().add(esOrder);
         }
+        return children;
+    }
+
+    @Override
+    public Children orderBy(String order, R column) {
+        if (getEsQueryParamWrapper().getEsOrderList() == null) {
+            getEsQueryParamWrapper().setEsOrderList(new ArrayList<>());
+        }
+        String name = nameToString(column);
+        EsOrder esOrder = new EsOrder();
+        esOrder.setName(name);
+        esOrder.setSort(order);
+        getEsQueryParamWrapper().getEsOrderList().add(esOrder);
         return children;
     }
 
