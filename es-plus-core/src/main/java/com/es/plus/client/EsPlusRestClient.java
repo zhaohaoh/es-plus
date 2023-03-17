@@ -921,6 +921,9 @@ public class EsPlusRestClient implements EsPlusClient {
         return new EsUpdateField.Field(REINDEX_TIME_FILED, System.currentTimeMillis());
     }
 
+    /**
+     * 锁
+     */
     public boolean lock(String index) {
         // 是在reindex索引重建.则获取更新锁  此处加上读写锁的原因如下
         // 1如果只有下面的锁的isLocked判断.那么判断还有锁.执行后续代码.但是刚好重建索引结束那么mappins就变了.并发问题,

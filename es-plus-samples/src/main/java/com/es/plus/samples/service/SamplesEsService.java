@@ -103,10 +103,10 @@ public class SamplesEsService extends EsServiceImpl<SamplesEsDTO> {
     }
 
     public void update() {
-        Map<String,Object> map=new HashMap<>();
-        map.put("username","fsdfsfds");
-        map.put("id","d73d1b4e46244b0db766987759d6e");
-       Es.chainUpdate(Map.class).index("sys_user2ttt").save(map);
+        Map<String, Object> map = new HashMap<>();
+        map.put("username", "fsdfsfds");
+        map.put("id", "d73d1b4e46244b0db766987759d6e");
+        Es.chainUpdate(Map.class).index("sys_user2ttt").save(map);
     }
 
     public void newSelect() {
