@@ -102,7 +102,7 @@ public class EsReindexProcess {
         // 获取当前索引
         String currentIndex = getIndexResponse.getIndices()[0];
 
-        //重新更新配置
+        // 重新更新配置  返回值是代表是否重建索引
         boolean reindex = settingsUpdate(getIndexResponse, currentIndex, clazz, esPlusClientFacade);
 
         //获取旧索引映射

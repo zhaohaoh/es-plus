@@ -198,6 +198,7 @@ public class EsClientConfiguration implements InitializingBean {
             return analysisProperties;
         });
 
+
         analysis.forEach((analyzerName, analyzer) -> {
             Map<String, Object> analyzerMap = XcontentBuildUtils.buildAnalyzer(analyzer.getTokenizer(), analyzer.getFilters(), analyzer.getTokenizer());
             EsParamHolder.putAnalysis(analyzerName, analyzerMap);

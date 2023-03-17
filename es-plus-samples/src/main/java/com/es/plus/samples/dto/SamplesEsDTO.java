@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 
 
 @Data
-@EsIndex(index = "sys_user2ttt" )
+@EsIndex(index = "sys_user2ttt" ,alias ="sys_user2ttt_alias" ,tryReindex = true)
 public class SamplesEsDTO {
     // id  不添加注解也会默认获取.
     @EsId
@@ -48,6 +48,9 @@ public class SamplesEsDTO {
     private Boolean deleteState;
     @EsField(type = EsFieldType.TEXT)
     private String aaaaa;
+
+    @EsField(type = EsFieldType.KEYWORD)
+    private String baaq;
     //
 //    @TableField(exist = false)
 //    @IgnoreSwaggerParameter

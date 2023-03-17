@@ -50,7 +50,7 @@ public interface Analyzer {
 
 
     /**
-     * ep KEWORD处理器
+     * ep KEWORD处理器 这个处理器只对keyword类型有效
      */
     String EP_NORMALIZER = "ep_normalizer";
 
