@@ -296,6 +296,24 @@ public class EsPlusIndexRestClient implements EsPlusIndexClient {
         //成功的话，返回结果是true
         return settingsResult.isAcknowledged();
     }
+    @Override
+    public boolean updateSettings(String index, Map<String,Object> esSettings) {
+        String json = JsonUtils.toJsonStr(esSettings);
+        Settings settings = Settings.builder().loadFromSource(json, XContentType.JSON).build();
+        //创建索引的settings
+        UpdateSettingsRequest updateSettingsRequest = new UpdateSettingsRequest(settings, index);
+
+        //执行put
+        AcknowledgedResponse settingsResult = null;
+        try {
+            settingsResult = restHighLevelClient.indices().putSettings(updateSettingsRequest, RequestOptions.DEFAULT);
+        } catch (IOException e) {
+            throw new EsException(e);
+        }
+
+        //成功的话，返回结果是true
+        return settingsResult.isAcknowledged();
+    }
 
     /**
      * 连接

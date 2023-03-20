@@ -6,7 +6,7 @@ import com.es.plus.annotation.EsIndex;
 import com.es.plus.config.GlobalConfigCache;
 import com.es.plus.constant.DefaultClass;
 import com.es.plus.constant.EsFieldType;
-import com.es.plus.constant.JdkDataTypeEnum;
+import com.es.plus.constant.JavaTypeEnum;
 import com.es.plus.exception.EsException;
 import com.es.plus.pojo.EsSettings;
 import com.es.plus.properties.EsIndexParam;
@@ -266,7 +266,7 @@ public class EsAnnotationParamProcess {
     private String getEsFieldType(Class<?> clazz) {
         String type = "";
         // 否则根据类型推断,String以及找不到的类型一律被当做keyword处理
-        JdkDataTypeEnum jdkDataType = JdkDataTypeEnum.getByType(clazz.getSimpleName().toLowerCase());
+        JavaTypeEnum jdkDataType = JavaTypeEnum.getByType(clazz.getSimpleName().toLowerCase());
 
         switch (jdkDataType) {
             case BYTE:

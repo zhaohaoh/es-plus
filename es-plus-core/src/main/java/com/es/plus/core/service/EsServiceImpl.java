@@ -94,6 +94,14 @@ public class EsServiceImpl<T> extends AbstractEsService<T> implements EsService<
     }
 
     /**
+     * 更新设置
+     */
+    @Override
+    public boolean updateSettings(Map<String,Object> esSettings) {
+        return esPlusClientFacade.updateSettings(alias, esSettings);
+    }
+
+    /**
      * 保存
      */
     @Override
@@ -313,7 +321,12 @@ public class EsServiceImpl<T> extends AbstractEsService<T> implements EsService<
         return esPlusClientFacade.searchByWrapper(esQueryWrapper.getEsParamWrapper(), clazz, alias).getList();
     }
 
-    //最多返回3万条
+    /**
+     * 列表 默认有限的size
+     *
+     * @param esQueryWrapper es查询包装器
+     * @return {@link EsResponse}<{@link T}>
+     */
     @Override
     public EsResponse<T> list(EsQueryWrapper<T> esQueryWrapper) {
         //默认查询所有
@@ -323,6 +336,13 @@ public class EsServiceImpl<T> extends AbstractEsService<T> implements EsService<
         return esPlusClientFacade.searchByWrapper(esQueryWrapper.getEsParamWrapper(), clazz, alias);
     }
 
+    /**
+     * 分页查询
+     *
+     * @param pageInfo       页面信息
+     * @param esQueryWrapper es查询包装器
+     * @return {@link EsResponse}<{@link T}>
+     */
     @Override
     public EsResponse<T> page(PageInfo<T> pageInfo, EsQueryWrapper<T> esQueryWrapper) {
         if (esQueryWrapper == null) {
@@ -331,6 +351,13 @@ public class EsServiceImpl<T> extends AbstractEsService<T> implements EsService<
         return esPlusClientFacade.searchPageByWrapper(pageInfo, esQueryWrapper.getEsParamWrapper(), clazz, alias);
     }
 
+    /**
+     * searchAfter
+     *
+     * @param pageInfo       页面信息
+     * @param esQueryWrapper es查询包装器
+     * @return {@link EsResponse}<{@link T}>
+     */
     @Override
     public EsResponse<T> searchAfter(PageInfo<T> pageInfo, EsQueryWrapper<T> esQueryWrapper) {
         if (esQueryWrapper == null) {
@@ -339,6 +366,12 @@ public class EsServiceImpl<T> extends AbstractEsService<T> implements EsService<
         return esPlusClientFacade.searchAfter(pageInfo, esQueryWrapper.getEsParamWrapper(), clazz, alias);
     }
 
+    /**
+     * 统计
+     *
+     * @param esQueryWrapper es查询包装器
+     * @return long
+     */
     @Override
     public long count(EsQueryWrapper<T> esQueryWrapper) {
         if (esQueryWrapper == null) {
@@ -347,6 +380,12 @@ public class EsServiceImpl<T> extends AbstractEsService<T> implements EsService<
         return esPlusClientFacade.count(esQueryWrapper.getEsParamWrapper(), alias);
     }
 
+    /**
+     * 聚合
+     *
+     * @param esQueryWrapper es查询包装器
+     * @return {@link EsAggsResponse}<{@link T}>
+     */
     @Override
     public EsAggsResponse<T> aggregations(EsQueryWrapper<T> esQueryWrapper) {
         return esPlusClientFacade.aggregations(alias, esQueryWrapper.getEsParamWrapper(), clazz);
@@ -364,6 +403,14 @@ public class EsServiceImpl<T> extends AbstractEsService<T> implements EsService<
         return esPlusClientFacade.searchByWrapper(esQueryWrapper.getEsParamWrapper(), clazz, alias);
     }
 
+    /**
+     * 滚动查询
+     *
+     * @param esQueryWrapper es查询包装器
+     * @param size           大小
+     * @param keepTime       保持时间
+     * @param scrollHandler  滚动处理程序
+     */
     @Override
     public void scroll(EsQueryWrapper<T> esQueryWrapper, int size, int keepTime, ScrollHandler<T> scrollHandler) {
         if (esQueryWrapper == null) {
@@ -373,11 +420,22 @@ public class EsServiceImpl<T> extends AbstractEsService<T> implements EsService<
         esPlusClientFacade.scrollByWrapper(esQueryWrapper.getEsParamWrapper(), clazz, alias, size, keepTime, scrollHandler);
     }
 
+    /**
+     * 增量
+     *
+     * @param esUpdateWrapper es更新包装器
+     * @return {@link BulkByScrollResponse}
+     */
     @Override
     public BulkByScrollResponse increment(EsUpdateWrapper<T> esUpdateWrapper) {
         return esPlusClientFacade.increment(alias, esUpdateWrapper.getEsParamWrapper());
     }
 
+    /**
+     * 匹配所有
+     *
+     * @return {@link EsQueryWrapper}<{@link T}>
+     */
     private EsQueryWrapper<T> matchAll() {
         EsQueryWrapper<T> esQueryWrapper = new EsQueryWrapper<>(clazz);
         esQueryWrapper.must().query(QueryBuilders.matchAllQuery());

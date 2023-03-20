@@ -210,6 +210,17 @@ public class EsPlusClientFacade {
         return esPlusIndexClient.updateSettings(index, esSettings);
     }
 
+    /**
+     * 更新设置
+     *
+     * @param index      索引
+     * @param esSettings es设置
+     * @return boolean
+     */
+    public boolean updateSettings(String index, Map<String,Object> esSettings) {
+        return esPlusIndexClient.updateSettings(index, esSettings);
+    }
+
 
     /**
      * ----------------------------------------------------------------------------------------------------------

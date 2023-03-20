@@ -108,6 +108,15 @@ public interface EsPlusIndexClient {
     boolean updateSettings(String index, EsSettings esSettings);
 
     /**
+     * 更新设置
+     *
+     * @param index      索引
+     * @param esSettings es设置
+     * @return boolean
+     */
+    boolean updateSettings(String index, Map<String,Object> esSettings);
+
+    /**
      * 连接
      */
     boolean ping();

@@ -16,6 +16,7 @@ import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 public interface EsService<T> {
 
@@ -34,6 +35,8 @@ public interface EsService<T> {
     void createMapping();
 
     boolean updateSettings(EsSettings esSettings);
+
+     boolean updateSettings(Map<String,Object> esSettings);
 
     boolean save(T entity);
 
