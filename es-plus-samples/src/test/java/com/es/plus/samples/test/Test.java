@@ -61,9 +61,10 @@ public class Test {
     }
 
     @org.junit.jupiter.api.Test
-    public void updateSettings() {
+    public void updateSettingsLog() {
         Map<String,Object> map=new HashMap<>();
         map.put(EsSettingsConstants.QUERY_INFO,"0s");
+        map.put(EsSettingsConstants.QUERY_WARN,"0s");
         map.put(EsSettingsConstants.SEARCH_LEVEL,"info");
         samplesEsService.updateSettings(map);
     }

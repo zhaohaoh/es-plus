@@ -1,6 +1,10 @@
 package com.es.plus.constant;
 
-
+/**
+ * @Author: hzh
+ * @Date: 2023/3/21 17:08
+ * es配置常量,发现就添加
+ */
 public interface EsSettingsConstants {
 
     String QUERY_DEBUG = "search.slowlog.threshold.query.debug";
@@ -20,10 +24,14 @@ public interface EsSettingsConstants {
     String FETCH_DEBUG = "search.slowlog.threshold.fetch.debug";
 
     String FETCH_TRACE = "search.slowlog.threshold.fetch.trace";
-    //日志级别
-    String SEARCH_LEVEL = "index.search.slowlog.level";
+    /**
+     * 日志级别
+     */
 
-    //索引日志
+    String SEARCH_LEVEL = "index.search.slowlog.level";
+    /**
+     * 索引日志
+     */
     String INDEX_WARN = "indexing.slowlog.threshold.index.warn";
 
     String INDEX_INFO = "indexing.slowlog.threshold.index.info";
