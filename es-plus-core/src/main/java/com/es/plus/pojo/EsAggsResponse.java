@@ -31,7 +31,7 @@ import java.util.Map;
  * @Author: hzh
  * @Date: 2022/6/21 12:31
  */
-public class EsAggregationsResponse<T> extends AbstractLambdaAggWrapper<T, SFunction<T, ?>> {
+public class EsAggsResponse<T> extends AbstractLambdaAggWrapper<T, SFunction<T, ?>> {
     private Aggregations aggregations;
 
     public void settClass(Class<T> tClass) {
@@ -57,7 +57,6 @@ public class EsAggregationsResponse<T> extends AbstractLambdaAggWrapper<T, SFunc
 
     /**
      * 得到聚合的map
-     *
      */
     public Map<String, Long> getTermsAsMap(SFunction<T, ?> name) {
         Terms terms = aggregations.get(getAggregationField(name) + EsConstant.AGG_DELIMITER + TermsAggregationBuilder.NAME);
@@ -85,7 +84,7 @@ public class EsAggregationsResponse<T> extends AbstractLambdaAggWrapper<T, SFunc
             EsPLusTerms<T> pLusTerms = new EsPLusTerms<>();
             pLusTerms.setDocCount(bucket.getDocCount());
             pLusTerms.setDocCountError(bucket.getDocCountError());
-            EsAggregationsResponse<T> tEsAggregationsResponse = new EsAggregationsResponse<>();
+            EsAggsResponse<T> tEsAggregationsResponse = new EsAggsResponse<>();
             tEsAggregationsResponse.settClass(super.tClass);
             tEsAggregationsResponse.setAggregations(bucket.getAggregations());
             pLusTerms.setEsAggregationsReponse(tEsAggregationsResponse);
@@ -146,4 +145,98 @@ public class EsAggregationsResponse<T> extends AbstractLambdaAggWrapper<T, SFunc
         return aggregations.get(getAggregationField(name) + EsConstant.AGG_DELIMITER + SumAggregationBuilder.NAME);
     }
 
+
+    /**
+     * 得到聚合的map
+     */
+    public Map<String, Long> getTermsAsMap(String name) {
+        Terms terms = aggregations.get(name + EsConstant.AGG_DELIMITER + TermsAggregationBuilder.NAME);
+        Map<String, Long> data = new HashMap<>();
+        if (terms == null) {
+            return data;
+        }
+
+        List<? extends Terms.Bucket> buckets = terms.getBuckets();
+        for (Terms.Bucket bucket : buckets) {
+            String keyAsString = bucket.getKeyAsString();
+            data.put(keyAsString, bucket.getDocCount());
+        }
+        return data;
+    }
+
+    /**
+     * 得到esplus封装的map
+     *
+     * @param name 名字
+     * @return {@link Map}<{@link String}, {@link EsPLusTerms}<{@link T}>>
+     */
+    public Map<String, EsPLusTerms<T>> getEsPLusTermsAsMap(String name) {
+        Terms terms = aggregations.get(name + EsConstant.AGG_DELIMITER + TermsAggregationBuilder.NAME);
+        Map<String, EsPLusTerms<T>> data = new HashMap<>();
+        List<? extends Terms.Bucket> buckets = terms.getBuckets();
+        for (Terms.Bucket bucket : buckets) {
+            String keyAsString = bucket.getKeyAsString();
+            EsPLusTerms<T> pLusTerms = new EsPLusTerms<>();
+            pLusTerms.setDocCount(bucket.getDocCount());
+            pLusTerms.setDocCountError(bucket.getDocCountError());
+            EsAggsResponse<T> tEsAggregationsResponse = new EsAggsResponse<>();
+            tEsAggregationsResponse.settClass(super.tClass);
+            tEsAggregationsResponse.setAggregations(bucket.getAggregations());
+            pLusTerms.setEsAggregationsReponse(tEsAggregationsResponse);
+            data.put(keyAsString, pLusTerms);
+        }
+        return data;
+    }
+
+    public Terms getTerms(String name) {
+        return aggregations.get(name + EsConstant.AGG_DELIMITER + TermsAggregationBuilder.NAME);
+    }
+
+    public RareTerms getRareTerms(String name) {
+        return aggregations.get(name + EsConstant.AGG_DELIMITER + RareTermsAggregationBuilder.NAME);
+    }
+
+    public Filters getFilters(String name) {
+        return aggregations.get(name + EsConstant.AGG_DELIMITER + FiltersAggregationBuilder.NAME);
+    }
+
+    public AdjacencyMatrix getAdjacencyMatrix(String name) {
+        return aggregations.get(name + EsConstant.AGG_DELIMITER + AdjacencyMatrixAggregationBuilder.NAME);
+    }
+
+    public SignificantTerms getSignificantTerms(String name) {
+        return aggregations.get(name + EsConstant.AGG_DELIMITER + SignificantTermsAggregationBuilder.NAME);
+    }
+
+    public Histogram getHistogram(String name) {
+        return aggregations.get(name + EsConstant.AGG_DELIMITER + HistogramAggregationBuilder.NAME);
+    }
+
+    public GeoGrid getGeoGrid(String name) {
+        return aggregations.get(name + EsConstant.AGG_DELIMITER + GeoTileGridAggregationBuilder.NAME);
+    }
+
+    public Max getMax(String name) {
+        return aggregations.get(name + EsConstant.AGG_DELIMITER + MaxAggregationBuilder.NAME);
+    }
+
+    public Avg getAvg(String name) {
+        return aggregations.get(name + EsConstant.AGG_DELIMITER + AvgAggregationBuilder.NAME);
+    }
+
+    public Sum getSum(String name) {
+        return aggregations.get(name + EsConstant.AGG_DELIMITER + SumAggregationBuilder.NAME);
+    }
+
+    public ValueCount getCount(String name) {
+        return aggregations.get(name + EsConstant.AGG_DELIMITER + SumAggregationBuilder.NAME);
+    }
+
+    public WeightedAvg getWeightedAvg(String name) {
+        return aggregations.get(name + EsConstant.AGG_DELIMITER + SumAggregationBuilder.NAME);
+    }
+
+    public BucketMetricValue getBucketMetricValue(String name) {
+        return aggregations.get(name + EsConstant.AGG_DELIMITER + SumAggregationBuilder.NAME);
+    }
 }

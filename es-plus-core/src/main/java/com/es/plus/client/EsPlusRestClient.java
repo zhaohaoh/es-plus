@@ -2,11 +2,10 @@ package com.es.plus.client;
 
 
 import com.es.plus.core.ScrollHandler;
+import com.es.plus.core.params.EsParamWrapper;
 import com.es.plus.core.wrapper.aggregation.EsAggWrapper;
-import com.es.plus.core.wrapper.core.EsParamWrapper;
-import com.es.plus.core.wrapper.core.EsQueryWrapper;
-import com.es.plus.core.wrapper.core.EsUpdateWrapper;
 import com.es.plus.core.wrapper.aggregation.EsLambdaAggWrapper;
+import com.es.plus.core.wrapper.core.EsQueryParamWrapper;
 import com.es.plus.exception.EsException;
 import com.es.plus.lock.EsLockFactory;
 import com.es.plus.pojo.*;
@@ -72,7 +71,6 @@ import java.util.stream.Collectors;
 
 import static com.es.plus.config.GlobalConfigCache.GLOBAL_CONFIG;
 import static com.es.plus.constant.EsConstant.*;
-import static com.es.plus.constant.EsConstant.REINDEX_UPDATE_LOCK;
 import static com.es.plus.util.ResolveUtils.isCommonDataType;
 import static com.es.plus.util.ResolveUtils.isWrapClass;
 
@@ -161,7 +159,7 @@ public class EsPlusRestClient implements EsPlusClient {
     private boolean isChildIndex(Object esData) {
         Class<?> clazz = esData.getClass();
         EsIndexParam esIndexParam = EsParamHolder.getEsIndexParam(clazz);
-        if (esIndexParam.getChildClass() != null && esIndexParam.getChildClass().equals(clazz)) {
+        if (esIndexParam != null && esIndexParam.getChildClass() != null && esIndexParam.getChildClass().equals(clazz)) {
             return true;
         } else {
             return false;
@@ -206,7 +204,7 @@ public class EsPlusRestClient implements EsPlusClient {
             res = restHighLevelClient.bulk(bulkRequest, RequestOptions.DEFAULT);
             for (BulkItemResponse bulkItemResponse : res.getItems()) {
                 if (bulkItemResponse.isFailed()) {
-                    printErrorLog("save error" + bulkItemResponse.getId() + " message:" + bulkItemResponse.getFailureMessage());
+                    printErrorLog("save error " + bulkItemResponse.getId() + " message:" + bulkItemResponse.getFailureMessage());
                     failBulkItemResponses.add(bulkItemResponse);
                 }
             }
@@ -281,6 +279,7 @@ public class EsPlusRestClient implements EsPlusClient {
                 printErrorLog("es update index={} data={}  error reason:  not found doc", index, JsonUtils.toJsonStr(esData));
                 throw new ElasticsearchException(e);
             }
+            throw e;
         } catch (Exception e) {
             throw new EsException("update error", e);
         } finally {
@@ -349,8 +348,8 @@ public class EsPlusRestClient implements EsPlusClient {
      * 更新包装
      */
     @Override
-    public <T> BulkByScrollResponse updateByWrapper(String index, EsUpdateWrapper<T> esUpdateWrapper) {
-        EsUpdateField esUpdateField = esUpdateWrapper.getEsUpdateField();
+    public <T> BulkByScrollResponse updateByWrapper(String index, EsParamWrapper<T> esParamWrapper) {
+        EsUpdateField esUpdateField = esParamWrapper.getEsUpdateField();
         List<EsUpdateField.Field> fields = esUpdateField.getFields();
         String scipt = esUpdateField.getScipt();
         Map<String, Object> params = esUpdateField.getSciptParams();
@@ -393,9 +392,9 @@ public class EsPlusRestClient implements EsPlusClient {
             UpdateByQueryRequest request = new UpdateByQueryRequest(index);
             //版本号不匹配更新失败不停止
             request.setConflicts(DEFAULT_CONFLICTS);
-            request.setQuery(esUpdateWrapper.getQueryBuilder());
+            request.setQuery(esParamWrapper.getQueryBuilder());
             request.setBatchSize(GLOBAL_CONFIG.getBatchSize());
-            String[] routings = esUpdateWrapper.getEsParamWrapper().getRoutings();
+            String[] routings = esParamWrapper.getEsQueryParamWrapper().getRoutings();
             if (routings != null) {
                 request.setRouting(routings[0]);
             }
@@ -420,9 +419,9 @@ public class EsPlusRestClient implements EsPlusClient {
     }
 
     @Override
-    public <T> BulkByScrollResponse increment(String index, EsUpdateWrapper<T> esUpdateWrapper) {
+    public <T> BulkByScrollResponse increment(String index, EsParamWrapper<T> esParamWrapper) {
         boolean lock = false;
-        List<EsUpdateField.Field> fields = esUpdateWrapper.getEsUpdateField().getIncrementFields();
+        List<EsUpdateField.Field> fields = esParamWrapper.getEsUpdateField().getIncrementFields();
         Map<String, Object> params = new HashMap<>();
         //构建scipt语句
         StringBuilder script = new StringBuilder();
@@ -444,11 +443,11 @@ public class EsPlusRestClient implements EsPlusClient {
             UpdateByQueryRequest request = new UpdateByQueryRequest(index);
             //版本号不匹配更新失败不停止
             request.setConflicts(DEFAULT_CONFLICTS);
-            request.setQuery(esUpdateWrapper.getQueryBuilder());
+            request.setQuery(esParamWrapper.getQueryBuilder());
             // 一次批处理的大小.因为是滚动处理的 这里才是这是的批处理查询数据量
             request.setBatchSize(GLOBAL_CONFIG.getBatchSize());
             request.setIndicesOptions(IndicesOptions.LENIENT_EXPAND_OPEN);
-            String[] routings = esUpdateWrapper.getEsParamWrapper().getRoutings();
+            String[] routings = esParamWrapper.getEsQueryParamWrapper().getRoutings();
             if (routings != null) {
                 request.setRouting(routings[0]);
             }
@@ -487,9 +486,9 @@ public class EsPlusRestClient implements EsPlusClient {
     }
 
     @Override
-    public <T> BulkByScrollResponse deleteByQuery(String index, EsUpdateWrapper<T> esUpdateWrapper) {
+    public <T> BulkByScrollResponse deleteByQuery(String index, EsParamWrapper<T> esParamWrapper) {
         DeleteByQueryRequest request = new DeleteByQueryRequest(index);
-        request.setQuery(esUpdateWrapper.getQueryBuilder());
+        request.setQuery(esParamWrapper.getQueryBuilder());
         // 更新最大文档数
         request.setMaxDocs(GLOBAL_CONFIG.getMaxDocs());
         request.setMaxRetries(GLOBAL_CONFIG.getMaxRetries());
@@ -502,7 +501,7 @@ public class EsPlusRestClient implements EsPlusClient {
         request.setTimeout(TimeValue.timeValueMinutes(30));
         // 更新时版本冲突
         request.setConflicts(DEFAULT_CONFLICTS);
-        String[] routings = esUpdateWrapper.getEsParamWrapper().getRoutings();
+        String[] routings = esParamWrapper.getEsQueryParamWrapper().getRoutings();
         if (routings != null) {
             request.setRouting(routings[0]);
         }
@@ -564,13 +563,13 @@ public class EsPlusRestClient implements EsPlusClient {
 
     //统计
     @Override
-    public <T> long count(EsQueryWrapper<T> esQueryWrapper, String index) {
+    public <T> long count(EsParamWrapper<T> esParamWrapper, String index) {
         CountRequest countRequest = new CountRequest();
-        countRequest.query(esQueryWrapper.getQueryBuilder());
+        countRequest.query(esParamWrapper.getQueryBuilder());
         countRequest.indices(index);
         CountResponse count = null;
         try {
-            printInfoLog("count index=:{} body:{}", index, esQueryWrapper.getQueryBuilder().toString());
+            printInfoLog("count index=:{} body:{}", index, esParamWrapper.getQueryBuilder().toString());
             count = restHighLevelClient.count(countRequest, RequestOptions.DEFAULT);
         } catch (IOException e) {
             throw new EsException("es-plus count error ", e);
@@ -582,22 +581,22 @@ public class EsPlusRestClient implements EsPlusClient {
     }
 
     @Override
-    public <T> EsResponse<T> searchByWrapper(EsQueryWrapper<T> esQueryWrapper, Class<T> tClass, String index) {
-        return search(null, esQueryWrapper, tClass, index);
+    public <T> EsResponse<T> searchByWrapper(EsParamWrapper<T> esParamWrapper, Class<T> tClass, String index) {
+        return search(null, esParamWrapper, tClass, index);
     }
 
     @Override
-    public <T> EsResponse<T> searchPageByWrapper(PageInfo<T> pageInfo, EsQueryWrapper<T> esQueryWrapper, Class<T> tClass, String index) {
-        return search(pageInfo, esQueryWrapper, tClass, index);
+    public <T> EsResponse<T> searchPageByWrapper(PageInfo<T> pageInfo, EsParamWrapper<T> esParamWrapper, Class<T> tClass, String index) {
+        return search(pageInfo, esParamWrapper, tClass, index);
     }
 
     @Override
-    public <T> void scrollByWrapper(EsQueryWrapper<T> esQueryWrapper, Class<T> tClass, String index, int size, int keepTime, ScrollHandler<T> scrollHandler) {
+    public <T> void scrollByWrapper(EsParamWrapper<T> esParamWrapper, Class<T> tClass, String index, int size, int keepTime, ScrollHandler<T> scrollHandler) {
         final Scroll scroll = new Scroll(TimeValue.timeValueMinutes(keepTime));
         SearchRequest searchRequest = new SearchRequest(index);
         searchRequest.scroll(scroll);
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-        searchSourceBuilder.query(esQueryWrapper.getQueryBuilder());
+        searchSourceBuilder.query(esParamWrapper.getQueryBuilder());
         searchSourceBuilder.size(size);
         searchRequest.source(searchSourceBuilder);
         try {
@@ -631,14 +630,14 @@ public class EsPlusRestClient implements EsPlusClient {
 
     // 聚合
     @Override
-    public <T> EsAggregationsResponse<T> aggregations(String index, EsQueryWrapper<T> esQueryWrapper) {
+    public <T> EsAggsResponse<T> aggregations(String index, EsParamWrapper<T> esParamWrapper, Class<T> tClass) {
         SearchRequest searchRequest = new SearchRequest();
         //查询条件组合
-        BoolQueryBuilder queryBuilder = esQueryWrapper.getQueryBuilder();
+        BoolQueryBuilder queryBuilder = esParamWrapper.getQueryBuilder();
         SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
         sourceBuilder.query(queryBuilder);
         sourceBuilder.size(0);
-        populateGroupField(esQueryWrapper, sourceBuilder);
+        populateGroupField(esParamWrapper, sourceBuilder);
         //设置索引
         searchRequest.source(sourceBuilder);
         searchRequest.indices(index);
@@ -657,71 +656,36 @@ public class EsPlusRestClient implements EsPlusClient {
             throw new EsException("elasticsearch aggregations error");
         }
         Aggregations aggregations = searchResponse.getAggregations();
-        EsAggregationsResponse<T> esAggregationReponse = new EsAggregationsResponse<>();
+        EsAggsResponse<T> esAggregationReponse = new EsAggsResponse<>();
         esAggregationReponse.setAggregations(aggregations);
-        esAggregationReponse.settClass(esQueryWrapper.gettClass());
+        esAggregationReponse.settClass(tClass);
         return esAggregationReponse;
     }
 
-
-    private <T> EsResponse<T> search(PageInfo<T> pageInfo, EsQueryWrapper<T> esQueryWrapper, Class<T> tClass, String index) {
+    @Override
+    public <T> EsResponse<T> searchAfter(PageInfo<T> pageInfo, EsParamWrapper<T> esParamWrapper, Class<T> tClass, String index) {
         SearchRequest searchRequest = new SearchRequest();
-        EsParamWrapper esParamWrapper = esQueryWrapper.getEsParamWrapper();
-        //查询条件组合
-        BoolQueryBuilder queryBuilder = esQueryWrapper.getQueryBuilder();
-        SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
-        sourceBuilder.query(queryBuilder);
-        EsSelect esSelect = esParamWrapper.getEsSelect();
-        if (esSelect != null) {
-            if (ArrayUtils.isNotEmpty(esSelect.getIncludes()) || ArrayUtils.isNotEmpty(esSelect.getExcludes())) {
-                sourceBuilder.fetchSource(esSelect.getIncludes(), esSelect.getExcludes());
-            }
+
+        EsQueryParamWrapper esQueryParamWrapper = esParamWrapper.getEsQueryParamWrapper();
+
+        //获取查询语句源数据
+        SearchSourceBuilder sourceBuilder = getSearchSourceBuilder(pageInfo, esParamWrapper);
+
+        if (pageInfo.getSearchAfterValues() != null) {
+            sourceBuilder.searchAfter(pageInfo.getSearchAfterValues());
         }
-        boolean profile = esQueryWrapper.getEsParamWrapper().isProfile();
-        if (profile) {
-            sourceBuilder.profile(profile);
-        }
-        sourceBuilder.size(GLOBAL_CONFIG.getSearchSize());
-        //是否需要分页查询
-        if (pageInfo != null) {
-            //设置分页属性
-            sourceBuilder.from((int) ((pageInfo.getPage() - 1) * pageInfo.getSize()));
-            sourceBuilder.size((int) pageInfo.getSize());
-        }
-        //设置高亮
-        if (esParamWrapper.getEsHighLights() != null) {
-            List<EsHighLight> esHighLight = esParamWrapper.getEsHighLights();
-            HighlightBuilder highlightBuilder = new HighlightBuilder();
-            //设置为0获取全部内容
-            highlightBuilder.numOfFragments(0);
-            for (EsHighLight highLight : esHighLight) {
-                //高亮字段
-                highlightBuilder.field(highLight.getField());
-                //高亮前后缀
-                highlightBuilder.preTags(highLight.getPreTag())
-                        .postTags(highLight.getPostTag())
-                        .fragmentSize(highLight.getFragmentSize());
-                sourceBuilder.highlighter(highlightBuilder);
-            }
-        }
-        //超过1万条加了才能返回
-        if (GLOBAL_CONFIG.isTrackTotalHits()) {
-            sourceBuilder.trackTotalHits(true);
-        }
-        //排序
-        if (!CollectionUtils.isEmpty(esParamWrapper.getEsOrderList())) {
-            List<EsOrder> orderFields = esParamWrapper.getEsOrderList();
-            orderFields.forEach(order -> {
-                sourceBuilder.sort(new FieldSortBuilder(order.getName()).order(SortOrder.valueOf(order.getSort())));
-            });
-        }
-        populateGroupField(esQueryWrapper, sourceBuilder);
-        //设置索引
+
+        //设置查询语句源数据
         searchRequest.source(sourceBuilder);
+
+        //设置索引
         searchRequest.indices(index);
-        if (esParamWrapper.getSearchType() != null) {
+
+
+        if (esQueryParamWrapper.getSearchType() != null) {
             searchRequest.searchType();
         }
+
         //查询
         SearchResponse searchResponse = null;
         try {
@@ -735,11 +699,55 @@ public class EsPlusRestClient implements EsPlusClient {
         if (searchResponse.status().getStatus() != 200) {
             throw new EsException("es-plus search error:" + searchResponse.status().getStatus());
         }
+
+        EsResponse<T> esResponse = gettEsResponse(tClass, esQueryParamWrapper, searchResponse);
+
+        return esResponse;
+    }
+
+
+    private <T> EsResponse<T> search(PageInfo<T> pageInfo, EsParamWrapper<T> esParamWrapper, Class<T> tClass, String index) {
+        SearchRequest searchRequest = new SearchRequest();
+
+        EsQueryParamWrapper esQueryParamWrapper = esParamWrapper.getEsQueryParamWrapper();
+
+        //获取查询语句源数据
+        SearchSourceBuilder sourceBuilder = getSearchSourceBuilder(pageInfo, esParamWrapper);
+
+        //设置查询语句源数据
+        searchRequest.source(sourceBuilder);
+
+        //设置索引
+        searchRequest.indices(index);
+
+
+        if (esQueryParamWrapper.getSearchType() != null) {
+            searchRequest.searchType();
+        }
+
+        //查询
+        SearchResponse searchResponse = null;
+        try {
+            long start = System.currentTimeMillis();
+            searchResponse = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
+            long end = System.currentTimeMillis();
+            printInfoLog("search index={} body:{} Time={}", index, sourceBuilder, end - start);
+        } catch (Exception e) {
+            throw new EsException("es-plus search body=" + sourceBuilder, e);
+        }
+        if (searchResponse.status().getStatus() != 200) {
+            throw new EsException("es-plus search error:" + searchResponse.status().getStatus());
+        }
+        EsResponse<T> esResponse = gettEsResponse(tClass, esQueryParamWrapper, searchResponse);
+        return esResponse;
+    }
+
+    private <T> EsResponse<T> gettEsResponse(Class<T> tClass, EsQueryParamWrapper esQueryParamWrapper, SearchResponse searchResponse) {
         //获取结果集
         SearchHits hits = searchResponse.getHits();
         SearchHit[] hitArray = hits.getHits();
         List<T> result = new ArrayList<>();
-        if (esParamWrapper.getEsHighLights() != null) {
+        if (esQueryParamWrapper.getEsHighLights() != null) {
             for (SearchHit hit : hitArray) {
                 //获取高亮字段
                 Map<String, HighlightField> highlightFields = hit.getHighlightFields();
@@ -766,29 +774,95 @@ public class EsPlusRestClient implements EsPlusClient {
                 result.add(JsonUtils.toBean(hit.getSourceAsString(), tClass));
             }
         }
+
+        //设置聚合结果
         Aggregations aggregations = searchResponse.getAggregations();
-        EsAggregationsResponse<T> esAggregationsReponse = new EsAggregationsResponse<>();
-        esAggregationsReponse.setAggregations(aggregations);
-        esAggregationsReponse.settClass(esQueryWrapper.gettClass());
-        EsResponse<T> tEsResponse = new EsResponse<>(result, hits.getTotalHits().value, esAggregationsReponse);
-        tEsResponse.setShardFailures(searchResponse.getShardFailures());
-        tEsResponse.setSkippedShards(searchResponse.getSkippedShards());
-        tEsResponse.setTookInMillis(searchResponse.getTook().getMillis());
-        tEsResponse.setSuccessfulShards(searchResponse.getSuccessfulShards());
-        tEsResponse.setTotalShards(searchResponse.getTotalShards());
-        if (profile) {
-            Map<String, ProfileShardResult> profileResults = searchResponse.getProfileResults();
-            tEsResponse.setProfileResults(profileResults);
+        EsAggsResponse<T> esAggsResponse = new EsAggsResponse<>();
+        esAggsResponse.setAggregations(aggregations);
+        esAggsResponse.settClass(tClass);
+
+        //设置返回结果
+        EsResponse<T> esResponse = new EsResponse<>(result, hits.getTotalHits().value, esAggsResponse);
+        esResponse.setShardFailures(searchResponse.getShardFailures());
+        esResponse.setSkippedShards(searchResponse.getSkippedShards());
+        esResponse.setTookInMillis(searchResponse.getTook().getMillis());
+        esResponse.setSuccessfulShards(searchResponse.getSuccessfulShards());
+        esResponse.setTotalShards(searchResponse.getTotalShards());
+        if (ArrayUtils.isNotEmpty(hitArray)){
+            esResponse.setFirstSortValues(hitArray[0].getSortValues());
+            esResponse.setTailSortValues(hitArray[hitArray.length - 1].getSortValues());
         }
-        return tEsResponse;
+
+        //profile是性能分析类似mysql的explain
+        if (esQueryParamWrapper.isProfile()) {
+            Map<String, ProfileShardResult> profileResults = searchResponse.getProfileResults();
+            esResponse.setProfileResults(profileResults);
+        }
+        return esResponse;
     }
 
+    private <T> SearchSourceBuilder getSearchSourceBuilder(PageInfo<T> pageInfo, EsParamWrapper<T> esParamWrapper) {
+        EsQueryParamWrapper esQueryParamWrapper = esParamWrapper.getEsQueryParamWrapper();
+        //查询条件组合
+        BoolQueryBuilder queryBuilder = esParamWrapper.getQueryBuilder();
+        SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
+        sourceBuilder.query(queryBuilder);
+        EsSelect esSelect = esQueryParamWrapper.getEsSelect();
+        if (esSelect != null) {
+            if (ArrayUtils.isNotEmpty(esSelect.getIncludes()) || ArrayUtils.isNotEmpty(esSelect.getExcludes())) {
+                sourceBuilder.fetchSource(esSelect.getIncludes(), esSelect.getExcludes());
+            }
+        }
+        boolean profile = esQueryParamWrapper.isProfile();
+        if (profile) {
+            sourceBuilder.profile(profile);
+        }
+
+        //是否需要分页查询
+        if (pageInfo != null) {
+            //设置分页属性
+            sourceBuilder.from((int) ((pageInfo.getPage() - 1) * pageInfo.getSize()));
+            sourceBuilder.size((int) pageInfo.getSize());
+        } else {
+            sourceBuilder.size(GLOBAL_CONFIG.getSearchSize());
+        }
+
+        //设置高亮
+        if (esQueryParamWrapper.getEsHighLights() != null) {
+            List<EsHighLight> esHighLight = esQueryParamWrapper.getEsHighLights();
+            HighlightBuilder highlightBuilder = new HighlightBuilder();
+            //设置为0获取全部内容
+            highlightBuilder.numOfFragments(0);
+            for (EsHighLight highLight : esHighLight) {
+                //高亮字段
+                highlightBuilder.field(highLight.getField());
+                //高亮前后缀
+                highlightBuilder.preTags(highLight.getPreTag())
+                        .postTags(highLight.getPostTag())
+                        .fragmentSize(highLight.getFragmentSize());
+                sourceBuilder.highlighter(highlightBuilder);
+            }
+        }
+        //超过1万条加了才能返回
+        if (GLOBAL_CONFIG.isTrackTotalHits()) {
+            sourceBuilder.trackTotalHits(true);
+        }
+        //排序
+        if (!CollectionUtils.isEmpty(esQueryParamWrapper.getEsOrderList())) {
+            List<EsOrder> orderFields = esQueryParamWrapper.getEsOrderList();
+            orderFields.forEach(order -> {
+                sourceBuilder.sort(new FieldSortBuilder(order.getName()).order(SortOrder.valueOf(order.getSort())));
+            });
+        }
+        populateGroupField(esParamWrapper, sourceBuilder);
+        return sourceBuilder;
+    }
 
     //填充分组字段
-    private void populateGroupField(EsQueryWrapper<?> esQueryWrapper, SearchSourceBuilder sourceBuilder) {
-        EsLambdaAggWrapper<?> esLambdaAggWrapper = esQueryWrapper.esLambdaAggWrapper();
-        EsAggWrapper<?> esAggregationWrapper = esQueryWrapper.esAggWrapper();
-        if (esLambdaAggWrapper.getAggregationBuilder() != null) {
+    private <T> void populateGroupField(EsParamWrapper<T> esParamWrapper, SearchSourceBuilder sourceBuilder) {
+        EsLambdaAggWrapper<?> esLambdaAggWrapper = esParamWrapper.getEsLambdaAggWrapper();
+        EsAggWrapper<?> esAggWrapper = esParamWrapper.getEsAggWrapper();
+        if (esLambdaAggWrapper != null && esLambdaAggWrapper.getAggregationBuilder() != null) {
             for (BaseAggregationBuilder aggregation : esLambdaAggWrapper.getAggregationBuilder()) {
                 if (aggregation instanceof AggregationBuilder) {
                     sourceBuilder.aggregation((AggregationBuilder) aggregation);
@@ -796,8 +870,8 @@ public class EsPlusRestClient implements EsPlusClient {
                     sourceBuilder.aggregation((PipelineAggregationBuilder) aggregation);
                 }
             }
-        } else {
-            for (BaseAggregationBuilder aggregation : esAggregationWrapper.getAggregationBuilder()) {
+        } else if (esAggWrapper != null && esAggWrapper.getAggregationBuilder() != null) {
+            for (BaseAggregationBuilder aggregation : esAggWrapper.getAggregationBuilder()) {
                 if (aggregation instanceof AggregationBuilder) {
                     sourceBuilder.aggregation((AggregationBuilder) aggregation);
                 } else {
@@ -808,10 +882,22 @@ public class EsPlusRestClient implements EsPlusClient {
     }
 
 
+    /**
+     * 打印信息日志
+     *
+     * @param format 格式
+     * @param params 参数个数
+     */
     private void printInfoLog(String format, Object... params) {
         log.info("es-plus " + format, params);
     }
 
+    /**
+     * 打印错误日志
+     *
+     * @param format 格式
+     * @param params 参数个数
+     */
     private void printErrorLog(String format, Object... params) {
         log.error("es-plus " + format, params);
     }
@@ -835,6 +921,9 @@ public class EsPlusRestClient implements EsPlusClient {
         return new EsUpdateField.Field(REINDEX_TIME_FILED, System.currentTimeMillis());
     }
 
+    /**
+     * 锁
+     */
     public boolean lock(String index) {
         // 是在reindex索引重建.则获取更新锁  此处加上读写锁的原因如下
         // 1如果只有下面的锁的isLocked判断.那么判断还有锁.执行后续代码.但是刚好重建索引结束那么mappins就变了.并发问题,

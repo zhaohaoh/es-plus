@@ -1,7 +1,6 @@
 package com.es.plus.core.wrapper.core;
 
 
-
 import com.es.plus.core.tools.LambdaUtils;
 import com.es.plus.core.tools.SFunction;
 import com.es.plus.core.tools.SerializedLambda;
@@ -10,7 +9,7 @@ import com.es.plus.exception.EsException;
 import java.util.Arrays;
 import java.util.Locale;
 
-public abstract class AbstractLambdaEsWrapper<T, R extends SFunction<T, ?>> {
+public abstract class AbstractLambdaEsWrapper<T, R> {
 
 
     protected final String[] nameToString(R... functions) {
@@ -19,12 +18,15 @@ public abstract class AbstractLambdaEsWrapper<T, R extends SFunction<T, ?>> {
 
 
     protected String nameToString(R function) {
-        SerializedLambda lambda = LambdaUtils.resolve(function);
+        if (function instanceof String) {
+            return (String) function;
+        }
+        SerializedLambda lambda = LambdaUtils.resolve((SFunction<T, ?>) function);
         return getColumn(lambda);
     }
 
     protected Class<?> getImplClass(R function) {
-        SerializedLambda lambda = LambdaUtils.resolve(function);
+        SerializedLambda lambda = LambdaUtils.resolve((SFunction<T, ?>) function);
         return lambda.getImplClass();
     }
 

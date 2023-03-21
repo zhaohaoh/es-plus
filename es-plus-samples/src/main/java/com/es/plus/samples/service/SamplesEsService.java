@@ -1,16 +1,20 @@
 package com.es.plus.samples.service;
 
 import com.es.plus.core.service.EsServiceImpl;
+import com.es.plus.core.statics.Es;
+import com.es.plus.core.wrapper.chain.EsChainLambdaQueryWrapper;
 import com.es.plus.core.wrapper.chain.EsChainQueryWrapper;
 import com.es.plus.core.wrapper.core.EsQueryWrapper;
-import com.es.plus.pojo.EsAggregationsResponse;
+import com.es.plus.pojo.EsAggsResponse;
 import com.es.plus.pojo.EsResponse;
+import com.es.plus.pojo.PageInfo;
 import com.es.plus.samples.dto.SamplesEsDTO;
 import com.es.plus.samples.dto.SamplesNestedDTO;
 import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -19,11 +23,11 @@ public class SamplesEsService extends EsServiceImpl<SamplesEsDTO> {
 
 
     public void nested() {
-        EsChainQueryWrapper<SamplesNestedDTO> asChainQueryWrap = new EsChainQueryWrapper<>(SamplesNestedDTO.class);
+        EsChainLambdaQueryWrapper<SamplesNestedDTO> asChainQueryWrap = new EsChainLambdaQueryWrapper<>(SamplesNestedDTO.class);
         asChainQueryWrap.should().term(SamplesNestedDTO::getUsername, "hzh");
         asChainQueryWrap.terms(SamplesNestedDTO::getUsername, "term");
         // 声明语句嵌套关系是must
-        EsChainQueryWrapper<SamplesEsDTO> queryWrapper = esChainQueryWrapper().must()
+        EsChainLambdaQueryWrapper<SamplesEsDTO> queryWrapper = esChainQueryWrapper().must()
                 .terms(SamplesEsDTO::getUsername, "admin", "hzh", "shi").nestedQuery(SamplesEsDTO::getSamplesNesteds, () -> {
                     EsQueryWrapper<SamplesNestedDTO> esQueryWrap = new EsQueryWrapper<>(SamplesNestedDTO.class);
                     esQueryWrap.must().term("samplesNesteds.email", "abc");
@@ -41,19 +45,28 @@ public class SamplesEsService extends EsServiceImpl<SamplesEsDTO> {
         EsResponse<SamplesEsDTO> esResponse = esChainQueryWrapper().must()
                 .terms(SamplesEsDTO::getUsername, "admin", "hzh", "shi")
                 // 多个must嵌套
-                .must(a ->
-                        // 声明内部语句关系的should
-                        a.must()
-                                .term(SamplesEsDTO::getNickName, "dasdsad")
-                                .term(SamplesEsDTO::getPhone, "1386859111"))
+//                .must(a ->
+//                        // 声明内部语句关系的should
+//                        a.must()
+//                                .term(SamplesEsDTO::getNickName, "dasdsad")
+//                                .term(SamplesEsDTO::getPhone, "1386859111"))
                 .list();
+        EsResponse<SamplesEsDTO> list2 = esChainQueryWrapper().list();
+        System.out.println(list2);
         List<SamplesEsDTO> list = esResponse.getList();
+        System.out.println(list);
 
+        EsChainQueryWrapper<Map> term = Es.chainQuery(Map.class).index("sys_user2ttt_alias").must().match("username", "HZH").term("email", "abc");
+        term.esAggWrapper().terms("keyword");
+        EsResponse<Map> list1 = term.list();
+        Map<String, Long> username1 = list1.getEsAggsResponse().getTermsAsMap("keyword");
+        System.out.println(username1);
     }
+
 
     public void agg() {
         // 声明语句嵌套关系是must
-        EsChainQueryWrapper<SamplesEsDTO> esChainQueryWrapper = esChainQueryWrapper().must()
+        EsChainLambdaQueryWrapper<SamplesEsDTO> esChainQueryWrapper = esChainQueryWrapper().must()
                 .ge(SamplesEsDTO::getId, 1);
         esChainQueryWrapper.esLambdaAggWrapper()
                 // terms聚合并且指定数量10000
@@ -65,7 +78,7 @@ public class SamplesEsService extends EsServiceImpl<SamplesEsDTO> {
                 .list();
         List<SamplesEsDTO> list = esResponse.getList();
 
-        EsAggregationsResponse<SamplesEsDTO> esAggregationsReponse = esResponse.getEsAggregationsReponse();
+        EsAggsResponse<SamplesEsDTO> esAggregationsReponse = esResponse.getEsAggsResponse();
         Terms terms = esAggregationsReponse.getTerms(SamplesEsDTO::getUsername);
         Map<String, Long> termsAsMap = esAggregationsReponse.getTermsAsMap(SamplesEsDTO::getUsername);
     }
@@ -87,5 +100,35 @@ public class SamplesEsService extends EsServiceImpl<SamplesEsDTO> {
         EsResponse<SamplesEsDTO> hzh = esChainQueryWrapper().must().match(SamplesEsDTO::getKeyword, "hzh").list();
 
         System.out.println(hzh);
+    }
+
+    public void update() {
+        Map<String, Object> map = new HashMap<>();
+        map.put("username", "fsdfsfds");
+        map.put("id", "d73d1b4e46244b0db766987759d6e");
+        Es.chainUpdate(Map.class).index("sys_user2ttt").save(map);
+    }
+
+    public void newSelect() {
+        EsResponse<SamplesEsDTO> hzh = Es.chainLambdaQuery(SamplesEsDTO.class).term(SamplesEsDTO::getUsername, "hzh").list();
+        System.out.println(hzh);
+    }
+
+    public void searhAfter() {
+        PageInfo<SamplesEsDTO> pageInfo = new PageInfo<>();
+        pageInfo.setSize(3);
+
+        EsResponse<SamplesEsDTO> samplesEsDTOEsResponse = Es.chainLambdaQuery(SamplesEsDTO.class)
+                .orderBy("asc", SamplesEsDTO::getId).searchAfter(pageInfo);
+
+
+        pageInfo.setSearchAfterValues(samplesEsDTOEsResponse.getTailSortValues());
+        EsResponse<SamplesEsDTO> samplesEsDTOEsResponse1 = Es.chainLambdaQuery(SamplesEsDTO.class)
+                .orderBy("DESC", SamplesEsDTO::getId).searchAfter(pageInfo);
+
+        System.out.println(samplesEsDTOEsResponse);
+
+        System.out.println(samplesEsDTOEsResponse1);
+
     }
 }

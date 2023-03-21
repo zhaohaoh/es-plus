@@ -24,10 +24,6 @@ import java.util.Map;
  */
 public interface Update<Children, R> extends Serializable {
 
-    Children set(String name, Object value);
-
-    Children increment(String name, Long value);
-
     /**
      * ignore
      */

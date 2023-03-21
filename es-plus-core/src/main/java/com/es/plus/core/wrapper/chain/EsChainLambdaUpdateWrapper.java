@@ -2,7 +2,8 @@ package com.es.plus.core.wrapper.chain;
 
 
 import com.es.plus.client.EsPlusClientFacade;
-import com.es.plus.core.wrapper.core.EsUpdateWrapper;
+import com.es.plus.core.tools.SFunction;
+import com.es.plus.core.wrapper.core.EsLambdaUpdateWrapper;
 import com.es.plus.core.wrapper.core.Update;
 import com.es.plus.pojo.ClientContext;
 import com.es.plus.properties.EsIndexParam;
@@ -20,22 +21,23 @@ import java.util.Map;
  * @Date: 2022/9/22 20:24
  * 链式方法
  */
-public class EsChainUpdateWrapper<T> extends AbstractEsChainWrapper<T, String, EsChainUpdateWrapper<T>, EsUpdateWrapper<T>> implements Update<EsChainUpdateWrapper<T>, String> {
+public class EsChainLambdaUpdateWrapper<T> extends AbstractEsChainWrapper<T, SFunction<T, ?>, EsChainLambdaUpdateWrapper<T>, EsLambdaUpdateWrapper<T>> implements Update<EsChainLambdaUpdateWrapper<T>, SFunction<T, ?>> {
+
 
     private EsPlusClientFacade esPlusClientFacade = ClientContext.getClient("master");
 
-    public EsChainUpdateWrapper(Class<T> clazz) {
+    public EsChainLambdaUpdateWrapper(Class<T> clazz) {
         super.tClass = clazz;
-        super.esWrapper = new EsUpdateWrapper<>(tClass);
+        super.esWrapper = new EsLambdaUpdateWrapper<>(tClass);
         EsIndexParam esIndexParam = EsParamHolder.getEsIndexParam(super.tClass);
         if (esIndexParam != null) {
             index = StringUtils.isBlank(esIndexParam.getAlias())? esIndexParam.getIndex():esIndexParam.getAlias();
         }
     }
 
-    public EsChainUpdateWrapper(Class<T> clazz, EsPlusClientFacade esPlusClientFacade) {
+    public EsChainLambdaUpdateWrapper(Class<T> clazz, EsPlusClientFacade esPlusClientFacade) {
         super.tClass = clazz;
-        super.esWrapper = new EsUpdateWrapper<>(tClass);
+        super.esWrapper = new EsLambdaUpdateWrapper<>(tClass);
         EsIndexParam esIndexParam = EsParamHolder.getEsIndexParam(super.tClass);
         if (esIndexParam != null) {
             index = StringUtils.isBlank(esIndexParam.getAlias())? esIndexParam.getIndex():esIndexParam.getAlias();
@@ -74,40 +76,40 @@ public class EsChainUpdateWrapper<T> extends AbstractEsChainWrapper<T, String, E
     }
 
     @Override
-    public EsChainUpdateWrapper<T> setScipt(String scipt, Map<String, Object> sciptParams) {
+    public EsChainLambdaUpdateWrapper<T> setScipt(String scipt, Map<String, Object> sciptParams) {
         esWrapper.setScipt(scipt, sciptParams);
         return this;
     }
 
     @Override
-    public EsChainUpdateWrapper<T> setScipt(boolean condition, String script, Map<String, Object> sciptParams) {
-        esWrapper.setScipt(condition,script, sciptParams);
-        return this;
+    public EsChainLambdaUpdateWrapper<T> setScipt(boolean condition, String script, Map<String, Object> sciptParams) {
+        return null;
     }
 
+
     @Override
-    public EsChainUpdateWrapper<T> set(String name, Object value) {
+    public EsChainLambdaUpdateWrapper<T> set(SFunction<T, ?> name, Object value) {
         esWrapper.set(name, value);
         return this;
     }
 
     @Override
-    public EsChainUpdateWrapper<T> set(boolean condition, String column, Object val) {
+    public EsChainLambdaUpdateWrapper<T> set(boolean condition, SFunction<T, ?> column, Object val) {
         esWrapper.set(condition, column, val);
         return this;
     }
 
+
     @Override
-    public EsChainUpdateWrapper<T> increment(String name, Long value) {
+    public EsChainLambdaUpdateWrapper<T> increment(SFunction<T, ?> name, Long value) {
         esWrapper.increment(name, value);
         return this;
     }
 
     @Override
-    public EsChainUpdateWrapper<T> increment(boolean condition, String column, Long val) {
+    public EsChainLambdaUpdateWrapper<T> increment(boolean condition, SFunction<T, ?> column, Long val) {
         esWrapper.increment(condition, column, val);
         return this;
     }
-
 
 }

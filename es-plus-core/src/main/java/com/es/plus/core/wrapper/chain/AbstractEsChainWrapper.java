@@ -1,7 +1,7 @@
 package com.es.plus.core.wrapper.chain;
 
 
-import com.es.plus.core.tools.SFunction;
+import com.es.plus.config.GlobalConfigCache;
 import com.es.plus.core.wrapper.aggregation.EsAggWrapper;
 import com.es.plus.core.wrapper.aggregation.EsLambdaAggWrapper;
 import com.es.plus.core.wrapper.core.*;
@@ -26,11 +26,13 @@ import java.util.function.Supplier;
  * T是实体类 R的方法 Children是自己
  */
 @SuppressWarnings({"unchecked"})
-public abstract class AbstractEsChainWrapper<T, R extends SFunction<T, ?>, Children extends AbstractEsChainWrapper<T, R, Children, QUERY>, QUERY extends AbstractEsWrapper<T, R, QUERY>>
+public abstract class AbstractEsChainWrapper<T, R, Children extends AbstractEsChainWrapper<T, R, Children, QUERY>, QUERY extends AbstractEsWrapper<T, R, QUERY>>
         implements IEsQueryWrapper<Children, QUERY, R>, EsWrapper<Children, T>, EsExtendsWrapper<Children, R> {
     protected QUERY esWrapper;
     protected Children children = (Children) this;
     protected Class<T> tClass;
+    //链式静态编程用来指定index
+    protected String index;
 
     public QUERY getWrapper() {
         return esWrapper;
@@ -49,6 +51,13 @@ public abstract class AbstractEsChainWrapper<T, R extends SFunction<T, ?>, Child
     @Override
     public EsSelect getSelect() {
         return getWrapper().getSelect();
+    }
+
+
+    public Children index(String index) {
+        //手动传入的索引名需要加上后缀
+        this.index = index + GlobalConfigCache.GLOBAL_CONFIG.getGlobalSuffix();
+        return this.children;
     }
 
     @Override
@@ -100,8 +109,8 @@ public abstract class AbstractEsChainWrapper<T, R extends SFunction<T, ?>, Child
     }
 
     @Override
-    public Children orderBy(String order, String... columns) {
-        getWrapper().orderBy(order, columns);
+    public Children orderBy(String order, R column) {
+        getWrapper().orderBy(order, column);
         return children;
     }
 
@@ -312,143 +321,6 @@ public abstract class AbstractEsChainWrapper<T, R extends SFunction<T, ?>, Child
         return getWrapper().getQueryBuilder();
     }
 
-    /**
-     * -----------下面的根据name查询，这里违反了设计原则但是方便了
-     */
-    @Override
-    public Children exists(String name) {
-        getWrapper().exists(name);
-        return children;
-    }
-
-    @Override
-    public Children exists(boolean condition, String name) {
-        getWrapper().exists(condition, name);
-        return children;
-    }
-
-    @Override
-    public Children term(boolean condition, String name, Object value) {
-        getWrapper().terms(condition, name, value);
-        return this.children;
-    }
-
-    @Override
-    public Children terms(boolean condition, String name, Object... value) {
-        getWrapper().terms(condition, name, value);
-        return children;
-    }
-
-    @Override
-    public Children terms(boolean condition, String name, Collection<Object> values) {
-        getWrapper().terms(condition, name, values);
-        return children;
-    }
-
-    @Override
-    public Children match(boolean condition, String name, Object value) {
-        getWrapper().match(condition, name, value);
-        return children;
-    }
-
-    @Override
-    public Children matchPhrase(boolean condition, String name, Object value) {
-        getWrapper().matchPhrase(condition, name, value);
-        return children;
-    }
-
-    @Override
-    public Children multiMatch(boolean condition, Object value, String... name) {
-        getWrapper().multiMatch(condition, value, name);
-        return children;
-    }
-
-    @Override
-    public Children matchPhrasePrefix(boolean condition, String name, Object value) {
-        getWrapper().matchPhrasePrefix(condition, name, value);
-        return children;
-    }
-
-    @Override
-    public Children wildcard(boolean condition, String name, String value) {
-        getWrapper().wildcard(condition, name, value);
-        return children;
-    }
-
-    //有纠错能力的模糊查询。
-    @Override
-    public Children fuzzy(boolean condition, String name, String value) {
-        getWrapper().fuzzy(condition, name, value);
-        return children;
-    }
-
-
-    @Override
-    public Children gt(boolean condition, String name, Object from) {
-        getWrapper().gt(condition, name, from);
-        return children;
-    }
-
-    @Override
-    public Children ge(boolean condition, String name, Object from) {
-        getWrapper().ge(condition, name, from);
-        return children;
-    }
-
-    @Override
-    public Children lt(boolean condition, String name, Object to) {
-        getWrapper().lt(condition, name, to);
-        return children;
-    }
-
-    @Override
-    public Children le(boolean condition, String name, Object to) {
-        getWrapper().le(condition, name, to);
-        return children;
-    }
-
-    @Override
-    public Children between(boolean condition, String name, Object from, Object to) {
-        getWrapper().between(condition, name, from, to);
-        return children;
-    }
-
-    @Override
-    public Children between(boolean condition, String name, Object from, Object to, boolean include) {
-        getWrapper().between(condition, name, from, to, include);
-        return children;
-    }
-
-    @Override
-    public Children nestedQuery(boolean condition, String path, Supplier<EsQueryWrapper<?>> sp, ScoreMode mode) {
-        getWrapper().nestedQuery(condition, path, sp, mode);
-        return children;
-    }
-
-    @Override
-    public Children geoBoundingBox(boolean condition, String name, GeoPoint topLeft, GeoPoint bottomRight) {
-        getWrapper().geoBoundingBox(condition, name, topLeft, bottomRight);
-        return children;
-    }
-
-    @Override
-    public Children geoDistance(boolean condition, String name, String distance, DistanceUnit distanceUnit, GeoPoint centralGeoPoint) {
-        getWrapper().geoDistance(condition, name, distance, distanceUnit, centralGeoPoint);
-        return children;
-    }
-
-    @Override
-    public Children geoPolygon(boolean condition, String name, List<GeoPoint> geoPoints) {
-        getWrapper().geoPolygon(condition, name, geoPoints);
-        return children;
-    }
-
-    @Override
-    public Children geoShape(boolean condition, String name, String indexedShapeId, Geometry geometry, ShapeRelation shapeRelation) {
-        getWrapper().geoShape(condition, name, indexedShapeId, geometry, shapeRelation);
-        return children;
-    }
-
     @Override
     public Children includes(R... func) {
         getWrapper().excludes(func);
@@ -456,20 +328,8 @@ public abstract class AbstractEsChainWrapper<T, R extends SFunction<T, ?>, Child
     }
 
     @Override
-    public Children includes(String... names) {
-        getWrapper().excludes(names);
-        return children;
-    }
-
-    @Override
     public Children excludes(R... func) {
         getWrapper().excludes(func);
-        return children;
-    }
-
-    @Override
-    public Children excludes(String... names) {
-        getWrapper().excludes(names);
         return children;
     }
 

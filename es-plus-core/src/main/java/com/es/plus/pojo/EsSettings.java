@@ -3,6 +3,7 @@ package com.es.plus.pojo;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
+import java.time.Duration;
 import java.util.Map;
 
 @Data
@@ -35,7 +36,49 @@ public class EsSettings {
     private String defaultAnalyzer;
 
     @JsonProperty("analysis")
-    private Map<String,Object> analysis;
+    private Map<String, Object> analysis;
+
+
+
+    /**
+     * 查询日志 收集文档id慢查询日志
+     */
+    @JsonProperty("search.slowlog.threshold.query.debug")
+    private Duration queryDebug;
+    @JsonProperty("search.slowlog.threshold.query.info")
+    private Duration queryWarn;
+    @JsonProperty("search.slowlog.threshold.query.warn")
+    private Duration queryInfo;
+    @JsonProperty("search.slowlog.threshold.query.trace")
+    private Duration queryTrace;
+    /**
+     * 根据文档id拉取数据慢查询日志
+     */
+    @JsonProperty("search.slowlog.threshold.fetch.warn")
+    private Duration fetchWarn;
+    @JsonProperty("search.slowlog.threshold.fetch.info")
+    private Duration fetchInfo;
+    @JsonProperty("search.slowlog.threshold.fetch.debug")
+    private Duration fetchDebug;
+    @JsonProperty("search.slowlog.threshold.fetch.trace")
+    private Duration fetchTrace;
+    //日志级别
+    @JsonProperty("index.search.slowlog.level") //info warn  debug trace
+    private String searchlevel;
+
+    //索引日志
+    @JsonProperty("indexing.slowlog.threshold.index.warn")
+    private Duration indexWarn;
+    @JsonProperty("indexing.slowlog.threshold.index.info")
+    private Duration indexInfo;
+    @JsonProperty("indexing.slowlog.threshold.index.debug")
+    private Duration indexDebug;
+    @JsonProperty("indexing.slowlog.threshold.index.trace")
+    private Duration indexTrace;
+    @JsonProperty("indexing.slowlog.level") //info warn  debug trace
+    private String indexlevel;
+    @JsonProperty("indexing.slowlog.source")
+    private Integer indexSource;
 
 }
 

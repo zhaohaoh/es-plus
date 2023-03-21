@@ -49,7 +49,10 @@ public interface Analyzer {
 
 
 
-
+    /**
+     * ep KEWORD处理器 这个处理器只对keyword类型有效
+     */
+    String EP_NORMALIZER = "ep_normalizer";
 
     /**
      * ep智能
@@ -93,12 +96,20 @@ public interface Analyzer {
     String SNOWBALL = "snowball";
 
 
-
-
-
-
+    /**
+     * 去除单词的复数形式，提取原单词，这样可以让单词原来的形态也能匹配
+     */
     String STEMMER = "stemmer";
+    /**
+     * 存储转化为小写字母 默认
+     */
     String LOWERCASE = "lowercase";
+    /**
+     * 不存在在ASCII 中的特殊字符转化存储
+     */
     String ASCIIFOLDING = "asciifolding";
+    /**
+     * 一个字段相同的词只存储一次，会导致无法使用match_parsh
+     */
     String UNIQUE = "unique";
 }

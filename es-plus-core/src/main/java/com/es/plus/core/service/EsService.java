@@ -5,10 +5,10 @@ import com.es.plus.core.ScrollHandler;
 import com.es.plus.core.wrapper.chain.EsChainUpdateWrapper;
 import com.es.plus.pojo.EsResponse;
 import com.es.plus.pojo.PageInfo;
-import com.es.plus.core.wrapper.chain.EsChainQueryWrapper;
+import com.es.plus.core.wrapper.chain.EsChainLambdaQueryWrapper;
 import com.es.plus.core.wrapper.core.EsQueryWrapper;
 import com.es.plus.core.wrapper.core.EsUpdateWrapper;
-import com.es.plus.pojo.EsAggregationsResponse;
+import com.es.plus.pojo.EsAggsResponse;
 import com.es.plus.pojo.EsSettings;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
@@ -16,6 +16,7 @@ import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 public interface EsService<T> {
 
@@ -23,7 +24,7 @@ public interface EsService<T> {
 
     EsUpdateWrapper<T> esUpdateWrapper();
 
-    EsChainQueryWrapper<T> esChainQueryWrapper();
+    EsChainLambdaQueryWrapper<T> esChainQueryWrapper();
 
     EsChainUpdateWrapper<T> esChainUpdateWrapper();
 
@@ -34,6 +35,8 @@ public interface EsService<T> {
     void createMapping();
 
     boolean updateSettings(EsSettings esSettings);
+
+     boolean updateSettings(Map<String,Object> esSettings);
 
     boolean save(T entity);
 
@@ -71,9 +74,12 @@ public interface EsService<T> {
 
     EsResponse<T> page(PageInfo<T> pageInfo, EsQueryWrapper<T> esQueryWrapper);
 
+
+    EsResponse<T> searchAfter(PageInfo<T> pageInfo, EsQueryWrapper<T> esQueryWrapper);
+
     long count(EsQueryWrapper<T> esQueryWrapper);
 
-    EsAggregationsResponse<T> aggregations(EsQueryWrapper<T> esQueryWrapper);
+    EsAggsResponse<T> aggregations(EsQueryWrapper<T> esQueryWrapper);
 
     /**
      * 性能分析

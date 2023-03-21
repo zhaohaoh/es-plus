@@ -17,6 +17,10 @@ public interface EsConstant {
      */
     String ANALYZER = "analyzer";
     /**
+     * 针对keyword使用的查询前字段处理 和analyzer类似
+     */
+    String NORMALIZER = "normalizer";
+    /**
      * 搜索分析仪
      */
     String SEARCH_ANALYZER = "search_analyzer";

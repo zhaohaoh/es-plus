@@ -50,7 +50,7 @@ public interface EsPlusIndexClient {
      * @param index  指数
      * @param tClass t类
      */
-    void deleteAndCreateIndexWithoutAlias(String index, Class<?> tClass);
+    void createIndexWithoutAlias(String index, Class<?> tClass);
 
     /**
      * 删除索引
@@ -87,7 +87,7 @@ public interface EsPlusIndexClient {
      * @param alias        别名
      * @return boolean
      */
-    boolean updateAlias(String oldIndexName, String reindexName, String alias);
+    boolean replaceAlias(String oldIndexName, String reindexName, String alias);
 
     /**
      * 迁移重建索引
@@ -108,8 +108,26 @@ public interface EsPlusIndexClient {
     boolean updateSettings(String index, EsSettings esSettings);
 
     /**
+     * 更新设置
+     *
+     * @param index      索引
+     * @param esSettings es设置
+     * @return boolean
+     */
+    boolean updateSettings(String index, Map<String,Object> esSettings);
+
+    /**
      * 连接
      */
     boolean ping();
 
+    /**
+     * 新别名
+     *
+     * @param currentIndex 目前指数
+     * @param alias        别名
+     */
+    void createAlias(String currentIndex, String alias);
+
+    void removeAlias(String index, String alias);
 }

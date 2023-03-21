@@ -1,6 +1,6 @@
 package com.es.plus.core.process;
 
-import com.es.plus.annotation.EsIgnoreReindex;
+import com.es.plus.annotation.EsIndex;
 import com.es.plus.client.EsPlusClientFacade;
 import com.es.plus.client.EsPlusIndexRestClient;
 import com.es.plus.config.GlobalConfigCache;
@@ -14,6 +14,7 @@ import com.es.plus.pojo.EsSettings;
 import com.es.plus.properties.EsIndexParam;
 import com.es.plus.properties.EsParamHolder;
 import com.es.plus.util.JsonUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.client.indices.GetIndexResponse;
 import org.elasticsearch.cluster.metadata.MappingMetadata;
 import org.elasticsearch.common.settings.Settings;
@@ -80,22 +81,28 @@ public class EsReindexProcess {
      * @param clazz              clazz
      */
     public static void tryReindex(EsPlusClientFacade esPlusClientFacade, Class<?> clazz) {
-        // 忽略处理reindex
-        EsIgnoreReindex annotation = clazz.getAnnotation(EsIgnoreReindex.class);
-        if (annotation != null) {
-            return;
-        }
 
         //获取索引信息
         EsIndexParam esIndexParam = EsParamHolder.getEsIndexParam(clazz);
 
-        //根据别名获取索引结果
-        GetIndexResponse getIndexResponse = esPlusClientFacade.getIndex(esIndexParam.getAlias());
+
+        //根据别名获取索引结果 获取不到则通过索引名获取并且修改成目前的别名
+        GetIndexResponse getIndexResponse = null;
+        if (StringUtils.isBlank(esIndexParam.getAlias())) {
+            getIndexResponse = esPlusClientFacade.getIndex(esIndexParam.getIndex());
+        } else {
+            getIndexResponse = esPlusClientFacade.getIndex(esIndexParam.getAlias());
+            if (getIndexResponse == null) {
+                getIndexResponse = esPlusClientFacade.getIndex(esIndexParam.getIndex());
+                esPlusClientFacade.createAlias(getIndexResponse.getIndices()[0], esIndexParam.getAlias());
+            }
+        }
+
 
         // 获取当前索引
         String currentIndex = getIndexResponse.getIndices()[0];
 
-        //重新更新配置
+        // 重新更新配置  返回值是代表是否重建索引
         boolean reindex = settingsUpdate(getIndexResponse, currentIndex, clazz, esPlusClientFacade);
 
         //获取旧索引映射
@@ -108,6 +115,14 @@ public class EsReindexProcess {
         if (Objects.equals(updateCommend, Commend.MAPPING_UPDATE)) {
             esPlusClientFacade.putMapping(currentIndex, clazz);
         } else if (Objects.equals(updateCommend, Commend.REINDEX) || reindex) {
+            // 忽略处理reindex
+            EsIndex annotation = clazz.getAnnotation(EsIndex.class);
+            if (!annotation.tryReindex()) {
+                return;
+            }
+            if (StringUtils.isBlank(annotation.alias())) {
+                throw new EsException(annotation.index() + " tryReindex alias Cannot be null");
+            }
             if (GlobalConfigCache.GLOBAL_CONFIG.isAutoReindex()) {
                 //执行reindex前先记录旧索引的时间映射
                 Map<String, Object> mappins = getUpdateReindexTimeMappins(currentEsMapping);
@@ -137,6 +152,11 @@ public class EsReindexProcess {
         if (remoteShards != localSettings.get("number_of_shards")) {
             return true;
         }
+        Map<String, Object> analysis = esSettings.getAnalysis();
+        if (analysisChange(settings, analysis)) {
+            return true;
+        }
+
         //以下几个字段的变更对esSettings进行更新。但不reindex
         EsSettings newEsSettings = null;
         if (!remoteMaxResultWindow.equals(localSettings.get("max_result_window"))) {
@@ -156,6 +176,44 @@ public class EsReindexProcess {
         return false;
     }
 
+    private static boolean analysisChange(Settings settings, Map<String, Object> analysis) {
+        Map<StringBuilder, Object> analysisList = new HashMap<>();
+        buildAnalysis(analysis, analysisList, new StringBuilder("index.analysis."));
+
+        Settings settingsByPrefix = settings.getByPrefix("index.analysis.");
+        Set<String> strings = settingsByPrefix.keySet();
+        //如果es的配置比本地的多的话要reindex
+        if (strings.size() > analysisList.size()) {
+            return true;
+        }
+
+        for (Map.Entry<StringBuilder, Object> entry : analysisList.entrySet()) {
+            String value = settings.get(entry.getKey().toString());
+            if (value == null) {
+                return true;
+            }
+            if (!value.equals(entry.getValue().toString())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static void buildAnalysis(Map<String, Object> analysis, Map<StringBuilder, Object> sbs, StringBuilder sb) {
+        analysis.forEach((k, v) -> {
+            StringBuilder builder = new StringBuilder(sb);
+            builder.append(k);
+            if (v instanceof Map) {
+                builder.append(".");
+                buildAnalysis((Map<String, Object>) v, sbs, builder);
+            } else {
+                if (v != null) {
+                    sbs.put(builder, v);
+                }
+            }
+        });
+    }
+
     public static void main(String[] args) {
         EsSettings esSettings = new EsSettings();
         esSettings.setMaxResultWindow(11);
@@ -172,20 +230,23 @@ public class EsReindexProcess {
     private static void tryLockReindex(EsPlusClientFacade esPlusClientFacade, Class<?> clazz, EsIndexParam esIndexParam, String currentIndex) {
         ELock eLock = esPlusClientFacade.getLock(esIndexParam.getIndex() + EsConstant.REINDEX_LOCK_SUFFIX);
         boolean lock = eLock.tryLock();
-        boolean release = false;
         try {
             if (lock) {
-                release = doReindex(esPlusClientFacade, clazz, esIndexParam, currentIndex, eLock);
+                //如果能找到当前索引才需要执行reindex，否则已经执行过
+                if (esPlusClientFacade.getIndex(currentIndex) != null) {
+                    doReindex(esPlusClientFacade, clazz, esIndexParam, currentIndex);
+                }
             }
         } finally {
-            if (!release) {
+            //上面是否已经释放。如果上面的方法释放了这里不释放
+            if (lock) {
                 eLock.unlock();
             }
         }
     }
 
-    private static boolean doReindex(EsPlusClientFacade esPlusClientFacade, Class<?> clazz, EsIndexParam esIndexParam, String currentIndex, ELock eLock) {
-        boolean release;
+    private static void doReindex(EsPlusClientFacade esPlusClientFacade, Class<?> clazz, EsIndexParam esIndexParam, String currentIndex) {
+
         //记录重建索引前的时间戳
         long currentTimeMillis = System.currentTimeMillis();
 
@@ -193,8 +254,7 @@ public class EsReindexProcess {
         String reindexName = getReindexName(currentIndex);
 
         //创建没有别名的新索引
-        esPlusClientFacade.deleteAndCreateIndexWithoutAlias(reindexName, clazz);
-
+        esPlusClientFacade.createIndexWithoutAlias(reindexName, clazz);
 
         log.info("es-plus doReindex Begin currentIndex:{} newIndex:{}", currentIndex, reindexName);
 
@@ -209,22 +269,19 @@ public class EsReindexProcess {
 
         stopWatch.stop();
 
-        log.info("es-plus doReindex End currentIndex:{} newIndex:{} totalTimeSeconds:{}", currentIndex, reindexName, stopWatch.getTotalTimeSeconds());
+        log.info("es-plus first reindex End currentIndex:{} newIndex:{} totalTimeSeconds:{}", currentIndex, reindexName, stopWatch.getTotalTimeSeconds());
 
         // 新索引添加别名  切换了别名索引对于所有服务就已经可用.此时就需要执行释放锁
         EsReadWriteLock readWrtieLock = esPlusClientFacade.getReadWrtieLock(esIndexParam.getIndex() + EsConstant.REINDEX_UPDATE_LOCK);
         Lock lock = readWrtieLock.writeLock();
         lock.lock();
         try {
-            esPlusClientFacade.updateAlias(currentIndex, reindexName, esIndexParam.getAlias());
+            esPlusClientFacade.replaceAlias(currentIndex, reindexName, esIndexParam.getAlias());
         } finally {
+            lock.unlock();
             //解放锁的状态 其他服务在进行新增修改操作的时候修改状态
             esPlusClientFacade.getEsPlusClient().setReindexState(false);
-            eLock.unlock();
-            lock.unlock();
-            release = true;
         }
-
 
         // 第二次迁移残留数据
         reindex = esPlusClientFacade.reindex(currentIndex, reindexName, QueryBuilders.rangeQuery(EsConstant.REINDEX_TIME_FILED).gte(currentTimeMillis));
@@ -235,7 +292,7 @@ public class EsReindexProcess {
         //删除老索引
         esPlusClientFacade.deleteIndex(currentIndex);
 
-        return release;
+        log.info("es-plus doReindex All End currentIndex:{} newIndex:{}", currentIndex, reindexName);
     }
 
     /**

@@ -12,7 +12,7 @@
     </modules>
     <groupId>io.github.zhaohaoh</groupId>
     <artifactId>es-plus</artifactId>
-    <version>0.0.9</version>
+    <version>${rversion}</version>
 
     <properties>
         <maven.compiler.source>8</maven.compiler.source>
@@ -20,6 +20,7 @@
         <spring-boot.version>2.6.3</spring-boot.version>
         <!-- 打包跳过单元测试 -->
         <skipTests>true</skipTests>
+        <rversion>0.1.0</rversion>
     </properties>
     <licenses>
         <license>
@@ -66,12 +67,9 @@
     <build>
         <plugins>
             <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
-            </plugin>
-            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.7.0</version>
                 <configuration>
                     <encoding>utf-8</encoding>
                     <source>8</source>
@@ -139,6 +137,32 @@
                     </execution>
                 </executions>
             </plugin>
+<!--全局管理manven版本号插件-->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>flatten-maven-plugin</artifactId>
+                <version>1.2.7</version>
+                <configuration>
+                    <updatePomFile>true</updatePomFile>
+                    <flattenMode>resolveCiFriendliesOnly</flattenMode>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>flatten</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>flatten</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>flatten.clean</id>
+                        <phase>clean</phase>
+                        <goals>
+                            <goal>clean</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
 
@@ -147,7 +171,7 @@
             <dependency>
                 <groupId>io.github.zhaohaoh</groupId>
                 <artifactId>es-plus-pom</artifactId>
-                <version>${project.version}</version>
+                <version>${rversion}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>

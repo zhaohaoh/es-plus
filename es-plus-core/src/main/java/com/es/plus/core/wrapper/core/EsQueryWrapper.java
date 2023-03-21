@@ -2,8 +2,11 @@ package com.es.plus.core.wrapper.core;
 
 
 import com.es.plus.core.tools.SFunction;
+import com.es.plus.pojo.EsUpdateField;
 
-public class EsQueryWrapper<T> extends AbstractEsWrapper<T, SFunction<T, ?>, EsQueryWrapper<T>> {
+import java.util.function.Consumer;
+
+public class EsQueryWrapper<T> extends AbstractEsWrapper<T, String, EsQueryWrapper<T>> {
 
 
     /**
@@ -30,6 +33,5 @@ public class EsQueryWrapper<T> extends AbstractEsWrapper<T, SFunction<T, ?>, EsQ
     public Class<T> gettClass() {
         return super.tClass;
     }
-
 
 }

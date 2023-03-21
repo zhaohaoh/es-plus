@@ -1,5 +1,6 @@
 package com.es.plus.annotation;
 
+import com.es.plus.constant.Analyzer;
 import com.es.plus.constant.EsFieldType;
 
 import java.lang.annotation.ElementType;
@@ -64,9 +65,15 @@ public @interface EsField {
     boolean fieldData() default false;
 
     /**
+     * 设置keyword字段处理器 只会设置keyword类型字段
+     * 全局目前已配置自带的转小写normalizer
+     */
+    String normalizer() default "";
+
+    /**
      * 把字段复制到某一个字段。搜索的时候根据这个字段搜索。无需合并倒排链
      * 类似联合索引
-     * 例:keyword字段要查询 name nicknam username phone 等字段。组合为一个keyword字段。磁盘空间占用变大。性能也变更好。
+     * 例:一个模糊查询字段要查询 name nicknam username phone 等字段。组合为一个模糊查询字段。磁盘空间占用变大。性能也变更好。
      * 因为无需多次检索FST的树
      * 对整合后的字段聚合的话，会得到多个字段的聚合结果  目标对象text和keyword类型都能使用
      */

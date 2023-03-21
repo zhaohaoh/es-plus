@@ -6,7 +6,7 @@ import com.es.plus.annotation.EsIndex;
 import com.es.plus.config.GlobalConfigCache;
 import com.es.plus.constant.DefaultClass;
 import com.es.plus.constant.EsFieldType;
-import com.es.plus.constant.JdkDataTypeEnum;
+import com.es.plus.constant.JavaTypeEnum;
 import com.es.plus.exception.EsException;
 import com.es.plus.pojo.EsSettings;
 import com.es.plus.properties.EsIndexParam;
@@ -22,6 +22,7 @@ import java.lang.reflect.Type;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.es.plus.constant.Analyzer.ANALYZER;
 import static com.es.plus.constant.EsConstant.*;
 
 /**
@@ -52,8 +53,6 @@ public class EsAnnotationParamProcess {
         esIndexParam.setIndex(esIndex.index() + esSuffix);
         if (StringUtils.isNotBlank(esIndex.alias())) {
             esIndexParam.setAlias(esIndex.alias() + esSuffix);
-        } else {
-            esIndexParam.setAlias(esIndex.index() + esSuffix);
         }
         // 索引配置
         EsSettings esSettings = new EsSettings();
@@ -68,34 +67,17 @@ public class EsAnnotationParamProcess {
         //添加设置的多个分词器
         String[] analyzers = esIndex.analyzer();
 
+        Map<String, Object> analysis = new HashMap<>();
+
         //添加自定义分词器
-        if (ArrayUtils.isNotEmpty(analyzers)) {
-            Map<String, Object> analysis = new HashMap<>();
-            Map<String, Object> child = new HashMap<>();
-            analysis.put(ANALYZER, child);
-            for (String analyzerName : analyzers) {
-                Map map = EsParamHolder.getAnalysis(analyzerName);
-                if (map != null) {
-                    child.put(analyzerName, map);
-                }
-            }
-            esSettings.setAnalysis(analysis);
-        } else {
-            String defaultAnalyzer = GlobalConfigCache.GLOBAL_CONFIG.getDefaultAnalyzer();
-            if (StringUtils.isNotBlank(defaultAnalyzer)) {
-                Map<String, Object> analysis = new HashMap<>();
-                Map<String, Object> child = new HashMap<>();
-                analysis.put(ANALYZER, child);
-                Map map = EsParamHolder.getAnalysis(defaultAnalyzer);
-                if (map != null) {
-                    child.put(defaultAnalyzer, map);
-                }
-                esSettings.setAnalysis(analysis);
-            }
-        }
+        putAnalyzer(analyzers, analysis);
+
+        //添加自定义keyword处理器
+        putNormalizer(analysis);
+
+        esSettings.setAnalysis(analysis);
 
         esIndexParam.setEsSettings(esSettings);
-
         //父子文档
         Class<?> childClass = esIndex.childClass();
         if (childClass != DefaultClass.class) {
@@ -103,6 +85,37 @@ public class EsAnnotationParamProcess {
         }
 
         return esIndexParam;
+    }
+
+    private void putAnalyzer(String[] analyzers, Map<String, Object> analysis) {
+        Map<String, Object> child = new HashMap<>();
+        analysis.put(ANALYZER, child);
+        if (ArrayUtils.isNotEmpty(analyzers)) {
+            for (String analyzerName : analyzers) {
+                Map map = EsParamHolder.getAnalysis(analyzerName);
+                if (map != null) {
+                    child.put(analyzerName, map);
+                }
+            }
+        } else {
+            String defaultAnalyzer = GlobalConfigCache.GLOBAL_CONFIG.getDefaultAnalyzer();
+            if (StringUtils.isNotBlank(defaultAnalyzer)) {
+                Map map = EsParamHolder.getAnalysis(defaultAnalyzer);
+                if (map != null) {
+                    child.put(defaultAnalyzer, map);
+                }
+            }
+        }
+    }
+
+    private void putNormalizer(Map<String, Object> analysis) {
+        String defaultNormalizer = GlobalConfigCache.GLOBAL_CONFIG.getDefaultNormalizer();
+        Map epNormalizer = EsParamHolder.getAnalysis(defaultNormalizer);
+        if (!CollectionUtils.isEmpty(epNormalizer)) {
+            Map<String, Object> child = new HashMap<>();
+            child.put(defaultNormalizer, epNormalizer);
+            analysis.put(NORMALIZER, child);
+        }
     }
 
     /**
@@ -231,6 +244,9 @@ public class EsAnnotationParamProcess {
         if (esField.type() == EsFieldType.TEXT && esField.fieldData()) {
             properties.put(INDEX, true);
         }
+        if (esField.type() == EsFieldType.KEYWORD && StringUtils.isNotBlank(esField.normalizer())) {
+            properties.put(NORMALIZER, esField.normalizer());
+        }
 
         if (ArrayUtils.isNotEmpty(esField.copyTo())) {
             List<String> copyTo = Arrays.stream(esField.copyTo()).collect(Collectors.toList());
@@ -250,7 +266,7 @@ public class EsAnnotationParamProcess {
     private String getEsFieldType(Class<?> clazz) {
         String type = "";
         // 否则根据类型推断,String以及找不到的类型一律被当做keyword处理
-        JdkDataTypeEnum jdkDataType = JdkDataTypeEnum.getByType(clazz.getSimpleName().toLowerCase());
+        JavaTypeEnum jdkDataType = JavaTypeEnum.getByType(clazz.getSimpleName().toLowerCase());
 
         switch (jdkDataType) {
             case BYTE:

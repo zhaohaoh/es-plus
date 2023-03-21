@@ -1,14 +1,12 @@
 package com.es.plus.client;
 
-import com.es.plus.config.GlobalConfig;
 import com.es.plus.config.GlobalConfigCache;
 import com.es.plus.core.ScrollHandler;
-import com.es.plus.core.wrapper.core.EsQueryWrapper;
-import com.es.plus.core.wrapper.core.EsUpdateWrapper;
+import com.es.plus.core.params.EsParamWrapper;
 import com.es.plus.lock.ELock;
 import com.es.plus.lock.EsLockFactory;
 import com.es.plus.lock.EsReadWriteLock;
-import com.es.plus.pojo.EsAggregationsResponse;
+import com.es.plus.pojo.EsAggsResponse;
 import com.es.plus.pojo.EsResponse;
 import com.es.plus.pojo.EsSettings;
 import com.es.plus.pojo.PageInfo;
@@ -73,6 +71,17 @@ public class EsPlusClientFacade {
 
 
     /**
+     * 初始化ping 如果设置为false启动时不创建索引
+     */
+    @PostConstruct
+    public void init() {
+        boolean ping = esPlusIndexClient.ping();
+        if (!ping) {
+            GlobalConfigCache.GLOBAL_CONFIG.setStartInit(false);
+        }
+    }
+
+    /**
      * 创建索引
      *
      * @param index  指数
@@ -93,13 +102,6 @@ public class EsPlusClientFacade {
         esPlusIndexClient.putMapping(index, tClass);
     }
 
-    @PostConstruct
-    public void init() {
-        boolean ping = esPlusIndexClient.ping();
-        if (!ping) {
-            GlobalConfigCache.GLOBAL_CONFIG.setStartInit(false);
-        }
-    }
 
     /**
      * 映射
@@ -129,8 +131,8 @@ public class EsPlusClientFacade {
      * @param index  指数
      * @param tClass t类
      */
-    public void deleteAndCreateIndexWithoutAlias(String index, Class<?> tClass) {
-        esPlusIndexClient.deleteAndCreateIndexWithoutAlias(index, tClass);
+    public void createIndexWithoutAlias(String index, Class<?> tClass) {
+        esPlusIndexClient.createIndexWithoutAlias(index, tClass);
     }
 
 
@@ -180,8 +182,8 @@ public class EsPlusClientFacade {
      * @param alias        别名
      * @return boolean
      */
-    public boolean updateAlias(String oldIndexName, String reindexName, String alias) {
-        return esPlusIndexClient.updateAlias(oldIndexName, reindexName, alias);
+    public boolean replaceAlias(String oldIndexName, String reindexName, String alias) {
+        return esPlusIndexClient.replaceAlias(oldIndexName, reindexName, alias);
     }
 
 
@@ -205,6 +207,17 @@ public class EsPlusClientFacade {
      * @return boolean
      */
     public boolean updateSettings(String index, EsSettings esSettings) {
+        return esPlusIndexClient.updateSettings(index, esSettings);
+    }
+
+    /**
+     * 更新设置
+     *
+     * @param index      索引
+     * @param esSettings es设置
+     * @return boolean
+     */
+    public boolean updateSettings(String index, Map<String,Object> esSettings) {
         return esPlusIndexClient.updateSettings(index, esSettings);
     }
 
@@ -259,7 +272,7 @@ public class EsPlusClientFacade {
     /**
      * 更新包装
      */
-    public <T> BulkByScrollResponse updateByWrapper(String index, EsUpdateWrapper<T> esUpdateWrapper) {
+    public <T> BulkByScrollResponse updateByWrapper(String index, EsParamWrapper<T> esUpdateWrapper) {
         return esPlusClient.updateByWrapper(index, esUpdateWrapper);
     }
 
@@ -271,7 +284,7 @@ public class EsPlusClientFacade {
      * @param esUpdateWrapper es更新包装
      * @return {@link BulkByScrollResponse}
      */
-    public <T> BulkByScrollResponse increment(String index, EsUpdateWrapper<T> esUpdateWrapper) {
+    public <T> BulkByScrollResponse increment(String index, EsParamWrapper<T> esUpdateWrapper) {
         return esPlusClient.increment(index, esUpdateWrapper);
     }
 
@@ -287,38 +300,126 @@ public class EsPlusClientFacade {
     }
 
 
-    public <T> BulkByScrollResponse deleteByQuery(String index, EsUpdateWrapper<T> esUpdateWrapper) {
+    /**
+     * 删除根据查询
+     *
+     * @param index           指数
+     * @param esUpdateWrapper es更新包装
+     * @return {@link BulkByScrollResponse}
+     */
+    public <T> BulkByScrollResponse deleteByQuery(String index, EsParamWrapper<T> esUpdateWrapper) {
         return esPlusClient.deleteByQuery(index, esUpdateWrapper);
     }
 
 
+    /**
+     * 删除批处理
+     *
+     * @param index      指数
+     * @param esDataList 数据列表
+     * @return boolean
+     */
     public boolean deleteBatch(String index, Collection<String> esDataList) {
         return esPlusClient.deleteBatch(index, esDataList);
     }
 
 
-    public <T> long count(EsQueryWrapper<T> esQueryWrapper, String index) {
-        return esPlusClient.count(esQueryWrapper, index);
+    /**
+     * 统计
+     *
+     * @param esParamWrapper es param包装
+     * @param index          索引
+     * @return long
+     */
+    public <T> long count(EsParamWrapper<T> esParamWrapper, String index) {
+        return esPlusClient.count(esParamWrapper, index);
     }
 
 
-    public <T> EsResponse<T> searchByWrapper(EsQueryWrapper<T> esQueryWrapper, Class<T> tClass, String index) {
-        return esPlusClient.searchByWrapper(esQueryWrapper, tClass, index);
+    /**
+     * 搜索根据包装器
+     *
+     * @param esParamWrapper es param包装
+     * @param tClass         t类
+     * @param index          索引
+     * @return {@link EsResponse}<{@link T}>
+     */
+    public <T> EsResponse<T> searchByWrapper(EsParamWrapper<T> esParamWrapper, Class<T> tClass, String index) {
+        return esPlusClient.searchByWrapper(esParamWrapper, tClass, index);
     }
 
 
-    public <T> EsResponse<T> searchPageByWrapper(PageInfo<T> pageInfo, EsQueryWrapper<T> esQueryWrapper, Class<T> tClass, String index) {
-        return esPlusClient.searchPageByWrapper(pageInfo, esQueryWrapper, tClass, index);
+    /**
+     * 搜索分页根据包装器
+     *
+     * @param pageInfo       页面信息
+     * @param esParamWrapper es param包装
+     * @param tClass         t类
+     * @param index          索引
+     * @return {@link EsResponse}<{@link T}>
+     */
+    public <T> EsResponse<T> searchPageByWrapper(PageInfo<T> pageInfo, EsParamWrapper<T> esParamWrapper, Class<T> tClass, String index) {
+        return esPlusClient.searchPageByWrapper(pageInfo, esParamWrapper, tClass, index);
+    }
+
+    /**
+     * 搜索翻页 也可以向前搜索，只要更改排序即可
+     * 此方法可以代替实现深度分页
+     *
+     * @param pageInfo       页面信息
+     * @param esParamWrapper es param包装
+     * @param tClass         t类
+     * @param index          索引
+     * @return {@link EsResponse}<{@link T}>
+     */
+    public <T> EsResponse<T> searchAfter(PageInfo<T> pageInfo, EsParamWrapper<T> esParamWrapper, Class<T> tClass, String index) {
+        return esPlusClient.searchAfter(pageInfo, esParamWrapper, tClass, index);
+    }
+
+    /**
+     * 滚动根据包装器
+     *
+     * @param esParamWrapper es param包装
+     * @param tClass         t类
+     * @param index          指数
+     * @param size           大小
+     * @param keepTime       保持时间
+     * @param scrollHandler  滚动处理程序
+     */
+    public <T> void scrollByWrapper(EsParamWrapper<T> esParamWrapper, Class<T> tClass, String index, int size, int keepTime, ScrollHandler<T> scrollHandler) {
+        esPlusClient.scrollByWrapper(esParamWrapper, tClass, index, size, keepTime, scrollHandler);
     }
 
 
-    public <T> void scrollByWrapper(EsQueryWrapper<T> esQueryWrapper, Class<T> tClass, String index, int size, int keepTime, ScrollHandler<T> scrollHandler) {
-        esPlusClient.scrollByWrapper(esQueryWrapper, tClass, index, size, keepTime, scrollHandler);
+    /**
+     * 聚合
+     *
+     * @param index          指数
+     * @param esParamWrapper es param包装
+     * @param tClass         t类
+     * @return {@link EsAggsResponse}<{@link T}>
+     */
+    public <T> EsAggsResponse<T> aggregations(String index, EsParamWrapper<T> esParamWrapper, Class<T> tClass) {
+        return esPlusClient.aggregations(index, esParamWrapper,tClass);
     }
 
-
-    public <T> EsAggregationsResponse<T> aggregations(String index, EsQueryWrapper<T> esQueryWrapper) {
-        return esPlusClient.aggregations(index, esQueryWrapper);
+    /**
+     * 创建别名
+     *
+     * @param currentIndex 目前指数
+     * @param alias        别名
+     */
+    public void createAlias(String currentIndex, String alias) {
+        esPlusIndexClient.createAlias(currentIndex,alias);
     }
 
+    /**
+     * 删除别名
+     *
+     * @param index 指数
+     * @param alias 别名
+     */
+    public void removeAlias(String index, String alias) {
+        esPlusIndexClient.removeAlias(index,alias);
+    }
 }

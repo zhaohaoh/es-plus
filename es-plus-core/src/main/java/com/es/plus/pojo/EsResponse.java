@@ -3,7 +3,6 @@ package com.es.plus.pojo;
 
 import lombok.Data;
 import org.elasticsearch.action.search.ShardSearchFailure;
-import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.profile.ProfileShardResult;
 
 import java.util.List;
@@ -24,13 +23,21 @@ public class EsResponse<T> {
     /**
      * 聚合结果
      */
-    private EsAggregationsResponse<T> esAggregationsReponse;
+    private EsAggsResponse<T> esAggsResponse;
 
     /**
      * 分析结果
      */
     private Map<String, ProfileShardResult> profileResults;
 
+    /**
+     * SearchAfter搜索查询起始值
+     */
+    private Object[] firstSortValues;
+    /**
+     * SearchAfter搜索查询结束值
+     */
+    private Object[] tailSortValues;
 
     private int totalShards;
     private int successfulShards;
@@ -38,9 +45,9 @@ public class EsResponse<T> {
     private ShardSearchFailure[] shardFailures;
     private long tookInMillis;
 
-    public EsResponse(List<T> list, long count, EsAggregationsResponse<T> esAggregationReponse) {
+    public EsResponse(List<T> list, long count, EsAggsResponse<T> esAggregationReponse) {
         this.list = list;
         this.total = count;
-        this.esAggregationsReponse = esAggregationReponse;
+        this.esAggsResponse = esAggregationReponse;
     }
 }

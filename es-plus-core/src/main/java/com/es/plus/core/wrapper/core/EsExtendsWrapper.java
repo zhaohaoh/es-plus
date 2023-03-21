@@ -26,7 +26,7 @@ public interface EsExtendsWrapper<Children, R> {
     /**
      * 包含字段
      */
-    Children includes(String... names);
+//    Children includes(String... names);
     /**
      * 忽略字段
      */
@@ -34,15 +34,21 @@ public interface EsExtendsWrapper<Children, R> {
     /**
      * 忽略字段
      */
-    Children excludes(String... names);
+//    Children excludes(String... names);
     /**
      * 排序
      */
     Children orderBy(String order, R... columns);
+
     /**
      * 排序
      */
-    Children orderBy(String order, String... columns);
+    Children orderBy(String order, R column);
+
+    /**
+     * 排序
+     */
+//    Children orderBy(String order, String... columns);
     /**
      * 排序
      */

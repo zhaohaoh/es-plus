@@ -7,7 +7,7 @@ import java.util.Arrays;
 import java.util.Objects;
 
 @AllArgsConstructor
-public enum JdkDataTypeEnum {
+public enum JavaTypeEnum {
     BYTE("byte"),
     SHORT("short"),
     INT("int"),
@@ -29,8 +29,8 @@ public enum JdkDataTypeEnum {
     @Getter
     private String type;
 
-    public static JdkDataTypeEnum getByType(String typeName) {
-        return Arrays.stream(JdkDataTypeEnum.values())
+    public static JavaTypeEnum getByType(String typeName) {
+        return Arrays.stream(JavaTypeEnum.values())
                 .filter(v -> Objects.equals(v.type, typeName))
                 .findFirst()
                 .orElse(OBJECT);

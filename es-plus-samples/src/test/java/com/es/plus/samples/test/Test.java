@@ -1,11 +1,15 @@
 package com.es.plus.samples.test;
 
+import com.es.plus.constant.EsSettingsConstants;
 import com.es.plus.samples.SamplesApplication;
 import com.es.plus.samples.dto.SamplesEsDTO;
 import com.es.plus.samples.dto.SamplesNestedDTO;
 import com.es.plus.samples.service.SamplesEsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @SpringBootTest(classes = SamplesApplication.class)
 public class Test {
@@ -21,7 +25,7 @@ public class Test {
         samplesNestedDTO.setEmail("abc");
         samplesEsDTO.setSamplesNesteds(samplesNestedDTO);
         samplesEsDTO.setSamplesNesteds(samplesNestedDTO);
-        samplesEsDTO.setId(1L);
+        samplesEsDTO.setId(3L);
         samplesEsService.save(samplesEsDTO);
     }
 
@@ -31,6 +35,10 @@ public class Test {
         samplesEsService.nested();
     }
 
+    @org.junit.jupiter.api.Test
+    public void agg() {
+        samplesEsService.agg();
+    }
 
     @org.junit.jupiter.api.Test
     public void search() {
@@ -45,5 +53,29 @@ public class Test {
     @org.junit.jupiter.api.Test
     public void profile() {
         samplesEsService.profile1();
+    }
+
+    @org.junit.jupiter.api.Test
+    public void newUpdate() {
+        samplesEsService.update();
+    }
+
+    @org.junit.jupiter.api.Test
+    public void updateSettingsLog() {
+        Map<String,Object> map=new HashMap<>();
+        map.put(EsSettingsConstants.QUERY_INFO,"0s");
+        map.put(EsSettingsConstants.QUERY_WARN,"0s");
+        map.put(EsSettingsConstants.SEARCH_LEVEL,"info");
+        samplesEsService.updateSettings(map);
+    }
+
+    @org.junit.jupiter.api.Test
+    public void newSelect() {
+        samplesEsService.newSelect();
+    }
+
+    @org.junit.jupiter.api.Test
+    public void searhAfter() {
+        samplesEsService.searhAfter();
     }
 }
