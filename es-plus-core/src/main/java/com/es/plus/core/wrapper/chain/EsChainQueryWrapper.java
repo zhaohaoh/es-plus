@@ -1,7 +1,6 @@
 package com.es.plus.core.wrapper.chain;
 
 import com.es.plus.client.EsPlusClientFacade;
-import com.es.plus.core.ScrollHandler;
 import com.es.plus.core.wrapper.core.EsQueryWrapper;
 import com.es.plus.pojo.ClientContext;
 import com.es.plus.pojo.EsAggsResponse;
@@ -39,7 +38,7 @@ public class EsChainQueryWrapper<T> extends AbstractEsChainWrapper<T, String, Es
         return esPlusClientFacade.searchByWrapper(esWrapper.getEsParamWrapper(), tClass, index);
     }
 
-    public EsResponse<T> page(long page, long size) {
+    public EsResponse<T> page(int page, int size) {
         return esPlusClientFacade.searchPageByWrapper(new PageInfo<>(page, size), super.esWrapper.getEsParamWrapper(), tClass, index);
     }
 
@@ -55,8 +54,12 @@ public class EsChainQueryWrapper<T> extends AbstractEsChainWrapper<T, String, Es
         return esPlusClientFacade.count(super.esWrapper.getEsParamWrapper(), index);
     }
 
-    public void scroll(int size, ScrollHandler<T> scrollHandler) {
-        esPlusClientFacade.scrollByWrapper(super.esWrapper.getEsParamWrapper(), tClass, index, size, 1, scrollHandler);
+    public void scroll(int size, String scollId) {
+        esPlusClientFacade.scrollByWrapper(super.esWrapper.getEsParamWrapper(), tClass, index, size, 5, scollId);
+    }
+
+    public void scroll(int size, int keepTime,String scollId) {
+        esPlusClientFacade.scrollByWrapper(esWrapper.getEsParamWrapper(), tClass, index, size, keepTime, scollId);
     }
 
     /**

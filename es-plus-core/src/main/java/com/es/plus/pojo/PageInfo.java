@@ -7,8 +7,8 @@ import java.util.List;
 
 @Data
 public class PageInfo<T> {
-    private long page = 1;
-    private long size = 10;
+    private int page = 1;
+    private int size = 10;
     private T query;
     //缓存索引起步是0
     private long cacheBeginIndex;
@@ -31,16 +31,9 @@ public class PageInfo<T> {
 
     public PageInfo() {
     }
-    public PageInfo(long page, long size) {
+    public PageInfo(int page, int size) {
         this.page = page;
         this.size = size;
-    }
-    public int start() {
-        return (int) ((int) (this.page - 1) * this.size);
-    }
-
-    public int end() {
-        return (int) ((int) this.page * this.size);
     }
 
     @Override

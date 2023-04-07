@@ -1,14 +1,14 @@
 package com.es.plus.client;
 
-import com.es.plus.core.ScrollHandler;
 import com.es.plus.core.params.EsParamWrapper;
+import com.es.plus.pojo.EsAggsResponse;
 import com.es.plus.pojo.EsResponse;
 import com.es.plus.pojo.PageInfo;
-import com.es.plus.pojo.EsAggsResponse;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
 
 public interface EsPlusClient {
     /**
@@ -135,14 +135,15 @@ public interface EsPlusClient {
     /**
      * 滚动查询包装
      *
+     * @param scrollHandler  滚动处理程序
      * @param esParamWrapper es查询包装
      * @param tClass         t类
      * @param index          指数
      * @param size           大小
      * @param keepTime       保持时间
-     * @param scrollHandler  滚动处理程序
+     * @return
      */
-    <T> void scrollByWrapper(EsParamWrapper<T> esParamWrapper, Class<T> tClass, String index, int size, int keepTime, ScrollHandler<T> scrollHandler);
+    <T>  EsResponse<T> scrollByWrapper(EsParamWrapper<T> esParamWrapper, Class<T> tClass, String index, int size, int keepTime, String scrollId);
 
     /**
      * 聚合

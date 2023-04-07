@@ -2,7 +2,6 @@ package com.es.plus.core.service;
 
 
 import com.es.plus.config.GlobalConfigCache;
-import com.es.plus.core.ScrollHandler;
 import com.es.plus.core.wrapper.chain.EsChainLambdaQueryWrapper;
 import com.es.plus.core.wrapper.chain.EsChainUpdateWrapper;
 import com.es.plus.core.wrapper.core.EsQueryWrapper;
@@ -409,15 +408,15 @@ public class EsServiceImpl<T> extends AbstractEsService<T> implements EsService<
      * @param esQueryWrapper es查询包装器
      * @param size           大小
      * @param keepTime       保持时间
-     * @param scrollHandler  滚动处理程序
+     * @param scollId  滚动处理Id
      */
     @Override
-    public void scroll(EsQueryWrapper<T> esQueryWrapper, int size, int keepTime, ScrollHandler<T> scrollHandler) {
+    public  EsResponse<T> scroll(EsQueryWrapper<T> esQueryWrapper, int size, int keepTime, String scollId) {
         if (esQueryWrapper == null) {
             esQueryWrapper = matchAll();
         }
 
-        esPlusClientFacade.scrollByWrapper(esQueryWrapper.getEsParamWrapper(), clazz, alias, size, keepTime, scrollHandler);
+       return esPlusClientFacade.scrollByWrapper(esQueryWrapper.getEsParamWrapper(), clazz, alias, size, keepTime, scollId);
     }
 
     /**
