@@ -11,6 +11,10 @@ import com.es.plus.properties.EsIndexParam;
 import com.es.plus.properties.EsParamHolder;
 import org.apache.commons.lang3.StringUtils;
 
+import java.time.Duration;
+
+import static com.es.plus.constant.EsConstant.SCROLL_KEEP_TIME;
+
 /**
  * @Author: hzh
  * @Date: 2023/2/6 17:08
@@ -39,22 +43,50 @@ public class EsChainLambdaQueryWrapper<T> extends AbstractEsChainWrapper<T, SFun
         }
     }
 
+    /**
+     * 列表
+     *
+     * @return {@link EsResponse}<{@link T}>
+     */
     public EsResponse<T> list() {
         return esPlusClientFacade.searchByWrapper(esWrapper.getEsParamWrapper(), tClass, index);
     }
 
+    /**
+     * 分页
+     *
+     * @param page 页面
+     * @param size 大小
+     * @return {@link EsResponse}<{@link T}>
+     */
     public EsResponse<T> page(int page, int size) {
         return esPlusClientFacade.searchPageByWrapper(new PageInfo<>(page, size), esWrapper.getEsParamWrapper(), tClass, index);
     }
 
+    /**
+     * 搜索后
+     *
+     * @param pageInfo 页面信息
+     * @return {@link EsResponse}<{@link T}>
+     */
     public EsResponse<T> searchAfter(PageInfo<T> pageInfo) {
         return esPlusClientFacade.searchAfter(pageInfo, esWrapper.getEsParamWrapper(), tClass, index);
     }
 
+    /**
+     * 聚合
+     *
+     * @return {@link EsAggsResponse}<{@link T}>
+     */
     public EsAggsResponse<T> aggregations() {
         return esPlusClientFacade.aggregations(index, esWrapper.getEsParamWrapper(), tClass);
     }
 
+    /**
+     * 统计
+     *
+     * @return long
+     */
     public long count() {
         return esPlusClientFacade.count(esWrapper.getEsParamWrapper(), index);
     }
@@ -67,7 +99,7 @@ public class EsChainLambdaQueryWrapper<T> extends AbstractEsChainWrapper<T, SFun
      * @return {@link EsResponse}<{@link T}>
      */
     public EsResponse<T> scroll(int size, String scollId ) {
-     return    esPlusClientFacade.scrollByWrapper(esWrapper.getEsParamWrapper(), tClass, index, size, 5, scollId);
+     return    esPlusClientFacade.scrollByWrapper(esWrapper.getEsParamWrapper(), tClass, index, size, SCROLL_KEEP_TIME, scollId);
     }
 
     /**
@@ -78,7 +110,7 @@ public class EsChainLambdaQueryWrapper<T> extends AbstractEsChainWrapper<T, SFun
      * @param scollId  scoll id
      * @return {@link EsResponse}<{@link T}>
      */
-    public EsResponse<T> scroll(int size, int keepTime,String scollId) {
+    public EsResponse<T> scroll(int size, Duration keepTime, String scollId) {
       return   esPlusClientFacade.scrollByWrapper(esWrapper.getEsParamWrapper(), tClass, index, size, keepTime, scollId);
     }
 

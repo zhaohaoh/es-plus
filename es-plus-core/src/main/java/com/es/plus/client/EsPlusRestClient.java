@@ -60,6 +60,7 @@ import org.springframework.util.CollectionUtils;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -601,11 +602,11 @@ public class EsPlusRestClient implements EsPlusClient {
      * @return {@link EsResponse}<{@link T}>
      */
     @Override
-    public <T> EsResponse<T> scrollByWrapper(EsParamWrapper<T> esParamWrapper, Class<T> tClass, String index, int size, int keepTime, String scrollId) {
+    public <T> EsResponse<T> scrollByWrapper(EsParamWrapper<T> esParamWrapper, Class<T> tClass, String index, int size, Duration keepTime, String scrollId) {
         SearchResponse searchResponse;
         SearchHit[] searchHits = null;
         List<T> result = new ArrayList<>();
-        final Scroll scroll = new Scroll(TimeValue.timeValueMinutes(keepTime));
+        final Scroll scroll = new Scroll(TimeValue.timeValueMillis(keepTime.toMillis()));
         try {
             if (StringUtils.isNotBlank(scrollId)) {
                 SearchScrollRequest scrollRequest = new SearchScrollRequest(scrollId);

@@ -1,6 +1,8 @@
 package com.es.plus.constant;
 
 
+import java.time.Duration;
+
 public interface EsConstant {
     /* 框架缩写
      */
@@ -109,6 +111,10 @@ public interface EsConstant {
      */
     String GLOBAL_LOCK = "ep_global_lock";
 
+    /**
+     * LOCK 名
+     */
+    Duration SCROLL_KEEP_TIME = Duration.ofMinutes(5);
 
     /**
      * LOCK过期时间的key

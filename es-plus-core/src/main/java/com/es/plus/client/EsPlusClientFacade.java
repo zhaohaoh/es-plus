@@ -12,10 +12,12 @@ import com.es.plus.pojo.PageInfo;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.client.GetAliasesResponse;
 import org.elasticsearch.client.indices.GetIndexResponse;
+import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
 
 import javax.annotation.PostConstruct;
+import java.time.Duration;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -385,7 +387,7 @@ public class EsPlusClientFacade {
      * @param keepTime       保持时间
      * @param scollId  滚动处理Id
      */
-    public <T>  EsResponse<T> scrollByWrapper(EsParamWrapper<T> esParamWrapper, Class<T> tClass, String index, int size, int keepTime, String scollId) {
+    public <T>  EsResponse<T> scrollByWrapper(EsParamWrapper<T> esParamWrapper, Class<T> tClass, String index, int size, Duration keepTime, String scollId) {
       return   esPlusClient.scrollByWrapper(esParamWrapper, tClass, index, size, keepTime, scollId);
     }
 

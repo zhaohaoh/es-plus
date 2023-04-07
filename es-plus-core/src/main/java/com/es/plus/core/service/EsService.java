@@ -13,9 +13,12 @@ import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
 
 import java.io.Serializable;
+import java.time.Duration;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+
+import static com.es.plus.constant.EsConstant.SCROLL_KEEP_TIME;
 
 public interface EsService<T> {
 
@@ -264,7 +267,7 @@ public interface EsService<T> {
      * @return {@link EsResponse}<{@link T}>
      */
     default EsResponse<T> scroll(EsQueryWrapper<T> esQueryWrapper, int size, String scollId) {
-        return scroll(esQueryWrapper, size, 5, scollId);
+        return scroll(esQueryWrapper, size, SCROLL_KEEP_TIME, scollId);
     }
 
     /**
@@ -276,7 +279,7 @@ public interface EsService<T> {
      * @param scollId        scoll id
      * @return {@link EsResponse}<{@link T}>
      */
-    EsResponse<T> scroll(EsQueryWrapper<T> esQueryWrapper, int size, int keepTime, String scollId);
+    EsResponse<T> scroll(EsQueryWrapper<T> esQueryWrapper, int size, Duration keepTime, String scollId);
 
     /**
      * 自增

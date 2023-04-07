@@ -47,52 +47,121 @@ public class EsChainLambdaUpdateWrapper<T> extends AbstractEsChainWrapper<T, SFu
         }
     }
 
+    /**
+     * 保存
+     *
+     * @param t t
+     * @return boolean
+     */
     public boolean save(T t) {
         return esPlusClientFacade.save(index, t);
     }
 
-    public boolean update(T t) {
+    /**
+     * 更新
+     *
+     * @param t t
+     * @return boolean
+     */
+    public boolean date(T t) {
         return esPlusClientFacade.update(index, t);
     }
 
+    /**
+     * 增量根据
+     *
+     * @return {@link BulkByScrollResponse}
+     */
     public BulkByScrollResponse incrementByWapper() {
         return esPlusClientFacade.increment(index, esWrapper.getEsParamWrapper());
     }
 
+    /**
+     * 批处理更新
+     *
+     * @param t t
+     * @return {@link List}<{@link BulkItemResponse}>
+     */
     public List<BulkItemResponse> updateBatch(Collection<T> t) {
         return esPlusClientFacade.updateBatch(index, t);
     }
 
+    /**
+     * 保存批处理
+     *
+     * @param t t
+     * @return {@link List}<{@link BulkItemResponse}>
+     */
     public List<BulkItemResponse> saveBatch(Collection<T> t) {
         return esPlusClientFacade.saveBatch(index, t);
     }
 
+    /**
+     * 更新
+     *
+     * @return {@link BulkByScrollResponse}
+     */
     public BulkByScrollResponse update() {
         return esPlusClientFacade.updateByWrapper(index, esWrapper.getEsParamWrapper());
     }
 
+    /**
+     * 删除
+     *
+     * @return {@link BulkByScrollResponse}
+     */
     public BulkByScrollResponse remove() {
         return esPlusClientFacade.deleteByQuery(index, esWrapper.getEsParamWrapper());
     }
 
+    /**
+     * 设置scipt
+     *
+     * @param scipt       scipt
+     * @param sciptParams scipt参数
+     * @return {@link EsChainLambdaUpdateWrapper}<{@link T}>
+     */
     @Override
     public EsChainLambdaUpdateWrapper<T> setScipt(String scipt, Map<String, Object> sciptParams) {
         esWrapper.setScipt(scipt, sciptParams);
         return this;
     }
 
+    /**
+     * 设置scipt
+     *
+     * @param condition   条件
+     * @param script      脚本
+     * @param sciptParams scipt参数
+     * @return {@link EsChainLambdaUpdateWrapper}<{@link T}>
+     */
     @Override
     public EsChainLambdaUpdateWrapper<T> setScipt(boolean condition, String script, Map<String, Object> sciptParams) {
         return null;
     }
 
 
+    /**
+     * 设置
+     *
+     * @param name  名字
+     * @param value 价值
+     * @return {@link EsChainLambdaUpdateWrapper}<{@link T}>
+     */
     @Override
     public EsChainLambdaUpdateWrapper<T> set(SFunction<T, ?> name, Object value) {
         esWrapper.set(name, value);
         return this;
     }
 
+    /**
+     * 设置
+     *
+     * @param condition 条件
+     * @param column    列
+     * @param val       瓦尔
+     * @return {@link EsChainLambdaUpdateWrapper}<{@link T}>
+     */
     @Override
     public EsChainLambdaUpdateWrapper<T> set(boolean condition, SFunction<T, ?> column, Object val) {
         esWrapper.set(condition, column, val);
@@ -100,12 +169,27 @@ public class EsChainLambdaUpdateWrapper<T> extends AbstractEsChainWrapper<T, SFu
     }
 
 
+    /**
+     * 增量
+     *
+     * @param name  名字
+     * @param value 价值
+     * @return {@link EsChainLambdaUpdateWrapper}<{@link T}>
+     */
     @Override
     public EsChainLambdaUpdateWrapper<T> increment(SFunction<T, ?> name, Long value) {
         esWrapper.increment(name, value);
         return this;
     }
 
+    /**
+     * 增量
+     *
+     * @param condition 条件
+     * @param column    列
+     * @param val       瓦尔
+     * @return {@link EsChainLambdaUpdateWrapper}<{@link T}>
+     */
     @Override
     public EsChainLambdaUpdateWrapper<T> increment(boolean condition, SFunction<T, ?> column, Long val) {
         esWrapper.increment(condition, column, val);

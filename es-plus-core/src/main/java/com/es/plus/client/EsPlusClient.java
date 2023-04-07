@@ -7,6 +7,7 @@ import com.es.plus.pojo.PageInfo;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
 
+import java.time.Duration;
 import java.util.Collection;
 import java.util.List;
 
@@ -143,7 +144,7 @@ public interface EsPlusClient {
      * @param keepTime       保持时间
      * @return
      */
-    <T>  EsResponse<T> scrollByWrapper(EsParamWrapper<T> esParamWrapper, Class<T> tClass, String index, int size, int keepTime, String scrollId);
+    <T>  EsResponse<T> scrollByWrapper(EsParamWrapper<T> esParamWrapper, Class<T> tClass, String index, int size, Duration keepTime, String scrollId);
 
     /**
      * 聚合

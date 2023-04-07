@@ -18,6 +18,7 @@ import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.springframework.util.CollectionUtils;
 
 import java.io.Serializable;
+import java.time.Duration;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -411,7 +412,7 @@ public class EsServiceImpl<T> extends AbstractEsService<T> implements EsService<
      * @param scollId  滚动处理Id
      */
     @Override
-    public  EsResponse<T> scroll(EsQueryWrapper<T> esQueryWrapper, int size, int keepTime, String scollId) {
+    public  EsResponse<T> scroll(EsQueryWrapper<T> esQueryWrapper, int size, Duration keepTime, String scollId) {
         if (esQueryWrapper == null) {
             esQueryWrapper = matchAll();
         }
