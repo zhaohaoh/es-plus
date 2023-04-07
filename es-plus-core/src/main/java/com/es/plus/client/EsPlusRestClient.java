@@ -672,6 +672,15 @@ public class EsPlusRestClient implements EsPlusClient {
         return esAggregationReponse;
     }
 
+    /**
+     * 搜索后
+     *
+     * @param pageInfo       页面信息
+     * @param esParamWrapper es参数包装器
+     * @param tClass         t类
+     * @param index          索引
+     * @return {@link EsResponse}<{@link T}>
+     */
     @Override
     public <T> EsResponse<T> searchAfter(PageInfo<T> pageInfo, EsParamWrapper<T> esParamWrapper, Class<T> tClass, String index) {
         SearchRequest searchRequest = new SearchRequest();
