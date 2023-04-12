@@ -225,7 +225,7 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
     @Override
     public Children query(boolean condition, QueryBuilder queryBuilder) {
         if (condition) {
-            queryBuilders.add(getQueryBuilder());
+            queryBuilders.add(queryBuilder);
         }
         return children;
     }

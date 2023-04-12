@@ -116,7 +116,7 @@ public class SamplesEsService extends EsServiceImpl<SamplesEsDTO> {
     }
 
     public void count() {
-        long hzh = esChainQueryWrapper().must().match(SamplesEsDTO::getKeyword, "hzh").count();
+        long hzh = this.count(null);
 
         System.out.println(hzh);
     }
