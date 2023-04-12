@@ -39,6 +39,11 @@ public class EsResponse<T> {
      */
     private Object[] tailSortValues;
 
+    /**
+     * 滚动id
+     */
+    private String scrollId;
+
     private int totalShards;
     private int successfulShards;
     private int skippedShards;

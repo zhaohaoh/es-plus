@@ -1,84 +1,253 @@
 package com.es.plus.core.service;
 
 
-import com.es.plus.core.ScrollHandler;
-import com.es.plus.core.wrapper.chain.EsChainUpdateWrapper;
-import com.es.plus.pojo.EsResponse;
-import com.es.plus.pojo.PageInfo;
 import com.es.plus.core.wrapper.chain.EsChainLambdaQueryWrapper;
+import com.es.plus.core.wrapper.chain.EsChainUpdateWrapper;
 import com.es.plus.core.wrapper.core.EsQueryWrapper;
 import com.es.plus.core.wrapper.core.EsUpdateWrapper;
 import com.es.plus.pojo.EsAggsResponse;
+import com.es.plus.pojo.EsResponse;
 import com.es.plus.pojo.EsSettings;
+import com.es.plus.pojo.PageInfo;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
 
 import java.io.Serializable;
+import java.time.Duration;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import static com.es.plus.constant.EsConstant.SCROLL_KEEP_TIME;
+
 public interface EsService<T> {
 
+    /**
+     * es查询包装器
+     *
+     * @return {@link EsQueryWrapper}<{@link T}>
+     */
     EsQueryWrapper<T> esQueryWrapper();
 
+    /**
+     * es更新包装器
+     *
+     * @return {@link EsUpdateWrapper}<{@link T}>
+     */
     EsUpdateWrapper<T> esUpdateWrapper();
 
+    /**
+     * es链查询包装器
+     *
+     * @return {@link EsChainLambdaQueryWrapper}<{@link T}>
+     */
     EsChainLambdaQueryWrapper<T> esChainQueryWrapper();
 
+    /**
+     * es链更新包装器
+     *
+     * @return {@link EsChainUpdateWrapper}<{@link T}>
+     */
     EsChainUpdateWrapper<T> esChainUpdateWrapper();
 
+    /**
+     * 创建索引
+     */
     void createIndex();
 
+    /**
+     * 创建索引映射
+     */
     void createIndexMapping();
 
+    /**
+     * 创建映射
+     */
     void createMapping();
 
+    /**
+     * 更新设置
+     *
+     * @param esSettings es设置
+     * @return boolean
+     */
     boolean updateSettings(EsSettings esSettings);
 
-     boolean updateSettings(Map<String,Object> esSettings);
+    /**
+     * 更新设置
+     *
+     * @param esSettings es设置
+     * @return boolean
+     */
+    boolean updateSettings(Map<String, Object> esSettings);
 
+    /**
+     * 保存
+     *
+     * @param entity 实体
+     * @return boolean
+     */
     boolean save(T entity);
 
+    /**
+     * 保存或更新
+     *
+     * @param entity 实体
+     * @return boolean
+     */
     boolean saveOrUpdate(T entity);
 
+    /**
+     * 保存或更新批处理
+     *
+     * @param entityList 实体列表
+     * @return {@link List}<{@link BulkItemResponse}>
+     */
     List<BulkItemResponse> saveOrUpdateBatch(Collection<T> entityList);
 
+    /**
+     * 保存批处理
+     *
+     * @param entityList 实体列表
+     * @return {@link List}<{@link BulkItemResponse}>
+     */
     List<BulkItemResponse> saveBatch(Collection<T> entityList);
 
+    /**
+     * 保存批处理
+     *
+     * @param entityList 实体列表
+     * @param batchSize  批量大小
+     * @return {@link List}<{@link BulkItemResponse}>
+     */
     List<BulkItemResponse> saveBatch(Collection<T> entityList, int batchSize);
 
+    /**
+     * 删除根据id
+     *
+     * @param id id
+     * @return boolean
+     */
     boolean removeById(Serializable id);
 
+    /**
+     * 删除根据id
+     *
+     * @param idList id列表
+     * @return boolean
+     */
     boolean removeByIds(Collection<? extends Serializable> idList);
 
+    /**
+     * 删除
+     *
+     * @param esUpdateWrapper es更新包装器
+     * @return {@link BulkByScrollResponse}
+     */
     BulkByScrollResponse remove(EsUpdateWrapper<T> esUpdateWrapper);
 
+    /**
+     * 删除所有
+     *
+     * @return {@link BulkByScrollResponse}
+     */
     BulkByScrollResponse removeAll();
 
+    /**
+     * 更新根据id
+     *
+     * @param entity 实体
+     * @return boolean
+     */
     boolean updateById(T entity);
 
+    /**
+     * 批处理更新
+     *
+     * @param entityList 实体列表
+     * @return {@link List}<{@link BulkItemResponse}>
+     */
     List<BulkItemResponse> updateBatch(Collection<T> entityList);
 
+    /**
+     * 批处理更新
+     *
+     * @param entityList 实体列表
+     * @param batchSize  批量大小
+     * @return {@link List}<{@link BulkItemResponse}>
+     */
     List<BulkItemResponse> updateBatch(Collection<T> entityList, int batchSize);
 
+    /**
+     * 删除索引
+     */
     void deleteIndex();
 
+    /**
+     * 更新根据包装器
+     *
+     * @param esUpdateWrapper es更新包装器
+     * @return {@link BulkByScrollResponse}
+     */
     BulkByScrollResponse updateByWrapper(EsUpdateWrapper<T> esUpdateWrapper);
 
+    /**
+     * 获取根据id
+     *
+     * @param id id
+     * @return {@link T}
+     */
     T getById(Serializable id);
 
+    /**
+     * 列表根据id
+     *
+     * @param idList id列表
+     * @return {@link List}<{@link T}>
+     */
     List<T> listByIds(Collection<Serializable> idList);
 
+    /**
+     * 列表
+     *
+     * @param esQueryWrapper es查询包装器
+     * @return {@link EsResponse}<{@link T}>
+     */
     EsResponse<T> list(EsQueryWrapper<T> esQueryWrapper);
 
+    /**
+     * 页面
+     *
+     * @param pageInfo       页面信息
+     * @param esQueryWrapper es查询包装器
+     * @return {@link EsResponse}<{@link T}>
+     */
     EsResponse<T> page(PageInfo<T> pageInfo, EsQueryWrapper<T> esQueryWrapper);
 
 
+    /**
+     * 搜索后
+     *
+     * @param pageInfo
+     * @param esQueryWrapper es查询包装器
+     * @return {@link EsResponse}<{@link T}>
+     */
     EsResponse<T> searchAfter(PageInfo<T> pageInfo, EsQueryWrapper<T> esQueryWrapper);
 
+    /**
+     * 统计
+     *
+     * @param esQueryWrapper es查询包装器
+     * @return long
+     */
     long count(EsQueryWrapper<T> esQueryWrapper);
 
+    /**
+     * 聚合
+     *
+     * @param esQueryWrapper es查询包装器
+     * @return {@link EsAggsResponse}<{@link T}>
+     */
     EsAggsResponse<T> aggregations(EsQueryWrapper<T> esQueryWrapper);
 
     /**
@@ -89,11 +258,34 @@ public interface EsService<T> {
      */
     EsResponse<T> profile(EsQueryWrapper<T> esQueryWrapper);
 
-    default void scroll(EsQueryWrapper<T> esQueryWrapper, int size, ScrollHandler<T> scrollHandler) {
-        scroll(esQueryWrapper, size, 1, scrollHandler);
+    /**
+     * 滚动
+     *
+     * @param esQueryWrapper es查询包装器
+     * @param size           大小
+     * @param scollId        scoll id
+     * @return {@link EsResponse}<{@link T}>
+     */
+    default EsResponse<T> scroll(EsQueryWrapper<T> esQueryWrapper, int size, String scollId) {
+        return scroll(esQueryWrapper, size, SCROLL_KEEP_TIME, scollId);
     }
 
-    void scroll(EsQueryWrapper<T> esQueryWrapper, int size, int keepTime, ScrollHandler<T> scrollHandler);
+    /**
+     * 滚动
+     *
+     * @param esQueryWrapper es查询包装器
+     * @param size           大小
+     * @param keepTime       保持时间
+     * @param scollId        scoll id
+     * @return {@link EsResponse}<{@link T}>
+     */
+    EsResponse<T> scroll(EsQueryWrapper<T> esQueryWrapper, int size, Duration keepTime, String scollId);
 
+    /**
+     * 自增
+     *
+     * @param esUpdateWrapper es更新包装器
+     * @return {@link BulkByScrollResponse}
+     */
     BulkByScrollResponse increment(EsUpdateWrapper<T> esUpdateWrapper);
 }

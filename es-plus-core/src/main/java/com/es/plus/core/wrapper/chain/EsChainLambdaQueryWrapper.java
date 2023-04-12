@@ -1,7 +1,6 @@
 package com.es.plus.core.wrapper.chain;
 
 import com.es.plus.client.EsPlusClientFacade;
-import com.es.plus.core.ScrollHandler;
 import com.es.plus.core.tools.SFunction;
 import com.es.plus.core.wrapper.core.EsLambdaQueryWrapper;
 import com.es.plus.pojo.ClientContext;
@@ -11,6 +10,10 @@ import com.es.plus.pojo.PageInfo;
 import com.es.plus.properties.EsIndexParam;
 import com.es.plus.properties.EsParamHolder;
 import org.apache.commons.lang3.StringUtils;
+
+import java.time.Duration;
+
+import static com.es.plus.constant.EsConstant.SCROLL_KEEP_TIME;
 
 /**
  * @Author: hzh
@@ -40,28 +43,75 @@ public class EsChainLambdaQueryWrapper<T> extends AbstractEsChainWrapper<T, SFun
         }
     }
 
+    /**
+     * 列表
+     *
+     * @return {@link EsResponse}<{@link T}>
+     */
     public EsResponse<T> list() {
         return esPlusClientFacade.searchByWrapper(esWrapper.getEsParamWrapper(), tClass, index);
     }
 
-    public EsResponse<T> page(long page, long size) {
+    /**
+     * 分页
+     *
+     * @param page 页面
+     * @param size 大小
+     * @return {@link EsResponse}<{@link T}>
+     */
+    public EsResponse<T> page(int page, int size) {
         return esPlusClientFacade.searchPageByWrapper(new PageInfo<>(page, size), esWrapper.getEsParamWrapper(), tClass, index);
     }
 
+    /**
+     * 搜索后
+     *
+     * @param pageInfo 页面信息
+     * @return {@link EsResponse}<{@link T}>
+     */
     public EsResponse<T> searchAfter(PageInfo<T> pageInfo) {
         return esPlusClientFacade.searchAfter(pageInfo, esWrapper.getEsParamWrapper(), tClass, index);
     }
 
+    /**
+     * 聚合
+     *
+     * @return {@link EsAggsResponse}<{@link T}>
+     */
     public EsAggsResponse<T> aggregations() {
         return esPlusClientFacade.aggregations(index, esWrapper.getEsParamWrapper(), tClass);
     }
 
+    /**
+     * 统计
+     *
+     * @return long
+     */
     public long count() {
         return esPlusClientFacade.count(esWrapper.getEsParamWrapper(), index);
     }
 
-    public void scroll(int size, ScrollHandler<T> scrollHandler) {
-        esPlusClientFacade.scrollByWrapper(esWrapper.getEsParamWrapper(), tClass, index, size, 1, scrollHandler);
+    /**
+     * 滚动查询
+     *
+     * @param size    大小
+     * @param scollId scoll id
+     * @return {@link EsResponse}<{@link T}>
+     */
+    public EsResponse<T> scroll(int size, String scollId ) {
+     return    esPlusClientFacade.scrollByWrapper(esWrapper.getEsParamWrapper(), tClass, index, size, SCROLL_KEEP_TIME, scollId);
+    }
+
+    /**
+     * 滚动查询
+     *
+     * @param size     大小
+     * @param keepTime 保持时间
+     * @param scollId  scoll id
+     * @return {@link EsResponse}<{@link T}>
+     */
+    public EsResponse<T> scroll(int size, Duration keepTime, String scollId) {
+      return   esPlusClientFacade.scrollByWrapper(esWrapper.getEsParamWrapper(), tClass, index, size, keepTime, scollId);
     }
 
     /**

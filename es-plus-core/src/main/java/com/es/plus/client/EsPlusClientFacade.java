@@ -1,7 +1,6 @@
 package com.es.plus.client;
 
 import com.es.plus.config.GlobalConfigCache;
-import com.es.plus.core.ScrollHandler;
 import com.es.plus.core.params.EsParamWrapper;
 import com.es.plus.lock.ELock;
 import com.es.plus.lock.EsLockFactory;
@@ -13,10 +12,12 @@ import com.es.plus.pojo.PageInfo;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.client.GetAliasesResponse;
 import org.elasticsearch.client.indices.GetIndexResponse;
+import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
 
 import javax.annotation.PostConstruct;
+import java.time.Duration;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -384,10 +385,10 @@ public class EsPlusClientFacade {
      * @param index          指数
      * @param size           大小
      * @param keepTime       保持时间
-     * @param scrollHandler  滚动处理程序
+     * @param scollId  滚动处理Id
      */
-    public <T> void scrollByWrapper(EsParamWrapper<T> esParamWrapper, Class<T> tClass, String index, int size, int keepTime, ScrollHandler<T> scrollHandler) {
-        esPlusClient.scrollByWrapper(esParamWrapper, tClass, index, size, keepTime, scrollHandler);
+    public <T>  EsResponse<T> scrollByWrapper(EsParamWrapper<T> esParamWrapper, Class<T> tClass, String index, int size, Duration keepTime, String scollId) {
+      return   esPlusClient.scrollByWrapper(esParamWrapper, tClass, index, size, keepTime, scollId);
     }
 
 

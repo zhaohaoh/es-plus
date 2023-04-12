@@ -19,13 +19,13 @@ public class Test {
     @org.junit.jupiter.api.Test
     public void testSave() {
         SamplesEsDTO samplesEsDTO = new SamplesEsDTO();
-        samplesEsDTO.setEmail("abc");
+        samplesEsDTO.setEmail("bbbberretertrebbbb");
         samplesEsDTO.setUsername("hzh");
         SamplesNestedDTO samplesNestedDTO = new SamplesNestedDTO();
-        samplesNestedDTO.setEmail("abc");
+        samplesNestedDTO.setEmail("gdfgdf");
         samplesEsDTO.setSamplesNesteds(samplesNestedDTO);
         samplesEsDTO.setSamplesNesteds(samplesNestedDTO);
-        samplesEsDTO.setId(3L);
+        samplesEsDTO.setId(4L);
         samplesEsService.save(samplesEsDTO);
     }
 
@@ -49,6 +49,17 @@ public class Test {
     public void test() {
         samplesEsService.test();
     }
+
+    @org.junit.jupiter.api.Test
+    public void scroll() {
+        samplesEsService.scroll();
+    }
+
+    @org.junit.jupiter.api.Test
+    public void count() {
+        samplesEsService.count();
+    }
+
 
     @org.junit.jupiter.api.Test
     public void profile() {

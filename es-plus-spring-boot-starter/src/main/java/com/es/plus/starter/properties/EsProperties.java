@@ -40,7 +40,6 @@ public class EsProperties {
     /**
      * 密码
      */
-
     private String password;
     /**
      * maxConnectTotal 最大连接数

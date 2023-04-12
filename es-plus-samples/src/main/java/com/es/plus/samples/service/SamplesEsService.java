@@ -102,6 +102,25 @@ public class SamplesEsService extends EsServiceImpl<SamplesEsDTO> {
         System.out.println(hzh);
     }
 
+    public void scroll() {
+        String scrollId = null;
+        int page =2;
+        int size=2;
+
+        for (int i = 0; i < page; i++) {
+            EsResponse<SamplesEsDTO> hzh = esChainQueryWrapper().must().match(SamplesEsDTO::getUsername, "HZH")
+                    .orderByAsc("id").scroll(size, scrollId);
+            scrollId = hzh.getScrollId();
+            System.out.println(hzh);
+        }
+    }
+
+    public void count() {
+        long hzh = esChainQueryWrapper().must().match(SamplesEsDTO::getKeyword, "hzh").count();
+
+        System.out.println(hzh);
+    }
+
     public void update() {
         Map<String, Object> map = new HashMap<>();
         map.put("username", "fsdfsfds");

@@ -1,7 +1,6 @@
 package com.es.plus.client;
 
 
-import com.es.plus.core.ScrollHandler;
 import com.es.plus.core.params.EsParamWrapper;
 import com.es.plus.core.wrapper.aggregation.EsAggWrapper;
 import com.es.plus.core.wrapper.aggregation.EsLambdaAggWrapper;
@@ -61,6 +60,7 @@ import org.springframework.util.CollectionUtils;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -569,7 +569,7 @@ public class EsPlusRestClient implements EsPlusClient {
         countRequest.indices(index);
         CountResponse count = null;
         try {
-            printInfoLog("count index=:{} body:{}", index, esParamWrapper.getQueryBuilder().toString());
+            printInfoLog("count index=:{} body:{}", index, JsonUtils.toJsonStr(esParamWrapper.getQueryBuilder()));
             count = restHighLevelClient.count(countRequest, RequestOptions.DEFAULT);
         } catch (IOException e) {
             throw new EsException("es-plus count error ", e);
@@ -590,45 +590,56 @@ public class EsPlusRestClient implements EsPlusClient {
         return search(pageInfo, esParamWrapper, tClass, index);
     }
 
+    /**
+     * 滚动包装器
+     *
+     * @param esParamWrapper es参数包装器
+     * @param tClass         t类
+     * @param index          索引
+     * @param size           大小
+     * @param keepTime       保持时间
+     * @param scrollId       滚动id
+     * @return {@link EsResponse}<{@link T}>
+     */
     @Override
-    public <T> void scrollByWrapper(EsParamWrapper<T> esParamWrapper, Class<T> tClass, String index, int size, int keepTime, ScrollHandler<T> scrollHandler) {
-        final Scroll scroll = new Scroll(TimeValue.timeValueMinutes(keepTime));
-        SearchRequest searchRequest = new SearchRequest(index);
-        searchRequest.scroll(scroll);
-        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-        searchSourceBuilder.query(esParamWrapper.getQueryBuilder());
-        searchSourceBuilder.size(size);
-        searchRequest.source(searchSourceBuilder);
+    public <T> EsResponse<T> scrollByWrapper(EsParamWrapper<T> esParamWrapper, Class<T> tClass, String index, int size, Duration keepTime, String scrollId) {
+        SearchResponse searchResponse;
+        SearchHit[] searchHits = null;
+        List<T> result = new ArrayList<>();
+        final Scroll scroll = new Scroll(TimeValue.timeValueMillis(keepTime.toMillis()));
         try {
-            //调用scroll处理
-            SearchResponse searchResponse = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
-            String scrollId = searchResponse.getScrollId();
-            SearchHit[] searchHits = searchResponse.getHits().getHits();
-            List<T> result = new ArrayList<>();
-            while (searchHits != null && searchHits.length > 0) {
-                for (SearchHit searchHit : searchHits) {
-                    T t = JsonUtils.toBean(searchHit.getSourceAsString(), tClass);
-                    result.add(t);
-                }
-                scrollHandler.handler(result);
-                result.clear();
+            if (StringUtils.isNotBlank(scrollId)) {
                 SearchScrollRequest scrollRequest = new SearchScrollRequest(scrollId);
                 scrollRequest.scroll(scroll);
                 searchResponse = restHighLevelClient.scroll(scrollRequest, RequestOptions.DEFAULT);
                 scrollId = searchResponse.getScrollId();
                 searchHits = searchResponse.getHits().getHits();
+            } else {
+                SearchRequest searchRequest = new SearchRequest(index);
+                searchRequest.scroll(scroll);
+                SearchSourceBuilder searchSourceBuilder = getSearchSourceBuilder(null, size, esParamWrapper);
+                searchRequest.source(searchSourceBuilder);
+                //调用scroll处理
+                searchResponse = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
+                scrollId = searchResponse.getScrollId();
+                searchHits = searchResponse.getHits().getHits();
             }
-
-            ClearScrollRequest clearScrollRequest = new ClearScrollRequest();
-            clearScrollRequest.addScrollId(scrollId);
-            ClearScrollResponse clearScrollResponse = restHighLevelClient.clearScroll(clearScrollRequest, RequestOptions.DEFAULT);
-            boolean succeeded = clearScrollResponse.isSucceeded();
+            EsResponse<T> esResponse = gettEsResponse(tClass, esParamWrapper.getEsQueryParamWrapper(), searchResponse);
+            if (searchHits == null || searchHits.length <= 0) {
+                ClearScrollRequest clearScrollRequest = new ClearScrollRequest();
+                clearScrollRequest.addScrollId(scrollId);
+                ClearScrollResponse clearScrollResponse = restHighLevelClient.clearScroll(clearScrollRequest, RequestOptions.DEFAULT);
+                boolean succeeded = clearScrollResponse.isSucceeded();
+            }
+            return esResponse;
         } catch (Exception e) {
             throw new EsException("scroll error", e);
         }
     }
 
-    // 聚合
+    /**
+     * 聚合
+     */
     @Override
     public <T> EsAggsResponse<T> aggregations(String index, EsParamWrapper<T> esParamWrapper, Class<T> tClass) {
         SearchRequest searchRequest = new SearchRequest();
@@ -662,6 +673,15 @@ public class EsPlusRestClient implements EsPlusClient {
         return esAggregationReponse;
     }
 
+    /**
+     * 搜索后
+     *
+     * @param pageInfo       页面信息
+     * @param esParamWrapper es参数包装器
+     * @param tClass         t类
+     * @param index          索引
+     * @return {@link EsResponse}<{@link T}>
+     */
     @Override
     public <T> EsResponse<T> searchAfter(PageInfo<T> pageInfo, EsParamWrapper<T> esParamWrapper, Class<T> tClass, String index) {
         SearchRequest searchRequest = new SearchRequest();
@@ -669,7 +689,7 @@ public class EsPlusRestClient implements EsPlusClient {
         EsQueryParamWrapper esQueryParamWrapper = esParamWrapper.getEsQueryParamWrapper();
 
         //获取查询语句源数据
-        SearchSourceBuilder sourceBuilder = getSearchSourceBuilder(pageInfo, esParamWrapper);
+        SearchSourceBuilder sourceBuilder = getSearchSourceBuilder(pageInfo.getPage(), pageInfo.getSize(), esParamWrapper);
 
         if (pageInfo.getSearchAfterValues() != null) {
             sourceBuilder.searchAfter(pageInfo.getSearchAfterValues());
@@ -712,7 +732,7 @@ public class EsPlusRestClient implements EsPlusClient {
         EsQueryParamWrapper esQueryParamWrapper = esParamWrapper.getEsQueryParamWrapper();
 
         //获取查询语句源数据
-        SearchSourceBuilder sourceBuilder = getSearchSourceBuilder(pageInfo, esParamWrapper);
+        SearchSourceBuilder sourceBuilder = getSearchSourceBuilder(pageInfo.getPage(), pageInfo.getSize(), esParamWrapper);
 
         //设置查询语句源数据
         searchRequest.source(sourceBuilder);
@@ -747,31 +767,33 @@ public class EsPlusRestClient implements EsPlusClient {
         SearchHits hits = searchResponse.getHits();
         SearchHit[] hitArray = hits.getHits();
         List<T> result = new ArrayList<>();
-        if (esQueryParamWrapper.getEsHighLights() != null) {
-            for (SearchHit hit : hitArray) {
-                //获取高亮字段
-                Map<String, HighlightField> highlightFields = hit.getHighlightFields();
-                //将Json数据转化为实体对象
-                Map<String, Object> map = hit.getSourceAsMap();
-                if (highlightFields != null) {
-                    highlightFields.forEach((k, v) -> {
-                                Text[] texts = v.fragments();
-                                StringBuilder stringBuilder = new StringBuilder();
-                                for (Text text : texts) {
-                                    stringBuilder.append(text);
+        if (hitArray != null && hitArray.length > 0) {
+            if (esQueryParamWrapper.getEsHighLights() != null) {
+                for (SearchHit hit : hitArray) {
+                    //获取高亮字段
+                    Map<String, HighlightField> highlightFields = hit.getHighlightFields();
+                    //将Json数据转化为实体对象
+                    Map<String, Object> map = hit.getSourceAsMap();
+                    if (highlightFields != null) {
+                        highlightFields.forEach((k, v) -> {
+                                    Text[] texts = v.fragments();
+                                    StringBuilder stringBuilder = new StringBuilder();
+                                    for (Text text : texts) {
+                                        stringBuilder.append(text);
+                                    }
+                                    //高亮字段重新put进去
+                                    map.put(k, stringBuilder.toString());
                                 }
-                                //高亮字段重新put进去
-                                map.put(k, stringBuilder.toString());
-                            }
-                    );
+                        );
 
+                    }
+                    T t = BeanUtils.mapToBean(map, tClass);
+                    result.add(t);
                 }
-                T t = BeanUtils.mapToBean(map, tClass);
-                result.add(t);
-            }
-        } else {
-            for (SearchHit hit : hitArray) {
-                result.add(JsonUtils.toBean(hit.getSourceAsString(), tClass));
+            } else {
+                for (SearchHit hit : hitArray) {
+                    result.add(JsonUtils.toBean(hit.getSourceAsString(), tClass));
+                }
             }
         }
 
@@ -788,7 +810,8 @@ public class EsPlusRestClient implements EsPlusClient {
         esResponse.setTookInMillis(searchResponse.getTook().getMillis());
         esResponse.setSuccessfulShards(searchResponse.getSuccessfulShards());
         esResponse.setTotalShards(searchResponse.getTotalShards());
-        if (ArrayUtils.isNotEmpty(hitArray)){
+        esResponse.setScrollId(searchResponse.getScrollId());
+        if (ArrayUtils.isNotEmpty(hitArray)) {
             esResponse.setFirstSortValues(hitArray[0].getSortValues());
             esResponse.setTailSortValues(hitArray[hitArray.length - 1].getSortValues());
         }
@@ -801,7 +824,7 @@ public class EsPlusRestClient implements EsPlusClient {
         return esResponse;
     }
 
-    private <T> SearchSourceBuilder getSearchSourceBuilder(PageInfo<T> pageInfo, EsParamWrapper<T> esParamWrapper) {
+    private <T> SearchSourceBuilder getSearchSourceBuilder(Integer page, Integer size, EsParamWrapper<T> esParamWrapper) {
         EsQueryParamWrapper esQueryParamWrapper = esParamWrapper.getEsQueryParamWrapper();
         //查询条件组合
         BoolQueryBuilder queryBuilder = esParamWrapper.getQueryBuilder();
@@ -819,10 +842,14 @@ public class EsPlusRestClient implements EsPlusClient {
         }
 
         //是否需要分页查询
-        if (pageInfo != null) {
+        if (page != null || size != null) {
             //设置分页属性
-            sourceBuilder.from((int) ((pageInfo.getPage() - 1) * pageInfo.getSize()));
-            sourceBuilder.size((int) pageInfo.getSize());
+            if (size != null) {
+                sourceBuilder.size(size);
+                if (page != null) {
+                    sourceBuilder.from(((page - 1) * size));
+                }
+            }
         } else {
             sourceBuilder.size(GLOBAL_CONFIG.getSearchSize());
         }
