@@ -569,7 +569,7 @@ public class EsPlusRestClient implements EsPlusClient {
         countRequest.indices(index);
         CountResponse count = null;
         try {
-            printInfoLog("count index=:{} body:{}", index, esParamWrapper.getQueryBuilder().toString());
+            printInfoLog("count index=:{} body:{}", index, JsonUtils.toJsonStr(esParamWrapper.getQueryBuilder()));
             count = restHighLevelClient.count(countRequest, RequestOptions.DEFAULT);
         } catch (IOException e) {
             throw new EsException("es-plus count error ", e);

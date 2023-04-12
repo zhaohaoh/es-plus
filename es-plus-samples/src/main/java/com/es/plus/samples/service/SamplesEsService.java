@@ -115,6 +115,12 @@ public class SamplesEsService extends EsServiceImpl<SamplesEsDTO> {
         }
     }
 
+    public void count() {
+        long hzh = esChainQueryWrapper().must().match(SamplesEsDTO::getKeyword, "hzh").count();
+
+        System.out.println(hzh);
+    }
+
     public void update() {
         Map<String, Object> map = new HashMap<>();
         map.put("username", "fsdfsfds");

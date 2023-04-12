@@ -56,6 +56,12 @@ public class Test {
     }
 
     @org.junit.jupiter.api.Test
+    public void count() {
+        samplesEsService.count();
+    }
+
+
+    @org.junit.jupiter.api.Test
     public void profile() {
         samplesEsService.profile1();
     }
