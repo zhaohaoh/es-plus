@@ -20,7 +20,7 @@
         <spring-boot.version>2.6.3</spring-boot.version>
         <!-- 打包跳过单元测试 -->
         <skipTests>true</skipTests>
-        <rversion>0.1.0</rversion>
+        <rversion>0.1.1</rversion>
     </properties>
     <licenses>
         <license>
