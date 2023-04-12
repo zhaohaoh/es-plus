@@ -14,7 +14,7 @@
         <elasticsearch.version>7.8.0</elasticsearch.version>
         <lang3.version>3.9</lang3.version>
         <spring-boot.version>2.6.3</spring-boot.version>
-        <rversion>0.1.1</rversion>
+        <rversion>0.1.11</rversion>
     </properties>
     <licenses>
         <license>
