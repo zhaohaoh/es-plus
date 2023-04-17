@@ -40,7 +40,7 @@ public class EsLockClient implements ELockClient {
 
     @Override
     public UpdateResponse upsertByScript(String index, String id, Map<String, Object> insertBody, Script painless) {
-        UpdateRequest updateRequest = new UpdateRequest(index, id);
+        UpdateRequest updateRequest = new UpdateRequest(index, GlobalConfigCache.GLOBAL_CONFIG.getType(),id);
         updateRequest.retryOnConflict(GlobalConfigCache.GLOBAL_CONFIG.getMaxRetries());
         updateRequest.script(painless);
         updateRequest.upsert(insertBody);

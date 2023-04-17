@@ -15,6 +15,10 @@ import org.elasticsearch.action.support.WriteRequest;
 @Data
 public class GlobalConfig {
     /**
+     * 类型
+     */
+    private String type = "_doc";
+    /**
      * 全局后缀
      */
     private String globalSuffix = "";

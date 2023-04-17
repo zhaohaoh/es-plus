@@ -14,10 +14,12 @@
         <dependency>
             <groupId>org.elasticsearch.client</groupId>
             <artifactId>elasticsearch-rest-client</artifactId>
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.elasticsearch</groupId>
             <artifactId>elasticsearch</artifactId>
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.elasticsearch.client</groupId>
@@ -32,6 +34,7 @@
                     <groupId>org.elasticsearch</groupId>
                 </exclusion>
             </exclusions>
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>io.github.zhaohaoh</groupId>
