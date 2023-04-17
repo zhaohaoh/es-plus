@@ -130,4 +130,6 @@ public interface EsPlusIndexClient {
     void createAlias(String currentIndex, String alias);
 
     void removeAlias(String index, String alias);
+
+    GetMappingsResponse getMappings(String index);
 }

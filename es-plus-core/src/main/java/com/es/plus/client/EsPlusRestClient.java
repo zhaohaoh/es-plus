@@ -565,7 +565,8 @@ public class EsPlusRestClient implements EsPlusClient {
     @Override
     public <T> long count(EsParamWrapper<T> esParamWrapper, String index) {
         CountRequest countRequest = new CountRequest();
-        countRequest.query(esParamWrapper.getQueryBuilder());
+        SearchSourceBuilder query = SearchSourceBuilder.searchSource().query(esParamWrapper.getQueryBuilder());
+        countRequest.source(query);
         countRequest.indices(index);
         CountResponse count = null;
         try {
@@ -689,9 +690,9 @@ public class EsPlusRestClient implements EsPlusClient {
         EsQueryParamWrapper esQueryParamWrapper = esParamWrapper.getEsQueryParamWrapper();
 
         //获取查询语句源数据
-        SearchSourceBuilder sourceBuilder = getSearchSourceBuilder(pageInfo.getPage(), pageInfo.getSize(), esParamWrapper);
+        SearchSourceBuilder sourceBuilder = getSearchSourceBuilder(pageInfo == null ? null : pageInfo.getPage(), pageInfo == null ? null : pageInfo.getSize(), esParamWrapper);
 
-        if (pageInfo.getSearchAfterValues() != null) {
+        if (pageInfo != null && pageInfo.getSearchAfterValues() != null) {
             sourceBuilder.searchAfter(pageInfo.getSearchAfterValues());
         }
 
@@ -732,7 +733,7 @@ public class EsPlusRestClient implements EsPlusClient {
         EsQueryParamWrapper esQueryParamWrapper = esParamWrapper.getEsQueryParamWrapper();
 
         //获取查询语句源数据
-        SearchSourceBuilder sourceBuilder = getSearchSourceBuilder(pageInfo.getPage(), pageInfo.getSize(), esParamWrapper);
+        SearchSourceBuilder sourceBuilder = getSearchSourceBuilder(pageInfo == null ? null : pageInfo.getPage(), pageInfo == null ? null : pageInfo.getSize(), esParamWrapper);
 
         //设置查询语句源数据
         searchRequest.source(sourceBuilder);

@@ -106,7 +106,7 @@ public class EsReindexProcess {
         boolean reindex = settingsUpdate(getIndexResponse, currentIndex, clazz, esPlusClientFacade);
 
         //获取旧索引映射
-        Map<String, Object> currentEsMapping = getCurrentEsMapping(getIndexResponse, currentIndex);
+        Map<String, Object> currentEsMapping = getCurrentEsMapping(getIndexResponse, currentIndex,esPlusClientFacade);
 
         //索引是否改变
         String updateCommend = getMappingUpdateCommend(currentEsMapping, clazz);
@@ -329,9 +329,7 @@ public class EsReindexProcess {
         return Commend.NO_EXECUTE;
     }
 
-    public static Map<String, Object> getCurrentEsMapping(GetIndexResponse indexResponse, String index) {
-
-        //   Settings settings = indexResponse.getSettings().get(index);
+    public static Map<String, Object> getCurrentEsMapping(GetIndexResponse indexResponse, String index,EsPlusClientFacade esPlusClientFacade) {
         MappingMetadata mappingMetadata = indexResponse.getMappings().get(index);
         // 设置mapping信息
         Map<String, Object> esIndexMapping = mappingMetadata.getSourceAsMap();

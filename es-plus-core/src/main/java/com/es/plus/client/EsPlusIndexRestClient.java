@@ -355,6 +355,28 @@ public class EsPlusIndexRestClient implements EsPlusIndexClient {
         }
     }
 
+    /**
+     * 获取映射
+     *
+     * @param index 索引
+     * @return {@link GetMappingsResponse}
+     */
+    @Override
+    public GetMappingsResponse getMappings(String index) {
+        GetMappingsRequest request = new GetMappingsRequest();
+        request.indices(index);
+        try {
+            return restHighLevelClient.indices().getMapping(request, RequestOptions.DEFAULT);
+        } catch (IOException e) {
+            throw new EsException("getMappings IOException", e);
+        } catch (ElasticsearchStatusException e) {
+            if (e.status().equals(RestStatus.NOT_FOUND)) {
+                return null;
+            }
+            throw e;
+        }
+    }
+
 
     /**
      * 索引请求

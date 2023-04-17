@@ -12,7 +12,7 @@ import com.es.plus.pojo.PageInfo;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.client.GetAliasesResponse;
 import org.elasticsearch.client.indices.GetIndexResponse;
-import org.elasticsearch.common.unit.TimeValue;
+import org.elasticsearch.client.indices.GetMappingsResponse;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
 
@@ -422,5 +422,9 @@ public class EsPlusClientFacade {
      */
     public void removeAlias(String index, String alias) {
         esPlusIndexClient.removeAlias(index,alias);
+    }
+
+    public GetMappingsResponse getMappings(String index) {
+        return esPlusIndexClient.getMappings(index);
     }
 }
