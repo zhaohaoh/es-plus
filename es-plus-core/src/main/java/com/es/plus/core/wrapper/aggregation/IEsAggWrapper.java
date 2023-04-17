@@ -11,7 +11,6 @@ import org.elasticsearch.search.aggregations.bucket.filter.Filter;
 import org.elasticsearch.search.aggregations.bucket.filter.Filters;
 import org.elasticsearch.search.aggregations.bucket.filter.FiltersAggregator;
 import org.elasticsearch.search.aggregations.bucket.geogrid.InternalGeoHashGrid;
-import org.elasticsearch.search.aggregations.bucket.geogrid.InternalGeoTileGrid;
 import org.elasticsearch.search.aggregations.bucket.global.Global;
 import org.elasticsearch.search.aggregations.bucket.histogram.DateHistogramAggregationBuilder;
 import org.elasticsearch.search.aggregations.bucket.histogram.Histogram;
@@ -25,7 +24,6 @@ import org.elasticsearch.search.aggregations.bucket.sampler.Sampler;
 import org.elasticsearch.search.aggregations.bucket.significant.SignificantTerms;
 import org.elasticsearch.search.aggregations.bucket.significant.SignificantTextAggregationBuilder;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
-import org.elasticsearch.search.aggregations.metrics.*;
 import org.elasticsearch.search.sort.FieldSortBuilder;
 
 import java.util.List;
@@ -159,10 +157,7 @@ public interface IEsAggWrapper<Children, R> {
      */
     Children geohashGrid(R name);
 
-    /**
-     * Create a new {@link InternalGeoTileGrid} aggregation with the given name.
-     */
-    Children geotileGrid(R name);
+
 
     /**
      * Create a new {@link SignificantTerms} aggregation with the given name.

@@ -7,6 +7,7 @@ import com.es.plus.constant.EsFieldType;
 import lombok.Data;
 
 import java.util.Date;
+import java.util.List;
 
 
 @Data
@@ -17,6 +18,7 @@ public class SpuEsDTO {
     private Long landId;
     @EsField(name = "apply_did")
     private Integer apply_did;
+
     @EsField(name = "resourceID")
     private Integer resourceId;
     @EsField(name = "area_town")
@@ -54,14 +56,14 @@ public class SpuEsDTO {
     private Integer salerid;
 
 
-    @EsField(name = "oversea")
+    @EsField(name = "sub_type")
     private Integer sub_type;
 
     @EsField(name = "addtime")
     private Date addtime;
 
     @EsField(name = "p_type")
-    private Integer p_type;
+    private String p_type;
 
 
     @EsField(name = "area_province")
@@ -73,5 +75,5 @@ public class SpuEsDTO {
     @EsField(name = "status")
     private Integer status;
     @EsField(type = EsFieldType.NESTED)
-    private TicketEsDTO ticketEsDTO;
+    private List<TicketEsDTO> ticket;
 }

@@ -14,6 +14,7 @@ import org.elasticsearch.action.support.WriteRequest;
  */
 @Data
 public class GlobalConfig {
+    private String type = "_doc";
     /**
      * 全局后缀
      */

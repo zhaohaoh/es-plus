@@ -28,7 +28,7 @@ public class EsLockClient implements ELockClient {
 
     @Override
     public UpdateResponse updateByScript(String index, String id, Script painless) {
-        UpdateRequest updateRequest = new UpdateRequest(index, id);
+        UpdateRequest updateRequest = new UpdateRequest(index, GlobalConfigCache.GLOBAL_CONFIG.getType(), id);
         updateRequest.retryOnConflict(GlobalConfigCache.GLOBAL_CONFIG.getMaxRetries());
         updateRequest.script(painless);
         try {
@@ -40,8 +40,8 @@ public class EsLockClient implements ELockClient {
 
     @Override
     public UpdateResponse upsertByScript(String index, String id, Map<String, Object> insertBody, Script painless) {
-        UpdateRequest updateRequest = new UpdateRequest(index, id);
-        updateRequest.retryOnConflict(GlobalConfigCache.GLOBAL_CONFIG.getMaxRetries());
+        UpdateRequest updateRequest = new UpdateRequest(index, GlobalConfigCache.GLOBAL_CONFIG.getType(), id);
+//        updateRequest.retryOnConflict(GlobalConfigCache.GLOBAL_CONFIG.getMaxRetries());
         updateRequest.script(painless);
         updateRequest.upsert(insertBody);
         try {
@@ -53,9 +53,9 @@ public class EsLockClient implements ELockClient {
 
     @Override
     public UpdateResponse update(String index, Object esData) {
-        UpdateRequest updateRequest = new UpdateRequest(index, EsParamHolder.getDocId(esData)).doc(JsonUtils.toJsonStr(esData), XContentType.JSON);
+        UpdateRequest updateRequest = new UpdateRequest(index, GlobalConfigCache.GLOBAL_CONFIG.getType(), EsParamHolder.getDocId(esData)).doc(JsonUtils.toJsonStr(esData), XContentType.JSON);
         //乐观锁重试次数
-        updateRequest.retryOnConflict(GlobalConfigCache.GLOBAL_CONFIG.getMaxRetries());
+//        updateRequest.retryOnConflict(GlobalConfigCache.GLOBAL_CONFIG.getMaxRetries());
         updateRequest.setRefreshPolicy(GlobalConfigCache.GLOBAL_CONFIG.getRefreshPolicy());
 
         try {

@@ -16,7 +16,7 @@ import com.es.plus.properties.EsParamHolder;
 import com.es.plus.util.JsonUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.client.indices.GetIndexResponse;
-import org.elasticsearch.cluster.metadata.MappingMetadata;
+import org.elasticsearch.cluster.metadata.MappingMetaData;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.util.set.Sets;
 import org.elasticsearch.common.xcontent.XContentType;
@@ -332,9 +332,9 @@ public class EsReindexProcess {
     public static Map<String, Object> getCurrentEsMapping(GetIndexResponse indexResponse, String index) {
 
         //   Settings settings = indexResponse.getSettings().get(index);
-        MappingMetadata mappingMetadata = indexResponse.getMappings().get(index);
+        MappingMetaData mappingMetaData = indexResponse.getMappings().get(index);
         // 设置mapping信息
-        Map<String, Object> esIndexMapping = mappingMetadata.getSourceAsMap();
+        Map<String, Object> esIndexMapping = mappingMetaData.getSourceAsMap();
 
         //设置索引配置
 //        Map<String, Object> indexSettings = new HashMap<>();

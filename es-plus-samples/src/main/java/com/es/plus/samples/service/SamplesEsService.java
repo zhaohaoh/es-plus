@@ -153,7 +153,7 @@ public class SamplesEsService extends EsServiceImpl<SamplesEsDTO> {
     }
 
     public void listLandList() {
-        EsResponse<SpuEsDTO> list = Es.chainLambdaQuery(SpuEsDTO.class).list();
+        EsResponse<SpuEsDTO> list = Es.chainQuery(SpuEsDTO.class).match("title","ee").list();
         System.out.println(list);
     }
 }

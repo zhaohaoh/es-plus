@@ -9,18 +9,21 @@ import org.elasticsearch.search.aggregations.bucket.adjacency.AdjacencyMatrix;
 import org.elasticsearch.search.aggregations.bucket.adjacency.AdjacencyMatrixAggregationBuilder;
 import org.elasticsearch.search.aggregations.bucket.filter.Filters;
 import org.elasticsearch.search.aggregations.bucket.filter.FiltersAggregationBuilder;
-import org.elasticsearch.search.aggregations.bucket.geogrid.GeoGrid;
-import org.elasticsearch.search.aggregations.bucket.geogrid.GeoTileGridAggregationBuilder;
 import org.elasticsearch.search.aggregations.bucket.histogram.Histogram;
 import org.elasticsearch.search.aggregations.bucket.histogram.HistogramAggregationBuilder;
 import org.elasticsearch.search.aggregations.bucket.significant.SignificantTerms;
 import org.elasticsearch.search.aggregations.bucket.significant.SignificantTermsAggregationBuilder;
-import org.elasticsearch.search.aggregations.bucket.terms.RareTerms;
-import org.elasticsearch.search.aggregations.bucket.terms.RareTermsAggregationBuilder;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.search.aggregations.bucket.terms.TermsAggregationBuilder;
-import org.elasticsearch.search.aggregations.metrics.*;
-import org.elasticsearch.search.aggregations.pipeline.BucketMetricValue;
+import org.elasticsearch.search.aggregations.metrics.avg.Avg;
+import org.elasticsearch.search.aggregations.metrics.avg.AvgAggregationBuilder;
+import org.elasticsearch.search.aggregations.metrics.max.Max;
+import org.elasticsearch.search.aggregations.metrics.max.MaxAggregationBuilder;
+import org.elasticsearch.search.aggregations.metrics.sum.Sum;
+import org.elasticsearch.search.aggregations.metrics.sum.SumAggregationBuilder;
+import org.elasticsearch.search.aggregations.metrics.valuecount.ValueCount;
+import org.elasticsearch.search.aggregations.metrics.weighted_avg.WeightedAvg;
+import org.elasticsearch.search.aggregations.pipeline.bucketmetrics.BucketMetricValue;
 
 import java.util.HashMap;
 import java.util.List;
@@ -97,9 +100,7 @@ public class EsAggsResponse<T> extends AbstractLambdaAggWrapper<T, SFunction<T, 
         return aggregations.get(getAggregationField(name) + EsConstant.AGG_DELIMITER + TermsAggregationBuilder.NAME);
     }
 
-    public RareTerms getRareTerms(SFunction<T, ?> name) {
-        return aggregations.get(getAggregationField(name) + EsConstant.AGG_DELIMITER + RareTermsAggregationBuilder.NAME);
-    }
+
 
     public Filters getFilters(SFunction<T, ?> name) {
         return aggregations.get(getAggregationField(name) + EsConstant.AGG_DELIMITER + FiltersAggregationBuilder.NAME);
@@ -117,9 +118,7 @@ public class EsAggsResponse<T> extends AbstractLambdaAggWrapper<T, SFunction<T, 
         return aggregations.get(getAggregationField(name) + EsConstant.AGG_DELIMITER + HistogramAggregationBuilder.NAME);
     }
 
-    public GeoGrid getGeoGrid(SFunction<T, ?> name) {
-        return aggregations.get(getAggregationField(name) + EsConstant.AGG_DELIMITER + GeoTileGridAggregationBuilder.NAME);
-    }
+
 
     public Max getMax(SFunction<T, ?> name) {
         return aggregations.get(getAggregationField(name) + EsConstant.AGG_DELIMITER + MaxAggregationBuilder.NAME);
@@ -192,9 +191,7 @@ public class EsAggsResponse<T> extends AbstractLambdaAggWrapper<T, SFunction<T, 
         return aggregations.get(name + EsConstant.AGG_DELIMITER + TermsAggregationBuilder.NAME);
     }
 
-    public RareTerms getRareTerms(String name) {
-        return aggregations.get(name + EsConstant.AGG_DELIMITER + RareTermsAggregationBuilder.NAME);
-    }
+
 
     public Filters getFilters(String name) {
         return aggregations.get(name + EsConstant.AGG_DELIMITER + FiltersAggregationBuilder.NAME);
@@ -212,9 +209,6 @@ public class EsAggsResponse<T> extends AbstractLambdaAggWrapper<T, SFunction<T, 
         return aggregations.get(name + EsConstant.AGG_DELIMITER + HistogramAggregationBuilder.NAME);
     }
 
-    public GeoGrid getGeoGrid(String name) {
-        return aggregations.get(name + EsConstant.AGG_DELIMITER + GeoTileGridAggregationBuilder.NAME);
-    }
 
     public Max getMax(String name) {
         return aggregations.get(name + EsConstant.AGG_DELIMITER + MaxAggregationBuilder.NAME);

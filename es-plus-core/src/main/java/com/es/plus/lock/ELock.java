@@ -103,7 +103,7 @@ public abstract class ELock implements Lock {
         EsQueryWrapper<Object> esQueryWrapper = new EsQueryWrapper<>();
         esQueryWrapper.term(ID_FIELD, key);
         SearchResponse response = esPlusLockClient.search(lockIndexName(), esQueryWrapper);
-        long value = response.getHits().getTotalHits().value;
+        long value = response.getHits().getTotalHits();
         if (value > 0) {
             for (SearchHit hit : response.getHits().getHits()) {
                 Long expireTime = (Long) hit.getSourceAsMap().get(GLOBAL_LOCK_EXPIRETIME);

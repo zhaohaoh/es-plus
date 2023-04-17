@@ -13,9 +13,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.common.geo.GeoPoint;
-import org.elasticsearch.common.geo.ShapeRelation;
 import org.elasticsearch.common.unit.DistanceUnit;
-import org.elasticsearch.geometry.Geometry;
 import org.elasticsearch.index.query.*;
 import org.elasticsearch.join.query.HasChildQueryBuilder;
 import org.elasticsearch.join.query.HasParentQueryBuilder;
@@ -491,23 +489,7 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
         return children;
     }
 
-    @Override
-    public Children geoShape(boolean condition, R name, String indexedShapeId, Geometry geometry, ShapeRelation shapeRelation) {
-        if (condition) {
-            GeoShapeQueryBuilder geoDistanceQueryBuilder;
-            if (StringUtils.isNotBlank(indexedShapeId)) {
-                geoDistanceQueryBuilder = new GeoShapeQueryBuilder(nameToString(name), indexedShapeId);
-            } else {
-                geoDistanceQueryBuilder = new GeoShapeQueryBuilder(nameToString(name), geometry);
-            }
-            if (shapeRelation != null) {
-                geoDistanceQueryBuilder.relation(shapeRelation);
-            }
-            currentBuilder = geoDistanceQueryBuilder;
-            queryBuilders.add(geoDistanceQueryBuilder);
-        }
-        return children;
-    }
+
 
     @Override
     public Children includes(R... func) {

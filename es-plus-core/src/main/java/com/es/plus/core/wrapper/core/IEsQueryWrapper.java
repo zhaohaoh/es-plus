@@ -2,9 +2,7 @@ package com.es.plus.core.wrapper.core;
 
 import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.common.geo.GeoPoint;
-import org.elasticsearch.common.geo.ShapeRelation;
 import org.elasticsearch.common.unit.DistanceUnit;
-import org.elasticsearch.geometry.Geometry;
 import org.elasticsearch.index.query.QueryBuilder;
 
 import java.util.Collection;
@@ -217,11 +215,6 @@ public interface IEsQueryWrapper<Children, QUERY, R> {
 
     Children geoPolygon(boolean condition, R name, List<GeoPoint> geoPoints);
 
-    default Children geoShape(R name, String indexedShapeId, Geometry geometry, ShapeRelation shapeRelation) {
-        return geoShape(true, name, indexedShapeId, geometry, shapeRelation);
-    }
-
-    Children geoShape(boolean condition, R name, String indexedShapeId, Geometry geometry, ShapeRelation shapeRelation);
 
 
     //根据name查询，这里违反了设计原则但是方便了

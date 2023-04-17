@@ -14,10 +14,6 @@ import org.elasticsearch.search.aggregations.bucket.adjacency.AdjacencyMatrixAgg
 import org.elasticsearch.search.aggregations.bucket.composite.CompositeAggregationBuilder;
 import org.elasticsearch.search.aggregations.bucket.composite.CompositeValuesSourceBuilder;
 import org.elasticsearch.search.aggregations.bucket.filter.*;
-import org.elasticsearch.search.aggregations.bucket.geogrid.GeoHashGridAggregationBuilder;
-import org.elasticsearch.search.aggregations.bucket.geogrid.GeoTileGridAggregationBuilder;
-import org.elasticsearch.search.aggregations.bucket.geogrid.InternalGeoHashGrid;
-import org.elasticsearch.search.aggregations.bucket.geogrid.InternalGeoTileGrid;
 import org.elasticsearch.search.aggregations.bucket.global.Global;
 import org.elasticsearch.search.aggregations.bucket.global.GlobalAggregationBuilder;
 import org.elasticsearch.search.aggregations.bucket.histogram.DateHistogramAggregationBuilder;
@@ -38,8 +34,37 @@ import org.elasticsearch.search.aggregations.bucket.significant.SignificantTerms
 import org.elasticsearch.search.aggregations.bucket.significant.SignificantTextAggregationBuilder;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.search.aggregations.bucket.terms.TermsAggregationBuilder;
-import org.elasticsearch.search.aggregations.metrics.*;
-import org.elasticsearch.search.aggregations.pipeline.*;
+import org.elasticsearch.search.aggregations.metrics.avg.AvgAggregationBuilder;
+import org.elasticsearch.search.aggregations.metrics.cardinality.CardinalityAggregationBuilder;
+import org.elasticsearch.search.aggregations.metrics.geobounds.GeoBoundsAggregationBuilder;
+import org.elasticsearch.search.aggregations.metrics.geocentroid.GeoCentroidAggregationBuilder;
+import org.elasticsearch.search.aggregations.metrics.mad.MedianAbsoluteDeviationAggregationBuilder;
+import org.elasticsearch.search.aggregations.metrics.max.MaxAggregationBuilder;
+import org.elasticsearch.search.aggregations.metrics.min.MinAggregationBuilder;
+import org.elasticsearch.search.aggregations.metrics.percentiles.PercentileRanksAggregationBuilder;
+import org.elasticsearch.search.aggregations.metrics.percentiles.PercentilesAggregationBuilder;
+import org.elasticsearch.search.aggregations.metrics.scripted.ScriptedMetricAggregationBuilder;
+import org.elasticsearch.search.aggregations.metrics.stats.StatsAggregationBuilder;
+import org.elasticsearch.search.aggregations.metrics.stats.extended.ExtendedStatsAggregationBuilder;
+import org.elasticsearch.search.aggregations.metrics.sum.SumAggregationBuilder;
+import org.elasticsearch.search.aggregations.metrics.tophits.TopHitsAggregationBuilder;
+import org.elasticsearch.search.aggregations.metrics.valuecount.ValueCountAggregationBuilder;
+import org.elasticsearch.search.aggregations.metrics.weighted_avg.WeightedAvgAggregationBuilder;
+import org.elasticsearch.search.aggregations.pipeline.bucketmetrics.avg.AvgBucketPipelineAggregationBuilder;
+import org.elasticsearch.search.aggregations.pipeline.bucketmetrics.max.MaxBucketPipelineAggregationBuilder;
+import org.elasticsearch.search.aggregations.pipeline.bucketmetrics.min.MinBucketPipelineAggregationBuilder;
+import org.elasticsearch.search.aggregations.pipeline.bucketmetrics.percentile.PercentilesBucketPipelineAggregationBuilder;
+import org.elasticsearch.search.aggregations.pipeline.bucketmetrics.stats.StatsBucketPipelineAggregationBuilder;
+import org.elasticsearch.search.aggregations.pipeline.bucketmetrics.stats.extended.ExtendedStatsBucketPipelineAggregationBuilder;
+import org.elasticsearch.search.aggregations.pipeline.bucketmetrics.sum.SumBucketPipelineAggregationBuilder;
+import org.elasticsearch.search.aggregations.pipeline.bucketscript.BucketScriptPipelineAggregationBuilder;
+import org.elasticsearch.search.aggregations.pipeline.bucketselector.BucketSelectorPipelineAggregationBuilder;
+import org.elasticsearch.search.aggregations.pipeline.bucketsort.BucketSortPipelineAggregationBuilder;
+import org.elasticsearch.search.aggregations.pipeline.cumulativesum.CumulativeSumPipelineAggregationBuilder;
+import org.elasticsearch.search.aggregations.pipeline.derivative.DerivativePipelineAggregationBuilder;
+import org.elasticsearch.search.aggregations.pipeline.movfn.MovFnPipelineAggregationBuilder;
+import org.elasticsearch.search.aggregations.pipeline.serialdiff.SerialDiffPipelineAggregationBuilder;
+import org.elasticsearch.search.aggregations.support.ValueType;
 import org.elasticsearch.search.sort.FieldSortBuilder;
 import org.springframework.util.CollectionUtils;
 
@@ -95,7 +120,7 @@ public abstract class AbstractEsAggWrapper<T, R, Children extends AbstractEsAggW
     public Children count(R name) {
         String field = getAggregationField(name);
         String aggName = field + AGG_DELIMITER + ValueCountAggregationBuilder.NAME;
-        ValueCountAggregationBuilder valueCountAggregationBuilder = new ValueCountAggregationBuilder(aggName);
+        ValueCountAggregationBuilder valueCountAggregationBuilder = new ValueCountAggregationBuilder(aggName, ValueType.STRING);
         valueCountAggregationBuilder.field(field);
         currentBuilder = valueCountAggregationBuilder;
         aggregationBuilder.add(currentBuilder);
@@ -311,7 +336,7 @@ public abstract class AbstractEsAggWrapper<T, R, Children extends AbstractEsAggW
     public Children missing(R name) {
         String field = getAggregationField(name);
         String aggName = field + AGG_DELIMITER + MissingAggregationBuilder.NAME;
-        MissingAggregationBuilder missingAggregationBuilder = new MissingAggregationBuilder(aggName);
+        MissingAggregationBuilder missingAggregationBuilder = new MissingAggregationBuilder(aggName, ValueType.STRING);
         missingAggregationBuilder.field(field);
         currentBuilder = missingAggregationBuilder;
         aggregationBuilder.add(currentBuilder);
@@ -372,33 +397,6 @@ public abstract class AbstractEsAggWrapper<T, R, Children extends AbstractEsAggW
         return this.children;
     }
 
-    /**
-     * Create a new {@link InternalGeoHashGrid} aggregation with the given name.
-     */
-    @Override
-    public Children geohashGrid(R name) {
-        String field = getAggregationField(name);
-        String aggName = field + AGG_DELIMITER + GeoHashGridAggregationBuilder.NAME;
-        GeoHashGridAggregationBuilder geoHashGridAggregationBuilder = new GeoHashGridAggregationBuilder(aggName);
-        geoHashGridAggregationBuilder.field(field);
-        currentBuilder = geoHashGridAggregationBuilder;
-        aggregationBuilder.add(currentBuilder);
-        return this.children;
-    }
-
-    /**
-     * Create a new {@link InternalGeoTileGrid} aggregation with the given name.
-     */
-    @Override
-    public Children geotileGrid(R name) {
-        String field = getAggregationField(name);
-        String aggName = field + AGG_DELIMITER + GeoTileGridAggregationBuilder.NAME;
-        GeoTileGridAggregationBuilder geoTileGridAggregationBuilder = new GeoTileGridAggregationBuilder(aggName);
-        geoTileGridAggregationBuilder.field(field);
-        currentBuilder = geoTileGridAggregationBuilder;
-        aggregationBuilder.add(currentBuilder);
-        return this.children;
-    }
 
     /**
      * Create a new {@link SignificantTerms} aggregation with the given name.
@@ -407,7 +405,7 @@ public abstract class AbstractEsAggWrapper<T, R, Children extends AbstractEsAggW
     public Children significantTerms(R name) {
         String field = getAggregationField(name);
         String aggName = field + AGG_DELIMITER + SignificantTermsAggregationBuilder.NAME;
-        SignificantTermsAggregationBuilder significantTermsAggregationBuilder = new SignificantTermsAggregationBuilder(aggName);
+        SignificantTermsAggregationBuilder significantTermsAggregationBuilder = new SignificantTermsAggregationBuilder(aggName, ValueType.STRING);
         significantTermsAggregationBuilder.field(field);
         currentBuilder = significantTermsAggregationBuilder;
         aggregationBuilder.add(currentBuilder);
@@ -496,7 +494,7 @@ public abstract class AbstractEsAggWrapper<T, R, Children extends AbstractEsAggW
     public Children terms(R name) {
         String field = getAggregationField(name);
         String aggName = field + AGG_DELIMITER + TermsAggregationBuilder.NAME;
-        TermsAggregationBuilder termsAggregationBuilder = new TermsAggregationBuilder(aggName);
+        TermsAggregationBuilder termsAggregationBuilder = new TermsAggregationBuilder(aggName, ValueType.STRING);
         termsAggregationBuilder.field(field);
         termsAggregationBuilder.size(GlobalConfigCache.GLOBAL_CONFIG.getSearchSize());
         currentBuilder = termsAggregationBuilder;
@@ -553,7 +551,8 @@ public abstract class AbstractEsAggWrapper<T, R, Children extends AbstractEsAggW
     public Children cardinality(R name) {
         String field = getAggregationField(name);
         String aggName = field + AGG_DELIMITER + CardinalityAggregationBuilder.NAME;
-        CardinalityAggregationBuilder cardinalityAggregationBuilder = new CardinalityAggregationBuilder(aggName);
+        CardinalityAggregationBuilder cardinalityAggregationBuilder = null;
+        cardinalityAggregationBuilder = new CardinalityAggregationBuilder(aggName, ValueType.STRING);
         cardinalityAggregationBuilder.field(field);
         currentBuilder = cardinalityAggregationBuilder;
         aggregationBuilder.add(currentBuilder);
@@ -926,19 +925,7 @@ public abstract class AbstractEsAggWrapper<T, R, Children extends AbstractEsAggW
         return children;
     }
 
-    @Override
-    public Children geohashGrid(R name, Function<GeoHashGridAggregationBuilder, GeoHashGridAggregationBuilder> fn) {
-        geohashGrid(name);
-        fn.apply((GeoHashGridAggregationBuilder) currentBuilder);
-        return children;
-    }
 
-    @Override
-    public Children geotileGrid(R name, Function<GeoTileGridAggregationBuilder, GeoTileGridAggregationBuilder> fn) {
-        geotileGrid(name);
-        fn.apply((GeoTileGridAggregationBuilder) currentBuilder);
-        return children;
-    }
 
     @Override
     public Children significantTerms(R name, Function<SignificantTermsAggregationBuilder, SignificantTermsAggregationBuilder> fn) {

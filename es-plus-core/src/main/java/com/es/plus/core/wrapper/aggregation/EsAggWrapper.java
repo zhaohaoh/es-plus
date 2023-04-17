@@ -15,4 +15,9 @@ public class EsAggWrapper<T> extends AbstractEsAggWrapper<T, String, EsAggWrappe
     protected EsAggWrapper<T> instance() {
         return new EsAggWrapper<>(super.tClass);
     }
+
+    @Override
+    public EsAggWrapper<T> geohashGrid(String name) {
+        return null;
+    }
 }

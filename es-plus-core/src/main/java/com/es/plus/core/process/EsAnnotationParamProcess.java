@@ -134,7 +134,7 @@ public class EsAnnotationParamProcess {
             //id缓存.用来自动获取实体类id
             EsId esId = field.getAnnotation(EsId.class);
             if (esId != null) {
-                EsParamHolder.put(tClass, field.getName());
+                EsParamHolder.put(tClass,  StringUtils.isNotBlank(esId.name()) ? esId.name() : field.getName());
             }
 
             //创建属性对象

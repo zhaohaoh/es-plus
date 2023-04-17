@@ -17,4 +17,9 @@ public class EsLambdaAggWrapper<T> extends AbstractEsAggWrapper<T, SFunction<T, 
     protected EsLambdaAggWrapper<T> instance() {
         return new EsLambdaAggWrapper<>(super.tClass);
     }
+
+    @Override
+    public EsLambdaAggWrapper<T> geohashGrid(SFunction<T, ?> name) {
+        return null;
+    }
 }

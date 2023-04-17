@@ -9,9 +9,7 @@ import com.es.plus.pojo.EsSelect;
 import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.common.geo.GeoPoint;
-import org.elasticsearch.common.geo.ShapeRelation;
 import org.elasticsearch.common.unit.DistanceUnit;
-import org.elasticsearch.geometry.Geometry;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 
@@ -310,11 +308,6 @@ public abstract class AbstractEsChainWrapper<T, R, Children extends AbstractEsCh
         return children;
     }
 
-    @Override
-    public Children geoShape(boolean condition, R name, String indexedShapeId, Geometry geometry, ShapeRelation shapeRelation) {
-        getWrapper().geoShape(condition, name, indexedShapeId, geometry, shapeRelation);
-        return children;
-    }
 
     @Override
     public BoolQueryBuilder getQueryBuilder() {
