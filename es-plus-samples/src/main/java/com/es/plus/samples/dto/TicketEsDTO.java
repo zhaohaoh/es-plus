@@ -4,6 +4,7 @@ import com.es.plus.annotation.EsField;
 import lombok.Data;
 
 import java.util.Date;
+import java.util.List;
 
 /**
 * 门票查询对象
@@ -31,21 +32,21 @@ public class TicketEsDTO {
 	 * 门票过期最大日期
 	 */
 	@EsField(name = "max_expiration_date")
-	private Date maxExpirationDate;
+	private Date max_expiration_date;
 	/**
 	 * 最小更新时间
 	 */
 	@EsField(name = "min_update_time")
-	private Date minUpdateTime;
+	private Date min_update_time;
 	/**
 	 * 最大更新时间
 	 */
 	@EsField(name = "max_update_time")
-	private Date maxUpdateTime;
+	private Date max_update_time;
 	/**
 	 * 销售渠道
 	 */
-	private  Integer  shop;
+	private List<Integer> shop;
 	/**
 	 * 商品id
 	 */
@@ -62,12 +63,12 @@ public class TicketEsDTO {
 	 * 订单有效期开始时间
 	 */
 	@EsField(name = "order_start")
-	private Date orderStart;
+	private Date order_start;
 	/**
 	 * 订单有效期结束时间
 	 */
 	@EsField(name = "order_end")
-	private Date orderEnd;
+	private Date order_end;
 	/**
 	 * 期票 0否 1是
 	 */
