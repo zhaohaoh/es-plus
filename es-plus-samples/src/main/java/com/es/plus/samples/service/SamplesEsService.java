@@ -10,6 +10,7 @@ import com.es.plus.pojo.EsResponse;
 import com.es.plus.pojo.PageInfo;
 import com.es.plus.samples.dto.SamplesEsDTO;
 import com.es.plus.samples.dto.SamplesNestedDTO;
+import com.es.plus.samples.dto.SpuEsDTO;
 import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.springframework.stereotype.Service;
@@ -149,5 +150,10 @@ public class SamplesEsService extends EsServiceImpl<SamplesEsDTO> {
 
         System.out.println(samplesEsDTOEsResponse1);
 
+    }
+
+    public void listLandList() {
+        EsResponse<SpuEsDTO> list = Es.chainLambdaQuery(SpuEsDTO.class).list();
+        System.out.println(list);
     }
 }

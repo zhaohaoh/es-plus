@@ -89,4 +89,10 @@ public class Test {
     public void searhAfter() {
         samplesEsService.searhAfter();
     }
+
+
+    @org.junit.jupiter.api.Test
+    public void listLandList() {
+        samplesEsService.listLandList();
+    }
 }
