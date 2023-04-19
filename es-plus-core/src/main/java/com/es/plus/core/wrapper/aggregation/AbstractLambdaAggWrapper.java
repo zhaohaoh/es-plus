@@ -1,11 +1,11 @@
 package com.es.plus.core.wrapper.aggregation;
 
 
-import com.es.plus.core.tools.LambdaUtils;
-import com.es.plus.core.tools.SFunction;
-import com.es.plus.core.tools.SerializedLambda;
-import com.es.plus.exception.EsException;
-import com.es.plus.properties.EsParamHolder;
+import com.es.plus.adapter.tools.LambdaUtils;
+import com.es.plus.adapter.tools.SFunction;
+import com.es.plus.adapter.tools.SerializedLambda;
+import com.es.plus.adapter.exception.EsException;
+import com.es.plus.adapter.properties.EsParamHolder;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.Locale;

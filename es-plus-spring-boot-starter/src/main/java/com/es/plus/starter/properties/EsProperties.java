@@ -1,6 +1,6 @@
 package com.es.plus.starter.properties;
 
-import com.es.plus.config.GlobalConfig;
+import com.es.plus.adapter.config.GlobalConfig;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.NestedConfigurationProperty;

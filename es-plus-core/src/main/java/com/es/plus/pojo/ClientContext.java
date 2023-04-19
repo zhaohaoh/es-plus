@@ -1,10 +1,13 @@
 package com.es.plus.pojo;
 
-import com.es.plus.client.EsPlusClientFacade;
-import com.es.plus.client.EsPlusIndexRestClient;
-import com.es.plus.client.EsPlusRestClient;
-import com.es.plus.lock.EsLockClient;
-import com.es.plus.lock.EsLockFactory;
+import com.es.plus.adapter.EsPlusClientFacade;
+import com.es.plus.adapter.core.EsPlusClient;
+import com.es.plus.adapter.core.EsPlusIndexClient;
+import com.es.plus.adapter.lock.EsLockFactory;
+import com.es.plus.es6.client.EsPlus6IndexRestClient;
+import com.es.plus.es6.client.EsPlus6RestClient;
+import com.es.plus.es7.client.EsPlus7IndexRestClient;
+import com.es.plus.es7.client.EsPlus7RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
 
 import java.util.Map;
@@ -42,12 +45,16 @@ public class ClientContext {
      *
      * @return {@link EsPlusClientFacade}
      */
-    public static EsPlusClientFacade buildEsPlusClientFacade(RestHighLevelClient restHighLevelClient) {
-        EsLockClient esLockClient = new EsLockClient(restHighLevelClient);
-        EsLockFactory esLockFactory = new EsLockFactory(esLockClient);
-        EsPlusRestClient esPlusRestClient = new EsPlusRestClient(restHighLevelClient, esLockFactory);
-        EsPlusIndexRestClient esPlusIndexRestClient = new EsPlusIndexRestClient(restHighLevelClient);
-        EsPlusClientFacade esPlusClientFacade = new EsPlusClientFacade(esPlusRestClient, esPlusIndexRestClient, esLockFactory);
-        return esPlusClientFacade;
+    public static EsPlusClientFacade buildEsPlusClientFacade(RestHighLevelClient restHighLevelClient, EsLockFactory esLockFactory, Integer version) {
+        EsPlusClient esPlusRestClient;
+        EsPlusIndexClient esPlusIndexRestClient;
+        if (version.equals(6)) {
+            esPlusRestClient = new EsPlus6RestClient(restHighLevelClient, esLockFactory);
+            esPlusIndexRestClient = new EsPlus6IndexRestClient(restHighLevelClient);
+        } else {
+            esPlusRestClient = new EsPlus7RestClient(restHighLevelClient, esLockFactory);
+            esPlusIndexRestClient = new EsPlus7IndexRestClient(restHighLevelClient);
+        }
+        return new EsPlusClientFacade(esPlusRestClient, esPlusIndexRestClient, esLockFactory);
     }
 }

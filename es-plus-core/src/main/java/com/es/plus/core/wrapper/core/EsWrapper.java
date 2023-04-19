@@ -1,9 +1,9 @@
 package com.es.plus.core.wrapper.core;
 
 
+import com.es.plus.adapter.params.EsUpdateField;
 import com.es.plus.core.wrapper.aggregation.EsAggWrapper;
 import com.es.plus.core.wrapper.aggregation.EsLambdaAggWrapper;
-import com.es.plus.pojo.EsUpdateField;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 
 public interface EsWrapper<Children, T> {

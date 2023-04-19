@@ -1,11 +1,11 @@
 package com.es.plus.core.wrapper.chain;
 
 
-import com.es.plus.config.GlobalConfigCache;
+import com.es.plus.adapter.config.GlobalConfigCache;
+import com.es.plus.adapter.params.EsSelect;
 import com.es.plus.core.wrapper.aggregation.EsAggWrapper;
 import com.es.plus.core.wrapper.aggregation.EsLambdaAggWrapper;
 import com.es.plus.core.wrapper.core.*;
-import com.es.plus.pojo.EsSelect;
 import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.common.geo.GeoPoint;
@@ -33,7 +33,7 @@ public abstract class AbstractEsChainWrapper<T, R, Children extends AbstractEsCh
     protected Class<T> tClass;
     //链式静态编程用来指定index
     protected String index;
-
+    protected String type;
     public QUERY getWrapper() {
         return esWrapper;
     }

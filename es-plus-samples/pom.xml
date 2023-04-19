@@ -25,6 +25,20 @@
             <groupId>io.github.zhaohaoh</groupId>
             <artifactId>es-plus-spring-boot-starter</artifactId>
             <version>${project.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.elasticsearch.client</groupId>
+                    <artifactId>elasticsearch-rest-client</artifactId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>elasticsearch-rest-high-level-client</artifactId>
+                    <groupId>org.elasticsearch.client</groupId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.elasticsearch</groupId>
+                    <artifactId>elasticsearch</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -36,20 +50,20 @@
             <scope>test</scope>
         </dependency>
 
-<!--        <dependency>-->
-<!--            <groupId>org.elasticsearch.client</groupId>-->
-<!--            <artifactId>elasticsearch-rest-client</artifactId>-->
-<!--            <version>6.7.0</version>-->
-<!--        </dependency>-->
-<!--        <dependency>-->
-<!--            <groupId>org.elasticsearch</groupId>-->
-<!--            <artifactId>elasticsearch</artifactId>-->
-<!--            <version>6.7.0</version>-->
-<!--        </dependency>-->
-<!--        <dependency>-->
-<!--                <artifactId>elasticsearch-rest-high-level-client</artifactId>-->
-<!--                <groupId>org.elasticsearch.client</groupId>-->
-<!--            <version>6.7.0</version>-->
-<!--        </dependency>-->
+        <dependency>
+            <groupId>org.elasticsearch.client</groupId>
+            <artifactId>elasticsearch-rest-client</artifactId>
+            <version>7.8.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.elasticsearch</groupId>
+            <artifactId>elasticsearch</artifactId>
+            <version>7.8.0</version>
+        </dependency>
+        <dependency>
+                <artifactId>elasticsearch-rest-high-level-client</artifactId>
+                <groupId>org.elasticsearch.client</groupId>
+            <version>7.8.0</version>
+        </dependency>
     </dependencies>
 </project>

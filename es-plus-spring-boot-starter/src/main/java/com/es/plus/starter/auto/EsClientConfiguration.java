@@ -1,14 +1,16 @@
 package com.es.plus.starter.auto;
 
-import com.es.plus.client.EsPlusClientFacade;
-import com.es.plus.config.GlobalConfigCache;
-import com.es.plus.exception.EsException;
+import com.es.plus.adapter.EsPlusClientFacade;
+import com.es.plus.adapter.config.GlobalConfigCache;
+import com.es.plus.adapter.exception.EsException;
+import com.es.plus.adapter.lock.EsLockFactory;
+import com.es.plus.adapter.properties.EsParamHolder;
+import com.es.plus.adapter.util.XcontentBuildUtils;
+import com.es.plus.lock.EsLockClient;
 import com.es.plus.pojo.ClientContext;
-import com.es.plus.properties.EsParamHolder;
 import com.es.plus.starter.properties.AnalysisProperties;
 import com.es.plus.starter.properties.ClientProperties;
 import com.es.plus.starter.properties.EsProperties;
-import com.es.plus.util.XcontentBuildUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpHost;
 import org.apache.http.auth.AuthScope;
@@ -121,7 +123,10 @@ public class EsClientConfiguration implements InitializingBean {
         }
         clientProperties.forEach((k, v) -> {
             RestHighLevelClient restHighLevelClient = getRestHighLevelClient(v);
-            EsPlusClientFacade esPlusClientFacade = ClientContext.buildEsPlusClientFacade(restHighLevelClient);
+            EsLockClient esLockClient = new EsLockClient(restHighLevelClient);
+            EsLockFactory esLockFactory = new EsLockFactory(esLockClient);
+            EsPlusClientFacade esPlusClientFacade = ClientContext.buildEsPlusClientFacade(restHighLevelClient, esLockFactory,
+                    esProperties.getGlobalConfig().getVersion());
             ClientContext.addClient(k, esPlusClientFacade);
         });
     }

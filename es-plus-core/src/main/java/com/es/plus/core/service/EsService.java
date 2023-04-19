@@ -1,14 +1,12 @@
 package com.es.plus.core.service;
 
 
+import com.es.plus.adapter.params.*;
 import com.es.plus.core.wrapper.chain.EsChainLambdaQueryWrapper;
 import com.es.plus.core.wrapper.chain.EsChainUpdateWrapper;
 import com.es.plus.core.wrapper.core.EsQueryWrapper;
 import com.es.plus.core.wrapper.core.EsUpdateWrapper;
-import com.es.plus.pojo.EsAggsResponse;
-import com.es.plus.pojo.EsResponse;
-import com.es.plus.pojo.EsSettings;
-import com.es.plus.pojo.PageInfo;
+import com.es.plus.es6.client.EsPlus6Aggregations;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
 
@@ -246,9 +244,9 @@ public interface EsService<T> {
      * 聚合
      *
      * @param esQueryWrapper es查询包装器
-     * @return {@link EsAggsResponse}<{@link T}>
+     * @return {@link EsPlus6Aggregations}<{@link T}>
      */
-    EsAggsResponse<T> aggregations(EsQueryWrapper<T> esQueryWrapper);
+    EsAggResponse<T> aggregations(EsQueryWrapper<T> esQueryWrapper);
 
     /**
      * 性能分析

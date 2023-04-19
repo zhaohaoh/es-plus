@@ -1,7 +1,7 @@
 package com.es.plus.core.wrapper.core;
 
 
-import com.es.plus.pojo.EsSelect;
+import com.es.plus.adapter.params.EsSelect;
 import org.elasticsearch.action.search.SearchType;
 
 public interface EsExtendsWrapper<Children, R> {

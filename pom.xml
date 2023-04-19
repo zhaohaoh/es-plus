@@ -9,6 +9,9 @@
         <module>es-plus-annotation</module>
         <module>es-plus-core</module>
         <module>es-plus-samples</module>
+        <module>es-plus-client-es6</module>
+        <module>es-plus-adapter-core</module>
+        <module>es-plus-client-es7</module>
     </modules>
     <groupId>io.github.zhaohaoh</groupId>
     <artifactId>es-plus</artifactId>

@@ -1,14 +1,10 @@
 package com.es.plus.core.wrapper.core;
 
 
-import com.es.plus.core.params.EsParamWrapper;
+import com.es.plus.adapter.params.*;
+import com.es.plus.adapter.properties.EsParamHolder;
 import com.es.plus.core.wrapper.aggregation.EsAggWrapper;
 import com.es.plus.core.wrapper.aggregation.EsLambdaAggWrapper;
-import com.es.plus.pojo.EsHighLight;
-import com.es.plus.pojo.EsOrder;
-import com.es.plus.pojo.EsSelect;
-import com.es.plus.pojo.EsUpdateField;
-import com.es.plus.properties.EsParamHolder;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.action.search.SearchType;
@@ -53,6 +49,9 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
 
     private List<QueryBuilder> queryBuilders = getEsParamWrapper().getQueryBuilder().must();
 
+    protected EsLambdaAggWrapper<T> esLambdaAggWrapper;
+    protected EsAggWrapper<T> esAggWrapper;
+
     public EsParamWrapper<T> getEsParamWrapper() {
         if (esParamWrapper == null) {
             esParamWrapper = new EsParamWrapper<>();
@@ -67,18 +66,20 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
 
     @Override
     public EsLambdaAggWrapper<T> esLambdaAggWrapper() {
-        if (esParamWrapper.getEsLambdaAggWrapper() == null) {
-            esParamWrapper.setEsLambdaAggWrapper(new EsLambdaAggWrapper<>(tClass));
+        if (esLambdaAggWrapper == null) {
+            esLambdaAggWrapper = new EsLambdaAggWrapper<>(tClass);
+            esParamWrapper.setAggregationBuilder(esLambdaAggWrapper.getAggregationBuilder());
         }
-        return esParamWrapper.getEsLambdaAggWrapper();
+        return esLambdaAggWrapper;
     }
 
     @Override
     public EsAggWrapper<T> esAggWrapper() {
-        if (esParamWrapper.getEsAggWrapper() == null) {
-            esParamWrapper.setEsAggWrapper(new EsAggWrapper<>(tClass));
+        if (esAggWrapper == null) {
+            esAggWrapper = new EsAggWrapper<>(tClass);
+            esParamWrapper.setAggregationBuilder(esAggWrapper.getAggregationBuilder());
         }
-        return esParamWrapper.getEsAggWrapper();
+        return esAggWrapper;
     }
 
 

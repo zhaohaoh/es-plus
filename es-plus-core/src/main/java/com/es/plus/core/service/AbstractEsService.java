@@ -1,19 +1,19 @@
 package com.es.plus.core.service;
 
 
+import com.es.plus.adapter.EsPlusClientFacade;
+import com.es.plus.adapter.config.GlobalConfigCache;
+import com.es.plus.adapter.constants.ConnectFailHandleEnum;
+import com.es.plus.adapter.exception.EsException;
+import com.es.plus.adapter.lock.ELock;
+import com.es.plus.adapter.lock.EsLockFactory;
+import com.es.plus.adapter.properties.EsIndexParam;
+import com.es.plus.adapter.properties.EsParamHolder;
 import com.es.plus.annotation.EsId;
 import com.es.plus.annotation.EsIndex;
-import com.es.plus.client.EsPlusClientFacade;
-import com.es.plus.config.GlobalConfigCache;
 import com.es.plus.constant.DefaultClass;
 import com.es.plus.constant.EsConstant;
 import com.es.plus.core.process.EsReindexProcess;
-import com.es.plus.enums.ConnectFailHandleEnum;
-import com.es.plus.exception.EsException;
-import com.es.plus.lock.ELock;
-import com.es.plus.lock.EsLockFactory;
-import com.es.plus.properties.EsIndexParam;
-import com.es.plus.properties.EsParamHolder;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

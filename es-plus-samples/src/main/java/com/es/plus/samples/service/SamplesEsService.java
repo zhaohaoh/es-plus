@@ -1,18 +1,16 @@
 package com.es.plus.samples.service;
 
+import com.es.plus.adapter.params.EsResponse;
+import com.es.plus.adapter.params.PageInfo;
 import com.es.plus.core.service.EsServiceImpl;
 import com.es.plus.core.statics.Es;
 import com.es.plus.core.wrapper.chain.EsChainLambdaQueryWrapper;
 import com.es.plus.core.wrapper.chain.EsChainQueryWrapper;
 import com.es.plus.core.wrapper.core.EsQueryWrapper;
-import com.es.plus.pojo.EsAggsResponse;
-import com.es.plus.pojo.EsResponse;
-import com.es.plus.pojo.PageInfo;
 import com.es.plus.samples.dto.SamplesEsDTO;
 import com.es.plus.samples.dto.SamplesNestedDTO;
 import com.es.plus.samples.dto.SpuEsDTO;
 import org.apache.lucene.search.join.ScoreMode;
-import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -60,8 +58,8 @@ public class SamplesEsService extends EsServiceImpl<SamplesEsDTO> {
         EsChainQueryWrapper<Map> term = Es.chainQuery(Map.class).index("sys_user2ttt_alias").must().match("username", "HZH").term("email", "abc");
         term.esAggWrapper().terms("keyword");
         EsResponse<Map> list1 = term.list();
-        Map<String, Long> username1 = list1.getEsAggsResponse().getTermsAsMap("keyword");
-        System.out.println(username1);
+//        Map<String, Long> username1 = list1.getEsAggsResponse().getTermsAsMap("keyword");
+//        System.out.println(username1);
     }
 
 
@@ -79,9 +77,9 @@ public class SamplesEsService extends EsServiceImpl<SamplesEsDTO> {
                 .list();
         List<SamplesEsDTO> list = esResponse.getList();
 
-        EsAggsResponse<SamplesEsDTO> esAggregationsReponse = esResponse.getEsAggsResponse();
-        Terms terms = esAggregationsReponse.getTerms(SamplesEsDTO::getUsername);
-        Map<String, Long> termsAsMap = esAggregationsReponse.getTermsAsMap(SamplesEsDTO::getUsername);
+//        EsAggregations<SamplesEsDTO> esAggregationsReponse = esResponse.getEsAggsResponse();
+//        Terms terms = esAggregationsReponse.getTerms(SamplesEsDTO::getUsername);
+//        Map<String, Long> termsAsMap = esAggregationsReponse.getTermsAsMap(SamplesEsDTO::getUsername);
     }
 
     public void profile1() {

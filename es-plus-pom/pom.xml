@@ -11,10 +11,10 @@
     <properties>
         <maven.compiler.source>8</maven.compiler.source>
         <maven.compiler.target>8</maven.compiler.target>
-        <elasticsearch.version>7.8.0</elasticsearch.version>
         <lang3.version>3.9</lang3.version>
         <spring-boot.version>2.6.3</spring-boot.version>
         <rversion>0.1.11</rversion>
+        <elasticsearch.version>7.8.0</elasticsearch.version>
     </properties>
     <licenses>
         <license>
@@ -136,9 +136,9 @@
     <dependencyManagement>
         <dependencies>
             <dependency>
-                <groupId>org.apache.commons</groupId>
-                <artifactId>commons-lang3</artifactId>
-                <version>${lang3.version}</version>
+                <groupId>org.elasticsearch</groupId>
+                <artifactId>elasticsearch</artifactId>
+                <version>${elasticsearch.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.elasticsearch.client</groupId>
@@ -146,14 +146,24 @@
                 <version>${elasticsearch.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.elasticsearch</groupId>
-                <artifactId>elasticsearch</artifactId>
-                <version>${elasticsearch.version}</version>
-            </dependency>
-            <dependency>
                 <groupId>org.elasticsearch.client</groupId>
                 <artifactId>elasticsearch-rest-high-level-client</artifactId>
                 <version>${elasticsearch.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <artifactId>elasticsearch-rest-client</artifactId>
+                        <groupId>org.elasticsearch.client</groupId>
+                    </exclusion>
+                    <exclusion>
+                        <artifactId>elasticsearch</artifactId>
+                        <groupId>org.elasticsearch</groupId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-lang3</artifactId>
+                <version>${lang3.version}</version>
             </dependency>
             <dependency>
                 <groupId>io.github.zhaohaoh</groupId>

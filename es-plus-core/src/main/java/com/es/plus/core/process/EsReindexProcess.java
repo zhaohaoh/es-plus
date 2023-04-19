@@ -1,26 +1,23 @@
 package com.es.plus.core.process;
 
+import com.es.plus.adapter.EsPlusClientFacade;
+import com.es.plus.adapter.config.GlobalConfigCache;
+import com.es.plus.adapter.exception.EsException;
+import com.es.plus.adapter.lock.ELock;
+import com.es.plus.adapter.lock.EsReadWriteLock;
+import com.es.plus.adapter.params.EsIndexResponse;
+import com.es.plus.adapter.params.EsSettings;
+import com.es.plus.adapter.properties.EsIndexParam;
+import com.es.plus.adapter.properties.EsParamHolder;
+import com.es.plus.adapter.util.JsonUtils;
 import com.es.plus.annotation.EsIndex;
-import com.es.plus.client.EsPlusClientFacade;
-import com.es.plus.client.EsPlusIndexRestClient;
-import com.es.plus.config.GlobalConfigCache;
 import com.es.plus.constant.Commend;
 import com.es.plus.constant.EsConstant;
 import com.es.plus.constant.EsFieldType;
-import com.es.plus.exception.EsException;
-import com.es.plus.lock.ELock;
-import com.es.plus.lock.EsReadWriteLock;
-import com.es.plus.pojo.EsSettings;
-import com.es.plus.properties.EsIndexParam;
-import com.es.plus.properties.EsParamHolder;
-import com.es.plus.util.JsonUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.elasticsearch.client.indices.GetIndexResponse;
-import org.elasticsearch.cluster.metadata.MappingMetadata;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.util.set.Sets;
 import org.elasticsearch.common.xcontent.XContentType;
-import org.elasticsearch.index.query.QueryBuilders;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.StopWatch;
@@ -46,7 +43,7 @@ import static com.es.plus.constant.EsConstant.NUMBER_OF_SHARDS;
  * @date 2022/09/03
  */
 public class EsReindexProcess {
-    private static final Logger log = LoggerFactory.getLogger(EsPlusIndexRestClient.class);
+    private static final Logger log = LoggerFactory.getLogger(EsReindexProcess.class);
     // 重建索引的最多有10个就已经很多了
     private static final ThreadPoolExecutor reindexExecutor = new ThreadPoolExecutor(1, 10,
             60L, TimeUnit.SECONDS,
@@ -87,7 +84,7 @@ public class EsReindexProcess {
 
 
         //根据别名获取索引结果 获取不到则通过索引名获取并且修改成目前的别名
-        GetIndexResponse getIndexResponse = null;
+        EsIndexResponse getIndexResponse = null;
         if (StringUtils.isBlank(esIndexParam.getAlias())) {
             getIndexResponse = esPlusClientFacade.getIndex(esIndexParam.getIndex());
         } else {
@@ -106,7 +103,7 @@ public class EsReindexProcess {
         boolean reindex = settingsUpdate(getIndexResponse, currentIndex, clazz, esPlusClientFacade);
 
         //获取旧索引映射
-        Map<String, Object> currentEsMapping = getCurrentEsMapping(getIndexResponse, currentIndex,esPlusClientFacade);
+        Map<String, Object> currentEsMapping = getCurrentEsMapping(getIndexResponse, currentIndex, esPlusClientFacade);
 
         //索引是否改变
         String updateCommend = getMappingUpdateCommend(currentEsMapping, clazz);
@@ -140,15 +137,16 @@ public class EsReindexProcess {
     }
 
     //有事临时编写的代码
-    private static boolean settingsUpdate(GetIndexResponse indexResponse, String currentIndex, Class<?> clazz, EsPlusClientFacade esPlusClientFacade) {
+    private static boolean settingsUpdate(EsIndexResponse indexResponse, String currentIndex, Class<?> clazz, EsPlusClientFacade esPlusClientFacade) {
         EsIndexParam esIndexParam = EsParamHolder.getEsIndexParam(clazz);
         EsSettings esSettings = esIndexParam.getEsSettings();
-        Settings settings = indexResponse.getSettings().get(currentIndex);
+        Map<String, String> settings = indexResponse.getSettings();
+
         String json = JsonUtils.toJsonStr(esSettings);
         Map<String, Object> localSettings = JsonUtils.toMap(json);
-        Integer remoteShards = settings.getAsInt(NUMBER_OF_SHARDS, 5);
-        Integer remoteMaxResultWindow = settings.getAsInt(MAX_RESULT_WINDOW, 10000);
-        String remoteRefreshInterval = settings.get("index.refresh_interval", "1s");
+        Integer remoteShards = settings.get(NUMBER_OF_SHARDS) != null ? Integer.parseInt(settings.get(NUMBER_OF_SHARDS)) : 5;
+        Integer remoteMaxResultWindow = settings.get(MAX_RESULT_WINDOW) != null ? Integer.parseInt(settings.get(MAX_RESULT_WINDOW)) : 10000;
+        String remoteRefreshInterval = settings.get("index.refresh_interval");
         if (remoteShards != localSettings.get("number_of_shards")) {
             return true;
         }
@@ -163,7 +161,7 @@ public class EsReindexProcess {
             newEsSettings = new EsSettings();
             newEsSettings.setMaxResultWindow((Integer) localSettings.get("max_result_window"));
         }
-        if (!remoteRefreshInterval.equals(localSettings.get("refresh_interval"))) {
+        if (remoteRefreshInterval != null && !remoteRefreshInterval.equals(localSettings.get("refresh_interval"))) {
             if (newEsSettings == null) {
                 newEsSettings = new EsSettings();
             }
@@ -176,14 +174,14 @@ public class EsReindexProcess {
         return false;
     }
 
-    private static boolean analysisChange(Settings settings, Map<String, Object> analysis) {
+    private static boolean analysisChange(Map<String, String> settings, Map<String, Object> analysis) {
         Map<StringBuilder, Object> analysisList = new HashMap<>();
         buildAnalysis(analysis, analysisList, new StringBuilder("index.analysis."));
 
-        Settings settingsByPrefix = settings.getByPrefix("index.analysis.");
-        Set<String> strings = settingsByPrefix.keySet();
+        long count = settings.keySet().stream().filter(a -> a.startsWith("index.analysis.")).count();
+
         //如果es的配置比本地的多的话要reindex
-        if (strings.size() > analysisList.size()) {
+        if (count > analysisList.size()) {
             return true;
         }
 
@@ -284,7 +282,7 @@ public class EsReindexProcess {
         }
 
         // 第二次迁移残留数据
-        reindex = esPlusClientFacade.reindex(currentIndex, reindexName, QueryBuilders.rangeQuery(EsConstant.REINDEX_TIME_FILED).gte(currentTimeMillis));
+        reindex = esPlusClientFacade.reindex(currentIndex, reindexName, currentTimeMillis);
         if (!reindex) {
             throw new EsException("es-plus second reindex Fail");
         }
@@ -329,10 +327,9 @@ public class EsReindexProcess {
         return Commend.NO_EXECUTE;
     }
 
-    public static Map<String, Object> getCurrentEsMapping(GetIndexResponse indexResponse, String index,EsPlusClientFacade esPlusClientFacade) {
-        MappingMetadata mappingMetadata = indexResponse.getMappings().get(index);
+    public static Map<String, Object> getCurrentEsMapping(EsIndexResponse indexResponse, String index, EsPlusClientFacade esPlusClientFacade) {
         // 设置mapping信息
-        Map<String, Object> esIndexMapping = mappingMetadata.getSourceAsMap();
+        Map<String, Object> esIndexMapping = indexResponse.getMappings();
 
         //设置索引配置
 //        Map<String, Object> indexSettings = new HashMap<>();

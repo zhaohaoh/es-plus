@@ -1,10 +1,10 @@
 package com.es.plus.lock;
 
-import com.es.plus.config.GlobalConfigCache;
-import com.es.plus.exception.EsException;
-import com.es.plus.properties.EsParamHolder;
-import com.es.plus.util.JsonUtils;
-import com.es.plus.core.wrapper.core.EsQueryWrapper;
+import com.es.plus.adapter.config.GlobalConfigCache;
+import com.es.plus.adapter.exception.EsException;
+import com.es.plus.adapter.lock.ELockClient;
+import com.es.plus.adapter.properties.EsParamHolder;
+import com.es.plus.adapter.util.JsonUtils;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.update.UpdateRequest;
@@ -12,6 +12,8 @@ import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.xcontent.XContentType;
+import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.query.TermQueryBuilder;
 import org.elasticsearch.script.Script;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 
@@ -28,7 +30,7 @@ public class EsLockClient implements ELockClient {
 
     @Override
     public UpdateResponse updateByScript(String index, String id, Script painless) {
-        UpdateRequest updateRequest = new UpdateRequest(index, id);
+        UpdateRequest updateRequest = new UpdateRequest(index, GlobalConfigCache.GLOBAL_CONFIG.getType(),id);
         updateRequest.retryOnConflict(GlobalConfigCache.GLOBAL_CONFIG.getMaxRetries());
         updateRequest.script(painless);
         try {
@@ -67,11 +69,12 @@ public class EsLockClient implements ELockClient {
 
 
     @Override
-    public <T> SearchResponse search(String index, EsQueryWrapper<T> esQueryWrapper) {
+    public <T> SearchResponse search(String index, String key,String value) {
+        TermQueryBuilder termQuery = QueryBuilders.termQuery(key, value);
         SearchRequest searchRequest = new SearchRequest();
         searchRequest.indices(index);
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-        searchSourceBuilder.query(esQueryWrapper.getQueryBuilder());
+        searchSourceBuilder.query(termQuery);
         searchRequest.source(searchSourceBuilder);
         SearchResponse response;
         try {

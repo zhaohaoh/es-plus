@@ -1,8 +1,7 @@
 package com.es.plus.core.wrapper.core;
 
 
-import com.es.plus.core.tools.SFunction;
-import com.es.plus.pojo.EsUpdateField;
+import com.es.plus.adapter.params.EsUpdateField;
 
 import java.util.List;
 import java.util.Map;

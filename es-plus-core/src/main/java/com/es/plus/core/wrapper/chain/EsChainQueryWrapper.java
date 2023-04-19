@@ -1,13 +1,14 @@
 package com.es.plus.core.wrapper.chain;
 
-import com.es.plus.client.EsPlusClientFacade;
+import com.es.plus.es6.client.EsPlus6Aggregations;
+import com.es.plus.adapter.params.EsResponse;
+import com.es.plus.adapter.params.EsAggResponse;
+import com.es.plus.adapter.params.PageInfo;
+import com.es.plus.adapter.properties.EsIndexParam;
+import com.es.plus.adapter.properties.EsParamHolder;
+import com.es.plus.adapter.EsPlusClientFacade;
 import com.es.plus.core.wrapper.core.EsQueryWrapper;
 import com.es.plus.pojo.ClientContext;
-import com.es.plus.pojo.EsAggsResponse;
-import com.es.plus.pojo.EsResponse;
-import com.es.plus.pojo.PageInfo;
-import com.es.plus.properties.EsIndexParam;
-import com.es.plus.properties.EsParamHolder;
 import org.apache.commons.lang3.StringUtils;
 
 import java.time.Duration;
@@ -77,9 +78,9 @@ public class EsChainQueryWrapper<T> extends AbstractEsChainWrapper<T, String, Es
     /**
      * 聚合
      *
-     * @return {@link EsAggsResponse}<{@link T}>
+     * @return {@link EsPlus6Aggregations}<{@link T}>
      */
-    public EsAggsResponse<T> aggregations() {
+    public EsAggResponse<T> aggregations() {
         return esPlusClientFacade.aggregations(index, super.esWrapper.getEsParamWrapper(), tClass);
     }
 

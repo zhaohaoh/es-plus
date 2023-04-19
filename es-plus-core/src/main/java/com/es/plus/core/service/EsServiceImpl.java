@@ -1,18 +1,15 @@
 package com.es.plus.core.service;
 
 
-import com.es.plus.config.GlobalConfigCache;
+import com.es.plus.adapter.config.GlobalConfigCache;
+import com.es.plus.adapter.params.*;
+import com.es.plus.adapter.util.CollectionUtil;
 import com.es.plus.core.wrapper.chain.EsChainLambdaQueryWrapper;
 import com.es.plus.core.wrapper.chain.EsChainUpdateWrapper;
 import com.es.plus.core.wrapper.core.EsQueryWrapper;
 import com.es.plus.core.wrapper.core.EsUpdateWrapper;
-import com.es.plus.pojo.EsAggsResponse;
-import com.es.plus.pojo.EsResponse;
-import com.es.plus.pojo.EsSettings;
-import com.es.plus.pojo.PageInfo;
-import com.es.plus.util.CollectionUtil;
+import com.es.plus.es6.client.EsPlus6Aggregations;
 import org.elasticsearch.action.bulk.BulkItemResponse;
-import org.elasticsearch.client.GetAliasesResponse;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.springframework.util.CollectionUtils;
@@ -54,8 +51,8 @@ public class EsServiceImpl<T> extends AbstractEsService<T> implements EsService<
      */
     @Override
     public void createIndex() {
-        GetAliasesResponse aliasIndex = esPlusClientFacade.getAliasIndex(alias);
-        if (!CollectionUtils.isEmpty(aliasIndex.getAliases())) {
+        EsAliasResponse aliasIndex = esPlusClientFacade.getAliasIndex(alias);
+        if (!CollectionUtils.isEmpty(aliasIndex.getIndexs())) {
             return;
         }
         esPlusClientFacade.createIndex(this.index, clazz);
@@ -66,8 +63,8 @@ public class EsServiceImpl<T> extends AbstractEsService<T> implements EsService<
      */
     @Override
     public void createIndexMapping() {
-        GetAliasesResponse aliasIndex = esPlusClientFacade.getAliasIndex(alias);
-        if (!CollectionUtils.isEmpty(aliasIndex.getAliases())) {
+        EsAliasResponse aliasIndex = esPlusClientFacade.getAliasIndex(alias);
+        if (!CollectionUtils.isEmpty(aliasIndex.getIndexs())) {
             return;
         }
         esPlusClientFacade.createIndexMapping(this.index, clazz);
@@ -78,8 +75,8 @@ public class EsServiceImpl<T> extends AbstractEsService<T> implements EsService<
      */
     @Override
     public void createMapping() {
-        GetAliasesResponse aliasIndex = esPlusClientFacade.getAliasIndex(alias);
-        if (!CollectionUtils.isEmpty(aliasIndex.getAliases())) {
+        EsAliasResponse aliasIndex = esPlusClientFacade.getAliasIndex(alias);
+        if (!CollectionUtils.isEmpty(aliasIndex.getIndexs())) {
             return;
         }
         esPlusClientFacade.putMapping(alias, clazz);
@@ -97,7 +94,7 @@ public class EsServiceImpl<T> extends AbstractEsService<T> implements EsService<
      * 更新设置
      */
     @Override
-    public boolean updateSettings(Map<String,Object> esSettings) {
+    public boolean updateSettings(Map<String, Object> esSettings) {
         return esPlusClientFacade.updateSettings(alias, esSettings);
     }
 
@@ -125,7 +122,7 @@ public class EsServiceImpl<T> extends AbstractEsService<T> implements EsService<
      */
     @Override
     public List<BulkItemResponse> saveOrUpdateBatch(Collection<T> entityList) {
-        return esPlusClientFacade.saveOrUpdateBatch(alias, entityList);
+        return esPlusClientFacade.saveOrUpdateBatch(alias, type, entityList);
     }
 
     /**
@@ -174,7 +171,7 @@ public class EsServiceImpl<T> extends AbstractEsService<T> implements EsService<
      */
     @Override
     public boolean removeById(Serializable id) {
-        return esPlusClientFacade.delete(alias, id.toString());
+        return esPlusClientFacade.delete(alias, type, id.toString());
     }
 
     /**
@@ -189,7 +186,7 @@ public class EsServiceImpl<T> extends AbstractEsService<T> implements EsService<
             return false;
         }
         List<String> ids = idList.stream().map(Object::toString).collect(Collectors.toList());
-        return esPlusClientFacade.deleteBatch(alias, ids);
+        return esPlusClientFacade.deleteBatch(alias, type, ids);
     }
 
     /**
@@ -220,7 +217,7 @@ public class EsServiceImpl<T> extends AbstractEsService<T> implements EsService<
      */
     @Override
     public boolean updateById(T entity) {
-        return esPlusClientFacade.update(alias, entity);
+        return esPlusClientFacade.update(alias, type, entity);
     }
 
     /**
@@ -259,7 +256,7 @@ public class EsServiceImpl<T> extends AbstractEsService<T> implements EsService<
     }
 
     private List<BulkItemResponse> doUpdateBatch(Collection<T> list) {
-        return esPlusClientFacade.updateBatch(alias, list);
+        return esPlusClientFacade.updateBatch(alias, type, list);
     }
 
     /**
@@ -279,11 +276,11 @@ public class EsServiceImpl<T> extends AbstractEsService<T> implements EsService<
     @Override
     public void deleteIndex() {
         // 查出别名下所有索引删除
-        GetAliasesResponse aliasIndex = esPlusClientFacade.getAliasIndex(alias);
-        if (CollectionUtils.isEmpty(aliasIndex.getAliases())) {
+        EsAliasResponse aliasIndex = esPlusClientFacade.getAliasIndex(alias);
+        if (CollectionUtils.isEmpty(aliasIndex.getIndexs())) {
             return;
         }
-        aliasIndex.getAliases().forEach((index, aliasMetadata) -> {
+        aliasIndex.getIndexs().forEach(index -> {
             esPlusClientFacade.deleteIndex(index);
         });
     }
@@ -384,10 +381,10 @@ public class EsServiceImpl<T> extends AbstractEsService<T> implements EsService<
      * 聚合
      *
      * @param esQueryWrapper es查询包装器
-     * @return {@link EsAggsResponse}<{@link T}>
+     * @return {@link EsPlus6Aggregations}<{@link T}>
      */
     @Override
-    public EsAggsResponse<T> aggregations(EsQueryWrapper<T> esQueryWrapper) {
+    public EsAggResponse<T> aggregations(EsQueryWrapper<T> esQueryWrapper) {
         return esPlusClientFacade.aggregations(alias, esQueryWrapper.getEsParamWrapper(), clazz);
     }
 
@@ -409,15 +406,15 @@ public class EsServiceImpl<T> extends AbstractEsService<T> implements EsService<
      * @param esQueryWrapper es查询包装器
      * @param size           大小
      * @param keepTime       保持时间
-     * @param scollId  滚动处理Id
+     * @param scollId        滚动处理Id
      */
     @Override
-    public  EsResponse<T> scroll(EsQueryWrapper<T> esQueryWrapper, int size, Duration keepTime, String scollId) {
+    public EsResponse<T> scroll(EsQueryWrapper<T> esQueryWrapper, int size, Duration keepTime, String scollId) {
         if (esQueryWrapper == null) {
             esQueryWrapper = matchAll();
         }
 
-       return esPlusClientFacade.scrollByWrapper(esQueryWrapper.getEsParamWrapper(), clazz, alias, size, keepTime, scollId);
+        return esPlusClientFacade.scrollByWrapper(esQueryWrapper.getEsParamWrapper(), clazz, alias, size, keepTime, scollId);
     }
 
     /**

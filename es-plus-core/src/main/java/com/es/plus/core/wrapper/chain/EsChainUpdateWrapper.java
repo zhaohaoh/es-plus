@@ -1,12 +1,12 @@
 package com.es.plus.core.wrapper.chain;
 
 
-import com.es.plus.client.EsPlusClientFacade;
+import com.es.plus.adapter.EsPlusClientFacade;
 import com.es.plus.core.wrapper.core.EsUpdateWrapper;
 import com.es.plus.core.wrapper.core.Update;
 import com.es.plus.pojo.ClientContext;
-import com.es.plus.properties.EsIndexParam;
-import com.es.plus.properties.EsParamHolder;
+import com.es.plus.adapter.properties.EsIndexParam;
+import com.es.plus.adapter.properties.EsParamHolder;
 import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
@@ -30,6 +30,7 @@ public class EsChainUpdateWrapper<T> extends AbstractEsChainWrapper<T, String, E
         EsIndexParam esIndexParam = EsParamHolder.getEsIndexParam(super.tClass);
         if (esIndexParam != null) {
             index = StringUtils.isBlank(esIndexParam.getAlias())? esIndexParam.getIndex():esIndexParam.getAlias();
+            type = esIndexParam.getType();
         }
     }
 
@@ -39,6 +40,7 @@ public class EsChainUpdateWrapper<T> extends AbstractEsChainWrapper<T, String, E
         EsIndexParam esIndexParam = EsParamHolder.getEsIndexParam(super.tClass);
         if (esIndexParam != null) {
             index = StringUtils.isBlank(esIndexParam.getAlias())? esIndexParam.getIndex():esIndexParam.getAlias();
+            type = esIndexParam.getType();
         }
         if (esPlusClientFacade != null) {
             this.esPlusClientFacade = esPlusClientFacade;
@@ -50,7 +52,7 @@ public class EsChainUpdateWrapper<T> extends AbstractEsChainWrapper<T, String, E
     }
 
     public boolean update(T t) {
-        return esPlusClientFacade.update(index, t);
+        return esPlusClientFacade.update(index,type, t);
     }
 
     /**
@@ -69,7 +71,7 @@ public class EsChainUpdateWrapper<T> extends AbstractEsChainWrapper<T, String, E
      * @return {@link List}<{@link BulkItemResponse}>
      */
     public List<BulkItemResponse> updateBatch(Collection<T> t) {
-        return esPlusClientFacade.updateBatch(index, t);
+        return esPlusClientFacade.updateBatch(index, type,t);
     }
 
     /**

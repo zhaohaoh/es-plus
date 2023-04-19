@@ -1,6 +1,6 @@
 package com.es.plus.core.statics;
 
-import com.es.plus.client.EsPlusClientFacade;
+import com.es.plus.adapter.EsPlusClientFacade;
 import com.es.plus.core.wrapper.chain.EsChainLambdaQueryWrapper;
 import com.es.plus.core.wrapper.chain.EsChainLambdaUpdateWrapper;
 import com.es.plus.core.wrapper.chain.EsChainQueryWrapper;
