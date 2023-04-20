@@ -65,7 +65,6 @@ public class JsonUtils {
         simpleModule.addSerializer(LocalDate.class, new LocalDateSerializer(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
         simpleModule.addDeserializer(LocalDate.class, new LocalDateDeserializer(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
 
-
         MAPPER.registerModule(new SpringDataElasticsearchModule());
         MAPPER.setDateFormat(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss") {
             // 这个方法是反序列化需要滴！

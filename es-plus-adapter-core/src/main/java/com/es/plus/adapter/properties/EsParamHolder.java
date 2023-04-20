@@ -22,6 +22,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @Author: hzh
  * @Date: 2022/1/24 15:27
  */
+@SuppressWarnings("all")
 public class EsParamHolder {
     private static final Logger logger = LoggerFactory.getLogger(EsParamHolder.class);
     // 属性解析器

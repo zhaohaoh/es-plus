@@ -20,12 +20,12 @@ public class Test {
     public void testSave() {
         SamplesEsDTO samplesEsDTO = new SamplesEsDTO();
         samplesEsDTO.setEmail("bbbberretertrebbbb");
-        samplesEsDTO.setUsername("hzh");
+        samplesEsDTO.setUsername("ggghhh");
         SamplesNestedDTO samplesNestedDTO = new SamplesNestedDTO();
         samplesNestedDTO.setEmail("gdfgdf");
         samplesEsDTO.setSamplesNesteds(samplesNestedDTO);
         samplesEsDTO.setSamplesNesteds(samplesNestedDTO);
-        samplesEsDTO.setId(4L);
+        samplesEsDTO.setId(6L);
         samplesEsService.save(samplesEsDTO);
     }
 

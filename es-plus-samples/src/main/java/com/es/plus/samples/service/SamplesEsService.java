@@ -2,15 +2,20 @@ package com.es.plus.samples.service;
 
 import com.es.plus.adapter.params.EsResponse;
 import com.es.plus.adapter.params.PageInfo;
+import com.es.plus.adapter.util.JsonUtils;
 import com.es.plus.core.service.EsServiceImpl;
 import com.es.plus.core.statics.Es;
 import com.es.plus.core.wrapper.chain.EsChainLambdaQueryWrapper;
 import com.es.plus.core.wrapper.chain.EsChainQueryWrapper;
 import com.es.plus.core.wrapper.core.EsQueryWrapper;
+import com.es.plus.es7.client.EsPlus7Aggregations;
 import com.es.plus.samples.dto.SamplesEsDTO;
 import com.es.plus.samples.dto.SamplesNestedDTO;
 import com.es.plus.samples.dto.SpuEsDTO;
 import org.apache.lucene.search.join.ScoreMode;
+import org.elasticsearch.search.aggregations.Aggregation;
+import org.elasticsearch.search.aggregations.Aggregations;
+import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -77,9 +82,13 @@ public class SamplesEsService extends EsServiceImpl<SamplesEsDTO> {
                 .list();
         List<SamplesEsDTO> list = esResponse.getList();
 
-//        EsAggregations<SamplesEsDTO> esAggregationsReponse = esResponse.getEsAggsResponse();
-//        Terms terms = esAggregationsReponse.getTerms(SamplesEsDTO::getUsername);
-//        Map<String, Long> termsAsMap = esAggregationsReponse.getTermsAsMap(SamplesEsDTO::getUsername);
+        EsPlus7Aggregations<SamplesEsDTO> esAggsResponse = (EsPlus7Aggregations<SamplesEsDTO>) esResponse.getEsAggsResponse();
+        Aggregations aggregations = esAggsResponse.getAggregations();
+        Map<String, Aggregation> asMap = aggregations.getAsMap();
+        Map<String, Object> map = JsonUtils.beanToMap(asMap);
+        System.out.println(map);
+        Terms terms = esAggsResponse.getTerms(SamplesEsDTO::getUsername);
+        Map<String, Long> termsAsMap = esAggsResponse.getTermsAsMap(SamplesEsDTO::getUsername);
     }
 
     public void profile1() {
