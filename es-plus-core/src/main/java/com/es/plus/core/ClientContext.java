@@ -1,4 +1,4 @@
-package com.es.plus.pojo;
+package com.es.plus.core;
 
 import com.es.plus.adapter.EsPlusClientFacade;
 import com.es.plus.adapter.core.EsPlusClient;
@@ -6,8 +6,6 @@ import com.es.plus.adapter.core.EsPlusIndexClient;
 import com.es.plus.adapter.lock.EsLockFactory;
 import com.es.plus.es6.client.EsPlus6IndexRestClient;
 import com.es.plus.es6.client.EsPlus6RestClient;
-import com.es.plus.es7.client.EsPlus7IndexRestClient;
-import com.es.plus.es7.client.EsPlus7RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
 
 import java.util.Map;
@@ -45,16 +43,11 @@ public class ClientContext {
      *
      * @return {@link EsPlusClientFacade}
      */
-    public static EsPlusClientFacade buildEsPlusClientFacade(RestHighLevelClient restHighLevelClient, EsLockFactory esLockFactory, Integer version) {
+    public static EsPlusClientFacade buildEsPlusClientFacade(RestHighLevelClient restHighLevelClient, EsLockFactory esLockFactory) {
         EsPlusClient esPlusRestClient;
         EsPlusIndexClient esPlusIndexRestClient;
-        if (version.equals(6)) {
-            esPlusRestClient = new EsPlus6RestClient(restHighLevelClient, esLockFactory);
-            esPlusIndexRestClient = new EsPlus6IndexRestClient(restHighLevelClient);
-        } else {
-            esPlusRestClient = new EsPlus7RestClient(restHighLevelClient, esLockFactory);
-            esPlusIndexRestClient = new EsPlus7IndexRestClient(restHighLevelClient);
-        }
+        esPlusRestClient = new EsPlus6RestClient(restHighLevelClient, esLockFactory);
+        esPlusIndexRestClient = new EsPlus6IndexRestClient(restHighLevelClient);
         return new EsPlusClientFacade(esPlusRestClient, esPlusIndexRestClient, esLockFactory);
     }
 }

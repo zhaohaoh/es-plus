@@ -21,7 +21,7 @@ public class EsParamWrapper<T> {
     /*
      * 更新字段封装
      */
-    protected EsUpdateField esUpdateField;
+    protected EsUpdateField esUpdateField=new EsUpdateField();
 
     /*
      *聚合封装

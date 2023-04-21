@@ -71,6 +71,12 @@ public class Test {
         samplesEsService.update();
     }
 
+
+    @org.junit.jupiter.api.Test
+    public void updateByQuery() {
+        samplesEsService.updateByQuery();
+    }
+
     @org.junit.jupiter.api.Test
     public void updateSettingsLog() {
         Map<String,Object> map=new HashMap<>();

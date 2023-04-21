@@ -1,11 +1,15 @@
 package com.es.plus.core.service;
 
 
-import com.es.plus.adapter.params.*;
+import com.es.plus.adapter.params.EsAggResponse;
+import com.es.plus.adapter.params.EsResponse;
+import com.es.plus.adapter.params.EsSettings;
+import com.es.plus.adapter.params.PageInfo;
 import com.es.plus.core.wrapper.chain.EsChainLambdaQueryWrapper;
 import com.es.plus.core.wrapper.chain.EsChainUpdateWrapper;
 import com.es.plus.core.wrapper.core.EsQueryWrapper;
 import com.es.plus.core.wrapper.core.EsUpdateWrapper;
+import com.es.plus.core.wrapper.core.EsWrapper;
 import com.es.plus.es6.client.EsPlus6Aggregations;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
@@ -142,7 +146,7 @@ public interface EsService<T> {
      * @param esUpdateWrapper es更新包装器
      * @return {@link BulkByScrollResponse}
      */
-    BulkByScrollResponse remove(EsUpdateWrapper<T> esUpdateWrapper);
+    BulkByScrollResponse remove(EsWrapper<T> esUpdateWrapper);
 
     /**
      * 删除所有
@@ -187,7 +191,7 @@ public interface EsService<T> {
      * @param esUpdateWrapper es更新包装器
      * @return {@link BulkByScrollResponse}
      */
-    BulkByScrollResponse updateByWrapper(EsUpdateWrapper<T> esUpdateWrapper);
+    BulkByScrollResponse updateByQuery(EsWrapper<T> esUpdateWrapper);
 
     /**
      * 获取根据id
@@ -211,7 +215,7 @@ public interface EsService<T> {
      * @param esQueryWrapper es查询包装器
      * @return {@link EsResponse}<{@link T}>
      */
-    EsResponse<T> list(EsQueryWrapper<T> esQueryWrapper);
+    EsResponse<T> list(EsWrapper<T> esQueryWrapper);
 
     /**
      * 页面
@@ -220,7 +224,7 @@ public interface EsService<T> {
      * @param esQueryWrapper es查询包装器
      * @return {@link EsResponse}<{@link T}>
      */
-    EsResponse<T> page(PageInfo<T> pageInfo, EsQueryWrapper<T> esQueryWrapper);
+    EsResponse<T> page(PageInfo<T> pageInfo, EsWrapper<T> esQueryWrapper);
 
 
     /**
@@ -230,7 +234,7 @@ public interface EsService<T> {
      * @param esQueryWrapper es查询包装器
      * @return {@link EsResponse}<{@link T}>
      */
-    EsResponse<T> searchAfter(PageInfo<T> pageInfo, EsQueryWrapper<T> esQueryWrapper);
+    EsResponse<T> searchAfter(PageInfo<T> pageInfo, EsWrapper<T> esQueryWrapper);
 
     /**
      * 统计
@@ -238,7 +242,7 @@ public interface EsService<T> {
      * @param esQueryWrapper es查询包装器
      * @return long
      */
-    long count(EsQueryWrapper<T> esQueryWrapper);
+    long count(EsWrapper<T> esQueryWrapper);
 
     /**
      * 聚合
@@ -246,7 +250,7 @@ public interface EsService<T> {
      * @param esQueryWrapper es查询包装器
      * @return {@link EsPlus6Aggregations}<{@link T}>
      */
-    EsAggResponse<T> aggregations(EsQueryWrapper<T> esQueryWrapper);
+    EsAggResponse<T> aggregations(EsWrapper<T> esQueryWrapper);
 
     /**
      * 性能分析
@@ -254,7 +258,7 @@ public interface EsService<T> {
      * @param esQueryWrapper es查询包装
      * @return {@link EsResponse}<{@link T}>
      */
-    EsResponse<T> profile(EsQueryWrapper<T> esQueryWrapper);
+    EsResponse<T> profile(EsWrapper<T> esQueryWrapper);
 
     /**
      * 滚动
@@ -264,7 +268,7 @@ public interface EsService<T> {
      * @param scollId        scoll id
      * @return {@link EsResponse}<{@link T}>
      */
-    default EsResponse<T> scroll(EsQueryWrapper<T> esQueryWrapper, int size, String scollId) {
+    default EsResponse<T> scroll(EsWrapper<T> esQueryWrapper, int size, String scollId) {
         return scroll(esQueryWrapper, size, SCROLL_KEEP_TIME, scollId);
     }
 
@@ -277,7 +281,7 @@ public interface EsService<T> {
      * @param scollId        scoll id
      * @return {@link EsResponse}<{@link T}>
      */
-    EsResponse<T> scroll(EsQueryWrapper<T> esQueryWrapper, int size, Duration keepTime, String scollId);
+    EsResponse<T> scroll(EsWrapper<T> esQueryWrapper, int size, Duration keepTime, String scollId);
 
     /**
      * 自增
@@ -285,5 +289,5 @@ public interface EsService<T> {
      * @param esUpdateWrapper es更新包装器
      * @return {@link BulkByScrollResponse}
      */
-    BulkByScrollResponse increment(EsUpdateWrapper<T> esUpdateWrapper);
+    BulkByScrollResponse increment(EsWrapper<T> esUpdateWrapper);
 }

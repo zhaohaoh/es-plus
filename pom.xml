@@ -24,6 +24,7 @@
         <!-- 打包跳过单元测试 -->
         <skipTests>true</skipTests>
         <rversion>0.1.11</rversion>
+        <elasticsearch.version>6.7.0</elasticsearch.version>
     </properties>
     <licenses>
         <license>

@@ -49,7 +49,7 @@ public class EsUpdateWrapper<T> extends AbstractEsWrapper<T, String, EsUpdateWra
 
     @Override
     public EsUpdateField getEsUpdateField() {
-        return getEsUpdateField();
+        return super.getEsUpdateField();
     }
 
     @Override

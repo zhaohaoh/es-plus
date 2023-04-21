@@ -6,8 +6,10 @@ import com.es.plus.core.service.EsServiceImpl;
 import com.es.plus.core.statics.Es;
 import com.es.plus.core.wrapper.chain.EsChainLambdaQueryWrapper;
 import com.es.plus.core.wrapper.chain.EsChainQueryWrapper;
+import com.es.plus.core.wrapper.core.EsLambdaQueryWrapper;
+import com.es.plus.core.wrapper.core.EsLambdaUpdateWrapper;
 import com.es.plus.core.wrapper.core.EsQueryWrapper;
-import com.es.plus.es7.client.EsPlus7Aggregations;
+import com.es.plus.es6.client.EsPlus6Aggregations;
 import com.es.plus.samples.dto.SamplesEsDTO;
 import com.es.plus.samples.dto.SamplesNestedDTO;
 import com.es.plus.samples.dto.SpuEsDTO;
@@ -56,7 +58,8 @@ public class SamplesEsService extends EsServiceImpl<SamplesEsDTO> {
         List<SamplesEsDTO> list = esResponse.getList();
         System.out.println(list);
 
-        EsChainQueryWrapper<Map> term = Es.chainQuery(Map.class).index("sys_user2ttt_alias").must().match("username", "HZH").term("email", "abc");
+        EsChainQueryWrapper<Map> term = Es.chainQuery(Map.class).index("sys_user2ttt_alias").must()
+                .match("username", "HZH").term("email", "abc");
         term.esAggWrapper().terms("keyword");
         EsResponse<Map> list1 = term.list();
 //        Map<String, Long> username1 = list1.getEsAggsResponse().getTermsAsMap("keyword");
@@ -78,7 +81,7 @@ public class SamplesEsService extends EsServiceImpl<SamplesEsDTO> {
                 .list();
         List<SamplesEsDTO> list = esResponse.getList();
 
-        EsPlus7Aggregations<SamplesEsDTO> esAggsResponse = (EsPlus7Aggregations<SamplesEsDTO>) esResponse.getEsAggsResponse();
+        EsPlus6Aggregations<SamplesEsDTO> esAggsResponse = (EsPlus6Aggregations<SamplesEsDTO>) esResponse.getEsAggsResponse();
 //        Aggregations aggregations = esAggsResponse.getAggregations();
 //        Map<String, Aggregation> asMap = aggregations.getAsMap();
 //        Map<String, Object> map = JsonUtils.beanToMap(asMap);
@@ -157,6 +160,17 @@ public class SamplesEsService extends EsServiceImpl<SamplesEsDTO> {
 
     public void listLandList() {
         EsResponse<SpuEsDTO> list = Es.chainLambdaQuery(SpuEsDTO.class).list();
+        System.out.println(list);
+    }
+
+    public void updateByQuery() {
+        EsLambdaUpdateWrapper<SamplesEsDTO> updateWrapper = new EsLambdaUpdateWrapper<>();
+        updateWrapper.match(SamplesEsDTO::getUsername,"ggghhh").set(SamplesEsDTO::getEmail,"bbbbbb");
+        this.updateByQuery(updateWrapper);
+
+        EsLambdaQueryWrapper<SamplesEsDTO> queryWrapper = new EsLambdaQueryWrapper<>();
+        queryWrapper.match(SamplesEsDTO::getUsername,"ggghhh");
+        EsResponse<SamplesEsDTO> list = this.list(queryWrapper);
         System.out.println(list);
     }
 }

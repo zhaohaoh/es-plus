@@ -9,9 +9,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.common.geo.GeoPoint;
-import org.elasticsearch.common.geo.ShapeRelation;
 import org.elasticsearch.common.unit.DistanceUnit;
-import org.elasticsearch.geometry.Geometry;
 import org.elasticsearch.index.query.*;
 import org.elasticsearch.join.query.HasChildQueryBuilder;
 import org.elasticsearch.join.query.HasParentQueryBuilder;
@@ -30,7 +28,7 @@ import java.util.function.Supplier;
  */
 @SuppressWarnings({"unchecked"})
 public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper<T, R, Children>> extends AbstractLambdaEsWrapper<T, R>
-        implements IEsQueryWrapper<Children, Children, R>, EsWrapper<Children, T>, EsExtendsWrapper<Children, R> {
+        implements IEsQueryWrapper<Children, Children, R>, EsWrapper<T>, EsExtendsWrapper<Children, R> {
     protected AbstractEsWrapper() {
     }
 
@@ -47,12 +45,13 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
 
     protected EsParamWrapper<T> esParamWrapper;
 
-    private List<QueryBuilder> queryBuilders = getEsParamWrapper().getQueryBuilder().must();
+    private List<QueryBuilder> queryBuilders = esParamWrapper().getQueryBuilder().must();
 
     protected EsLambdaAggWrapper<T> esLambdaAggWrapper;
     protected EsAggWrapper<T> esAggWrapper;
 
-    public EsParamWrapper<T> getEsParamWrapper() {
+    @Override
+    public EsParamWrapper<T> esParamWrapper() {
         if (esParamWrapper == null) {
             esParamWrapper = new EsParamWrapper<>();
         }
@@ -61,7 +60,7 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
 
     @Override
     public EsUpdateField getEsUpdateField() {
-        return esParamWrapper.getEsUpdateField();
+        return esParamWrapper().getEsUpdateField();
     }
 
     @Override
@@ -99,7 +98,7 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
 
     @Override
     public BoolQueryBuilder getQueryBuilder() {
-        return getEsParamWrapper().getQueryBuilder();
+        return esParamWrapper().getQueryBuilder();
     }
 
     //获取select的字段
@@ -486,24 +485,6 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
     public Children geoPolygon(boolean condition, R name, List<GeoPoint> geoPoints) {
         if (condition) {
             GeoPolygonQueryBuilder geoDistanceQueryBuilder = new GeoPolygonQueryBuilder(nameToString(name), geoPoints);
-            currentBuilder = geoDistanceQueryBuilder;
-            queryBuilders.add(geoDistanceQueryBuilder);
-        }
-        return children;
-    }
-
-    @Override
-    public Children geoShape(boolean condition, R name, String indexedShapeId, Geometry geometry, ShapeRelation shapeRelation) {
-        if (condition) {
-            GeoShapeQueryBuilder geoDistanceQueryBuilder;
-            if (StringUtils.isNotBlank(indexedShapeId)) {
-                geoDistanceQueryBuilder = new GeoShapeQueryBuilder(nameToString(name), indexedShapeId);
-            } else {
-                geoDistanceQueryBuilder = new GeoShapeQueryBuilder(nameToString(name), geometry);
-            }
-            if (shapeRelation != null) {
-                geoDistanceQueryBuilder.relation(shapeRelation);
-            }
             currentBuilder = geoDistanceQueryBuilder;
             queryBuilders.add(geoDistanceQueryBuilder);
         }

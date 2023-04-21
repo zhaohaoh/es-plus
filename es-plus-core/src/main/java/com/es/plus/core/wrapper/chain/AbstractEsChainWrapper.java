@@ -2,6 +2,7 @@ package com.es.plus.core.wrapper.chain;
 
 
 import com.es.plus.adapter.config.GlobalConfigCache;
+import com.es.plus.adapter.params.EsParamWrapper;
 import com.es.plus.adapter.params.EsSelect;
 import com.es.plus.core.wrapper.aggregation.EsAggWrapper;
 import com.es.plus.core.wrapper.aggregation.EsLambdaAggWrapper;
@@ -9,9 +10,7 @@ import com.es.plus.core.wrapper.core.*;
 import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.common.geo.GeoPoint;
-import org.elasticsearch.common.geo.ShapeRelation;
 import org.elasticsearch.common.unit.DistanceUnit;
-import org.elasticsearch.geometry.Geometry;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 
@@ -27,7 +26,7 @@ import java.util.function.Supplier;
  */
 @SuppressWarnings({"unchecked"})
 public abstract class AbstractEsChainWrapper<T, R, Children extends AbstractEsChainWrapper<T, R, Children, QUERY>, QUERY extends AbstractEsWrapper<T, R, QUERY>>
-        implements IEsQueryWrapper<Children, QUERY, R>, EsWrapper<Children, T>, EsExtendsWrapper<Children, R> {
+        implements IEsQueryWrapper<Children, QUERY, R>, EsWrapper<T>, EsExtendsWrapper<Children, R> {
     protected QUERY esWrapper;
     protected Children children = (Children) this;
     protected Class<T> tClass;
@@ -36,6 +35,11 @@ public abstract class AbstractEsChainWrapper<T, R, Children extends AbstractEsCh
     protected String type;
     public QUERY getWrapper() {
         return esWrapper;
+    }
+
+    @Override
+    public EsParamWrapper<T> esParamWrapper() {
+        return getWrapper().esParamWrapper();
     }
 
     @Override
@@ -310,11 +314,6 @@ public abstract class AbstractEsChainWrapper<T, R, Children extends AbstractEsCh
         return children;
     }
 
-    @Override
-    public Children geoShape(boolean condition, R name, String indexedShapeId, Geometry geometry, ShapeRelation shapeRelation) {
-        getWrapper().geoShape(condition, name, indexedShapeId, geometry, shapeRelation);
-        return children;
-    }
 
     @Override
     public BoolQueryBuilder getQueryBuilder() {

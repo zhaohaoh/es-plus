@@ -8,6 +8,7 @@ import com.es.plus.core.wrapper.chain.EsChainLambdaQueryWrapper;
 import com.es.plus.core.wrapper.chain.EsChainUpdateWrapper;
 import com.es.plus.core.wrapper.core.EsQueryWrapper;
 import com.es.plus.core.wrapper.core.EsUpdateWrapper;
+import com.es.plus.core.wrapper.core.EsWrapper;
 import com.es.plus.es6.client.EsPlus6Aggregations;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.index.query.QueryBuilders;
@@ -196,8 +197,8 @@ public class EsServiceImpl<T> extends AbstractEsService<T> implements EsService<
      * @return {@link BulkByScrollResponse}
      */
     @Override
-    public BulkByScrollResponse remove(EsUpdateWrapper<T> esUpdateWrapper) {
-        return esPlusClientFacade.deleteByQuery(alias, esUpdateWrapper.getEsParamWrapper());
+    public BulkByScrollResponse remove(EsWrapper<T> esUpdateWrapper) {
+        return esPlusClientFacade.deleteByQuery(alias, esUpdateWrapper.esParamWrapper());
     }
 
     /**
@@ -207,7 +208,7 @@ public class EsServiceImpl<T> extends AbstractEsService<T> implements EsService<
      */
     @Override
     public BulkByScrollResponse removeAll() {
-        return esPlusClientFacade.deleteByQuery(alias, esUpdateWrapper().matchAll().getEsParamWrapper());
+        return esPlusClientFacade.deleteByQuery(alias, esUpdateWrapper().matchAll().esParamWrapper());
     }
 
     /**
@@ -266,8 +267,8 @@ public class EsServiceImpl<T> extends AbstractEsService<T> implements EsService<
      * @return {@link BulkByScrollResponse}
      */
     @Override
-    public BulkByScrollResponse updateByWrapper(EsUpdateWrapper<T> esUpdateWrapper) {
-        return esPlusClientFacade.updateByWrapper(alias, esUpdateWrapper.getEsParamWrapper());
+    public BulkByScrollResponse updateByQuery(EsWrapper<T> esUpdateWrapper) {
+        return esPlusClientFacade.updateByWrapper(alias, esUpdateWrapper.esParamWrapper());
     }
 
     /**
@@ -296,7 +297,7 @@ public class EsServiceImpl<T> extends AbstractEsService<T> implements EsService<
         EsQueryWrapper<T> esQueryWrapper = new EsQueryWrapper<>(clazz);
         esQueryWrapper.ids(ids);
         //查询
-        EsResponse<T> esResponse = esPlusClientFacade.searchByWrapper(esQueryWrapper.getEsParamWrapper(), clazz, alias);
+        EsResponse<T> esResponse = esPlusClientFacade.searchByWrapper(esQueryWrapper.esParamWrapper(), clazz, alias);
         List<T> list = esResponse.getList();
         if (CollectionUtils.isEmpty(list)) {
             return null;
@@ -315,7 +316,7 @@ public class EsServiceImpl<T> extends AbstractEsService<T> implements EsService<
         EsQueryWrapper<T> esQueryWrapper = new EsQueryWrapper<>(clazz);
         esQueryWrapper.ids(idList.stream().map(Objects::toString).collect(Collectors.toList()));
         //查询
-        return esPlusClientFacade.searchByWrapper(esQueryWrapper.getEsParamWrapper(), clazz, alias).getList();
+        return esPlusClientFacade.searchByWrapper(esQueryWrapper.esParamWrapper(), clazz, alias).getList();
     }
 
     /**
@@ -325,12 +326,12 @@ public class EsServiceImpl<T> extends AbstractEsService<T> implements EsService<
      * @return {@link EsResponse}<{@link T}>
      */
     @Override
-    public EsResponse<T> list(EsQueryWrapper<T> esQueryWrapper) {
+    public EsResponse<T> list(EsWrapper<T> esQueryWrapper) {
         //默认查询所有
         if (esQueryWrapper == null) {
             esQueryWrapper = matchAll();
         }
-        return esPlusClientFacade.searchByWrapper(esQueryWrapper.getEsParamWrapper(), clazz, alias);
+        return esPlusClientFacade.searchByWrapper(esQueryWrapper.esParamWrapper(), clazz, alias);
     }
 
     /**
@@ -341,11 +342,11 @@ public class EsServiceImpl<T> extends AbstractEsService<T> implements EsService<
      * @return {@link EsResponse}<{@link T}>
      */
     @Override
-    public EsResponse<T> page(PageInfo<T> pageInfo, EsQueryWrapper<T> esQueryWrapper) {
+    public EsResponse<T> page(PageInfo<T> pageInfo, EsWrapper<T> esQueryWrapper) {
         if (esQueryWrapper == null) {
             esQueryWrapper = matchAll();
         }
-        return esPlusClientFacade.searchPageByWrapper(pageInfo, esQueryWrapper.getEsParamWrapper(), clazz, alias);
+        return esPlusClientFacade.searchPageByWrapper(pageInfo, esQueryWrapper.esParamWrapper(), clazz, alias);
     }
 
     /**
@@ -356,11 +357,11 @@ public class EsServiceImpl<T> extends AbstractEsService<T> implements EsService<
      * @return {@link EsResponse}<{@link T}>
      */
     @Override
-    public EsResponse<T> searchAfter(PageInfo<T> pageInfo, EsQueryWrapper<T> esQueryWrapper) {
+    public EsResponse<T> searchAfter(PageInfo<T> pageInfo, EsWrapper<T> esQueryWrapper) {
         if (esQueryWrapper == null) {
             esQueryWrapper = matchAll();
         }
-        return esPlusClientFacade.searchAfter(pageInfo, esQueryWrapper.getEsParamWrapper(), clazz, alias);
+        return esPlusClientFacade.searchAfter(pageInfo, esQueryWrapper.esParamWrapper(), clazz, alias);
     }
 
     /**
@@ -370,11 +371,11 @@ public class EsServiceImpl<T> extends AbstractEsService<T> implements EsService<
      * @return long
      */
     @Override
-    public long count(EsQueryWrapper<T> esQueryWrapper) {
+    public long count(EsWrapper<T> esQueryWrapper) {
         if (esQueryWrapper == null) {
             esQueryWrapper = matchAll();
         }
-        return esPlusClientFacade.count(esQueryWrapper.getEsParamWrapper(), alias);
+        return esPlusClientFacade.count(esQueryWrapper.esParamWrapper(), alias);
     }
 
     /**
@@ -384,8 +385,8 @@ public class EsServiceImpl<T> extends AbstractEsService<T> implements EsService<
      * @return {@link EsPlus6Aggregations}<{@link T}>
      */
     @Override
-    public EsAggResponse<T> aggregations(EsQueryWrapper<T> esQueryWrapper) {
-        return esPlusClientFacade.aggregations(alias, esQueryWrapper.getEsParamWrapper(), clazz);
+    public EsAggResponse<T> aggregations(EsWrapper<T> esQueryWrapper) {
+        return esPlusClientFacade.aggregations(alias, esQueryWrapper.esParamWrapper(), clazz);
     }
 
     /**
@@ -395,9 +396,9 @@ public class EsServiceImpl<T> extends AbstractEsService<T> implements EsService<
      * @return {@link EsResponse}<{@link T}>
      */
     @Override
-    public EsResponse<T> profile(EsQueryWrapper<T> esQueryWrapper) {
-        esQueryWrapper.getEsParamWrapper().getEsQueryParamWrapper().setProfile(true);
-        return esPlusClientFacade.searchByWrapper(esQueryWrapper.getEsParamWrapper(), clazz, alias);
+    public EsResponse<T> profile(EsWrapper<T> esQueryWrapper) {
+        esQueryWrapper.esParamWrapper().getEsQueryParamWrapper().setProfile(true);
+        return esPlusClientFacade.searchByWrapper(esQueryWrapper.esParamWrapper(), clazz, alias);
     }
 
     /**
@@ -409,12 +410,12 @@ public class EsServiceImpl<T> extends AbstractEsService<T> implements EsService<
      * @param scollId        滚动处理Id
      */
     @Override
-    public EsResponse<T> scroll(EsQueryWrapper<T> esQueryWrapper, int size, Duration keepTime, String scollId) {
+    public EsResponse<T> scroll(EsWrapper<T> esQueryWrapper, int size, Duration keepTime, String scollId) {
         if (esQueryWrapper == null) {
             esQueryWrapper = matchAll();
         }
 
-        return esPlusClientFacade.scrollByWrapper(esQueryWrapper.getEsParamWrapper(), clazz, alias, size, keepTime, scollId);
+        return esPlusClientFacade.scrollByWrapper(esQueryWrapper.esParamWrapper(), clazz, alias, size, keepTime, scollId);
     }
 
     /**
@@ -424,14 +425,14 @@ public class EsServiceImpl<T> extends AbstractEsService<T> implements EsService<
      * @return {@link BulkByScrollResponse}
      */
     @Override
-    public BulkByScrollResponse increment(EsUpdateWrapper<T> esUpdateWrapper) {
-        return esPlusClientFacade.increment(alias, esUpdateWrapper.getEsParamWrapper());
+    public BulkByScrollResponse increment(EsWrapper<T> esUpdateWrapper) {
+        return esPlusClientFacade.increment(alias, esUpdateWrapper.esParamWrapper());
     }
 
     /**
      * 匹配所有
      *
-     * @return {@link EsQueryWrapper}<{@link T}>
+     * @return {@link EsWrapper}<{@link T}>
      */
     private EsQueryWrapper<T> matchAll() {
         EsQueryWrapper<T> esQueryWrapper = new EsQueryWrapper<>(clazz);

@@ -4,7 +4,7 @@ import com.es.plus.adapter.EsPlusClientFacade;
 import com.es.plus.adapter.lock.ELockClient;
 import com.es.plus.adapter.lock.EsLockFactory;
 import com.es.plus.lock.EsLockClient;
-import com.es.plus.pojo.ClientContext;
+import com.es.plus.core.ClientContext;
 import com.es.plus.starter.properties.EsProperties;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,8 +37,7 @@ public class EsAutoConfiguration {
      */
     @Bean
     public EsPlusClientFacade esPlusClientFacade(RestHighLevelClient restHighLevelClient, EsLockFactory esLockFactory) {
-        Integer version = esProperties.getGlobalConfig().getVersion();
-        EsPlusClientFacade esPlusClientFacade = ClientContext.buildEsPlusClientFacade(restHighLevelClient, esLockFactory, version);
+        EsPlusClientFacade esPlusClientFacade = ClientContext.buildEsPlusClientFacade(restHighLevelClient, esLockFactory);
         ClientContext.addClient("master", esPlusClientFacade);
         return esPlusClientFacade;
     }

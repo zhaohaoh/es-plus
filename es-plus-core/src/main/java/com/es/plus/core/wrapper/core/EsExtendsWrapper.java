@@ -12,6 +12,15 @@ public interface EsExtendsWrapper<Children, R> {
      */
     EsSelect getSelect();
 
+    Children must();
+
+    Children should();
+
+    Children filter();
+
+    Children mustNot();
+
+    Children minimumShouldMatch(String minimumShouldMatch);
     /**
      * 路由
      *

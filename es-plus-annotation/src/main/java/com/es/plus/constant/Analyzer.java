@@ -101,7 +101,7 @@ public interface Analyzer {
      */
     String STEMMER = "stemmer";
     /**
-     * 存储转化为小写字母 默认
+     * 搜索分词器转化为小写字母 默认  因为es默认存储数据是小写，搜索如果是大写字母搜不出来
      */
     String LOWERCASE = "lowercase";
     /**

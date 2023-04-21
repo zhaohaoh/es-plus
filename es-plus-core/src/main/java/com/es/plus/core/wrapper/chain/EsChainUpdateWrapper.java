@@ -4,7 +4,7 @@ package com.es.plus.core.wrapper.chain;
 import com.es.plus.adapter.EsPlusClientFacade;
 import com.es.plus.core.wrapper.core.EsUpdateWrapper;
 import com.es.plus.core.wrapper.core.Update;
-import com.es.plus.pojo.ClientContext;
+import com.es.plus.core.ClientContext;
 import com.es.plus.adapter.properties.EsIndexParam;
 import com.es.plus.adapter.properties.EsParamHolder;
 import org.apache.commons.lang3.StringUtils;
@@ -61,7 +61,7 @@ public class EsChainUpdateWrapper<T> extends AbstractEsChainWrapper<T, String, E
      * @return {@link BulkByScrollResponse}
      */
     public BulkByScrollResponse incrementByWapper() {
-        return esPlusClientFacade.increment(index, esWrapper.getEsParamWrapper());
+        return esPlusClientFacade.increment(index, esWrapper.esParamWrapper());
     }
 
     /**
@@ -90,7 +90,7 @@ public class EsChainUpdateWrapper<T> extends AbstractEsChainWrapper<T, String, E
      * @return {@link BulkByScrollResponse}
      */
     public BulkByScrollResponse update() {
-        return esPlusClientFacade.updateByWrapper(index, esWrapper.getEsParamWrapper());
+        return esPlusClientFacade.updateByWrapper(index, esWrapper.esParamWrapper());
     }
 
     /**
@@ -99,7 +99,7 @@ public class EsChainUpdateWrapper<T> extends AbstractEsChainWrapper<T, String, E
      * @return {@link BulkByScrollResponse}
      */
     public BulkByScrollResponse remove() {
-        return esPlusClientFacade.deleteByQuery(index, esWrapper.getEsParamWrapper());
+        return esPlusClientFacade.deleteByQuery(index, esWrapper.esParamWrapper());
     }
 
     /**
