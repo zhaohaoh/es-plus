@@ -49,7 +49,7 @@ import javax.naming.OperationNotSupportedException;
 import static com.es.plus.constant.EsConstant.AGG_DELIMITER;
 
 
-public class EsPlus6AggsClient implements EsAggClient {
+public class EsPlusAggsClient implements EsAggClient {
     @Override
     public BaseAggregationBuilder count(String field) {
         String aggName = field + AGG_DELIMITER + ValueCountAggregationBuilder.NAME;

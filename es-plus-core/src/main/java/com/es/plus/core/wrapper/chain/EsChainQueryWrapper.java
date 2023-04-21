@@ -1,6 +1,6 @@
 package com.es.plus.core.wrapper.chain;
 
-import com.es.plus.es6.client.EsPlus6Aggregations;
+import com.es.plus.es6.client.EsPlusAggregations;
 import com.es.plus.adapter.params.EsResponse;
 import com.es.plus.adapter.params.EsAggResponse;
 import com.es.plus.adapter.params.PageInfo;
@@ -78,7 +78,7 @@ public class EsChainQueryWrapper<T> extends AbstractEsChainWrapper<T, String, Es
     /**
      * 聚合
      *
-     * @return {@link EsPlus6Aggregations}<{@link T}>
+     * @return {@link EsPlusAggregations}<{@link T}>
      */
     public EsAggResponse<T> aggregations() {
         return esPlusClientFacade.aggregations(index, super.esWrapper.esParamWrapper(), tClass);

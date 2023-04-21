@@ -1,7 +1,7 @@
 package com.es.plus.core.wrapper.aggregation;
 
 import com.es.plus.adapter.core.EsAggClient;
-import com.es.plus.es6.client.EsPlus6AggsClient;
+import com.es.plus.es6.client.EsPlusAggsClient;
 import lombok.SneakyThrows;
 import org.elasticsearch.common.geo.GeoPoint;
 import org.elasticsearch.index.query.QueryBuilder;
@@ -81,7 +81,7 @@ import static com.es.plus.constant.EsConstant.AGG_DELIMITER;
 public abstract class AbstractEsAggWrapper<T, R, Children extends AbstractEsAggWrapper<T, R, Children>> extends AbstractLambdaAggWrapper<T, R>
         implements IEsAggWrapper<Children, R>, IEsAggFuncWrapper<Children, R> {
     protected AbstractEsAggWrapper() {
-        esAggClient = new EsPlus6AggsClient();
+        esAggClient = new EsPlusAggsClient();
     }
 
     protected abstract Children instance();

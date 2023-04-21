@@ -4,8 +4,8 @@ import com.es.plus.adapter.EsPlusClientFacade;
 import com.es.plus.adapter.core.EsPlusClient;
 import com.es.plus.adapter.core.EsPlusIndexClient;
 import com.es.plus.adapter.lock.EsLockFactory;
-import com.es.plus.es6.client.EsPlus6IndexRestClient;
-import com.es.plus.es6.client.EsPlus6RestClient;
+import com.es.plus.es6.client.EsPlusIndexRestClient;
+import com.es.plus.es6.client.EsPlusRestClient;
 import org.elasticsearch.client.RestHighLevelClient;
 
 import java.util.Map;
@@ -46,8 +46,8 @@ public class ClientContext {
     public static EsPlusClientFacade buildEsPlusClientFacade(RestHighLevelClient restHighLevelClient, EsLockFactory esLockFactory) {
         EsPlusClient esPlusRestClient;
         EsPlusIndexClient esPlusIndexRestClient;
-        esPlusRestClient = new EsPlus6RestClient(restHighLevelClient, esLockFactory);
-        esPlusIndexRestClient = new EsPlus6IndexRestClient(restHighLevelClient);
+        esPlusRestClient = new EsPlusRestClient(restHighLevelClient, esLockFactory);
+        esPlusIndexRestClient = new EsPlusIndexRestClient(restHighLevelClient);
         return new EsPlusClientFacade(esPlusRestClient, esPlusIndexRestClient, esLockFactory);
     }
 }

@@ -73,8 +73,8 @@ import java.util.stream.Collectors;
  * @Author: hzh
  * @Date: 2022/1/21 11:10
  */
-public class EsPlus6RestClient implements EsPlusClient {
-    private static final Logger log = LoggerFactory.getLogger(EsPlus6RestClient.class);
+public class EsPlusRestClient implements EsPlusClient {
+    private static final Logger log = LoggerFactory.getLogger(EsPlusRestClient.class);
     private final RestHighLevelClient restHighLevelClient;
     private boolean reindexState = false;
     private final EsLockFactory esLockFactory;
@@ -90,7 +90,7 @@ public class EsPlus6RestClient implements EsPlusClient {
     }
 
 
-    public EsPlus6RestClient(RestHighLevelClient restHighLevelClient, EsLockFactory esLockFactory) {
+    public EsPlusRestClient(RestHighLevelClient restHighLevelClient, EsLockFactory esLockFactory) {
         this.restHighLevelClient = restHighLevelClient;
         this.esLockFactory = esLockFactory;
     }
@@ -666,7 +666,7 @@ public class EsPlus6RestClient implements EsPlusClient {
             throw new EsException("elasticsearch aggregations error");
         }
         Aggregations aggregations = searchResponse.getAggregations();
-        EsPlus6Aggregations<T> esAggregationReponse = new EsPlus6Aggregations<>();
+        EsPlusAggregations<T> esAggregationReponse = new EsPlusAggregations<>();
         esAggregationReponse.setAggregations(aggregations);
         esAggregationReponse.settClass(tClass);
         return esAggregationReponse;
@@ -798,7 +798,7 @@ public class EsPlus6RestClient implements EsPlusClient {
 
         //设置聚合结果
         Aggregations aggregations = searchResponse.getAggregations();
-        EsPlus6Aggregations<T> esAggsResponse = new EsPlus6Aggregations<>();
+        EsPlusAggregations<T> esAggsResponse = new EsPlusAggregations<>();
         esAggsResponse.setAggregations(aggregations);
         esAggsResponse.settClass(tClass);
 

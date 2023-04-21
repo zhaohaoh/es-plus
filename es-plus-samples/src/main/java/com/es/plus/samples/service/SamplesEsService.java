@@ -9,7 +9,7 @@ import com.es.plus.core.wrapper.chain.EsChainQueryWrapper;
 import com.es.plus.core.wrapper.core.EsLambdaQueryWrapper;
 import com.es.plus.core.wrapper.core.EsLambdaUpdateWrapper;
 import com.es.plus.core.wrapper.core.EsQueryWrapper;
-import com.es.plus.es6.client.EsPlus6Aggregations;
+import com.es.plus.es6.client.EsPlusAggregations;
 import com.es.plus.samples.dto.SamplesEsDTO;
 import com.es.plus.samples.dto.SamplesNestedDTO;
 import com.es.plus.samples.dto.SpuEsDTO;
@@ -81,7 +81,7 @@ public class SamplesEsService extends EsServiceImpl<SamplesEsDTO> {
                 .list();
         List<SamplesEsDTO> list = esResponse.getList();
 
-        EsPlus6Aggregations<SamplesEsDTO> esAggsResponse = (EsPlus6Aggregations<SamplesEsDTO>) esResponse.getEsAggsResponse();
+        EsPlusAggregations<SamplesEsDTO> esAggsResponse = (EsPlusAggregations<SamplesEsDTO>) esResponse.getEsAggsResponse();
 //        Aggregations aggregations = esAggsResponse.getAggregations();
 //        Map<String, Aggregation> asMap = aggregations.getAsMap();
 //        Map<String, Object> map = JsonUtils.beanToMap(asMap);

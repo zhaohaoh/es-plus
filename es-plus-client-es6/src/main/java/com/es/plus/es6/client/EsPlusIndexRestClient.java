@@ -47,12 +47,12 @@ import java.util.Set;
  * @author hzh
  * @date 2022/09/03
  */
-public class EsPlus6IndexRestClient implements EsPlusIndexClient {
-    private static final Logger log = LoggerFactory.getLogger(EsPlus6IndexRestClient.class);
+public class EsPlusIndexRestClient implements EsPlusIndexClient {
+    private static final Logger log = LoggerFactory.getLogger(EsPlusIndexRestClient.class);
     private final RestHighLevelClient restHighLevelClient;
 
 
-    public EsPlus6IndexRestClient(RestHighLevelClient restHighLevelClient) {
+    public EsPlusIndexRestClient(RestHighLevelClient restHighLevelClient) {
         this.restHighLevelClient = restHighLevelClient;
     }
 
