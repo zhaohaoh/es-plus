@@ -23,6 +23,7 @@
         <spring-boot.version>2.6.3</spring-boot.version>
         <!-- 打包跳过单元测试 -->
         <skipTests>true</skipTests>
+        <!--        0.1.2   es6.7版本-->
         <rversion>0.1.2</rversion>
         <elasticsearch.version>6.7.0</elasticsearch.version>
     </properties>
@@ -141,7 +142,7 @@
                     </execution>
                 </executions>
             </plugin>
-<!--全局管理manven版本号插件-->
+            <!--全局管理manven版本号插件-->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>flatten-maven-plugin</artifactId>
