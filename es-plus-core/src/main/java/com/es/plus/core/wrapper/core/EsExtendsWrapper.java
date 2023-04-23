@@ -7,20 +7,62 @@ import org.elasticsearch.action.search.SearchType;
 public interface EsExtendsWrapper<Children, R> {
 
     /**
-     * 选择字段
+     * 索引
      *
+     * @param index 索引
+     * @return {@link Children}
+     */
+    Children index(String index);
+
+    /**
+     * 类型
+     *
+     * @param type 类型
+     * @return {@link Children}
+     */
+    Children type(String type);
+
+    /**
+     * 选择字段
      */
     EsSelect getSelect();
 
+    /**
+     * 必须
+     *
+     * @return {@link Children}
+     */
     Children must();
 
+    /**
+     * 应该
+     *
+     * @return {@link Children}
+     */
     Children should();
 
+    /**
+     * 过滤器
+     *
+     * @return {@link Children}
+     */
     Children filter();
 
+    /**
+     * 不得
+     *
+     * @return {@link Children}
+     */
     Children mustNot();
 
+    /**
+     * 最低应该匹配
+     *
+     * @param minimumShouldMatch 最低应该匹配
+     * @return {@link Children}
+     */
     Children minimumShouldMatch(String minimumShouldMatch);
+
     /**
      * 路由
      *
@@ -28,6 +70,7 @@ public interface EsExtendsWrapper<Children, R> {
      * @return {@link Children 本身}
      */
     Children routings(String... routings);
+
     /**
      * 包含字段
      */
@@ -36,6 +79,7 @@ public interface EsExtendsWrapper<Children, R> {
      * 包含字段
      */
 //    Children includes(String... names);
+
     /**
      * 忽略字段
      */
@@ -43,7 +87,7 @@ public interface EsExtendsWrapper<Children, R> {
     /**
      * 忽略字段
      */
-//    Children excludes(String... names);
+
     /**
      * 排序
      */
@@ -58,24 +102,29 @@ public interface EsExtendsWrapper<Children, R> {
      * 排序
      */
 //    Children orderBy(String order, String... columns);
+
     /**
      * 排序
      */
     Children orderByAsc(String... columns);
+
     /**
      * 排序
      */
     Children orderByDesc(String... columns);
+
     /**
      * es查询类型
      */
     Children searchType(SearchType searchType);
+
     /**
      * 高亮字段
      */
     Children highLight(String field);
+
     /**
-     *高亮字段
+     * 高亮字段
      */
     Children highLight(String field, String preTag, String postTag);
 }

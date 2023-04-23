@@ -32,7 +32,8 @@ public abstract class AbstractEsChainWrapper<T, R, Children extends AbstractEsCh
     protected Class<T> tClass;
     //链式静态编程用来指定index
     protected String index;
-    protected String type;
+    protected String type = GlobalConfigCache.GLOBAL_CONFIG.getType();
+
     public QUERY getWrapper() {
         return esWrapper;
     }
@@ -58,9 +59,17 @@ public abstract class AbstractEsChainWrapper<T, R, Children extends AbstractEsCh
     }
 
 
+    @Override
     public Children index(String index) {
         //手动传入的索引名需要加上后缀
         this.index = index + GlobalConfigCache.GLOBAL_CONFIG.getGlobalSuffix();
+        return this.children;
+    }
+
+    @Override
+    public Children type(String type) {
+        //手动传入的索引名需要加上后缀
+        this.type = type;
         return this.children;
     }
 
