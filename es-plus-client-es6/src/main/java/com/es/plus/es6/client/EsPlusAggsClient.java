@@ -59,7 +59,6 @@ public class EsPlusAggsClient implements EsAggClient {
     }
 
     /**
-     * Create a new {@link Avg} aggregation with the given aggName.
      */
     @Override
     public BaseAggregationBuilder avg(String field) {
@@ -70,7 +69,6 @@ public class EsPlusAggsClient implements EsAggClient {
     }
 
     /**
-     * Create a new {@link Avg} aggregation with the given aggName.
      */
     @Override
     public BaseAggregationBuilder weightedAvg(String field) {
@@ -80,7 +78,6 @@ public class EsPlusAggsClient implements EsAggClient {
     }
 
     /**
-     * Create a new {@link Max} aggregation with the given aggName.
      */
     @Override
     public BaseAggregationBuilder max(String field) {
@@ -91,7 +88,6 @@ public class EsPlusAggsClient implements EsAggClient {
     }
 
     /**
-     * Create a new {@link Min} aggregation with the given aggName.
      */
     @Override
     public BaseAggregationBuilder min(String field) {
@@ -102,7 +98,6 @@ public class EsPlusAggsClient implements EsAggClient {
     }
 
     /**
-     * Create a new {@link Sum} aggregation with the given aggName.
      */
     @Override
     public BaseAggregationBuilder sum(String field) {
@@ -113,7 +108,6 @@ public class EsPlusAggsClient implements EsAggClient {
     }
 
     /**
-     * Create a new {@link Stats} aggregation with the given aggName.
      */
     @Override
     public BaseAggregationBuilder stats(String field) {
@@ -124,7 +118,6 @@ public class EsPlusAggsClient implements EsAggClient {
     }
 
     /**
-     * Create a new {@link ExtendedStats} aggregation with the given aggName.
      */
     @Override
     public BaseAggregationBuilder extendedStats(String field) {
@@ -136,7 +129,6 @@ public class EsPlusAggsClient implements EsAggClient {
 
 
     /**
-     * Create a new {@link Sampler} aggregation with the given aggName.
      */
     @Override
     public BaseAggregationBuilder sampler(String field) {
@@ -145,9 +137,7 @@ public class EsPlusAggsClient implements EsAggClient {
         return  samplerAggregationBuilder;
     }
 
-    /**
-     * Create a new {@link Sampler} aggregation with the given aggName.
-     */
+
     @Override
     public BaseAggregationBuilder diversifiedSampler(String field) {
         String aggName = field + AGG_DELIMITER + DiversifiedAggregationBuilder.NAME;
@@ -166,9 +156,7 @@ public class EsPlusAggsClient implements EsAggClient {
         return globalAggregationBuilder;
     }
 
-    /**
-     * Create a new {@link Missing} aggregation with the given aggName.
-     */
+
     @Override
     public BaseAggregationBuilder missing(String field) {
         String aggName = field + AGG_DELIMITER + MissingAggregationBuilder.NAME;
@@ -188,7 +176,7 @@ public class EsPlusAggsClient implements EsAggClient {
     }
 
     /**
-     * Create a new {@link StringeverseNested} aggregation with the given aggName.
+
      */
     @Override
     public BaseAggregationBuilder reverseNested(String field) throws OperationNotSupportedException {
@@ -208,7 +196,6 @@ public class EsPlusAggsClient implements EsAggClient {
     }
 
     /**
-     * Create a new {@link InternalGeoHashGrid} aggregation with the given aggName.
      */
     @Override
     public BaseAggregationBuilder geohashGrid(String field) throws OperationNotSupportedException {
@@ -216,7 +203,6 @@ public class EsPlusAggsClient implements EsAggClient {
     }
 
     /**
-     * Create a new {@link InternalGeoTileGrid} aggregation with the given aggName.
      */
     @Override
     public BaseAggregationBuilder geotileGrid(String field) throws OperationNotSupportedException {
@@ -224,7 +210,6 @@ public class EsPlusAggsClient implements EsAggClient {
     }
 
     /**
-     * Create a new {@link SignificantTerms} aggregation with the given aggName.
      */
     @Override
     public BaseAggregationBuilder significantTerms(String field) {
@@ -260,7 +245,7 @@ public class EsPlusAggsClient implements EsAggClient {
     }
 
     /**
-     * Create a new {@link Stringange} aggregation with the given aggName.
+
      */
     @Override
     public BaseAggregationBuilder range(String field) {
@@ -268,7 +253,6 @@ public class EsPlusAggsClient implements EsAggClient {
     }
 
     /**
-     * Create a new {@link DateStringangeAggregationBuilder} aggregation with the
      * given aggName.
      */
     @Override
@@ -277,7 +261,6 @@ public class EsPlusAggsClient implements EsAggClient {
     }
 
     /**
-     * Create a new {@link IpStringangeAggregationBuilder} aggregation with the
      * given aggName.
      */
     @Override
@@ -298,7 +281,6 @@ public class EsPlusAggsClient implements EsAggClient {
     }
 
     /**
-     * Create a new {@link Percentiles} aggregation with the given aggName.
      */
     @Override
     public BaseAggregationBuilder percentiles(String field) {
@@ -309,7 +291,6 @@ public class EsPlusAggsClient implements EsAggClient {
     }
 
     /**
-     * Create a new {@link PercentileStringanks} aggregation with the given aggName.
      */
     @Override
     public BaseAggregationBuilder percentileStringanks(String aggName, double[] values) {
@@ -318,7 +299,6 @@ public class EsPlusAggsClient implements EsAggClient {
     }
 
     /**
-     * Create a new {@link MedianAbsoluteDeviation} aggregation with the given aggName
      */
     @Override
     public BaseAggregationBuilder medianAbsoluteDeviation(String field) {
@@ -329,7 +309,6 @@ public class EsPlusAggsClient implements EsAggClient {
     }
 
     /**
-     * Create a new {@link Cardinality} aggregation with the given aggName.
      */
     @Override
     public BaseAggregationBuilder cardinality(String field) {
@@ -340,7 +319,6 @@ public class EsPlusAggsClient implements EsAggClient {
     }
 
     /**
-     * Create a new {@link TopHits} aggregation with the given aggName.
      */
     @Override
     public BaseAggregationBuilder topHits(String field) {
@@ -350,7 +328,6 @@ public class EsPlusAggsClient implements EsAggClient {
     }
 
     /**
-     * Create a new {@link GeoBounds} aggregation with the given aggName.
      */
     @Override
     public BaseAggregationBuilder geoBounds(String field) {
@@ -362,7 +339,6 @@ public class EsPlusAggsClient implements EsAggClient {
     }
 
     /**
-     * Create a new {@link GeoCentroid} aggregation with the given aggName.
      */
     @Override
     public BaseAggregationBuilder geoCentroid(String field) {
@@ -373,7 +349,6 @@ public class EsPlusAggsClient implements EsAggClient {
     }
 
     /**
-     * Create a new {@link ScriptedMetric} aggregation with the given aggName.
      */
     @Override
     public BaseAggregationBuilder scriptedMetric(String field) {

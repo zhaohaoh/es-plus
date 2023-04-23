@@ -2,7 +2,6 @@ package com.es.plus.es7.client;
 
 import com.es.plus.adapter.config.GlobalConfigCache;
 import com.es.plus.adapter.core.EsAggClient;
-import com.sun.org.glassfish.external.statistics.Stats;
 import org.elasticsearch.search.aggregations.BaseAggregationBuilder;
 import org.elasticsearch.search.aggregations.bucket.global.Global;
 import org.elasticsearch.search.aggregations.bucket.global.GlobalAggregationBuilder;
