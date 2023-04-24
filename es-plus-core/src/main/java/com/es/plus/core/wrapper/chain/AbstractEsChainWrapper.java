@@ -2,8 +2,10 @@ package com.es.plus.core.wrapper.chain;
 
 
 import com.es.plus.adapter.config.GlobalConfigCache;
+import com.es.plus.adapter.exception.EsException;
 import com.es.plus.adapter.params.EsParamWrapper;
 import com.es.plus.adapter.params.EsSelect;
+import com.es.plus.adapter.properties.EsParamHolder;
 import com.es.plus.core.wrapper.aggregation.EsAggWrapper;
 import com.es.plus.core.wrapper.aggregation.EsLambdaAggWrapper;
 import com.es.plus.core.wrapper.core.*;
@@ -72,9 +74,13 @@ public abstract class AbstractEsChainWrapper<T, R, Children extends AbstractEsCh
         this.type = type;
         return this.children;
     }
+
     @Override
     public Children _id(String _id) {
-        this._id = _id;
+        if (index == null) {
+            throw new EsException("index is null");
+        }
+        EsParamHolder.set_id(_id);
         return this.children;
     }
 

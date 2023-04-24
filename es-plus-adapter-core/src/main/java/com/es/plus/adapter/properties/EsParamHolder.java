@@ -27,6 +27,8 @@ public class EsParamHolder {
     private static final Logger logger = LoggerFactory.getLogger(EsParamHolder.class);
     // 属性解析器
     private static final EsAnnotationParamProcess ES_ANNOTATION_PARAM_RESOLVE = new EsAnnotationParamProcess();
+    // id的线程本地变量
+    private static final ThreadLocal<String> _ID = new ThreadLocal<>();
     // id的map
     private static final Map<String, String> ID_MAP = new ConcurrentHashMap<>();
     // 转换keyword
@@ -53,10 +55,14 @@ public class EsParamHolder {
     public static <T> String getDocId(T obj) {
         Class<T> clazz = (Class<T>) ClassUtils.getClass(obj.getClass());
         try {
-            //如果对象字段获取不到id走自动生成
-            String idFeildName = ID_MAP.get(clazz.getName());
+            //先获取线程本地id名
+            String idFeildName = _id();
             if (idFeildName == null) {
-                idFeildName = GlobalConfigCache.GLOBAL_CONFIG.getGlobalEsId();
+                //如果对象字段获取不到id走自动生成
+                idFeildName = ID_MAP.get(clazz.getName());
+                if (idFeildName == null) {
+                    idFeildName = GlobalConfigCache.GLOBAL_CONFIG.getGlobalEsId();
+                }
             }
             //如果map字段获取不到id走自动生成
             if (obj instanceof Map) {
@@ -89,6 +95,16 @@ public class EsParamHolder {
 
     public static void put(Class<?> clazz, String id) {
         ID_MAP.put(clazz.getName(), id);
+    }
+
+    public static String _id() {
+        String _id = _ID.get();
+        _ID.remove();
+        return _id;
+    }
+
+    public static void set_id(String _id) {
+        _ID.set(_id);
     }
 
 
