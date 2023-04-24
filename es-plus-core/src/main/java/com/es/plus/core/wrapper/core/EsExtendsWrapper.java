@@ -6,21 +6,6 @@ import org.elasticsearch.action.search.SearchType;
 
 public interface EsExtendsWrapper<Children, R> {
 
-    /**
-     * 索引
-     *
-     * @param index 索引
-     * @return {@link Children}
-     */
-    Children index(String index);
-
-    /**
-     * 类型
-     *
-     * @param type 类型
-     * @return {@link Children}
-     */
-    Children type(String type);
 
     /**
      * 选择字段

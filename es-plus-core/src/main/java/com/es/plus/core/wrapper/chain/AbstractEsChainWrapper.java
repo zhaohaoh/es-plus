@@ -26,13 +26,14 @@ import java.util.function.Supplier;
  */
 @SuppressWarnings({"unchecked"})
 public abstract class AbstractEsChainWrapper<T, R, Children extends AbstractEsChainWrapper<T, R, Children, QUERY>, QUERY extends AbstractEsWrapper<T, R, QUERY>>
-        implements IEsQueryWrapper<Children, QUERY, R>, EsWrapper<T>, EsExtendsWrapper<Children, R> {
+        implements IEsQueryWrapper<Children, QUERY, R>, EsWrapper<T>, EsExtendsWrapper<Children, R>, EsStaitcsWrapper<Children> {
     protected QUERY esWrapper;
     protected Children children = (Children) this;
     protected Class<T> tClass;
     //链式静态编程用来指定index
     protected String index;
     protected String type = GlobalConfigCache.GLOBAL_CONFIG.getType();
+    protected String _id = "id";
 
     public QUERY getWrapper() {
         return esWrapper;
@@ -68,8 +69,12 @@ public abstract class AbstractEsChainWrapper<T, R, Children extends AbstractEsCh
 
     @Override
     public Children type(String type) {
-        //手动传入的索引名需要加上后缀
         this.type = type;
+        return this.children;
+    }
+    @Override
+    public Children _id(String _id) {
+        this._id = _id;
         return this.children;
     }
 
