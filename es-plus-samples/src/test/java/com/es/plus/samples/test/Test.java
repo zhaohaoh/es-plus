@@ -30,7 +30,7 @@ public class Test {
         map.put("usrname","adddbbbb");
         map.put("sex","2");
         map.put("id","111");
-    Es.chainUpdate(Map.class).index("sys_user2ttt_test_s0").type("_doc").save(map);
+    Es.chainUpdate(Map.class).index("sys_user2ttt_test_s0").save(map);
     }
 
 
