@@ -155,7 +155,7 @@ public class EsPlusRestClient implements EsPlusClient {
      * 保存批量
      */
     @Override
-    public List<BulkItemResponse> saveBatch(String index, Collection<?> esDataList) {
+    public List<BulkItemResponse> saveBatch(String index, String type, Collection<?> esDataList) {
         List<BulkItemResponse> failBulkItemResponses = new ArrayList<>();
         if (CollectionUtils.isEmpty(esDataList)) {
             return failBulkItemResponses;
@@ -175,7 +175,7 @@ public class EsPlusRestClient implements EsPlusClient {
             BulkRequest bulkRequest = new BulkRequest();
 
             for (Object esData : esDataList) {
-                IndexRequest indexRequest = new IndexRequest(index);
+                IndexRequest indexRequest = new IndexRequest(index, type);
                 indexRequest.id(EsParamHolder.getDocId(esData)).source(JsonUtils.toJsonStr(esData), XContentType.JSON);
                 if (childIndex) {
                     indexRequest.routing(FieldUtils.getStrFieldValue(esData, "joinField", "parent"));
@@ -209,8 +209,8 @@ public class EsPlusRestClient implements EsPlusClient {
      * 保存
      */
     @Override
-    public boolean save(String index, Object esData) {
-        List<BulkItemResponse> bulkItemResponses = saveBatch(index, Collections.singletonList(esData));
+    public boolean save(String index, String type, Object esData) {
+        List<BulkItemResponse> bulkItemResponses = saveBatch(index, type, Collections.singletonList(esData));
         if (CollectionUtils.isEmpty(bulkItemResponses)) {
             return true;
         }
@@ -338,7 +338,7 @@ public class EsPlusRestClient implements EsPlusClient {
      * 更新包装
      */
     @Override
-    public <T> BulkByScrollResponse updateByWrapper(String index, EsParamWrapper<T> esParamWrapper) {
+    public <T> BulkByScrollResponse updateByWrapper(String index, String type, EsParamWrapper<T> esParamWrapper) {
         EsUpdateField esUpdateField = esParamWrapper.getEsUpdateField();
         List<EsUpdateField.Field> fields = esUpdateField.getFields();
         String script = esUpdateField.getScipt();
@@ -379,7 +379,7 @@ public class EsPlusRestClient implements EsPlusClient {
             script = sb.toString();
         }
         try {
-            UpdateByQueryRequest request = getUpdateByQueryRequest(index, params, script, esParamWrapper);
+            UpdateByQueryRequest request = getUpdateByQueryRequest(index, type, params, script, esParamWrapper);
             long start = System.currentTimeMillis();
             BulkByScrollResponse bulkResponse =
                     restHighLevelClient.updateByQuery(request, RequestOptions.DEFAULT);
@@ -397,7 +397,7 @@ public class EsPlusRestClient implements EsPlusClient {
     }
 
     @Override
-    public <T> BulkByScrollResponse increment(String index, EsParamWrapper<T> esParamWrapper) {
+    public <T> BulkByScrollResponse increment(String index, String type, EsParamWrapper<T> esParamWrapper) {
         boolean lock = false;
         List<EsUpdateField.Field> fields = esParamWrapper.getEsUpdateField().getIncrementFields();
         Map<String, Object> params = new HashMap<>();
@@ -418,7 +418,7 @@ public class EsPlusRestClient implements EsPlusClient {
             }
         }
         try {
-            UpdateByQueryRequest request = getUpdateByQueryRequest(index, params, script.toString(), esParamWrapper);
+            UpdateByQueryRequest request = getUpdateByQueryRequest(index, type, params, script.toString(), esParamWrapper);
             printInfoLog(index, "increment requst: script:{},params={}", script, params);
             long start = System.currentTimeMillis();
             BulkByScrollResponse bulkResponse =
@@ -458,8 +458,8 @@ public class EsPlusRestClient implements EsPlusClient {
      * @return {@link BulkByScrollResponse}
      */
     @Override
-    public <T> BulkByScrollResponse deleteByQuery(String index, EsParamWrapper<T> esParamWrapper) {
-        DeleteByQueryRequest request = new DeleteByQueryRequest(index);
+    public <T> BulkByScrollResponse deleteByQuery(String index, String type, EsParamWrapper<T> esParamWrapper) {
+        DeleteByQueryRequest request = new DeleteByQueryRequest(index, type);
         request.setQuery(esParamWrapper.getQueryBuilder());
         // 更新最大文档数
         request.setMaxRetries(GlobalConfigCache.GLOBAL_CONFIG.getMaxRetries());
@@ -547,11 +547,12 @@ public class EsPlusRestClient implements EsPlusClient {
 
     //统计
     @Override
-    public <T> long count(EsParamWrapper<T> esParamWrapper, String index) {
+    public <T> long count(String index, String type, EsParamWrapper<T> esParamWrapper) {
         CountRequest countRequest = new CountRequest();
         SearchSourceBuilder query = SearchSourceBuilder.searchSource().query(esParamWrapper.getQueryBuilder());
         countRequest.source(query);
         countRequest.indices(index);
+        countRequest.types(type);
         CountResponse count = null;
         try {
             long start = System.currentTimeMillis();
@@ -568,13 +569,13 @@ public class EsPlusRestClient implements EsPlusClient {
     }
 
     @Override
-    public <T> EsResponse<T> searchByWrapper(EsParamWrapper<T> esParamWrapper, Class<T> tClass, String index) {
-        return search(null, esParamWrapper, tClass, index);
+    public <T> EsResponse<T> searchByWrapper(String index, String type, EsParamWrapper<T> esParamWrapper, Class<T> tClass) {
+        return search(index, type, null, esParamWrapper, tClass);
     }
 
     @Override
-    public <T> EsResponse<T> searchPageByWrapper(PageInfo<T> pageInfo, EsParamWrapper<T> esParamWrapper, Class<T> tClass, String index) {
-        return search(pageInfo, esParamWrapper, tClass, index);
+    public <T> EsResponse<T> searchPageByWrapper(String index, String type, PageInfo<T> pageInfo, EsParamWrapper<T> esParamWrapper, Class<T> tClass) {
+        return search(index, type,pageInfo, esParamWrapper, tClass);
     }
 
     /**
@@ -589,7 +590,7 @@ public class EsPlusRestClient implements EsPlusClient {
      * @return {@link EsResponse}<{@link T}>
      */
     @Override
-    public <T> EsResponse<T> scrollByWrapper(EsParamWrapper<T> esParamWrapper, Class<T> tClass, String index, int size, Duration keepTime, String scrollId) {
+    public <T> EsResponse<T> scrollByWrapper(String index, String type, EsParamWrapper<T> esParamWrapper, Class<T> tClass, int size, Duration keepTime, String scrollId) {
         SearchResponse searchResponse;
         SearchHit[] searchHits;
         final Scroll scroll = new Scroll(TimeValue.timeValueMillis(keepTime.toMillis()));
@@ -603,6 +604,7 @@ public class EsPlusRestClient implements EsPlusClient {
                 searchHits = searchResponse.getHits().getHits();
             } else {
                 SearchRequest searchRequest = new SearchRequest(index);
+                searchRequest.types(type);
                 searchRequest.scroll(scroll);
                 SearchSourceBuilder searchSourceBuilder = getSearchSourceBuilder(null, size, esParamWrapper);
                 searchRequest.source(searchSourceBuilder);
@@ -630,7 +632,7 @@ public class EsPlusRestClient implements EsPlusClient {
      * 聚合
      */
     @Override
-    public <T> EsAggResponse<T> aggregations(String index, EsParamWrapper<T> esParamWrapper, Class<T> tClass) {
+    public <T> EsAggResponse<T> aggregations(String index, String type, EsParamWrapper<T> esParamWrapper, Class<T> tClass) {
         SearchRequest searchRequest = new SearchRequest();
         //查询条件组合
         BoolQueryBuilder queryBuilder = esParamWrapper.getQueryBuilder();
@@ -641,6 +643,7 @@ public class EsPlusRestClient implements EsPlusClient {
         //设置索引
         searchRequest.source(sourceBuilder);
         searchRequest.indices(index);
+        searchRequest.types(type);
         //查询
         SearchResponse searchResponse = null;
         try {
@@ -671,7 +674,7 @@ public class EsPlusRestClient implements EsPlusClient {
      * @return {@link EsResponse}<{@link T}>
      */
     @Override
-    public <T> EsResponse<T> searchAfter(PageInfo<T> pageInfo, EsParamWrapper<T> esParamWrapper, Class<T> tClass, String index) {
+    public <T> EsResponse<T> searchAfter(String index, String type, PageInfo<T> pageInfo, EsParamWrapper<T> esParamWrapper, Class<T> tClass) {
         SearchRequest searchRequest = new SearchRequest();
 
         EsQueryParamWrapper esQueryParamWrapper = esParamWrapper.getEsQueryParamWrapper();
@@ -682,6 +685,7 @@ public class EsPlusRestClient implements EsPlusClient {
         if (pageInfo != null && pageInfo.getSearchAfterValues() != null) {
             sourceBuilder.searchAfter(pageInfo.getSearchAfterValues());
         }
+        searchRequest.types(type);
 
         //设置查询语句源数据
         searchRequest.source(sourceBuilder);
@@ -715,7 +719,7 @@ public class EsPlusRestClient implements EsPlusClient {
     }
 
 
-    private <T> EsResponse<T> search(PageInfo<T> pageInfo, EsParamWrapper<T> esParamWrapper, Class<T> tClass, String index) {
+    private <T> EsResponse<T> search(String index, String type, PageInfo<T> pageInfo, EsParamWrapper<T> esParamWrapper, Class<T> tClass) {
         SearchRequest searchRequest = new SearchRequest();
 
         EsQueryParamWrapper esQueryParamWrapper = esParamWrapper.getEsQueryParamWrapper();
@@ -733,7 +737,7 @@ public class EsPlusRestClient implements EsPlusClient {
         if (esQueryParamWrapper.getSearchType() != null) {
             searchRequest.searchType();
         }
-
+        searchRequest.types(type);
         //查询
         SearchResponse searchResponse = null;
         try {
@@ -899,8 +903,9 @@ public class EsPlusRestClient implements EsPlusClient {
      * @param esParamWrapper es参数包装器
      * @return {@link UpdateByQueryRequest}
      */
-    private <T> UpdateByQueryRequest getUpdateByQueryRequest(String index, Map<String, Object> params, String script, EsParamWrapper<T> esParamWrapper) {
+    private <T> UpdateByQueryRequest getUpdateByQueryRequest(String index, String type, Map<String, Object> params, String script, EsParamWrapper<T> esParamWrapper) {
         UpdateByQueryRequest request = new UpdateByQueryRequest(index);
+        request.setDocTypes(type);
         //版本号不匹配更新失败不停止
         request.setConflicts(EsConstant.DEFAULT_CONFLICTS);
         request.setQuery(esParamWrapper.getQueryBuilder());

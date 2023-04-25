@@ -35,7 +35,6 @@ public abstract class AbstractEsChainWrapper<T, R, Children extends AbstractEsCh
     //链式静态编程用来指定index
     protected String index;
     protected String type = GlobalConfigCache.GLOBAL_CONFIG.getType();
-    protected String _id = "id";
 
     public QUERY getWrapper() {
         return esWrapper;

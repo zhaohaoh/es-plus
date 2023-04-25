@@ -234,15 +234,15 @@ public class EsPlusClientFacade {
      * @param esDataList 西文数据列表
      * @return {@link List}<{@link BulkItemResponse}>
      */
-    public List<BulkItemResponse> saveBatch(String index, Collection<?> esDataList) {
-        return esPlusClient.saveBatch(index, esDataList);
+    public List<BulkItemResponse> saveBatch(String index, String type,Collection<?> esDataList) {
+        return esPlusClient.saveBatch(index,type, esDataList);
     }
 
     /**
      * 保存
      */
-    public boolean save(String index, Object esData) {
-        return esPlusClient.save(index, esData);
+    public boolean save(String index,String type, Object esData) {
+        return esPlusClient.save(index, type,esData);
     }
 
     /**
@@ -269,8 +269,8 @@ public class EsPlusClientFacade {
     /**
      * 更新包装
      */
-    public <T> BulkByScrollResponse updateByWrapper(String index, EsParamWrapper<T> esUpdateWrapper) {
-        return esPlusClient.updateByWrapper(index, esUpdateWrapper);
+    public <T> BulkByScrollResponse updateByWrapper(String index,String type, EsParamWrapper<T> esUpdateWrapper) {
+        return esPlusClient.updateByWrapper(index,type, esUpdateWrapper);
     }
 
 
@@ -281,8 +281,8 @@ public class EsPlusClientFacade {
      * @param esUpdateWrapper es更新包装
      * @return {@link BulkByScrollResponse}
      */
-    public <T> BulkByScrollResponse increment(String index, EsParamWrapper<T> esUpdateWrapper) {
-        return esPlusClient.increment(index, esUpdateWrapper);
+    public <T> BulkByScrollResponse increment(String index, String type,EsParamWrapper<T> esUpdateWrapper) {
+        return esPlusClient.increment(index,type, esUpdateWrapper);
     }
 
     /**
@@ -304,8 +304,8 @@ public class EsPlusClientFacade {
      * @param esUpdateWrapper es更新包装
      * @return {@link BulkByScrollResponse}
      */
-    public <T> BulkByScrollResponse deleteByQuery(String index, EsParamWrapper<T> esUpdateWrapper) {
-        return esPlusClient.deleteByQuery(index, esUpdateWrapper);
+    public <T> BulkByScrollResponse deleteByQuery(String index,String type, EsParamWrapper<T> esUpdateWrapper) {
+        return esPlusClient.deleteByQuery(index,type, esUpdateWrapper);
     }
 
 
@@ -328,8 +328,8 @@ public class EsPlusClientFacade {
      * @param index          索引
      * @return long
      */
-    public <T> long count(EsParamWrapper<T> esParamWrapper, String index) {
-        return esPlusClient.count(esParamWrapper, index);
+    public <T> long count(String index,String type,EsParamWrapper<T> esParamWrapper) {
+        return esPlusClient.count(index,type,esParamWrapper);
     }
 
 
@@ -341,8 +341,8 @@ public class EsPlusClientFacade {
      * @param index          索引
      * @return {@link EsResponse}<{@link T}>
      */
-    public <T> EsResponse<T> searchByWrapper(EsParamWrapper<T> esParamWrapper, Class<T> tClass, String index) {
-        return esPlusClient.searchByWrapper(esParamWrapper, tClass, index);
+    public <T> EsResponse<T> searchByWrapper(String index,String type,EsParamWrapper<T> esParamWrapper, Class<T> tClass) {
+        return esPlusClient.searchByWrapper(index,type,esParamWrapper, tClass);
     }
 
 
@@ -355,8 +355,8 @@ public class EsPlusClientFacade {
      * @param index          索引
      * @return {@link EsResponse}<{@link T}>
      */
-    public <T> EsResponse<T> searchPageByWrapper(PageInfo<T> pageInfo, EsParamWrapper<T> esParamWrapper, Class<T> tClass, String index) {
-        return esPlusClient.searchPageByWrapper(pageInfo, esParamWrapper, tClass, index);
+    public <T> EsResponse<T> searchPageByWrapper( String index,String type ,PageInfo<T> pageInfo, EsParamWrapper<T> esParamWrapper, Class<T> tClass) {
+        return esPlusClient.searchPageByWrapper(index,type,pageInfo, esParamWrapper, tClass);
     }
 
     /**
@@ -369,8 +369,8 @@ public class EsPlusClientFacade {
      * @param index          索引
      * @return {@link EsResponse}<{@link T}>
      */
-    public <T> EsResponse<T> searchAfter(PageInfo<T> pageInfo, EsParamWrapper<T> esParamWrapper, Class<T> tClass, String index) {
-        return esPlusClient.searchAfter(pageInfo, esParamWrapper, tClass, index);
+    public <T> EsResponse<T> searchAfter( String index,String type ,PageInfo<T> pageInfo, EsParamWrapper<T> esParamWrapper, Class<T> tClass) {
+        return esPlusClient.searchAfter(index,type,pageInfo, esParamWrapper, tClass);
     }
 
     /**
@@ -383,8 +383,8 @@ public class EsPlusClientFacade {
      * @param keepTime       保持时间
      * @param scollId  滚动处理Id
      */
-    public <T>  EsResponse<T> scrollByWrapper(EsParamWrapper<T> esParamWrapper, Class<T> tClass, String index, int size, Duration keepTime, String scollId) {
-      return   esPlusClient.scrollByWrapper(esParamWrapper, tClass, index, size, keepTime, scollId);
+    public <T>  EsResponse<T> scrollByWrapper(String index,String type ,EsParamWrapper<T> esParamWrapper, Class<T> tClass,   int size, Duration keepTime, String scollId) {
+      return   esPlusClient.scrollByWrapper(index,type,esParamWrapper, tClass, size, keepTime, scollId);
     }
 
 
@@ -396,8 +396,8 @@ public class EsPlusClientFacade {
      * @param tClass         t类
      * @return {@link EsAggregations}<{@link T}>
      */
-    public <T> EsAggResponse<T> aggregations(String index, EsParamWrapper<T> esParamWrapper, Class<T> tClass) {
-        return esPlusClient.aggregations(index, esParamWrapper,tClass);
+    public <T> EsAggResponse<T> aggregations(String index,String type, EsParamWrapper<T> esParamWrapper, Class<T> tClass) {
+        return esPlusClient.aggregations(index, type, esParamWrapper,tClass);
     }
 
     /**

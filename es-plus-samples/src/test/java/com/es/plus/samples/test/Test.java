@@ -1,9 +1,8 @@
 package com.es.plus.samples.test;
 
 import com.es.plus.constant.EsSettingsConstants;
+import com.es.plus.core.statics.Es;
 import com.es.plus.samples.SamplesApplication;
-import com.es.plus.samples.dto.SamplesEsDTO;
-import com.es.plus.samples.dto.SamplesNestedDTO;
 import com.es.plus.samples.service.SamplesEsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -18,15 +17,20 @@ public class Test {
 
     @org.junit.jupiter.api.Test
     public void testSave() {
-        SamplesEsDTO samplesEsDTO = new SamplesEsDTO();
-        samplesEsDTO.setEmail("bbbberretertrebbbb");
-        samplesEsDTO.setUsername("ggghhh");
-        SamplesNestedDTO samplesNestedDTO = new SamplesNestedDTO();
-        samplesNestedDTO.setEmail("gdfgdf");
-        samplesEsDTO.setSamplesNesteds(samplesNestedDTO);
-        samplesEsDTO.setSamplesNesteds(samplesNestedDTO);
-        samplesEsDTO.setId(6L);
-        samplesEsService.save(samplesEsDTO);
+//        SamplesEsDTO samplesEsDTO = new SamplesEsDTO();
+//        samplesEsDTO.setEmail("bbbberretertrebbbb");
+//        samplesEsDTO.setUsername("ggghhh");
+//        SamplesNestedDTO samplesNestedDTO = new SamplesNestedDTO();
+//        samplesNestedDTO.setEmail("gdfgdf");
+//        samplesEsDTO.setSamplesNesteds(samplesNestedDTO);
+//        samplesEsDTO.setSamplesNesteds(samplesNestedDTO);
+//        samplesEsDTO.setId(6L);
+//        samplesEsService.save(samplesEsDTO);
+        Map<String,Object> map=new HashMap<>();
+        map.put("usrname","adddbbbb");
+        map.put("sex","2");
+        map.put("id","111");
+    Es.chainUpdate(Map.class).index("sys_user2ttt_test_s0").type("_doc").save(map);
     }
 
 

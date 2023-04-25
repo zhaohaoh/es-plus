@@ -48,7 +48,7 @@ public class EsChainUpdateWrapper<T> extends AbstractEsChainWrapper<T, String, E
     }
 
     public boolean save(T t) {
-        return esPlusClientFacade.save(index, t);
+        return esPlusClientFacade.save(index, type,t);
     }
 
     public boolean update(T t) {
@@ -61,7 +61,7 @@ public class EsChainUpdateWrapper<T> extends AbstractEsChainWrapper<T, String, E
      * @return {@link BulkByScrollResponse}
      */
     public BulkByScrollResponse incrementByWapper() {
-        return esPlusClientFacade.increment(index, esWrapper.esParamWrapper());
+        return esPlusClientFacade.increment(index,type, esWrapper.esParamWrapper());
     }
 
     /**
@@ -81,7 +81,7 @@ public class EsChainUpdateWrapper<T> extends AbstractEsChainWrapper<T, String, E
      * @return {@link List}<{@link BulkItemResponse}>
      */
     public List<BulkItemResponse> saveBatch(Collection<T> t) {
-        return esPlusClientFacade.saveBatch(index, t);
+        return esPlusClientFacade.saveBatch(index,type, t);
     }
 
     /**
@@ -90,7 +90,7 @@ public class EsChainUpdateWrapper<T> extends AbstractEsChainWrapper<T, String, E
      * @return {@link BulkByScrollResponse}
      */
     public BulkByScrollResponse update() {
-        return esPlusClientFacade.updateByWrapper(index, esWrapper.esParamWrapper());
+        return esPlusClientFacade.updateByWrapper(index,type, esWrapper.esParamWrapper());
     }
 
     /**
@@ -99,7 +99,7 @@ public class EsChainUpdateWrapper<T> extends AbstractEsChainWrapper<T, String, E
      * @return {@link BulkByScrollResponse}
      */
     public BulkByScrollResponse remove() {
-        return esPlusClientFacade.deleteByQuery(index, esWrapper.esParamWrapper());
+        return esPlusClientFacade.deleteByQuery(index,type, esWrapper.esParamWrapper());
     }
 
     /**
