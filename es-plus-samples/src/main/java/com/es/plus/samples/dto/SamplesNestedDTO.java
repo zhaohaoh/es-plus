@@ -13,4 +13,10 @@ public class SamplesNestedDTO {
     private String username;
     @EsField(type = EsFieldType.TEXT)
     private String email;
+    @EsField(type = EsFieldType.BOOLEAN)
+    private Boolean state;
+    @EsField(type = EsFieldType.BOOLEAN)
+    private Boolean aaaqedd;
+    @EsField(type = EsFieldType.BOOLEAN)
+    private Boolean ffff;
 }

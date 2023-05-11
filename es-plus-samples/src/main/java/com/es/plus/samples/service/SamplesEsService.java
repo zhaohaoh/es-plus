@@ -30,9 +30,10 @@ public class SamplesEsService extends EsServiceImpl<SamplesEsDTO> {
         asChainQueryWrap.terms(SamplesNestedDTO::getUsername, "term");
         // 声明语句嵌套关系是must
         EsChainLambdaQueryWrapper<SamplesEsDTO> queryWrapper = esChainQueryWrapper().must()
-                .terms(SamplesEsDTO::getUsername, "admin", "hzh", "shi").nestedQuery(SamplesEsDTO::getSamplesNesteds, () -> {
+                .nestedQuery(SamplesEsDTO::getSamplesNesteds, () -> {
                     EsQueryWrapper<SamplesNestedDTO> esQueryWrap = new EsQueryWrapper<>(SamplesNestedDTO.class);
-                    esQueryWrap.must().term("samplesNesteds.email", "abc");
+                    esQueryWrap.mustNot().term("samplesNesteds.state", false);
+                    esQueryWrap.mustNot().term("samplesNesteds.id", 3L);
                     return esQueryWrap;
                 }, ScoreMode.None);
         EsResponse<SamplesEsDTO> esResponse = queryWrapper.list();
@@ -44,8 +45,9 @@ public class SamplesEsService extends EsServiceImpl<SamplesEsDTO> {
 
     public void search() {
         // 声明语句嵌套关系是must
-        EsResponse<SamplesEsDTO> esResponse = esChainQueryWrapper().must()
-                .terms(SamplesEsDTO::getUsername, "admin", "hzh", "shi")
+        EsResponse<SamplesEsDTO> esResponse = esChainQueryWrapper().mustNot()
+                .term(SamplesEsDTO::getUsername, "ggghhh")
+                .term(SamplesEsDTO::getEmail,"bbbbbb")
                 // 多个must嵌套
 //                .must(a ->
 //                        // 声明内部语句关系的should
@@ -53,11 +55,15 @@ public class SamplesEsService extends EsServiceImpl<SamplesEsDTO> {
 //                                .term(SamplesEsDTO::getNickName, "dasdsad")
 //                                .term(SamplesEsDTO::getPhone, "1386859111"))
                 .list();
-        EsResponse<SamplesEsDTO> list2 = esChainQueryWrapper().list();
-        System.out.println(list2);
+//        EsResponse<SamplesEsDTO> list2 = esChainQueryWrapper().list();
+//        System.out.println(list2);
         List<SamplesEsDTO> list = esResponse.getList();
         System.out.println(list);
-
+        try {
+            Thread.sleep(2000L);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         EsChainQueryWrapper<Map> term = Es.chainQuery(Map.class).index("sys_user2ttt_alias").must()
                 .match("username", "HZH").term("email", "abc");
         term.esAggWrapper().terms("keyword");

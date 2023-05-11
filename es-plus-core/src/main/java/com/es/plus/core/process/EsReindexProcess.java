@@ -302,6 +302,10 @@ public class EsReindexProcess {
         // 新map添加NUMBER_OF_SHARDS
         Map<String, Object> localIndexMapping = esIndexParam.getMappings();
         // 本地和远程的索引
+        return getCmd(esIndexMapping, localIndexMapping);
+    }
+
+    private static String getCmd(Map<String, Object> esIndexMapping, Map<String, Object> localIndexMapping) {
         boolean equals = localIndexMapping.equals(esIndexMapping);
         // 如果需要更新
         if (!equals) {
@@ -309,14 +313,32 @@ public class EsReindexProcess {
             Map<String, Object> localMappings = (Map<String, Object>) localIndexMapping.get(EsConstant.PROPERTIES);
             Map<String, Object> esMappings = (Map<String, Object>) esIndexMapping.get(EsConstant.PROPERTIES);
 
-            // 如果长度相同.或者减少字段.那么必然要reindex
-            if (localMappings.size() <= esMappings.size()) {
+            // 如果减少字段.那么必然要reindex
+            if (localMappings.size() < esMappings.size()) {
                 return Commend.REINDEX;
             }
 
-            // 长度不相等的情况.判断相同的字段是否改变.如果改了reindex.如果没有改变只需要对新的映射进行新增
+            // 本地长度大于等于es长度的话. 需要查询嵌套对象判断子对象需要reindex还是update
+            // 取交集 取es中的映射
             Set<String> set = Sets.intersection(localMappings.keySet(), esMappings.keySet());
-            boolean isUpdate = set.stream().anyMatch(key -> !localMappings.get(key).equals(esMappings.get(key)));
+            //如果取交集的数量少于es的数量。本地和es的映射字段名发生了改变
+            if (set.size() < esMappings.size()) {
+                return Commend.REINDEX;
+            }
+            // 判断相同的字段是否改变.如果改了reindex.如果没有改变说明只是本地新增字段，只需要对新的映射进行新增
+            boolean isUpdate = set.stream().anyMatch(key -> {
+                Map<String, Object> localMapping = (Map) localMappings.get(key);
+                Map<String, Object> esMapping = (Map) esMappings.get(key);
+                Map<String, Object> localProperties = (Map) localMapping.get(EsConstant.PROPERTIES);
+                Map<String, Object> esProperties = (Map) esMapping.get(EsConstant.PROPERTIES);
+                if (localProperties != null && esProperties != null) {
+                    String cmd = getCmd(esMapping, localMapping);
+                    //如果返回reindex说明有嵌套对象的变更，否则嵌套对象也只是更新或者不处理
+                    boolean reindex = cmd.equals(Commend.REINDEX);
+                    return !localMapping.equals(esMapping) && reindex;
+                }
+                return !localMapping.equals(esMapping);
+            });
             // 有字段改变REINDEX
             if (isUpdate) {
                 return Commend.REINDEX;

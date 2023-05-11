@@ -8,6 +8,7 @@ import com.es.plus.constant.EsFieldType;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 
 @Data
@@ -55,5 +56,5 @@ public class SamplesEsDTO {
 //    @TableField(exist = false)
 //    @IgnoreSwaggerParameter
     @EsField(type = EsFieldType.NESTED)
-    private SamplesNestedDTO samplesNesteds;
+    private List<SamplesNestedDTO> samplesNesteds;
 }
