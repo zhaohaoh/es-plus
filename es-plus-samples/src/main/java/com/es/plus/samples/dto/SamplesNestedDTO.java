@@ -18,5 +18,7 @@ public class SamplesNestedDTO {
     @EsField(type = EsFieldType.BOOLEAN)
     private Boolean aaaqedd;
     @EsField(type = EsFieldType.BOOLEAN)
-    private Boolean ffff;
+    private Boolean ffffddd;
+    @EsField(type = EsFieldType.BOOLEAN)
+    private Boolean aaaa;
 }
