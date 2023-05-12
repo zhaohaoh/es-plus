@@ -13,7 +13,7 @@
         <maven.compiler.target>8</maven.compiler.target>
         <lang3.version>3.9</lang3.version>
         <spring-boot.version>2.6.3</spring-boot.version>
-        <rversion>0.1.25</rversion>
+        <rversion>0.1.26-SNAPSHOT</rversion>
         <elasticsearch.version>6.7.0</elasticsearch.version>
     </properties>
     <licenses>
