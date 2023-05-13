@@ -82,6 +82,8 @@ public class SysUser  {
 ```java
 @Service
 public class SysUserEsService extends EsServiceImpl<SysUser>{
+    
+    
     public void search() {
         // 声明语句嵌套关系是must
         EsResponse<SysUser> esResponse = esChainQueryWrapper().must()
@@ -123,6 +125,22 @@ public class SysUserEsService extends EsServiceImpl<SysUser>{
         // 以下方法选一种
         Terms terms = esAggregationsReponse.getTerms(SysUser::getUsername);
         Map<String, Long> termsAsMap = esAggregationsReponse.getTermsAsMap(SysUser::getUsername);
+    }
+    //嵌套对象的查询
+    public void nested() {
+        EsChainLambdaQueryWrapper<SamplesNestedDTO> asChainQueryWrap = new EsChainLambdaQueryWrapper<>(SamplesNestedDTO.class);
+        asChainQueryWrap.should().term(SamplesNestedDTO::getUsername, "hzh");
+        asChainQueryWrap.terms(SamplesNestedDTO::getUsername, "term");
+        // 声明语句嵌套关系是must
+        EsChainLambdaQueryWrapper<SamplesEsDTO> queryWrapper = esChainQueryWrapper().must()
+                .nestedQuery( SamplesEsDTO::getSamplesNesteds, (esQueryWrap) -> {
+                    esQueryWrap.mustNot().term("state", false);
+                    esQueryWrap.mustNot().term("id", 2L);
+                });
+        EsResponse<SamplesEsDTO> esResponse = queryWrapper.list();
+
+        // 查询
+        List<SamplesEsDTO> list = esResponse.getList();
     }
 }
 ```
