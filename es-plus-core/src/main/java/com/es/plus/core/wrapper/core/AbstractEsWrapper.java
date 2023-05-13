@@ -20,7 +20,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
+import java.util.function.Function;
 
 /**
  * @Author: hzh
@@ -42,6 +42,7 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
      *实例
      */
     protected abstract Children instance();
+
 
     protected EsParamWrapper<T> esParamWrapper;
 
@@ -258,6 +259,7 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
         return children;
     }
 
+
     @Override
     public Children terms(boolean condition, R name, Object... value) {
         if (condition) {
@@ -399,11 +401,65 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
     }
 
     @Override
-    public Children nestedQuery(boolean condition, R path, Supplier<EsQueryWrapper<?>> sp, ScoreMode mode) {
+    public <S> Children nestedQuery(boolean condition, R path, Class<S> sClass, Consumer<EsLambdaQueryWrapper<S>> consumer) {
         if (condition) {
-            EsQueryWrapper<?> esQueryWrapper = sp.get();
-            NestedQueryBuilder nestedQueryBuilder = QueryBuilders.nestedQuery(nameToString(path), esQueryWrapper.getQueryBuilder(), mode);
+            String name = nameToString(path);
+            Function<Class<S>, EsLambdaQueryWrapper<S>> sp = a -> new EsLambdaQueryWrapper<>(sClass);
+            EsLambdaQueryWrapper<S> esQueryWrapper = sp.apply(sClass);
+            //嵌套对象增加父字段名
+            esQueryWrapper.parentFieldName = name;
+            consumer.accept(esQueryWrapper);
+            NestedQueryBuilder nestedQueryBuilder = QueryBuilders.nestedQuery(name, esQueryWrapper.getQueryBuilder(), ScoreMode.None);
             currentBuilder = nestedQueryBuilder;
+            this.queryBuilders.add(nestedQueryBuilder);
+        }
+        return this.children;
+    }
+
+    @Override
+    public <S> Children nestedQuery(boolean condition, R path, Consumer<EsQueryWrapper<S>> consumer) {
+        if (condition) {
+            String name = nameToString(path);
+            EsQueryWrapper<S> esQueryWrapper = new EsQueryWrapper<>();
+            //嵌套对象增加父字段名
+            esQueryWrapper.parentFieldName = name;
+            consumer.accept(esQueryWrapper);
+            NestedQueryBuilder nestedQueryBuilder = QueryBuilders.nestedQuery(name, esQueryWrapper.getQueryBuilder(),ScoreMode.None);
+            currentBuilder = nestedQueryBuilder;
+            this.queryBuilders.add(nestedQueryBuilder);
+        }
+        return this.children;
+    }
+
+    @Override
+    public <S> Children nestedQuery(boolean condition, R path, Class<S> sClass, Consumer<EsLambdaQueryWrapper<S>> consumer, ScoreMode mode,InnerHitBuilder innerHitBuilder) {
+        if (condition) {
+            String name = nameToString(path);
+
+            Function<Class<S>, EsLambdaQueryWrapper<S>> sp = a -> new EsLambdaQueryWrapper<>(sClass);
+            EsLambdaQueryWrapper<S> esQueryWrapper = sp.apply(sClass);
+            //嵌套对象增加父字段名
+            esQueryWrapper.parentFieldName = name;
+            consumer.accept(esQueryWrapper);
+            NestedQueryBuilder nestedQueryBuilder = QueryBuilders.nestedQuery(name, esQueryWrapper.getQueryBuilder(), mode);
+            currentBuilder = nestedQueryBuilder;
+            nestedQueryBuilder.innerHit(innerHitBuilder);
+            this.queryBuilders.add(nestedQueryBuilder);
+        }
+        return this.children;
+    }
+
+    @Override
+    public <S> Children nestedQuery(boolean condition, R path, Consumer<EsQueryWrapper<S>> consumer, ScoreMode mode,InnerHitBuilder innerHitBuilder) {
+        if (condition) {
+            String name = nameToString(path);
+            EsQueryWrapper<S> esQueryWrapper = new EsQueryWrapper<>();
+            //嵌套对象增加父字段名
+            esQueryWrapper.parentFieldName = name;
+            consumer.accept(esQueryWrapper);
+            NestedQueryBuilder nestedQueryBuilder = QueryBuilders.nestedQuery(name, esQueryWrapper.getQueryBuilder(), mode);
+            currentBuilder = nestedQueryBuilder;
+            nestedQueryBuilder.innerHit(innerHitBuilder);
             this.queryBuilders.add(nestedQueryBuilder);
         }
         return this.children;
@@ -498,6 +554,14 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
         esSelect.setIncludes(includes);
         return (Children) this;
     }
+
+    @Override
+    public Children fetch(boolean fetch) {
+        EsSelect esSelect = getSelect();
+        esSelect.setFetch(fetch);
+        return (Children) this;
+    }
+
 
     @Override
     public Children excludes(R... func) {

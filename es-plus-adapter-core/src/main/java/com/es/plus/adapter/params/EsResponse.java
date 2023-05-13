@@ -38,7 +38,10 @@ public class EsResponse<T> {
      * SearchAfter搜索查询结束值
      */
     private Object[] tailSortValues;
-
+    /**
+     * 滚动id
+     */
+    private Map<String, List<Map<String, Object>>> innerHits;
     /**
      * 滚动id
      */

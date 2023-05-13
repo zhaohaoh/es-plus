@@ -575,7 +575,7 @@ public class EsPlusRestClient implements EsPlusClient {
 
     @Override
     public <T> EsResponse<T> searchPageByWrapper(String index, String type, PageInfo<T> pageInfo, EsParamWrapper<T> esParamWrapper, Class<T> tClass) {
-        return search(index, type,pageInfo, esParamWrapper, tClass);
+        return search(index, type, pageInfo, esParamWrapper, tClass);
     }
 
     /**
@@ -761,6 +761,7 @@ public class EsPlusRestClient implements EsPlusClient {
         SearchHits hits = searchResponse.getHits();
         SearchHit[] hitArray = hits.getHits();
         List<T> result = new ArrayList<>();
+        Map<String, List<Map<String, Object>>> innerHits = null;
         if (hitArray != null && hitArray.length > 0) {
             if (esQueryParamWrapper.getEsHighLights() != null) {
                 for (SearchHit hit : hitArray) {
@@ -786,7 +787,12 @@ public class EsPlusRestClient implements EsPlusClient {
                 }
             } else {
                 for (SearchHit hit : hitArray) {
-                    result.add(JsonUtils.toBean(hit.getSourceAsString(), tClass));
+                    String sourceAsString = hit.getSourceAsString();
+                    if (StringUtils.isBlank(sourceAsString)) {
+                    } else {
+                        result.add(JsonUtils.toBean(hit.getSourceAsString(), tClass));
+                    }
+                    innerHits = getInnerHits(hit);
                 }
             }
         }
@@ -799,6 +805,7 @@ public class EsPlusRestClient implements EsPlusClient {
 
         //设置返回结果
         EsResponse<T> esResponse = new EsResponse<>(result, hits.getTotalHits(), esAggsResponse);
+        esResponse.setInnerHits(innerHits);
         esResponse.setShardFailures(searchResponse.getShardFailures());
         esResponse.setSkippedShards(searchResponse.getSkippedShards());
         esResponse.setTookInMillis(searchResponse.getTook().getMillis());
@@ -818,6 +825,26 @@ public class EsPlusRestClient implements EsPlusClient {
         return esResponse;
     }
 
+    private Map<String, List<Map<String, Object>>> getInnerHits(SearchHit hit) {
+        Map<String, SearchHits> innerHits = hit.getInnerHits();
+        if (!CollectionUtils.isEmpty(innerHits)) {
+            Map<String, List<Map<String, Object>>> innerHitsMap = new HashMap<>();
+            innerHits.forEach((k, v) -> {
+                List<Map<String, Object>> maps = new ArrayList<>();
+                for (SearchHit valueHit : v) {
+                    Map<String, Object> map = JsonUtils.toMap(valueHit.getSourceAsString());
+                    maps.add(map);
+                    map.put("parentId", hit.getId());
+                    Map<String, List<Map<String, Object>>> innerHitss = getInnerHits(valueHit);
+                    map.put("innerHits", innerHitss);
+                }
+                innerHitsMap.put(k, maps);
+            });
+            return innerHitsMap;
+        }
+        return null;
+    }
+
     private <T> SearchSourceBuilder getSearchSourceBuilder(Integer page, Integer size, EsParamWrapper<T> esParamWrapper) {
         EsQueryParamWrapper esQueryParamWrapper = esParamWrapper.getEsQueryParamWrapper();
         //查询条件组合
@@ -828,6 +855,9 @@ public class EsPlusRestClient implements EsPlusClient {
         if (esSelect != null) {
             if (ArrayUtils.isNotEmpty(esSelect.getIncludes()) || ArrayUtils.isNotEmpty(esSelect.getExcludes())) {
                 sourceBuilder.fetchSource(esSelect.getIncludes(), esSelect.getExcludes());
+            }
+            if (esSelect.getFetch() != null) {
+                sourceBuilder.fetchSource(esSelect.getFetch());
             }
         }
         boolean profile = esQueryParamWrapper.isProfile();

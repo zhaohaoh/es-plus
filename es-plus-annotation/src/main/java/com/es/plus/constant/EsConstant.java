@@ -7,6 +7,7 @@ public interface EsConstant {
     /* 框架缩写
      */
     String EP = "ep";
+
     /* 字段属性
      */
     String TYPE = "type";
@@ -70,9 +71,14 @@ public interface EsConstant {
     String IGNORE_ABOVE = "ignore_above";
 
 
-    /* 字段属性
+    /* 字段属性分割府
      */
     String DELIMITER = "_";
+
+    /*
+     点
+     */
+    String DOT = ".";
 
     // 聚合字段分隔符
     String AGG_DELIMITER = "_";

@@ -14,12 +14,12 @@ import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.common.geo.GeoPoint;
 import org.elasticsearch.common.unit.DistanceUnit;
 import org.elasticsearch.index.query.BoolQueryBuilder;
+import org.elasticsearch.index.query.InnerHitBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 /**
  * @Author: hzh
@@ -180,8 +180,50 @@ public abstract class AbstractEsChainWrapper<T, R, Children extends AbstractEsCh
     }
 
     @Override
-    public Children nestedQuery(boolean condition, R path, Supplier<EsQueryWrapper<?>> sp, ScoreMode mode) {
-        getWrapper().nestedQuery(condition, path, sp, mode);
+    public <S> Children nestedQuery(R path, Class<S> sClass, Consumer<EsLambdaQueryWrapper<S>> consumer) {
+        getWrapper().nestedQuery(path, sClass, consumer);
+        return this.children;
+    }
+
+    @Override
+    public <S> Children nestedQuery(R path, Consumer<EsQueryWrapper<S>> consumer) {
+        getWrapper().nestedQuery(path, consumer);
+        return this.children;
+    }
+
+    @Override
+    public <S> Children nestedQuery(boolean condition, R path, Class<S> sClass, Consumer<EsLambdaQueryWrapper<S>> consumer) {
+        getWrapper().nestedQuery(condition, path, sClass, consumer);
+        return this.children;
+    }
+
+    @Override
+    public <S> Children nestedQuery(boolean condition, R path, Consumer<EsQueryWrapper<S>> consumer) {
+        getWrapper().nestedQuery(condition, path, consumer);
+        return this.children;
+    }
+
+    @Override
+    public <S> Children nestedQuery(R path, Class<S> sClass, Consumer<EsLambdaQueryWrapper<S>> consumer, ScoreMode mode, InnerHitBuilder innerHitBuilder) {
+        getWrapper().nestedQuery(path, sClass, consumer, mode,innerHitBuilder);
+        return this.children;
+    }
+
+    @Override
+    public <S> Children nestedQuery(R path, Consumer<EsQueryWrapper<S>> consumer, ScoreMode mode,InnerHitBuilder innerHitBuilder) {
+        getWrapper().nestedQuery(path, consumer, mode,innerHitBuilder);
+        return this.children;
+    }
+
+    @Override
+    public <S> Children nestedQuery(boolean condition, R path, Class<S> sClass, Consumer<EsLambdaQueryWrapper<S>> consumer, ScoreMode mode,InnerHitBuilder innerHitBuilder) {
+        getWrapper().nestedQuery(condition, path, sClass, consumer, mode,innerHitBuilder);
+        return this.children;
+    }
+
+    @Override
+    public <S> Children nestedQuery(boolean condition, R path, Consumer<EsQueryWrapper<S>> consumer, ScoreMode mode,InnerHitBuilder innerHitBuilder) {
+        getWrapper().nestedQuery(condition, path, consumer, mode,innerHitBuilder);
         return this.children;
     }
 
@@ -340,8 +382,14 @@ public abstract class AbstractEsChainWrapper<T, R, Children extends AbstractEsCh
     }
 
     @Override
+    public Children fetch(boolean fetch) {
+        getWrapper().fetch(fetch);
+        return children;
+    }
+
+    @Override
     public Children includes(R... func) {
-        getWrapper().excludes(func);
+        getWrapper().includes(func);
         return children;
     }
 

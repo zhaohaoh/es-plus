@@ -8,8 +8,18 @@ public class EsSelect {
     //查询结果不包含字段
     private String[] excludes;
 
+    private Boolean fetch ;
+
     public String[] getIncludes() {
         return includes;
+    }
+
+    public Boolean getFetch() {
+        return fetch;
+    }
+
+    public void setFetch(Boolean fetch) {
+        this.fetch = fetch;
     }
 
     public void setIncludes(String[] includes) {

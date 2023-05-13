@@ -1,16 +1,18 @@
 package com.es.plus.core.wrapper.core;
 
 
+import com.es.plus.adapter.exception.EsException;
 import com.es.plus.adapter.tools.LambdaUtils;
 import com.es.plus.adapter.tools.SFunction;
 import com.es.plus.adapter.tools.SerializedLambda;
-import com.es.plus.adapter.exception.EsException;
 
 import java.util.Arrays;
 import java.util.Locale;
 
-public abstract class AbstractLambdaEsWrapper<T, R> {
+import static com.es.plus.constant.EsConstant.DOT;
 
+public abstract class AbstractLambdaEsWrapper<T, R> {
+    protected String parentFieldName;
 
     protected final String[] nameToString(R... functions) {
         return Arrays.stream(functions).map(this::nameToString).toArray(String[]::new);
@@ -19,10 +21,12 @@ public abstract class AbstractLambdaEsWrapper<T, R> {
 
     protected String nameToString(R function) {
         if (function instanceof String) {
-            return (String) function;
+            return parentFieldName != null ? parentFieldName + DOT + function : (String) function;
         }
         SerializedLambda lambda = LambdaUtils.resolve((SFunction<T, ?>) function);
-        return getColumn(lambda);
+        String column = getColumn(lambda);
+
+        return  parentFieldName != null ? parentFieldName+ DOT + column:column;
     }
 
     protected Class<?> getImplClass(R function) {

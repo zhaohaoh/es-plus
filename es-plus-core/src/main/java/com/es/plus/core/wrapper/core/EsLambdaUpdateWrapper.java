@@ -49,6 +49,7 @@ public class EsLambdaUpdateWrapper<T> extends AbstractEsWrapper<T, SFunction<T, 
         return new EsLambdaUpdateWrapper<T>(super.tClass);
     }
 
+
     @Override
     public EsUpdateField getEsUpdateField() {
         return super.getEsUpdateField();

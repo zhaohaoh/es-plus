@@ -29,4 +29,5 @@ public class EsQueryWrapper<T> extends AbstractEsWrapper<T, String, EsQueryWrapp
         return super.tClass;
     }
 
+
 }

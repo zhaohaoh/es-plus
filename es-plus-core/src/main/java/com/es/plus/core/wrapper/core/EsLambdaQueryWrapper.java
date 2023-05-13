@@ -27,6 +27,7 @@ public class EsLambdaQueryWrapper<T> extends AbstractEsWrapper<T, SFunction<T,?>
     }
 
 
+
     public Class<T> gettClass() {
         return super.tClass;
     }

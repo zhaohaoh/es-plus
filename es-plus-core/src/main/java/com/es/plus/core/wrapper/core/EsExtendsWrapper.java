@@ -56,10 +56,14 @@ public interface EsExtendsWrapper<Children, R> {
      */
     Children routings(String... routings);
 
+
+    Children fetch(boolean fetch);
+
     /**
      * 包含字段
      */
     Children includes(R... func);
+
     /**
      * 包含字段
      */
