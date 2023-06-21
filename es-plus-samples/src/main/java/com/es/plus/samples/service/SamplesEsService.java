@@ -27,30 +27,46 @@ public class SamplesEsService extends EsServiceImpl<SamplesEsDTO> {
 
 
     public void nested() {
-        EsChainLambdaQueryWrapper<SamplesNestedDTO> asChainQueryWrap = new EsChainLambdaQueryWrapper<>(SamplesNestedDTO.class);
-        asChainQueryWrap.should().term(SamplesNestedDTO::getUsername, "hzh");
-        asChainQueryWrap.terms(SamplesNestedDTO::getUsername, "term");
+        //获取二级查询条件
+        Consumer<EsLambdaQueryWrapper<SamplesNestedDTO>> innerConsumer = getSamplesNestedConsumer();
         // 声明语句嵌套关系是must
         InnerHitBuilder innerHitBuilder = new InnerHitBuilder("test");
         innerHitBuilder.setSize(10);
-        Consumer<EsLambdaQueryWrapper<SamplesNestedDTO>> innerConsumer = (esQueryWrap) -> {
-            esQueryWrap.must().term(SamplesNestedDTO::getUsername, "3");
-            InnerHitBuilder innerHitBuilder1 = new InnerHitBuilder();
-            innerHitBuilder1.setSize(100);
-            Consumer<EsLambdaQueryWrapper<SamplesNestedInnerDTO>> innerInnerConsumer = (innerQuery) -> {
-                innerQuery.must().term(SamplesNestedInnerDTO::getUsername, 3);
-            };
-            esQueryWrap.must().nestedQuery(SamplesNestedDTO::getSamplesNestedInner, SamplesNestedInnerDTO.class,
-                    innerInnerConsumer, ScoreMode.None, innerHitBuilder1);
-        };
+        //一级查询条件
         EsChainLambdaQueryWrapper<SamplesEsDTO> queryWrapper = esChainQueryWrapper().must()
-                .nestedQuery(SamplesEsDTO::getSamplesNesteds, SamplesNestedDTO.class, innerConsumer, ScoreMode.None,innerHitBuilder);
-
+                .nestedQuery(SamplesEsDTO::getSamplesNesteds, SamplesNestedDTO.class,
+                        innerConsumer, ScoreMode.None,innerHitBuilder);
 
         EsResponse<SamplesEsDTO> esResponse = queryWrapper.list();
         // 查询
         List<SamplesEsDTO> list = esResponse.getList();
     }
+
+    /**
+     *  获取二级嵌套查询对象
+     */
+    private Consumer<EsLambdaQueryWrapper<SamplesNestedDTO>> getSamplesNestedConsumer() {
+        Consumer<EsLambdaQueryWrapper<SamplesNestedDTO>> innerConsumer = (esQueryWrap) -> {
+            esQueryWrap.must().term(SamplesNestedDTO::getUsername, "3");
+            InnerHitBuilder innerHitBuilder1 = new InnerHitBuilder();
+            innerHitBuilder1.setSize(100);
+            Consumer<EsLambdaQueryWrapper<SamplesNestedInnerDTO>> innerInnerConsumer = getSamplesNestedInnerConsumer();
+            esQueryWrap.must().nestedQuery(SamplesNestedDTO::getSamplesNestedInner, SamplesNestedInnerDTO.class,
+                    innerInnerConsumer, ScoreMode.None, innerHitBuilder1);
+        };
+        return innerConsumer;
+    }
+
+    /**
+     *  获取三级嵌套查询对象
+     */
+    private Consumer<EsLambdaQueryWrapper<SamplesNestedInnerDTO>> getSamplesNestedInnerConsumer() {
+        Consumer<EsLambdaQueryWrapper<SamplesNestedInnerDTO>> innerInnerConsumer = (innerQuery) -> {
+            innerQuery.must().term(SamplesNestedInnerDTO::getUsername, 3);
+        };
+        return innerInnerConsumer;
+    }
+
 
     public void search() {
         // 声明语句嵌套关系是must

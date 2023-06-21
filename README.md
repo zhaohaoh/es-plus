@@ -149,6 +149,50 @@ public class SysUserEsService extends EsServiceImpl<SysUser>{
         // 查询
         List<SamplesEsDTO> list = esResponse.getList();
     }
+    
+    //三级嵌套对象附加innerHits查询方法  一级对象SamplesEsDTO 二级对象SamplesNestedDTO 三级对象 SamplesNestedInnerDTO
+    public void nested() {
+        //获取二级查询条件
+        Consumer<EsLambdaQueryWrapper<SamplesNestedDTO>> innerConsumer = getSamplesNestedConsumer();
+        //   InnerHit
+        InnerHitBuilder innerHitBuilder = new InnerHitBuilder("test");
+        innerHitBuilder.setSize(10);
+        //一级查询条件
+        EsChainLambdaQueryWrapper<SamplesEsDTO> queryWrapper = esChainQueryWrapper().must()
+                .nestedQuery(SamplesEsDTO::getSamplesNesteds, SamplesNestedDTO.class,
+                        innerConsumer, ScoreMode.None,innerHitBuilder);
+
+        EsResponse<SamplesEsDTO> esResponse = queryWrapper.list();
+        // 查询
+        List<SamplesEsDTO> list = esResponse.getList();
+    }
+
+    /**
+     *  获取二级嵌套查询对象
+     */
+    private Consumer<EsLambdaQueryWrapper<SamplesNestedDTO>> getSamplesNestedConsumer() {
+        Consumer<EsLambdaQueryWrapper<SamplesNestedDTO>> innerConsumer = (esQueryWrap) -> {
+            esQueryWrap.must().term(SamplesNestedDTO::getUsername, "3");
+            InnerHitBuilder innerHitBuilder1 = new InnerHitBuilder();
+            innerHitBuilder1.setSize(100);
+            Consumer<EsLambdaQueryWrapper<SamplesNestedInnerDTO>> innerInnerConsumer = getSamplesNestedInnerConsumer();
+            esQueryWrap.must().nestedQuery(SamplesNestedDTO::getSamplesNestedInner, SamplesNestedInnerDTO.class,
+                    innerInnerConsumer, ScoreMode.None, innerHitBuilder1);
+        };
+        return innerConsumer;
+    }
+
+    /**
+     *  获取三级嵌套查询对象
+     */
+    private Consumer<EsLambdaQueryWrapper<SamplesNestedInnerDTO>> getSamplesNestedInnerConsumer() {
+        Consumer<EsLambdaQueryWrapper<SamplesNestedInnerDTO>> innerInnerConsumer = (innerQuery) -> {
+            innerQuery.must().term(SamplesNestedInnerDTO::getUsername, 3);
+        };
+        return innerInnerConsumer;
+    }
+    
+    
 }
 ```
 
