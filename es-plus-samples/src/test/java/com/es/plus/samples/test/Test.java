@@ -4,6 +4,7 @@ import com.es.plus.constant.EsSettingsConstants;
 import com.es.plus.samples.SamplesApplication;
 import com.es.plus.samples.dto.SamplesEsDTO;
 import com.es.plus.samples.dto.SamplesNestedDTO;
+import com.es.plus.samples.dto.SamplesNestedInnerDTO;
 import com.es.plus.samples.service.SamplesEsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -38,6 +39,19 @@ public class Test {
         samplesNestedDTOS.add(samplesNestedDTO1);
         samplesEsDTO.setSamplesNesteds(samplesNestedDTOS);
         samplesEsDTO.setId(1L);
+
+        List<SamplesNestedInnerDTO> samplesNestedss=new ArrayList<>();
+        for (int i = 0; i <500; i++) {
+
+            SamplesNestedInnerDTO samplesNestedInnerDTO = new SamplesNestedInnerDTO();
+            samplesNestedInnerDTO.setEmail("3");
+            samplesNestedInnerDTO.setUsername("3");
+            samplesNestedInnerDTO.setId((long)i);
+            samplesNestedInnerDTO.setState(true);
+            samplesNestedss.add(samplesNestedInnerDTO);
+        }
+
+        samplesNestedDTO.setSamplesNestedInner(samplesNestedss);
         samplesEsService.save(samplesEsDTO);
 //        Map<String,Object> map=new HashMap<>();
 //        map.put("usrname","adddbbbb");

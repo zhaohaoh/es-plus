@@ -11,12 +11,16 @@ import com.es.plus.core.wrapper.core.EsLambdaUpdateWrapper;
 import com.es.plus.es6.client.EsPlusAggregations;
 import com.es.plus.samples.dto.SamplesEsDTO;
 import com.es.plus.samples.dto.SamplesNestedDTO;
+import com.es.plus.samples.dto.SamplesNestedInnerDTO;
 import com.es.plus.samples.dto.SpuEsDTO;
+import org.apache.lucene.search.join.ScoreMode;
+import org.elasticsearch.index.query.InnerHitBuilder;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 @Service
 public class SamplesEsService extends EsServiceImpl<SamplesEsDTO> {
@@ -27,13 +31,23 @@ public class SamplesEsService extends EsServiceImpl<SamplesEsDTO> {
         asChainQueryWrap.should().term(SamplesNestedDTO::getUsername, "hzh");
         asChainQueryWrap.terms(SamplesNestedDTO::getUsername, "term");
         // 声明语句嵌套关系是must
+        InnerHitBuilder innerHitBuilder = new InnerHitBuilder("test");
+        innerHitBuilder.setSize(10);
+        Consumer<EsLambdaQueryWrapper<SamplesNestedDTO>> innerConsumer = (esQueryWrap) -> {
+            esQueryWrap.must().term(SamplesNestedDTO::getUsername, "3");
+            InnerHitBuilder innerHitBuilder1 = new InnerHitBuilder();
+            innerHitBuilder1.setSize(100);
+            Consumer<EsLambdaQueryWrapper<SamplesNestedInnerDTO>> innerInnerConsumer = (innerQuery) -> {
+                innerQuery.must().term(SamplesNestedInnerDTO::getUsername, 3);
+            };
+            esQueryWrap.must().nestedQuery(SamplesNestedDTO::getSamplesNestedInner, SamplesNestedInnerDTO.class,
+                    innerInnerConsumer, ScoreMode.None, innerHitBuilder1);
+        };
         EsChainLambdaQueryWrapper<SamplesEsDTO> queryWrapper = esChainQueryWrapper().must()
-                .nestedQuery( SamplesEsDTO::getSamplesNesteds, (esQueryWrap) -> {
-                    esQueryWrap.mustNot().term("state", false);
-                    esQueryWrap.mustNot().term("id", 2L);
-                });
-        EsResponse<SamplesEsDTO> esResponse = queryWrapper.list();
+                .nestedQuery(SamplesEsDTO::getSamplesNesteds, SamplesNestedDTO.class, innerConsumer, ScoreMode.None,innerHitBuilder);
 
+
+        EsResponse<SamplesEsDTO> esResponse = queryWrapper.list();
         // 查询
         List<SamplesEsDTO> list = esResponse.getList();
     }

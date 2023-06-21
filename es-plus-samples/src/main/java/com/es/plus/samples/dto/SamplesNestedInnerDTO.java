@@ -4,11 +4,9 @@ import com.es.plus.annotation.EsField;
 import com.es.plus.constant.EsFieldType;
 import lombok.Data;
 
-import java.util.List;
-
 
 @Data
-public class SamplesNestedDTO {
+public class SamplesNestedInnerDTO {
 
     private Long id;
     @EsField(type = EsFieldType.KEYWORD)
@@ -25,7 +23,4 @@ public class SamplesNestedDTO {
     private Boolean aaaa;
     @EsField(type = EsFieldType.BOOLEAN)
     private Boolean ccccc;
-
-    @EsField(type = EsFieldType.NESTED)
-    private List<SamplesNestedInnerDTO> samplesNestedInner;
 }

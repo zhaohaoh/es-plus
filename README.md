@@ -138,6 +138,13 @@ public class SysUserEsService extends EsServiceImpl<SysUser>{
                     esQueryWrap.mustNot().term("id", 2L);
                 });
         EsResponse<SamplesEsDTO> esResponse = queryWrapper.list();
+        //lambda写法
+        EsChainLambdaQueryWrapper<SamplesEsDTO> queryWrapper = esChainQueryWrapper().must()
+                .nestedQuery( SamplesEsDTO::getSamplesNesteds,SamplesNestedDTO.class, (esQueryWrap) -> {
+                    esQueryWrap.mustNot().term(SamplesNestedDTO::getState, false);
+                    esQueryWrap.mustNot().term(SamplesNestedDTO::getId, 2L);
+                });
+        EsResponse<SamplesEsDTO> esResponse = queryWrapper.list();
 
         // 查询
         List<SamplesEsDTO> list = esResponse.getList();
