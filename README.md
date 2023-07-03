@@ -12,6 +12,7 @@ Es-Plus 是Elasticsearch Api增强工具 - 只做增强不做改变，简化`CRU
 -
 
 ## 引入
+目前使用快照版本0.1.26-SNAPSHOT
 ``` xml
       <dependency>
             <groupId>io.github.zhaohaoh</groupId>
