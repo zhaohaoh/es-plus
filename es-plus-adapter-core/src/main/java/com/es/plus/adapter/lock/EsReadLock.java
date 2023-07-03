@@ -7,8 +7,7 @@ import org.elasticsearch.script.ScriptType;
 import java.util.HashMap;
 import java.util.Map;
 
-import static com.es.plus.constant.EsConstant.GLOBAL_LOCK_EXPIRETIME;
-import static com.es.plus.constant.EsConstant.GLOBAL_LOCK_TIMEOUT;
+import static com.es.plus.constant.EsConstant.*;
 
 public class EsReadLock extends ELock {
 
@@ -39,7 +38,7 @@ public class EsReadLock extends ELock {
                 " ctx.op = 'noop'; \n" +
                 " return; \n";
 
-        Script painless = new Script(ScriptType.INLINE, "painless", script, params);
+        Script painless = new Script(ScriptType.INLINE, PAINLESS, script, params);
         UpdateResponse update = esPlusLockClient.upsertByScript(lockIndexName(), key, data, painless);
         byte op = update.getResult().getOp();
         if (op == DocWriteResponse.Result.NOOP.getOp()) {
@@ -62,7 +61,7 @@ public class EsReadLock extends ELock {
                 "return;" +
                 " }" +
                 "      ctx.op = 'delete';";
-        Script painless = new Script(ScriptType.INLINE, "painless", script, params);
+        Script painless = new Script(ScriptType.INLINE, PAINLESS, script, params);
         UpdateResponse update = esPlusLockClient.updateByScript(lockIndexName(), key, painless);
     }
 

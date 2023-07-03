@@ -35,7 +35,7 @@ public class EsLock extends ELock {
                 " } \n" +
                 " ctx.op= 'noop';";
 
-        Script painless = new Script(ScriptType.INLINE, "painless", script, params);
+        Script painless = new Script(ScriptType.INLINE, PAINLESS, script, params);
 
         UpdateResponse update = esPlusLockClient.upsertByScript(lockIndexName(), key, data, painless);
         byte op = update.getResult().getOp();
@@ -54,7 +54,7 @@ public class EsLock extends ELock {
         params.put("param", "delete");
         //构建scipt语句
         String script = "ctx.op = params.param;";
-        Script painless = new Script(ScriptType.INLINE, "painless", script, params);
+        Script painless = new Script(ScriptType.INLINE, PAINLESS, script, params);
         UpdateResponse update = esPlusLockClient.updateByScript(lockIndexName(), key, painless);
 
     }

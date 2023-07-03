@@ -150,4 +150,17 @@ public interface EsConstant {
      */
     String REINDEX_UPDATE_LOCK = "_reindex_update_lock";
 
+    /**
+     * 内部嵌套返回体的记录父类id
+     */
+    String INNER_HITS_PARENT_ID = "parentId";
+    /**
+     * 内部嵌套对象
+     */
+    String INNERHITS = "innerHits";
+    /**
+     * 脚本语言 painless的常量
+     */
+    String PAINLESS = "painless";
+
 }

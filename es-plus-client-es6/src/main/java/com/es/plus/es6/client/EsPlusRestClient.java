@@ -69,6 +69,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.stream.Collectors;
 
+import static com.es.plus.constant.EsConstant.*;
+
 /**
  * @Author: hzh
  * @Date: 2022/1/21 11:10
@@ -834,9 +836,9 @@ public class EsPlusRestClient implements EsPlusClient {
                 for (SearchHit valueHit : v) {
                     Map<String, Object> map = JsonUtils.toMap(valueHit.getSourceAsString());
                     maps.add(map);
-                    map.put("parentId", hit.getId());
+                    map.put(INNER_HITS_PARENT_ID, hit.getId());
                     Map<String, List<Map<String, Object>>> innerHitss = getInnerHits(valueHit);
-                    map.put("innerHits", innerHitss);
+                    map.put(INNERHITS, innerHitss);
                 }
                 innerHitsMap.put(k, maps);
             });
@@ -950,7 +952,7 @@ public class EsPlusRestClient implements EsPlusClient {
         if (routings != null) {
             request.setRouting(routings[0]);
         }
-        Script painless = new Script(ScriptType.INLINE, "painless", script, params);
+        Script painless = new Script(ScriptType.INLINE, PAINLESS, script, params);
         request.setScript(painless);
         return request;
     }
