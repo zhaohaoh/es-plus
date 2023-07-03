@@ -196,6 +196,9 @@ public class SysUserEsService extends EsServiceImpl<SysUser>{
 }
 ```
 
+## Es版本
+遇到版本冲突使用6.7.0
+
 ## 自动Reindex
 #### 如何开启:
 es-plus.global-config.auto-reindex=true
