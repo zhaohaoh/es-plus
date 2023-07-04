@@ -1,10 +1,13 @@
 package com.es.plus.core.wrapper.aggregation;
 
+import com.es.plus.adapter.config.GlobalConfigCache;
 import com.es.plus.adapter.core.EsAggClient;
-import com.es.plus.es6.client.EsPlusAggsClient;
+import com.es.plus.adapter.params.EsParamWrapper;
+import com.es.plus.core.wrapper.core.EsWrapper;
+import com.es.plus.es6.client.EsPlus6AggsClient;
+import com.es.plus.es7.client.EsPlusAggsClient;
 import lombok.SneakyThrows;
 import org.elasticsearch.common.geo.GeoPoint;
-import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.script.Script;
 import org.elasticsearch.search.aggregations.AggregationBuilder;
 import org.elasticsearch.search.aggregations.AggregatorFactories;
@@ -31,44 +34,15 @@ import org.elasticsearch.search.aggregations.bucket.sampler.SamplerAggregationBu
 import org.elasticsearch.search.aggregations.bucket.significant.SignificantTermsAggregationBuilder;
 import org.elasticsearch.search.aggregations.bucket.significant.SignificantTextAggregationBuilder;
 import org.elasticsearch.search.aggregations.bucket.terms.TermsAggregationBuilder;
-import org.elasticsearch.search.aggregations.metrics.avg.AvgAggregationBuilder;
-import org.elasticsearch.search.aggregations.metrics.cardinality.CardinalityAggregationBuilder;
-import org.elasticsearch.search.aggregations.metrics.geobounds.GeoBoundsAggregationBuilder;
-import org.elasticsearch.search.aggregations.metrics.geocentroid.GeoCentroidAggregationBuilder;
-import org.elasticsearch.search.aggregations.metrics.mad.MedianAbsoluteDeviationAggregationBuilder;
-import org.elasticsearch.search.aggregations.metrics.max.MaxAggregationBuilder;
-import org.elasticsearch.search.aggregations.metrics.min.MinAggregationBuilder;
-import org.elasticsearch.search.aggregations.metrics.percentiles.PercentileRanksAggregationBuilder;
-import org.elasticsearch.search.aggregations.metrics.percentiles.PercentilesAggregationBuilder;
-import org.elasticsearch.search.aggregations.metrics.scripted.ScriptedMetricAggregationBuilder;
-import org.elasticsearch.search.aggregations.metrics.stats.StatsAggregationBuilder;
-import org.elasticsearch.search.aggregations.metrics.stats.extended.ExtendedStatsAggregationBuilder;
-import org.elasticsearch.search.aggregations.metrics.sum.SumAggregationBuilder;
-import org.elasticsearch.search.aggregations.metrics.tophits.TopHitsAggregationBuilder;
-import org.elasticsearch.search.aggregations.metrics.valuecount.ValueCountAggregationBuilder;
-import org.elasticsearch.search.aggregations.metrics.weighted_avg.WeightedAvgAggregationBuilder;
-import org.elasticsearch.search.aggregations.pipeline.bucketmetrics.avg.AvgBucketPipelineAggregationBuilder;
-import org.elasticsearch.search.aggregations.pipeline.bucketmetrics.max.MaxBucketPipelineAggregationBuilder;
-import org.elasticsearch.search.aggregations.pipeline.bucketmetrics.min.MinBucketPipelineAggregationBuilder;
-import org.elasticsearch.search.aggregations.pipeline.bucketmetrics.percentile.PercentilesBucketPipelineAggregationBuilder;
-import org.elasticsearch.search.aggregations.pipeline.bucketmetrics.stats.StatsBucketPipelineAggregationBuilder;
-import org.elasticsearch.search.aggregations.pipeline.bucketmetrics.stats.extended.ExtendedStatsBucketPipelineAggregationBuilder;
-import org.elasticsearch.search.aggregations.pipeline.bucketmetrics.sum.SumBucketPipelineAggregationBuilder;
-import org.elasticsearch.search.aggregations.pipeline.bucketscript.BucketScriptPipelineAggregationBuilder;
-import org.elasticsearch.search.aggregations.pipeline.bucketselector.BucketSelectorPipelineAggregationBuilder;
-import org.elasticsearch.search.aggregations.pipeline.bucketsort.BucketSortPipelineAggregationBuilder;
-import org.elasticsearch.search.aggregations.pipeline.cumulativesum.CumulativeSumPipelineAggregationBuilder;
-import org.elasticsearch.search.aggregations.pipeline.derivative.DerivativePipelineAggregationBuilder;
-import org.elasticsearch.search.aggregations.pipeline.movfn.MovFnPipelineAggregationBuilder;
-import org.elasticsearch.search.aggregations.pipeline.serialdiff.SerialDiffPipelineAggregationBuilder;
+import org.elasticsearch.search.aggregations.metrics.*;
+import org.elasticsearch.search.aggregations.pipeline.*;
 import org.elasticsearch.search.sort.FieldSortBuilder;
 import org.springframework.util.CollectionUtils;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import static com.es.plus.constant.EsConstant.AGG_DELIMITER;
 
@@ -79,9 +53,13 @@ import static com.es.plus.constant.EsConstant.AGG_DELIMITER;
  */
 @SuppressWarnings({"unchecked"})
 public abstract class AbstractEsAggWrapper<T, R, Children extends AbstractEsAggWrapper<T, R, Children>> extends AbstractLambdaAggWrapper<T, R>
-        implements IEsAggWrapper<Children, R>, IEsAggFuncWrapper<Children, R> {
+        implements IEsAggWrapper<Children, R,T>, IEsAggFuncWrapper<Children, R,T> {
     protected AbstractEsAggWrapper() {
-        esAggClient = new EsPlusAggsClient();
+        if (GlobalConfigCache.GLOBAL_CONFIG.getVersion().equals(6)) {
+            esAggClient = new EsPlus6AggsClient();
+        }else{
+            esAggClient = new EsPlusAggsClient();
+        }
     }
 
     protected abstract Children instance();
@@ -211,11 +189,10 @@ public abstract class AbstractEsAggWrapper<T, R, Children extends AbstractEsAggW
      * Create a new {@link Filter} aggregation with the given name.
      */
     @Override
-    public Children filter(R name, QueryBuilder filter) {
+    public Children filter(R name, Supplier<EsWrapper<T>> supplier) {
         String field = getAggregationField(name);
-        String aggName = field + AGG_DELIMITER + FilterAggregationBuilder.NAME;
-        FilterAggregationBuilder filterAggregationBuilder = new FilterAggregationBuilder(aggName, filter);
-        currentBuilder = filterAggregationBuilder;
+        BaseAggregationBuilder filter = esAggClient.filter(field, supplier.get().esParamWrapper());
+        currentBuilder = filter;
         aggregationBuilder.add(currentBuilder);
         return this.children;
     }
@@ -237,11 +214,10 @@ public abstract class AbstractEsAggWrapper<T, R, Children extends AbstractEsAggW
      * Create a new {@link Filters} aggregation with the given name.
      */
     @Override
-    public Children filters(R name, QueryBuilder... filters) {
+    public Children filters(R name, Supplier<EsWrapper<T>>... supplier) {
         String field = getAggregationField(name);
-        String aggName = field + AGG_DELIMITER + FiltersAggregationBuilder.NAME;
-        FiltersAggregationBuilder filtersAggregationBuilder = new FiltersAggregationBuilder(aggName, filters);
-        currentBuilder = filtersAggregationBuilder;
+        EsParamWrapper<T>[] esParamWrappers = Arrays.stream(supplier).map(a -> a.get().esParamWrapper()).toArray(EsParamWrapper[]::new);
+        currentBuilder = esAggClient.filters(field, esParamWrappers);
         aggregationBuilder.add(currentBuilder);
         return this.children;
     }
@@ -250,11 +226,12 @@ public abstract class AbstractEsAggWrapper<T, R, Children extends AbstractEsAggW
      * Create a new {@link AdjacencyMatrix} aggregation with the given name.
      */
     @Override
-    public Children adjacencyMatrix(R name, Map<String, QueryBuilder> filters) {
+    public Children adjacencyMatrix(R name, Map<String, Supplier<EsWrapper<T>>> adjacencyMatrixMap) {
         String field = getAggregationField(name);
-        String aggName = field + AGG_DELIMITER + AdjacencyMatrixAggregationBuilder.NAME;
-        AdjacencyMatrixAggregationBuilder adjacencyMatrixAggregationBuilder = new AdjacencyMatrixAggregationBuilder(aggName, filters);
-        currentBuilder = adjacencyMatrixAggregationBuilder;
+        Map<String,EsParamWrapper<?>> esParamWrapperMap = new HashMap<>();
+        adjacencyMatrixMap.forEach((k,v)->esParamWrapperMap.put(k,v.get().esParamWrapper()));
+        BaseAggregationBuilder adjacencyMatrix = esAggClient.adjacencyMatrix(field, esParamWrapperMap);
+        currentBuilder = adjacencyMatrix;
         aggregationBuilder.add(currentBuilder);
         return this.children;
     }
@@ -263,11 +240,12 @@ public abstract class AbstractEsAggWrapper<T, R, Children extends AbstractEsAggW
      * Create a new {@link AdjacencyMatrix} aggregation with the given name and separator
      */
     @Override
-    public Children adjacencyMatrix(R name, String separator, Map<String, QueryBuilder> filters) {
+    public Children adjacencyMatrix(R name, String separator, Map<String, Supplier<EsWrapper<T>>> adjacencyMatrixMap) {
         String field = getAggregationField(name);
-        String aggName = field + AGG_DELIMITER + AdjacencyMatrixAggregationBuilder.NAME;
-        AdjacencyMatrixAggregationBuilder adjacencyMatrixAggregationBuilder = new AdjacencyMatrixAggregationBuilder(aggName, separator, filters);
-        currentBuilder = adjacencyMatrixAggregationBuilder;
+        Map<String,EsParamWrapper<?>> esParamWrapperMap = new HashMap<>();
+        adjacencyMatrixMap.forEach((k,v)->esParamWrapperMap.put(k,v.get().esParamWrapper()));
+        BaseAggregationBuilder adjacencyMatrix = esAggClient.adjacencyMatrix(field, separator,esParamWrapperMap);
+        currentBuilder = adjacencyMatrix;
         aggregationBuilder.add(currentBuilder);
         return this.children;
     }
@@ -506,10 +484,8 @@ public abstract class AbstractEsAggWrapper<T, R, Children extends AbstractEsAggW
     @Override
     public Children percentileRanks(R name, double[] values) {
         String field = getAggregationField(name);
-        String aggName = field + AGG_DELIMITER + PercentileRanksAggregationBuilder.NAME;
-        PercentileRanksAggregationBuilder percentileRanksAggregationBuilder = new PercentileRanksAggregationBuilder(aggName, values);
-        percentileRanksAggregationBuilder.field(field);
-        currentBuilder = percentileRanksAggregationBuilder;
+        BaseAggregationBuilder baseAggregationBuilder = esAggClient.percentiles(field);
+        currentBuilder = baseAggregationBuilder;
         aggregationBuilder.add(currentBuilder);
         return this.children;
     }
@@ -812,21 +788,21 @@ public abstract class AbstractEsAggWrapper<T, R, Children extends AbstractEsAggW
     }
 
     @Override
-    public Children filter(R name, QueryBuilder filter, Function<FilterAggregationBuilder, FilterAggregationBuilder> fn) {
+    public Children filter(R name, Supplier<EsWrapper<T>> filter, Function<FilterAggregationBuilder, FilterAggregationBuilder> fn) {
         filter(name, filter);
         fn.apply((FilterAggregationBuilder) currentBuilder);
         return children;
     }
 
     @Override
-    public Children adjacencyMatrix(R name, Map<String, QueryBuilder> filters, Function<AdjacencyMatrixAggregationBuilder, AdjacencyMatrixAggregationBuilder> fn) {
+    public Children adjacencyMatrix(R name, Map<String, Supplier<EsWrapper<T>>> filters, Function<AdjacencyMatrixAggregationBuilder, AdjacencyMatrixAggregationBuilder> fn) {
         adjacencyMatrix(name, filters);
         fn.apply((AdjacencyMatrixAggregationBuilder) currentBuilder);
         return children;
     }
 
     @Override
-    public Children adjacencyMatrix(R name, String separator, Map<String, QueryBuilder> filters, Function<AdjacencyMatrixAggregationBuilder, AdjacencyMatrixAggregationBuilder> fn) {
+    public Children adjacencyMatrix(R name, String separator, Map<String, Supplier<EsWrapper<T>>> filters, Function<AdjacencyMatrixAggregationBuilder, AdjacencyMatrixAggregationBuilder> fn) {
         adjacencyMatrix(name, separator, filters);
         fn.apply((AdjacencyMatrixAggregationBuilder) currentBuilder);
         return children;

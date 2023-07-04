@@ -8,7 +8,8 @@ import com.es.plus.core.wrapper.chain.EsChainLambdaQueryWrapper;
 import com.es.plus.core.wrapper.chain.EsChainQueryWrapper;
 import com.es.plus.core.wrapper.core.EsLambdaQueryWrapper;
 import com.es.plus.core.wrapper.core.EsLambdaUpdateWrapper;
-import com.es.plus.es6.client.EsPlusAggregations;
+import com.es.plus.core.wrapper.core.EsWrapper;
+import com.es.plus.es7.client.EsPlusAggregations;
 import com.es.plus.samples.dto.SamplesEsDTO;
 import com.es.plus.samples.dto.SamplesNestedDTO;
 import com.es.plus.samples.dto.SamplesNestedInnerDTO;
@@ -99,11 +100,18 @@ public class SamplesEsService extends EsServiceImpl<SamplesEsDTO> {
 
 
     public void agg() {
+
+        EsResponse<SamplesEsDTO> dd = esChainQueryWrapper().must().match(SamplesEsDTO::getUsername, "dd").list();
+
         // 声明语句嵌套关系是must
         EsChainLambdaQueryWrapper<SamplesEsDTO> esChainQueryWrapper = esChainQueryWrapper().must()
                 .ge(SamplesEsDTO::getId, 1);
         esChainQueryWrapper.esLambdaAggWrapper()
                 // terms聚合并且指定数量10000
+                .filter(SamplesEsDTO::getUsername, ()-> {
+                      EsWrapper<SamplesEsDTO> esWrapper = esChainQueryWrapper();
+                      return esWrapper;
+                })
                 .terms(SamplesEsDTO::getUsername, a -> a.size(1000))
                 // 在terms聚合的基础上统计lock数量
                 .subAggregation(t -> t.sum(SamplesEsDTO::getId));

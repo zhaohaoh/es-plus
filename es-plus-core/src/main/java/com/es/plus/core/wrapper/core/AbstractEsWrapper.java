@@ -97,7 +97,7 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
         return super.nameToString(function);
     }
 
-    @Override
+
     public BoolQueryBuilder getQueryBuilder() {
         return esParamWrapper().getQueryBuilder();
     }

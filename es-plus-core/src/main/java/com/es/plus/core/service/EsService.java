@@ -10,7 +10,6 @@ import com.es.plus.core.wrapper.chain.EsChainUpdateWrapper;
 import com.es.plus.core.wrapper.core.EsQueryWrapper;
 import com.es.plus.core.wrapper.core.EsUpdateWrapper;
 import com.es.plus.core.wrapper.core.EsWrapper;
-import com.es.plus.es6.client.EsPlusAggregations;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
 
@@ -248,7 +247,6 @@ public interface EsService<T> {
      * 聚合
      *
      * @param esQueryWrapper es查询包装器
-     * @return {@link EsPlusAggregations}<{@link T}>
      */
     EsAggResponse<T> aggregations(EsWrapper<T> esQueryWrapper);
 

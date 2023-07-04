@@ -1,5 +1,4 @@
-package com.es.plus.es7.client;
-
+package com.es.plus.es6.client;
 
 import com.es.plus.adapter.config.GlobalConfigCache;
 import com.es.plus.adapter.core.EsPlusIndexClient;
@@ -24,7 +23,7 @@ import org.elasticsearch.client.GetAliasesResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.client.indices.*;
-import org.elasticsearch.cluster.metadata.MappingMetadata;
+import org.elasticsearch.cluster.metadata.MappingMetaData;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentType;
@@ -37,7 +36,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.util.CollectionUtils;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * es索引管理者
@@ -45,12 +47,12 @@ import java.util.*;
  * @author hzh
  * @date 2022/09/03
  */
-public class EsPlus7IndexRestClient implements EsPlusIndexClient {
-    private static final Logger log = LoggerFactory.getLogger(EsPlus7IndexRestClient.class);
+public class EsPlus6IndexRestClient implements EsPlusIndexClient {
+    private static final Logger log = LoggerFactory.getLogger(EsPlus6IndexRestClient.class);
     private final RestHighLevelClient restHighLevelClient;
 
 
-    public EsPlus7IndexRestClient(RestHighLevelClient restHighLevelClient) {
+    public EsPlus6IndexRestClient(RestHighLevelClient restHighLevelClient) {
         this.restHighLevelClient = restHighLevelClient;
     }
 
@@ -178,16 +180,14 @@ public class EsPlus7IndexRestClient implements EsPlusIndexClient {
             GetIndexResponse getIndexResponse = restHighLevelClient.indices().get(request, RequestOptions.DEFAULT);
 
             Map<String, String> settingsMap = new HashMap<>();
-            Collection<Settings> values = getIndexResponse.getSettings().values();
-            Optional<Settings> first = values.stream().findFirst();
-            first.ifPresent(s -> {
+            getIndexResponse.getSettings().values().stream().findFirst().ifPresent(s -> {
                 Set<String> names = s.keySet();
                 names.forEach(name -> settingsMap.put(name, s.get(name)));
             });
 
 
             String[] indices = getIndexResponse.getIndices();
-            Map<String, MappingMetadata> mappings = getIndexResponse.getMappings();
+            Map<String, MappingMetaData> mappings = getIndexResponse.getMappings();
             Map<String, Object> sourceAsMap = mappings.values().stream().findFirst().get().getSourceAsMap();
             esIndexResponse.setIndices(indices);
             esIndexResponse.setMappings(sourceAsMap);
@@ -378,6 +378,7 @@ public class EsPlus7IndexRestClient implements EsPlusIndexClient {
             throw new EsException("createAlias exception", e);
         }
     }
+
 
     /**
      * 索引请求

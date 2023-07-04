@@ -1,7 +1,11 @@
 package com.es.plus.adapter.core;
 
-import com.es.plus.adapter.params.*;
+import com.es.plus.adapter.params.EsAggResponse;
+import com.es.plus.adapter.params.EsParamWrapper;
+import com.es.plus.adapter.params.EsResponse;
+import com.es.plus.adapter.params.PageInfo;
 import org.elasticsearch.action.bulk.BulkItemResponse;
+import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
 
 import java.time.Duration;
@@ -9,6 +13,8 @@ import java.util.Collection;
 import java.util.List;
 
 public interface EsPlusClient {
+
+    RestHighLevelClient getRestHighLevelClient();
     /**
      * 是否在执行reindex
      */

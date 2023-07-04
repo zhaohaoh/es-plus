@@ -15,6 +15,10 @@ import org.elasticsearch.action.support.WriteRequest;
 @Data
 public class GlobalConfig {
     /**
+     * es版本 目前支持6和7，默认是7
+     */
+    private Integer version = 7;
+    /**
      * 类型
      */
     private String type = "_doc";

@@ -51,7 +51,7 @@ public class SamplesEsDTO {
     private String aaaaa;
 
     @EsField(type = EsFieldType.KEYWORD)
-    private String baaq;
+    private String baaaqqrr;
     //
 //    @TableField(exist = false)
 //    @IgnoreSwaggerParameter

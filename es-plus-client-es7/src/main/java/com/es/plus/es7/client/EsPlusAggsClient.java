@@ -1,8 +1,13 @@
-package com.es.plus.es6.client;
+package com.es.plus.es7.client;
 
 import com.es.plus.adapter.config.GlobalConfigCache;
 import com.es.plus.adapter.core.EsAggClient;
+import com.es.plus.adapter.params.EsParamWrapper;
+import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.search.aggregations.BaseAggregationBuilder;
+import org.elasticsearch.search.aggregations.bucket.adjacency.AdjacencyMatrixAggregationBuilder;
+import org.elasticsearch.search.aggregations.bucket.filter.FilterAggregationBuilder;
+import org.elasticsearch.search.aggregations.bucket.filter.FiltersAggregationBuilder;
 import org.elasticsearch.search.aggregations.bucket.global.Global;
 import org.elasticsearch.search.aggregations.bucket.global.GlobalAggregationBuilder;
 import org.elasticsearch.search.aggregations.bucket.histogram.DateHistogramAggregationBuilder;
@@ -17,34 +22,13 @@ import org.elasticsearch.search.aggregations.bucket.significant.SignificantTerms
 import org.elasticsearch.search.aggregations.bucket.significant.SignificantTextAggregationBuilder;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.search.aggregations.bucket.terms.TermsAggregationBuilder;
-import org.elasticsearch.search.aggregations.metrics.avg.AvgAggregationBuilder;
-import org.elasticsearch.search.aggregations.metrics.cardinality.CardinalityAggregationBuilder;
-import org.elasticsearch.search.aggregations.metrics.geobounds.GeoBoundsAggregationBuilder;
-import org.elasticsearch.search.aggregations.metrics.geocentroid.GeoCentroidAggregationBuilder;
-import org.elasticsearch.search.aggregations.metrics.mad.MedianAbsoluteDeviationAggregationBuilder;
-import org.elasticsearch.search.aggregations.metrics.max.MaxAggregationBuilder;
-import org.elasticsearch.search.aggregations.metrics.min.MinAggregationBuilder;
-import org.elasticsearch.search.aggregations.metrics.percentiles.PercentilesAggregationBuilder;
-import org.elasticsearch.search.aggregations.metrics.scripted.ScriptedMetricAggregationBuilder;
-import org.elasticsearch.search.aggregations.metrics.stats.StatsAggregationBuilder;
-import org.elasticsearch.search.aggregations.metrics.stats.extended.ExtendedStatsAggregationBuilder;
-import org.elasticsearch.search.aggregations.metrics.sum.SumAggregationBuilder;
-import org.elasticsearch.search.aggregations.metrics.tophits.TopHitsAggregationBuilder;
-import org.elasticsearch.search.aggregations.metrics.valuecount.ValueCountAggregationBuilder;
-import org.elasticsearch.search.aggregations.metrics.weighted_avg.WeightedAvgAggregationBuilder;
-import org.elasticsearch.search.aggregations.pipeline.bucketmetrics.avg.AvgBucketPipelineAggregationBuilder;
-import org.elasticsearch.search.aggregations.pipeline.bucketmetrics.max.MaxBucketPipelineAggregationBuilder;
-import org.elasticsearch.search.aggregations.pipeline.bucketmetrics.min.MinBucketPipelineAggregationBuilder;
-import org.elasticsearch.search.aggregations.pipeline.bucketmetrics.percentile.PercentilesBucketPipelineAggregationBuilder;
-import org.elasticsearch.search.aggregations.pipeline.bucketmetrics.stats.StatsBucketPipelineAggregationBuilder;
-import org.elasticsearch.search.aggregations.pipeline.bucketmetrics.stats.extended.ExtendedStatsBucketPipelineAggregationBuilder;
-import org.elasticsearch.search.aggregations.pipeline.bucketmetrics.sum.SumBucketPipelineAggregationBuilder;
-import org.elasticsearch.search.aggregations.pipeline.cumulativesum.CumulativeSumPipelineAggregationBuilder;
-import org.elasticsearch.search.aggregations.pipeline.derivative.DerivativePipelineAggregationBuilder;
-import org.elasticsearch.search.aggregations.pipeline.serialdiff.SerialDiffPipelineAggregationBuilder;
-import org.elasticsearch.search.aggregations.support.ValueType;
+import org.elasticsearch.search.aggregations.metrics.*;
+import org.elasticsearch.search.aggregations.pipeline.*;
 
 import javax.naming.OperationNotSupportedException;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 import static com.es.plus.constant.EsConstant.AGG_DELIMITER;
 
@@ -53,12 +37,13 @@ public class EsPlusAggsClient implements EsAggClient {
     @Override
     public BaseAggregationBuilder count(String field) {
         String aggName = field + AGG_DELIMITER + ValueCountAggregationBuilder.NAME;
-        ValueCountAggregationBuilder valueCountAggregationBuilder = new ValueCountAggregationBuilder(aggName,ValueType.STRING);
+        ValueCountAggregationBuilder valueCountAggregationBuilder = new ValueCountAggregationBuilder(aggName);
         valueCountAggregationBuilder.field(field);
         return valueCountAggregationBuilder;
     }
 
     /**
+     * Create a new {@link Avg} aggregation with the given aggName.
      */
     @Override
     public BaseAggregationBuilder avg(String field) {
@@ -69,6 +54,7 @@ public class EsPlusAggsClient implements EsAggClient {
     }
 
     /**
+     * Create a new {@link Avg} aggregation with the given aggName.
      */
     @Override
     public BaseAggregationBuilder weightedAvg(String field) {
@@ -78,6 +64,7 @@ public class EsPlusAggsClient implements EsAggClient {
     }
 
     /**
+     * Create a new {@link Max} aggregation with the given aggName.
      */
     @Override
     public BaseAggregationBuilder max(String field) {
@@ -88,6 +75,7 @@ public class EsPlusAggsClient implements EsAggClient {
     }
 
     /**
+     * Create a new {@link Min} aggregation with the given aggName.
      */
     @Override
     public BaseAggregationBuilder min(String field) {
@@ -98,6 +86,7 @@ public class EsPlusAggsClient implements EsAggClient {
     }
 
     /**
+     * Create a new {@link Sum} aggregation with the given aggName.
      */
     @Override
     public BaseAggregationBuilder sum(String field) {
@@ -108,6 +97,7 @@ public class EsPlusAggsClient implements EsAggClient {
     }
 
     /**
+     * Create a new {@link Stats} aggregation with the given aggName.
      */
     @Override
     public BaseAggregationBuilder stats(String field) {
@@ -118,6 +108,7 @@ public class EsPlusAggsClient implements EsAggClient {
     }
 
     /**
+     * Create a new {@link ExtendedStats} aggregation with the given aggName.
      */
     @Override
     public BaseAggregationBuilder extendedStats(String field) {
@@ -127,8 +118,41 @@ public class EsPlusAggsClient implements EsAggClient {
         return extendedStatsAggregationBuilder;
     }
 
+    @Override
+    public BaseAggregationBuilder filter(String field, EsParamWrapper<?> esParamWrapper) {
+        String aggName = field + AGG_DELIMITER + FilterAggregationBuilder.NAME;
+        FilterAggregationBuilder filterAggregationBuilder = new FilterAggregationBuilder(aggName,esParamWrapper.getQueryBuilder());
+        return filterAggregationBuilder;
+    }
+
+    @Override
+    public BaseAggregationBuilder filters(String field, EsParamWrapper<?>... esParamWrapper) {
+        QueryBuilder[] boolQueryBuilders = Arrays.stream(esParamWrapper).map(EsParamWrapper::getQueryBuilder).toArray(QueryBuilder[]::new);
+        String aggName = field + AGG_DELIMITER + FiltersAggregationBuilder.NAME;
+        FiltersAggregationBuilder filterAggregationBuilder = new FiltersAggregationBuilder(aggName,boolQueryBuilders);
+        return filterAggregationBuilder;
+    }
+
+    @Override
+    public BaseAggregationBuilder adjacencyMatrix(String field, Map<String, EsParamWrapper<?>> esParamWrapper) {
+        Map<String,QueryBuilder> queryBuilderMap=new HashMap<>();
+        esParamWrapper.forEach((k,v)->queryBuilderMap.put(k,v.getQueryBuilder()));
+        String aggName = field + AGG_DELIMITER + FiltersAggregationBuilder.NAME;
+        AdjacencyMatrixAggregationBuilder adjacencyMatrixAggregationBuilder = new AdjacencyMatrixAggregationBuilder(aggName,queryBuilderMap);
+        return adjacencyMatrixAggregationBuilder;
+    }
+
+    @Override
+    public BaseAggregationBuilder adjacencyMatrix(String name, String separator, Map<String, EsParamWrapper<?>> esParamWrapper) {
+        Map<String,QueryBuilder> queryBuilderMap=new HashMap<>();
+        esParamWrapper.forEach((k,v)->queryBuilderMap.put(k,v.getQueryBuilder()));
+        String aggName = name + AGG_DELIMITER + FiltersAggregationBuilder.NAME;
+        AdjacencyMatrixAggregationBuilder adjacencyMatrixAggregationBuilder = new AdjacencyMatrixAggregationBuilder(aggName,separator,queryBuilderMap);
+        return adjacencyMatrixAggregationBuilder;
+    }
 
     /**
+     * Create a new {@link Sampler} aggregation with the given aggName.
      */
     @Override
     public BaseAggregationBuilder sampler(String field) {
@@ -137,7 +161,9 @@ public class EsPlusAggsClient implements EsAggClient {
         return  samplerAggregationBuilder;
     }
 
-
+    /**
+     * Create a new {@link Sampler} aggregation with the given aggName.
+     */
     @Override
     public BaseAggregationBuilder diversifiedSampler(String field) {
         String aggName = field + AGG_DELIMITER + DiversifiedAggregationBuilder.NAME;
@@ -156,11 +182,13 @@ public class EsPlusAggsClient implements EsAggClient {
         return globalAggregationBuilder;
     }
 
-
+    /**
+     * Create a new {@link Missing} aggregation with the given aggName.
+     */
     @Override
     public BaseAggregationBuilder missing(String field) {
         String aggName = field + AGG_DELIMITER + MissingAggregationBuilder.NAME;
-        MissingAggregationBuilder missingAggregationBuilder = new MissingAggregationBuilder(aggName,ValueType.STRING);
+        MissingAggregationBuilder missingAggregationBuilder = new MissingAggregationBuilder(aggName);
         missingAggregationBuilder.field(field);
         return missingAggregationBuilder;
     }
@@ -176,7 +204,7 @@ public class EsPlusAggsClient implements EsAggClient {
     }
 
     /**
-
+     * Create a new {@link StringeverseNested} aggregation with the given aggName.
      */
     @Override
     public BaseAggregationBuilder reverseNested(String field) throws OperationNotSupportedException {
@@ -196,6 +224,7 @@ public class EsPlusAggsClient implements EsAggClient {
     }
 
     /**
+     * Create a new {@link InternalGeoHashGrid} aggregation with the given aggName.
      */
     @Override
     public BaseAggregationBuilder geohashGrid(String field) throws OperationNotSupportedException {
@@ -203,6 +232,7 @@ public class EsPlusAggsClient implements EsAggClient {
     }
 
     /**
+     * Create a new {@link InternalGeoTileGrid} aggregation with the given aggName.
      */
     @Override
     public BaseAggregationBuilder geotileGrid(String field) throws OperationNotSupportedException {
@@ -210,11 +240,12 @@ public class EsPlusAggsClient implements EsAggClient {
     }
 
     /**
+     * Create a new {@link SignificantTerms} aggregation with the given aggName.
      */
     @Override
     public BaseAggregationBuilder significantTerms(String field) {
         String aggName = field + AGG_DELIMITER + SignificantTermsAggregationBuilder.NAME;
-        SignificantTermsAggregationBuilder significantTermsAggregationBuilder = new SignificantTermsAggregationBuilder(aggName,ValueType.STRING);
+        SignificantTermsAggregationBuilder significantTermsAggregationBuilder = new SignificantTermsAggregationBuilder(aggName);
         significantTermsAggregationBuilder.field(field);
         return significantTermsAggregationBuilder;
     }
@@ -245,7 +276,7 @@ public class EsPlusAggsClient implements EsAggClient {
     }
 
     /**
-
+     * Create a new {@link Stringange} aggregation with the given aggName.
      */
     @Override
     public BaseAggregationBuilder range(String field) {
@@ -253,6 +284,7 @@ public class EsPlusAggsClient implements EsAggClient {
     }
 
     /**
+     * Create a new {@link DateStringangeAggregationBuilder} aggregation with the
      * given aggName.
      */
     @Override
@@ -261,6 +293,7 @@ public class EsPlusAggsClient implements EsAggClient {
     }
 
     /**
+     * Create a new {@link IpStringangeAggregationBuilder} aggregation with the
      * given aggName.
      */
     @Override
@@ -274,13 +307,14 @@ public class EsPlusAggsClient implements EsAggClient {
     @Override
     public BaseAggregationBuilder terms(String field) {
         String aggName = field + AGG_DELIMITER + TermsAggregationBuilder.NAME;
-        TermsAggregationBuilder termsAggregationBuilder = new TermsAggregationBuilder(aggName,ValueType.STRING);
+        TermsAggregationBuilder termsAggregationBuilder = new TermsAggregationBuilder(aggName);
         termsAggregationBuilder.field(field);
         termsAggregationBuilder.size(GlobalConfigCache.GLOBAL_CONFIG.getSearchSize());
         return termsAggregationBuilder;
     }
 
     /**
+     * Create a new {@link Percentiles} aggregation with the given aggName.
      */
     @Override
     public BaseAggregationBuilder percentiles(String field) {
@@ -291,14 +325,18 @@ public class EsPlusAggsClient implements EsAggClient {
     }
 
     /**
+     * Create a new {@link PercentileStringanks} aggregation with the given aggName.
      */
     @Override
-    public BaseAggregationBuilder percentileStringanks(String aggName, double[] values) {
-
-        return null;
+    public BaseAggregationBuilder percentileStringanks(String field, double[] values) {
+        String aggName = field + AGG_DELIMITER + PercentileRanksAggregationBuilder.NAME;
+        PercentileRanksAggregationBuilder percentileRanksAggregationBuilder = new PercentileRanksAggregationBuilder(aggName, values);
+        percentileRanksAggregationBuilder.field(field);
+        return percentileRanksAggregationBuilder;
     }
 
     /**
+     * Create a new {@link MedianAbsoluteDeviation} aggregation with the given aggName
      */
     @Override
     public BaseAggregationBuilder medianAbsoluteDeviation(String field) {
@@ -309,16 +347,18 @@ public class EsPlusAggsClient implements EsAggClient {
     }
 
     /**
+     * Create a new {@link Cardinality} aggregation with the given aggName.
      */
     @Override
     public BaseAggregationBuilder cardinality(String field) {
         String aggName = field + AGG_DELIMITER + CardinalityAggregationBuilder.NAME;
-        CardinalityAggregationBuilder cardinalityAggregationBuilder = new CardinalityAggregationBuilder(aggName, ValueType.STRING);
+        CardinalityAggregationBuilder cardinalityAggregationBuilder = new CardinalityAggregationBuilder(aggName);
         cardinalityAggregationBuilder.field(field);
         return cardinalityAggregationBuilder;
     }
 
     /**
+     * Create a new {@link TopHits} aggregation with the given aggName.
      */
     @Override
     public BaseAggregationBuilder topHits(String field) {
@@ -328,6 +368,7 @@ public class EsPlusAggsClient implements EsAggClient {
     }
 
     /**
+     * Create a new {@link GeoBounds} aggregation with the given aggName.
      */
     @Override
     public BaseAggregationBuilder geoBounds(String field) {
@@ -339,6 +380,7 @@ public class EsPlusAggsClient implements EsAggClient {
     }
 
     /**
+     * Create a new {@link GeoCentroid} aggregation with the given aggName.
      */
     @Override
     public BaseAggregationBuilder geoCentroid(String field) {
@@ -349,6 +391,7 @@ public class EsPlusAggsClient implements EsAggClient {
     }
 
     /**
+     * Create a new {@link ScriptedMetric} aggregation with the given aggName.
      */
     @Override
     public BaseAggregationBuilder scriptedMetric(String field) {

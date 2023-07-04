@@ -1,8 +1,8 @@
 package com.es.plus.core.wrapper.aggregation;
 
+import com.es.plus.core.wrapper.core.EsWrapper;
 import org.elasticsearch.common.geo.GeoDistance;
 import org.elasticsearch.common.geo.GeoPoint;
-import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.script.Script;
 import org.elasticsearch.search.aggregations.bucket.adjacency.AdjacencyMatrix;
 import org.elasticsearch.search.aggregations.bucket.composite.CompositeAggregationBuilder;
@@ -30,12 +30,13 @@ import org.elasticsearch.search.sort.FieldSortBuilder;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 /**
  * @Author: hzh
  * @Date: 2022/1/21 11:10
  */
-public interface IEsAggWrapper<Children, R> {
+public interface IEsAggWrapper<Children, R,T> {
 
     /**
      * 子聚合
@@ -91,7 +92,7 @@ public interface IEsAggWrapper<Children, R> {
     /**
      * Create a new {@link Filter} aggregation with the given name.
      */
-    Children filter(R name, QueryBuilder filter);
+    Children filter(R name, Supplier<EsWrapper<T>> supplier);
 
     /**
      * Create a new {@link Filters} aggregation with the given name.
@@ -101,17 +102,17 @@ public interface IEsAggWrapper<Children, R> {
     /**
      * Create a new {@link Filters} aggregation with the given name.
      */
-    Children filters(R name, QueryBuilder... filters);
+    Children filters(R name, Supplier<EsWrapper<T>>... supplier);
 
     /**
      * Create a new {@link AdjacencyMatrix} aggregation with the given name.
      */
-    Children adjacencyMatrix(R name, Map<String, QueryBuilder> filters);
+    Children adjacencyMatrix(R name, Map<String, Supplier<EsWrapper<T>>> filters);
 
     /**
      * Create a new {@link AdjacencyMatrix} aggregation with the given name and separator
      */
-    Children adjacencyMatrix(R name, String separator, Map<String, QueryBuilder> filters);
+    Children adjacencyMatrix(R name, String separator, Map<String, Supplier<EsWrapper<T>>> adjacencyMatrixMap);
 
     /**
      * Create a new {@link Sampler} aggregation with the given name.

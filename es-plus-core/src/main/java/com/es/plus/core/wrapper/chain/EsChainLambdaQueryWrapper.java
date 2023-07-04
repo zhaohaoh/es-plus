@@ -9,7 +9,6 @@ import com.es.plus.adapter.properties.EsParamHolder;
 import com.es.plus.adapter.tools.SFunction;
 import com.es.plus.core.ClientContext;
 import com.es.plus.core.wrapper.core.EsLambdaQueryWrapper;
-import com.es.plus.es6.client.EsPlusAggregations;
 import org.apache.commons.lang3.StringUtils;
 
 import java.time.Duration;
@@ -77,7 +76,6 @@ public class EsChainLambdaQueryWrapper<T> extends AbstractEsChainWrapper<T, SFun
     /**
      * 聚合
      *
-     * @return {@link EsPlusAggregations}<{@link T}>
      */
     public EsAggResponse<T> aggregations() {
         return esPlusClientFacade.aggregations(index, type, esWrapper.esParamWrapper(), tClass);

@@ -375,8 +375,6 @@ public abstract class AbstractEsChainWrapper<T, R, Children extends AbstractEsCh
         return children;
     }
 
-
-    @Override
     public BoolQueryBuilder getQueryBuilder() {
         return getWrapper().getQueryBuilder();
     }

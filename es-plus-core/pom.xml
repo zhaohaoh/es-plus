@@ -18,6 +18,12 @@
         </dependency>
         <dependency>
             <groupId>io.github.zhaohaoh</groupId>
+            <artifactId>es-plus-client-es7</artifactId>
+            <version>${project.version}</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.github.zhaohaoh</groupId>
             <artifactId>es-plus-client-es6</artifactId>
             <version>${project.version}</version>
             <scope>compile</scope>

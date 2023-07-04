@@ -1,9 +1,11 @@
 package com.es.plus.adapter.core;
 
 
+import com.es.plus.adapter.params.EsParamWrapper;
 import org.elasticsearch.search.aggregations.BaseAggregationBuilder;
 
 import javax.naming.OperationNotSupportedException;
+import java.util.Map;
 
 
 public interface EsAggClient {
@@ -56,31 +58,31 @@ public interface EsAggClient {
      * Create a new {@link Filter} aggregation with the given name.
      */
 
-//    BaseAggregationBuilder filter(String name, QueryBuilder filter);
+    BaseAggregationBuilder filter(String name, EsParamWrapper<?> esParamWrapper);
 
-//    /**
-//     * Create a new {@link Filters} aggregation with the given name.
-//     */
-//
+    /**
+     * Create a new {@link Filters} aggregation with the given name.
+     */
+
 //    BaseAggregationBuilder filters(String name, FiltersAggregator.KeyedFilter... filters);
-//
-//    /**
-//     * Create a new {@link Filters} aggregation with the given name.
-//     */
-//
-//    BaseAggregationBuilder filters(String name, QueryBuilder... filters);
-//
-//    /**
-//     * Create a new {@link AdjacencyMatrix} aggregation with the given name.
-//     */
-//
-//    BaseAggregationBuilder adjacencyMatrix(String name, Map<String, QueryBuilder> filters);
-//
-//    /**
-//     * Create a new {@link AdjacencyMatrix} aggregation with the given name and separator
-//     */
-//
-//    BaseAggregationBuilder adjacencyMatrix(String name, String separator, Map<String, QueryBuilder> filters);
+
+    /**
+     * Create a new {@link Filters} aggregation with the given name.
+     */
+
+    BaseAggregationBuilder filters(String name, EsParamWrapper<?>... esParamWrapper);
+
+    /**
+     * Create a new {@link AdjacencyMatrix} aggregation with the given name.
+     */
+
+    BaseAggregationBuilder adjacencyMatrix(String name, Map<String, EsParamWrapper<?>> esParamWrapper);
+
+    /**
+     * Create a new {@link AdjacencyMatrix} aggregation with the given name and separator
+     */
+
+    BaseAggregationBuilder adjacencyMatrix(String name, String separator, Map<String, EsParamWrapper<?>> esParamWrapper);
 
     /**
      * Create a new {@link Sampler} aggregation with the given name.

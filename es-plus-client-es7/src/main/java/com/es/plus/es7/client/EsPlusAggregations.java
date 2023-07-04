@@ -32,7 +32,7 @@ import java.util.Map;
  * @Author: hzh
  * @Date: 2022/6/21 12:31
  */
-public class EsPlus7Aggregations<T> implements EsAggResponse<T> {
+public class EsPlusAggregations<T> implements EsAggResponse<T> {
     private Aggregations aggregations;
     private Class<T> tClass;
 
