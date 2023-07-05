@@ -11,7 +11,7 @@ Es-Plus 是Elasticsearch Api增强工具 - 只做增强不做改变，简化`CRU
 - **自动reindex功能**：es索引库属性的改变会导致es需要重建索引.重建索引的数据迁移由框架自动完成.使用了读写锁,确保reindex过程中额外生成的数据也能同步(但会有删除数据的冗余)
 - **兼容es多版本**: 同时支持es6.7和es7.8双版本
 - **优雅的nested嵌套查询**: 使用lambda表达式封装实现更优雅的嵌套查询
-- **静态链式es编程**: 支持使用静态类，无需指定对应实体类即可执行增删改查
+- **静态链式es编程**: 支持使用静态类，无需指定对应实体类即可执行。可以简单快速对es的索引进行增删改查。
 - **多数据源es**: 代码中预留,暂未排期开发
 
 ## 引入
@@ -28,9 +28,9 @@ Es-Plus 是Elasticsearch Api增强工具 - 只做增强不做改变，简化`CRU
         </dependency>
 ```
 
-## 快速开始
+## 简单两步! 快速开始!
 
-###   application.peoperties配置
+###  第一步 application.peoperties配置
 
 ```properties
 # es地址 多个逗号分隔
@@ -55,6 +55,26 @@ es-plus.password=
 # es多版本 本次更新
 es-plus.global-config.version=7
 ```
+
+### 第二步 静态链式编程
+```java
+public class SamplesEsService extends EsServiceImpl<SamplesEsDTO> {
+    // 无实体类使用指定index索引直接保存 查询同理
+    public void update() {
+        Map<String, Object> map = new HashMap<>();
+        map.put("username", "fsdfsfds");
+        map.put("id", "d73d1b4e46244b0db766987759d6e");
+        Es.chainUpdate(Map.class).index("sys_user2ttt").save(map);
+    }
+
+    public void newSelect() {
+        EsResponse<SamplesEsDTO> aaaaa = Es.chainLambdaQuery(SamplesEsDTO.class).term(SamplesEsDTO::getUsername, "hzh").list();
+        System.out.println(aaaaa);
+    }
+}
+```
+
+## ORM映射方式
 
 ### 实体类 没有配置@EsField会根据java自动映射.获取不到映射则设置为Object
 ```java
@@ -209,24 +229,6 @@ public class SysUserEsService extends EsServiceImpl<SysUser>{
 }
 ```
 
-
-## 静态链式编程
-```java
-public class SamplesEsService extends EsServiceImpl<SamplesEsDTO> {
-    // 无实体类使用指定index索引直接保存 查询同理
-    public void update() {
-        Map<String, Object> map = new HashMap<>();
-        map.put("username", "fsdfsfds");
-        map.put("id", "d73d1b4e46244b0db766987759d6e");
-        Es.chainUpdate(Map.class).index("sys_user2ttt").save(map);
-    }
-
-    public void newSelect() {
-        EsResponse<SamplesEsDTO> aaaaa = Es.chainLambdaQuery(SamplesEsDTO.class).term(SamplesEsDTO::getUsername, "hzh").list();
-        System.out.println(aaaaa);
-    }
-}
-```
 
 
 ## Es版本
