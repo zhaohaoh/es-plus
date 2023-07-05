@@ -6,14 +6,14 @@
 
     <groupId>io.github.zhaohaoh</groupId>
     <artifactId>es-plus-pom</artifactId>
-     <version>${rversion}</version>
+    <version>${rversion}</version>
     <packaging>pom</packaging>
     <properties>
         <maven.compiler.source>8</maven.compiler.source>
         <maven.compiler.target>8</maven.compiler.target>
         <lang3.version>3.9</lang3.version>
         <spring-boot.version>2.6.3</spring-boot.version>
-        <rversion>0.1.26-SNAPSHOT</rversion>
+        <rversion>0.2.0-SNAPSHOT</rversion>
         <elasticsearch.version>7.8.0</elasticsearch.version>
     </properties>
     <licenses>

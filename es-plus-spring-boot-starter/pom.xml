@@ -15,6 +15,9 @@
         <maven.compiler.source>8</maven.compiler.source>
         <maven.compiler.target>8</maven.compiler.target>
     </properties>
+
+    <description>es-plus启动类</description>
+
     <dependencies>
         <dependency>
             <groupId>io.github.zhaohaoh</groupId>
