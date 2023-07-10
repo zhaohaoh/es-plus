@@ -51,12 +51,12 @@ public interface EsPlusIndexClient {
      * @param index  指数
      * @param tClass t类
      */
-    void createIndexWithoutAlias(String index, Class<?> tClass);
+    boolean createIndexWithoutAlias(String index, Class<?> tClass);
 
     /**
      * 删除索引
      */
-    void deleteIndex(String index);
+    boolean deleteIndex(String index);
 
 
     /**

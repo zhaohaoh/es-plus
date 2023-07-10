@@ -1,6 +1,5 @@
 package com.es.plus.annotation;
 
-import com.es.plus.constant.Analyzer;
 import com.es.plus.constant.EsFieldType;
 
 import java.lang.annotation.ElementType;
@@ -87,18 +86,31 @@ public @interface EsField {
     boolean exist() default true;
 
     /**
-     * 日期格式化
+     * es的日期支持的存储格式。 || 可以指定多个   但不是正反序列化使用的格式  但是date转换成string的序列化不归此参数管理
      *
      * @return {@link String}
      */
     String format() default "";
 
     /**
-     * 全局序数 提高聚合性能 适用于聚合字段和父子文档
+     * 全局序数  插入的时候即对聚合进行预处理 提高聚合性能 适用于聚合字段和父子文档
+     * 适用场景：高基数聚合 即非重复属性多的字段
+     * 表示是否提前加载全局顺序号。 Global ordinals 是一个建立在 doc values 和 fielddata 基础上的数据结构
+     * | Doc   | Terms                                                   |
+     * | ----- | ------------------------------------------------------- |
+     * | Doc_1 | brown, dog, fox, jumped, lazy, over, quick, the         |
+     * | Doc_2 | brown, dogs, foxes, in, lazy, leap, over, quick, summer |
+     *
+     * | Terms | ordinal |
+     * | ----- | ------- |
+     * | brown | 1       |
+     * | dog   | 2       |
+     * | fox   | 3       |
      *
      * @return boolean
      */
     boolean eagerGlobalOrdinals() default false;
+
 
     /**
      * 父

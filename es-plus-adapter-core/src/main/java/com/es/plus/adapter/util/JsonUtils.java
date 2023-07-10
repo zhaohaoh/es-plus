@@ -67,7 +67,9 @@ public class JsonUtils {
         simpleModule.addSerializer(LocalDate.class, new LocalDateSerializer(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
         simpleModule.addDeserializer(LocalDate.class, new LocalDateDeserializer(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
 
+//        simpleModule.addSerializer(Date.class,new CustomDateSerializer());
         MAPPER.registerModule(new SpringDataElasticsearchModule());
+        //默认反序列化返回的时间
         MAPPER.setDateFormat(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss") {
             // 这个方法是反序列化需要滴！
             @Override
@@ -75,6 +77,7 @@ public class JsonUtils {
                 return str2Data(source);
             }
         });
+
         MAPPER.registerModule(simpleModule);
     }
 
@@ -95,7 +98,7 @@ public class JsonUtils {
         if (index > fmtList.size() - 1) {
             return null;
         }
-        SimpleDateFormat format = new SimpleDateFormat(fmtList.get(index));
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
         try {
             Date date = format.parse(dateStr);
             return date;
@@ -104,16 +107,7 @@ public class JsonUtils {
         }
     }
 
-    /***
-     * date格式化字符串
-     * @param date
-     * @param fmt
-     * @return
-     */
-    private String date2str(Date date, String fmt) {
-        SimpleDateFormat format = new SimpleDateFormat(fmt);
-        return format.format(date);
-    }
+
 
     public static <T> T mapToBean(Map<String, Object> source, Class<T> targetType) {
         try {

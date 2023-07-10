@@ -8,6 +8,7 @@ import com.es.plus.constant.EsFieldType;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.List;
 
 
@@ -53,8 +54,8 @@ public class SamplesEsDTO {
     @EsField(type = EsFieldType.KEYWORD)
     private String baaaqqrr;
 
-    @EsField(type = EsFieldType.DATE,format = "yyyy-MM-dd HH:mm:ss || yyyy-MM-dd ")
-    private String date;
+    @EsField(type = EsFieldType.DATE,format = "yyyy-MM-dd'T'HH:mm:ss'Z' || yyyy-MM-dd HH:mm:ss || yyyy-MM-dd || yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+    private Date date;
     //
 //    @TableField(exist = false)
 //    @IgnoreSwaggerParameter

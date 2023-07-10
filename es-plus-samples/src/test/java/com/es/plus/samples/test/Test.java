@@ -21,7 +21,7 @@ public class Test {
         SamplesEsDTO samplesEsDTO = new SamplesEsDTO();
         samplesEsDTO.setEmail("bbbberretertrebbbb");
         samplesEsDTO.setUsername("ggghhh");
-        samplesEsDTO.setDate("2018-09-22 12:30:10");
+        samplesEsDTO.setDate(new Date());
         List<SamplesNestedDTO> samplesNestedDTOS=new ArrayList<>();
         SamplesNestedDTO samplesNestedDTO = new SamplesNestedDTO();
         samplesNestedDTO.setEmail("3");

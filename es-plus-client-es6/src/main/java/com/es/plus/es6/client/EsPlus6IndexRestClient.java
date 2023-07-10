@@ -124,7 +124,7 @@ public class EsPlus6IndexRestClient implements EsPlusIndexClient {
      * @param tClass t类
      */
     @Override
-    public void createIndexWithoutAlias(String index, Class<?> tClass) {
+    public boolean createIndexWithoutAlias(String index, Class<?> tClass) {
         // 如果已经存在
         CreateIndexRequest indexRequest = new CreateIndexRequest(index);
         boolean exists = this.indexExists(indexRequest.index());
@@ -145,22 +145,25 @@ public class EsPlus6IndexRestClient implements EsPlusIndexClient {
                         .mapping(esIndexParam.getMappings());
                 printInfoLog("createMapping settings={},mappings:{}", settings.build().toString(), JsonUtils.toJsonStr(esIndexParam.getMappings()));
                 CreateIndexResponse indexResponse = restHighLevelClient.indices().create(indexRequest, RequestOptions.DEFAULT);
+                return indexResponse.isAcknowledged();
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             throw new EsException("mappingRequest error", e);
         }
+        return false;
     }
 
     /**
      * 删除索引
      */
     @Override
-    public void deleteIndex(String index) {
+    public boolean deleteIndex(String index) {
         DeleteIndexRequest request = new DeleteIndexRequest(index);
         try {
             AcknowledgedResponse delete = restHighLevelClient.indices().delete(request, RequestOptions.DEFAULT);
             boolean acknowledged = delete.isAcknowledged();
             printInfoLog("deleteIndex index={} ack:{}", index,acknowledged);
+            return acknowledged;
         } catch (IOException e) {
             throw new RuntimeException("delete index error ", e);
         }
