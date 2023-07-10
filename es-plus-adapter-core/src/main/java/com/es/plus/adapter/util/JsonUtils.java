@@ -43,6 +43,8 @@ public class JsonUtils {
         add("yyyy-MM-dd HH:mm");
         add("yyyy-MM-dd HH");
         add("yyyy-MM-dd");
+        add("yyyy-MM-dd'T'HH:mm:ss'Z'");
+        add("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
     }};
 
     static {

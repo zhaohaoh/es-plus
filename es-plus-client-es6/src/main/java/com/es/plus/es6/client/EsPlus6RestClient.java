@@ -1023,7 +1023,7 @@ public class EsPlus6RestClient implements EsPlusClient {
             if (!isLock) {
                 //已经执行完reindex操作 那么释放更新锁
                 reindexState = false;
-                log.info("enabledReindex = false");
+                log.info("set enabledReindex false");
                 if (success) {
                     readLock.unlock();
                 }

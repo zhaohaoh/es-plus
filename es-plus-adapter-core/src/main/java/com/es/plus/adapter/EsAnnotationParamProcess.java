@@ -254,6 +254,9 @@ public class EsAnnotationParamProcess {
 
         //获取格式化
         if (StringUtils.isNotBlank(esField.format())) {
+            if (!esField.type().equals(EsFieldType.DATE)){
+                throw new EsException("ES field type not is date but format is date ");
+            }
             properties.put(EsConstant.FORMAT, esField.format());
         }
     }

@@ -44,8 +44,8 @@ import static com.es.plus.constant.EsConstant.NUMBER_OF_SHARDS;
  */
 public class EsReindexProcess {
     private static final Logger log = LoggerFactory.getLogger(EsReindexProcess.class);
-    // 重建索引的最多有10个就已经很多了
-    private static final ThreadPoolExecutor reindexExecutor = new ThreadPoolExecutor(1, 10,
+    // 重建索引的最多有3个就已经很多了  再多cpu飙升
+    private static final ThreadPoolExecutor reindexExecutor = new ThreadPoolExecutor(1, 3,
             60L, TimeUnit.SECONDS,
             // 这个范围内的视为核心线程可以处理
             new SynchronousQueue<>(), new ThreadFactory() {
@@ -63,6 +63,7 @@ public class EsReindexProcess {
             //除了固定的boss线程。临时新增的线程会删除了会递增，int递增有最大值。这里再9999的时候就从固定线程的数量上重新计算.防止线程名字过长
             int current = threadNumber.getAndUpdate(operand -> operand >= 99999 ? 1 + 1 : operand + 1);
             Thread t = new Thread(group, r, NAME_PREFIX + current);
+            //此线程未执行完容器不关闭
             t.setDaemon(false);
             if (t.getPriority() != Thread.NORM_PRIORITY) {
                 t.setPriority(Thread.NORM_PRIORITY);
@@ -70,6 +71,8 @@ public class EsReindexProcess {
             return t;
         }
     }, new ThreadPoolExecutor.CallerRunsPolicy());
+
+
 
     /**
      * 试着重建索引
@@ -81,7 +84,6 @@ public class EsReindexProcess {
 
         //获取索引信息
         EsIndexParam esIndexParam = EsParamHolder.getEsIndexParam(clazz);
-
 
         //根据别名获取索引结果 获取不到则通过索引名获取并且修改成目前的别名
         EsIndexResponse getIndexResponse = null;

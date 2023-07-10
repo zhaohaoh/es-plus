@@ -914,8 +914,8 @@ public class EsPlusRestClient implements EsPlusClient {
      * @param format 格式
      * @param params 参数个数
      */
-    private void printInfoLog(String index, String format, Object... params) {
-        log.info("es-plus " + index +" "+ format, params);
+    private void printInfoLog(String format, Object... params) {
+        log.info("es-plus " + format, params);
     }
 
     /**
@@ -966,7 +966,7 @@ public class EsPlusRestClient implements EsPlusClient {
             if (!isLock) {
                 //已经执行完reindex操作 那么释放更新锁
                 reindexState = false;
-                log.info("enabledReindex = false");
+                log.info("set enabledReindex false");
                 if (success) {
                     readLock.unlock();
                 }

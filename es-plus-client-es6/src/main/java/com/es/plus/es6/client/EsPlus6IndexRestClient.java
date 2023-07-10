@@ -158,8 +158,9 @@ public class EsPlus6IndexRestClient implements EsPlusIndexClient {
     public void deleteIndex(String index) {
         DeleteIndexRequest request = new DeleteIndexRequest(index);
         try {
-            restHighLevelClient.indices().delete(request, RequestOptions.DEFAULT);
-            printInfoLog("deleteIndex index={}", index);
+            AcknowledgedResponse delete = restHighLevelClient.indices().delete(request, RequestOptions.DEFAULT);
+            boolean acknowledged = delete.isAcknowledged();
+            printInfoLog("deleteIndex index={} ack:{}", index,acknowledged);
         } catch (IOException e) {
             throw new RuntimeException("delete index error ", e);
         }

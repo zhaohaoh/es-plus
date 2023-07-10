@@ -52,6 +52,9 @@ public class SamplesEsDTO {
 
     @EsField(type = EsFieldType.KEYWORD)
     private String baaaqqrr;
+
+    @EsField(type = EsFieldType.DATE,format = "yyyy-MM-dd HH:mm:ss || yyyy-MM-dd ")
+    private String date;
     //
 //    @TableField(exist = false)
 //    @IgnoreSwaggerParameter

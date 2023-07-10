@@ -9,10 +9,7 @@ import com.es.plus.samples.service.SamplesEsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @SpringBootTest(classes = SamplesApplication.class)
 public class Test {
@@ -24,6 +21,7 @@ public class Test {
         SamplesEsDTO samplesEsDTO = new SamplesEsDTO();
         samplesEsDTO.setEmail("bbbberretertrebbbb");
         samplesEsDTO.setUsername("ggghhh");
+        samplesEsDTO.setDate("2018-09-22 12:30:10");
         List<SamplesNestedDTO> samplesNestedDTOS=new ArrayList<>();
         SamplesNestedDTO samplesNestedDTO = new SamplesNestedDTO();
         samplesNestedDTO.setEmail("3");

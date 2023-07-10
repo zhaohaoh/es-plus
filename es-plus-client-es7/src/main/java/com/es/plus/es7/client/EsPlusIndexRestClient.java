@@ -83,7 +83,7 @@ public class EsPlusIndexRestClient implements EsPlusIndexClient {
             //将settings和mappings封装到一个IndexClient对象中
             PutMappingRequest putMappingRequest = new PutMappingRequest(index);
             putMappingRequest.source(mappingProperties);
-            printInfoLog("putMapping info={}", JsonUtils.toJsonStr(mappingProperties));
+            printInfoLog("putMapping index={} info={}", index,JsonUtils.toJsonStr(mappingProperties));
             restHighLevelClient.indices().putMapping(putMappingRequest, RequestOptions.DEFAULT);
         } catch (IOException e) {
             throw new EsException("mappingRequest error", e);
@@ -96,7 +96,7 @@ public class EsPlusIndexRestClient implements EsPlusIndexClient {
             //将settings和mappings封装到一个IndexClient对象中
             PutMappingRequest putMappingRequest = new PutMappingRequest(index);
             putMappingRequest.source(mappingProperties);
-            printInfoLog("putMapping info={}", JsonUtils.toJsonStr(mappingProperties));
+            printInfoLog("putMapping index={} info={}", index,JsonUtils.toJsonStr(mappingProperties));
             restHighLevelClient.indices().putMapping(putMappingRequest, RequestOptions.DEFAULT);
         } catch (IOException e) {
             throw new EsException("mappingRequest error", e);
@@ -141,7 +141,7 @@ public class EsPlusIndexRestClient implements EsPlusIndexClient {
                 indexRequest
                         .settings(settings)
                         .mapping(esIndexParam.getMappings());
-                printInfoLog("createMapping settings={},mappings:{}", settings.build().toString(), JsonUtils.toJsonStr(esIndexParam.getMappings()));
+                printInfoLog("createMapping index={} settings={},mappings:{}",index ,settings.build().toString(), JsonUtils.toJsonStr(esIndexParam.getMappings()));
                 CreateIndexResponse indexResponse = restHighLevelClient.indices().create(indexRequest, RequestOptions.DEFAULT);
             }
         } catch (IOException e) {
@@ -156,8 +156,9 @@ public class EsPlusIndexRestClient implements EsPlusIndexClient {
     public void deleteIndex(String index) {
         DeleteIndexRequest request = new DeleteIndexRequest(index);
         try {
-            restHighLevelClient.indices().delete(request, RequestOptions.DEFAULT);
-            printInfoLog("deleteIndex index={}", index);
+            AcknowledgedResponse delete = restHighLevelClient.indices().delete(request, RequestOptions.DEFAULT);
+            boolean acknowledged = delete.isAcknowledged();
+            printInfoLog("deleteIndex index={} ack:{}", index,acknowledged);
         } catch (IOException e) {
             throw new RuntimeException("delete index error ", e);
         }
@@ -279,7 +280,9 @@ public class EsPlusIndexRestClient implements EsPlusIndexClient {
         reindexRequest.setConflicts(EsConstant.DEFAULT_CONFLICTS);
         reindexRequest.setRefresh(true);
         reindexRequest.getSearchRequest().source().fetchSource(null, EsConstant.REINDEX_TIME_FILED);
-        reindexRequest.setSourceQuery(QueryBuilders.rangeQuery(EsConstant.REINDEX_TIME_FILED).gte(currentTime));
+        if (currentTime!=null){
+            reindexRequest.setSourceQuery(QueryBuilders.rangeQuery(EsConstant.REINDEX_TIME_FILED).gte(currentTime));
+        }
         reindexRequest.setSourceBatchSize(GlobalConfigCache.GLOBAL_CONFIG.getBatchSize());
         reindexRequest.setTimeout(TimeValue.timeValueNanos(Long.MAX_VALUE));
         try {

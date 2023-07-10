@@ -4,6 +4,7 @@ import com.es.plus.adapter.params.EsResponse;
 import com.es.plus.adapter.params.PageInfo;
 import com.es.plus.core.service.EsServiceImpl;
 import com.es.plus.core.statics.Es;
+import com.es.plus.core.wrapper.aggregation.EsAggWrapper;
 import com.es.plus.core.wrapper.chain.EsChainLambdaQueryWrapper;
 import com.es.plus.core.wrapper.chain.EsChainQueryWrapper;
 import com.es.plus.core.wrapper.core.EsLambdaQueryWrapper;
@@ -72,7 +73,7 @@ public class SamplesEsService extends EsServiceImpl<SamplesEsDTO> {
     public void search() {
         // 声明语句嵌套关系是must
         EsResponse<SamplesEsDTO> esResponse = esChainQueryWrapper().mustNot()
-                .term(SamplesEsDTO::getUsername, "ggghhh")
+                .wildcard(SamplesEsDTO::getUsername, "*g那好好好好好好好好好好好好哈哈哈哈哈哈哈哈人兔兔兔兔兔兔兔兔吞吞吐吐他吞吞吐吐vvvvvvvvvvvvvvvvvvv请问额额额GG古古怪怪滚滚滚刚刚扭扭捏捏那你哈哈哈哈哈好哈哈哈哈哈哈哈哈应用*")
                 .term(SamplesEsDTO::getEmail, "bbbbbb")
                 // 多个must嵌套
 //                .must(a ->
@@ -102,6 +103,7 @@ public class SamplesEsService extends EsServiceImpl<SamplesEsDTO> {
     public void agg() {
 
         EsResponse<SamplesEsDTO> dd = esChainQueryWrapper().must().match(SamplesEsDTO::getUsername, "dd").list();
+        EsAggWrapper<SamplesEsDTO> username = esChainQueryWrapper().esAggWrapper().terms("username");
 
         // 声明语句嵌套关系是must
         EsChainLambdaQueryWrapper<SamplesEsDTO> esChainQueryWrapper = esChainQueryWrapper().must()
