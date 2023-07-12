@@ -8,6 +8,9 @@ public interface EsConstant {
      */
     String EP = "ep";
 
+    /* 主库
+     */
+    String MASTER = "master";
     /* 字段属性
      */
     String TYPE = "type";

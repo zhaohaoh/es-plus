@@ -44,7 +44,7 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
     protected abstract Children instance();
 
 
-    protected EsParamWrapper<T> esParamWrapper;
+    private EsParamWrapper<T> esParamWrapper;
 
     private List<QueryBuilder> queryBuilders = esParamWrapper().getQueryBuilder().must();
 

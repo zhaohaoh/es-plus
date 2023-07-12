@@ -218,6 +218,9 @@ public class EsPlusClientFacade {
         return esPlusIndexClient.updateSettings(index, esSettings);
     }
 
+    public boolean ping() {
+        return esPlusIndexClient.ping();
+    }
 
     /**
      * ----------------------------------------------------------------------------------------------------------
@@ -316,7 +319,7 @@ public class EsPlusClientFacade {
      * @param esDataList 数据列表
      * @return boolean
      */
-    public boolean deleteBatch(String index,String type, Collection<String> esDataList) {
+    public boolean deleteBatchByIds(String index, String type, Collection<String> esDataList) {
         return esPlusClient.deleteBatch(index,type ,esDataList);
     }
 

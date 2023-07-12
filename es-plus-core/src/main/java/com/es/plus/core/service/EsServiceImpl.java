@@ -186,7 +186,7 @@ public class EsServiceImpl<T> extends AbstractEsService<T> implements EsService<
             return false;
         }
         List<String> ids = idList.stream().map(Object::toString).collect(Collectors.toList());
-        return esPlusClientFacade.deleteBatch(alias, type, ids);
+        return esPlusClientFacade.deleteBatchByIds(alias, type, ids);
     }
 
     /**

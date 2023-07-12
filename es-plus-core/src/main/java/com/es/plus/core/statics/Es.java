@@ -5,6 +5,7 @@ import com.es.plus.core.wrapper.chain.EsChainLambdaQueryWrapper;
 import com.es.plus.core.wrapper.chain.EsChainLambdaUpdateWrapper;
 import com.es.plus.core.wrapper.chain.EsChainQueryWrapper;
 import com.es.plus.core.wrapper.chain.EsChainUpdateWrapper;
+import com.es.plus.core.wrapper.core.EsIndexWrapper;
 
 /**
  * @author hzh
@@ -34,27 +35,6 @@ public class Es {
     }
 
     /**
-     * 函数链更新
-     *
-     * @param rClass r类
-     * @return {@link EsChainLambdaUpdateWrapper}<{@link T}>
-     */
-    public static <T> EsChainLambdaUpdateWrapper<T> chainLambdaUpdate(Class<T> rClass) {
-        return new EsChainLambdaUpdateWrapper<>(rClass);
-    }
-
-    /**
-     * 链更新
-     *
-     * @param rClass r类
-     * @return {@link EsChainUpdateWrapper}<{@link T}>
-     */
-    public static <T> EsChainUpdateWrapper<T> chainUpdate(Class<T> rClass) {
-        return new EsChainUpdateWrapper<>(rClass);
-    }
-
-
-    /**
      * 函数链查询
      *
      * @param rClass r类
@@ -80,6 +60,27 @@ public class Es {
      * @param rClass r类
      * @return {@link EsChainLambdaUpdateWrapper}<{@link T}>
      */
+    public static <T> EsChainLambdaUpdateWrapper<T> chainLambdaUpdate(Class<T> rClass) {
+        return new EsChainLambdaUpdateWrapper<>(rClass);
+    }
+
+    /**
+     * 链更新
+     *
+     * @param rClass r类
+     * @return {@link EsChainUpdateWrapper}<{@link T}>
+     */
+    public static <T> EsChainUpdateWrapper<T> chainUpdate(Class<T> rClass) {
+        return new EsChainUpdateWrapper<>(rClass);
+    }
+
+
+    /**
+     * 函数链更新
+     *
+     * @param rClass r类
+     * @return {@link EsChainLambdaUpdateWrapper}<{@link T}>
+     */
     public static <T> EsChainLambdaUpdateWrapper<T> chainLambdaUpdate(EsPlusClientFacade esPlusClientFacade, Class<T> rClass) {
         return new EsChainLambdaUpdateWrapper<>(rClass, esPlusClientFacade);
     }
@@ -94,4 +95,21 @@ public class Es {
         return new EsChainUpdateWrapper<>(rClass, esPlusClientFacade);
     }
 
+
+    /**
+     * 链更新
+     *
+     * @return {@link EsChainUpdateWrapper}<{@link T}>
+     */
+    public static <T> EsIndexWrapper chainIndex(EsPlusClientFacade esPlusClientFacade) {
+        return new EsIndexWrapper(esPlusClientFacade);
+    }
+    /**
+     * 链更新
+     *
+     * @return {@link EsChainUpdateWrapper}<{@link T}>
+     */
+    public static <T> EsIndexWrapper chainIndex() {
+        return new EsIndexWrapper();
+    }
 }
