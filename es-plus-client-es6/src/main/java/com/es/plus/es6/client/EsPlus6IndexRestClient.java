@@ -64,8 +64,9 @@ public class EsPlus6IndexRestClient implements EsPlusIndexClient {
      */
     @Override
     public void createIndex(String index, Class<?> tClass) {
+        EsIndexParam esIndexParam = EsParamHolder.getEsIndexParam(tClass);
         if (StringUtils.isBlank(index)) {
-            throw new EsException("createMapping index not exists");
+            index = esIndexParam.getIndex();
         }
         EsIndexParam esDocParam = EsParamHolder.getEsIndexParam(tClass);
         CreateIndexRequest indexRequest = new CreateIndexRequest(index);
@@ -80,7 +81,11 @@ public class EsPlus6IndexRestClient implements EsPlusIndexClient {
      */
     @Override
     public void putMapping(String index, Class<?> tClass) {
-        Map<String, Object> mappingProperties = EsParamHolder.getEsIndexParam(tClass).getMappings();
+        EsIndexParam esIndexParam = EsParamHolder.getEsIndexParam(tClass);
+        if (StringUtils.isBlank(index)) {
+            index = esIndexParam.getIndex();
+        }
+        Map<String, Object> mappingProperties = esIndexParam.getMappings();
         try {
             //将settings和mappings封装到一个IndexClient对象中
             PutMappingRequest putMappingRequest = new PutMappingRequest(index);
@@ -114,6 +119,9 @@ public class EsPlus6IndexRestClient implements EsPlusIndexClient {
     @Override
     public void createIndexMapping(String index, Class<?> tClass) {
         EsIndexParam esIndexParam = EsParamHolder.getEsIndexParam(tClass);
+        if (StringUtils.isBlank(index)) {
+            index = esIndexParam.getIndex();
+        }
         doCreateIndexMapping(index, esIndexParam);
     }
 

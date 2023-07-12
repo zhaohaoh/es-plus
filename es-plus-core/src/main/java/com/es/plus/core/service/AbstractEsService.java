@@ -124,7 +124,9 @@ public abstract class AbstractEsService<T> implements InitializingBean {
                     EsReindexProcess.tryReindex(esPlusClientFacade, indexClass);
                 } else {
                     esPlusClientFacade.createIndexMapping(this.index, indexClass);
+                    exists = true;
                 }
+                esIndexParam.setExists(exists);
                 logger.info("init es-plus indexResponse={} exists={}", this.index, exists);
             }
         } finally {

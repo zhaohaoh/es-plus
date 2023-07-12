@@ -90,7 +90,7 @@ public @interface EsField {
      *
      * @return {@link String}
      */
-    String format() default "";
+    String format() default "yyyy-MM-dd HH:mm:ss||strict_date_optional_time||epoch_millis";
 
     /**
      * 全局序数  插入的时候即对聚合进行预处理 提高聚合性能 适用于聚合字段和父子文档

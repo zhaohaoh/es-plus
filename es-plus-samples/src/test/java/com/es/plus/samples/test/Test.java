@@ -1,7 +1,10 @@
 package com.es.plus.samples.test;
 
+import com.es.plus.adapter.params.EsResponse;
 import com.es.plus.constant.EsSettingsConstants;
+import com.es.plus.core.statics.Es;
 import com.es.plus.samples.SamplesApplication;
+import com.es.plus.samples.dto.FastTestDTO;
 import com.es.plus.samples.dto.SamplesEsDTO;
 import com.es.plus.samples.dto.SamplesNestedDTO;
 import com.es.plus.samples.dto.SamplesNestedInnerDTO;
@@ -13,6 +16,7 @@ import java.util.*;
 
 @SpringBootTest(classes = SamplesApplication.class)
 public class Test {
+
     @Autowired
     private SamplesEsService samplesEsService;
 
@@ -40,7 +44,6 @@ public class Test {
 
         List<SamplesNestedInnerDTO> samplesNestedss=new ArrayList<>();
         for (int i = 0; i <500; i++) {
-
             SamplesNestedInnerDTO samplesNestedInnerDTO = new SamplesNestedInnerDTO();
             samplesNestedInnerDTO.setEmail("3");
             samplesNestedInnerDTO.setUsername("3");
@@ -48,7 +51,6 @@ public class Test {
             samplesNestedInnerDTO.setState(true);
             samplesNestedss.add(samplesNestedInnerDTO);
         }
-
         samplesNestedDTO.setSamplesNestedInner(samplesNestedss);
         samplesEsService.save(samplesEsDTO);
 //        Map<String,Object> map=new HashMap<>();
@@ -58,10 +60,43 @@ public class Test {
 //    Es.chainUpdate(Map.class).index("sys_user2ttt_test_s0").save(map);
     }
 
+    @org.junit.jupiter.api.Test
+    public void fast() {
+        EsResponse<Map> list = Es.chainQuery(Map.class).index("sys_user2ttt_s0").list();
+        System.out.println(list);
+    }
+    @org.junit.jupiter.api.Test
+    public void fastCreateIndex() {
+        //没有指定索引的话会取Class中的索引
+        Es.chainIndex().createIndex(FastTestDTO.class).putMapping(FastTestDTO.class);
+    }
 
     @org.junit.jupiter.api.Test
-    public void testSearch() {
-        samplesEsService.nested();
+    public void fastSave() {
+        FastTestDTO fastTestDTO = new FastTestDTO();
+        fastTestDTO.setId(1L);
+        fastTestDTO.setText("我的个人介绍 我是一篇文章，用于搜索。我的关键词有很多。苹果 梨子 苹果X2 苹果哥哥");
+        fastTestDTO.setAge(25);
+        fastTestDTO.setUsername("酷酷的");
+        fastTestDTO.setCreateTime(new Date());
+        Es.chainUpdate(FastTestDTO.class).save(fastTestDTO);
+    }
+
+    @org.junit.jupiter.api.Test
+    public void fastSearch() {
+        EsResponse<FastTestDTO> test = Es.chainLambdaQuery(FastTestDTO.class).match(FastTestDTO::getText, "苹果").list();
+        System.out.println(test);
+    }
+
+
+
+
+    @org.junit.jupiter.api.Test
+    public void nested() {
+
+        boolean ss = Es.chainIndex().index("ss").indexExists();
+        System.out.println(ss);
+//        samplesEsService.nested();
     }
 
     @org.junit.jupiter.api.Test
