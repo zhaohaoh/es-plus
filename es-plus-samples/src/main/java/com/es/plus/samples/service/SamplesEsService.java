@@ -36,12 +36,24 @@ public class SamplesEsService extends EsServiceImpl<SamplesEsDTO> {
         innerHitBuilder.setSize(10);
         //一级查询条件
         EsChainLambdaQueryWrapper<SamplesEsDTO> queryWrapper = esChainQueryWrapper().must()
+                //二级
                 .nestedQuery(SamplesEsDTO::getSamplesNesteds, SamplesNestedDTO.class,
-                        innerConsumer, ScoreMode.None,innerHitBuilder);
+                        (esQueryWrap) -> {
+                            esQueryWrap.must().term(SamplesNestedDTO::getUsername, "3");
+                            InnerHitBuilder innerHitBuilder1 = new InnerHitBuilder();
+                            innerHitBuilder1.setSize(100);
+                            //三级
+                            esQueryWrap.must().nestedQuery(SamplesNestedDTO::getSamplesNestedInner, SamplesNestedInnerDTO.class,
+                                    (innerQuery) -> {
+                                        innerQuery.must().term(SamplesNestedInnerDTO::getUsername, 3)
+                                        .term(SamplesNestedInnerDTO::getState,false);
+                                    }, ScoreMode.None, innerHitBuilder1);
+                        }, ScoreMode.None,innerHitBuilder);
 
         EsResponse<SamplesEsDTO> esResponse = queryWrapper.list();
         // 查询
         List<SamplesEsDTO> list = esResponse.getList();
+        System.out.println(list);
     }
 
     /**

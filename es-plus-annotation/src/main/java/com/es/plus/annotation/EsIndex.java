@@ -35,9 +35,9 @@ public @interface EsIndex {
     int replices() default 1;
 
     /**
-     * 初始窗口值 可更改
+     * 初始窗口值 可更改 默认走全局
      */
-    int initMaxResultWindow() default 100000;
+    int initMaxResultWindow() default 0;
 
     /**
      * 初始刷新值 可更改

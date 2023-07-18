@@ -49,15 +49,22 @@ public abstract class AbstractEsService<T> implements InitializingBean {
     protected Class<T> clazz;
 
     @Autowired
-    protected EsPlusClientFacade esPlusClientFacade;
+    private EsPlusClientFacade esPlusClientFacade;
 
 
     /**
      * es锁客户
      */
     @Autowired
-    protected EsLockFactory esLockFactory;
+    private EsLockFactory esLockFactory;
 
+    public EsPlusClientFacade getEsPlusClientFacade() {
+        return esPlusClientFacade;
+    }
+
+    public EsLockFactory getEsLockFactory() {
+        return esLockFactory;
+    }
 
     @Override
     @SuppressWarnings({"unchecked"})

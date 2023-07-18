@@ -20,6 +20,7 @@ public class Test {
     @Autowired
     private SamplesEsService samplesEsService;
 
+
     @org.junit.jupiter.api.Test
     public void testSave() {
         SamplesEsDTO samplesEsDTO = new SamplesEsDTO();
@@ -88,15 +89,20 @@ public class Test {
         System.out.println(test);
     }
 
+    @org.junit.jupiter.api.Test
+    public void fastSearch2() {
+        EsResponse<FastTestDTO> test = Es.chainLambdaQuery(FastTestDTO.class).match(FastTestDTO::getText, "苹果").list();
+        System.out.println(test);
+    }
 
 
 
     @org.junit.jupiter.api.Test
     public void nested() {
 
-        boolean ss = Es.chainIndex().index("ss").indexExists();
-        System.out.println(ss);
-//        samplesEsService.nested();
+//        boolean ss = Es.chainIndex().index("ss").indexExists();
+//        System.out.println(ss);
+    samplesEsService.nested();
     }
 
     @org.junit.jupiter.api.Test

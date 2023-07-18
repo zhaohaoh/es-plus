@@ -54,7 +54,7 @@ public class EsAnnotationParamProcess {
         esSettings.setNumberOfShards(esIndex.shard());
         esSettings.setNumberOfReplicas(esIndex.replices());
         esSettings.setRefreshInterval(esIndex.initRefreshInterval());
-        esSettings.setMaxResultWindow(Math.max(esIndex.initMaxResultWindow(), GlobalConfigCache.GLOBAL_CONFIG.getSearchSize()));
+        esSettings.setMaxResultWindow(esIndex.initMaxResultWindow() <= 0 ? GlobalConfigCache.GLOBAL_CONFIG.getSearchSize() : esIndex.initMaxResultWindow());
         if (StringUtils.isNotBlank(esIndex.defaultAnalyzer())) {
             esSettings.setDefaultAnalyzer(esIndex.defaultAnalyzer());
         }
@@ -253,7 +253,7 @@ public class EsAnnotationParamProcess {
         }
 
         //获取格式化
-        if (esField.type().equals(EsFieldType.DATE)&&StringUtils.isNotBlank(esField.format())) {
+        if (esField.type().equals(EsFieldType.DATE) && StringUtils.isNotBlank(esField.format())) {
             properties.put(EsConstant.FORMAT, esField.format());
         }
     }
@@ -264,7 +264,7 @@ public class EsAnnotationParamProcess {
         JavaTypeEnum jdkDataType = JavaTypeEnum.getByType(clazz.getSimpleName().toLowerCase());
 
         switch (jdkDataType) {
-            case  BYTE:
+            case BYTE:
                 type = EsFieldType.BYTE.name();
                 break;
             case SHORT:

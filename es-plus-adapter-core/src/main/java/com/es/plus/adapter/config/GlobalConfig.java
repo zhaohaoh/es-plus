@@ -50,9 +50,9 @@ public class GlobalConfig {
     private int maxDocs = 100000;
 
     /**
-     * 最大查询文档数量 默认10万
+     * 最大查询文档数量 默认1万
      */
-    private int searchSize = 100000;
+    private int searchSize = 10000;
     /*
      * 批量执行的数量和scoll的批次数量
      */
