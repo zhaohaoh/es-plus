@@ -14,7 +14,6 @@ import com.es.plus.es7.client.EsPlusAggregations;
 import com.es.plus.samples.dto.SamplesEsDTO;
 import com.es.plus.samples.dto.SamplesNestedDTO;
 import com.es.plus.samples.dto.SamplesNestedInnerDTO;
-import com.es.plus.samples.dto.SpuEsDTO;
 import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.index.query.InnerHitBuilder;
 import org.springframework.stereotype.Service;
@@ -212,10 +211,6 @@ public class SamplesEsService extends EsServiceImpl<SamplesEsDTO> {
 
     }
 
-    public void listLandList() {
-        EsResponse<SpuEsDTO> list = Es.chainLambdaQuery(SpuEsDTO.class).list();
-        System.out.println(list);
-    }
 
     public void updateByQuery() {
         EsLambdaUpdateWrapper<SamplesEsDTO> updateWrapper = new EsLambdaUpdateWrapper<>();
