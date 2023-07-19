@@ -176,14 +176,14 @@ public interface EsAggClient {
      * given name.
      */
 
-    BaseAggregationBuilder dateStringange(String name);
+    BaseAggregationBuilder dateRange(String name);
 
     /**
      * Create a new {@link IpStringangeAggregationBuilder} aggregation with the
      * given name.
      */
 
-    BaseAggregationBuilder ipStringange(String name);
+    BaseAggregationBuilder ipRange(String name);
 
     /**
      * Create a new {@link Terms} aggregation with the given name.

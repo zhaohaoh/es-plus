@@ -4,6 +4,7 @@ import com.es.plus.core.wrapper.core.EsWrapper;
 import org.elasticsearch.common.geo.GeoDistance;
 import org.elasticsearch.common.geo.GeoPoint;
 import org.elasticsearch.script.Script;
+import org.elasticsearch.search.aggregations.BaseAggregationBuilder;
 import org.elasticsearch.search.aggregations.bucket.adjacency.AdjacencyMatrix;
 import org.elasticsearch.search.aggregations.bucket.composite.CompositeAggregationBuilder;
 import org.elasticsearch.search.aggregations.bucket.composite.CompositeValuesSourceBuilder;
@@ -46,6 +47,13 @@ public interface IEsAggWrapper<Children, R,T> {
      */
     Children subAggregation(Consumer<Children> consumer);
 
+    /**
+     * 自定义添加一个基础聚合
+     *
+     * @param baseAggregationBuilder 基聚合构建器
+     * @return {@link Children}
+     */
+    Children add(BaseAggregationBuilder baseAggregationBuilder);
     /**
      * 统计
      *

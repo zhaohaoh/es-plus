@@ -93,6 +93,13 @@ public abstract class AbstractEsAggWrapper<T, R, Children extends AbstractEsAggW
     }
 
     @Override
+    public Children add(BaseAggregationBuilder baseAggregationBuilder) {
+        currentBuilder = baseAggregationBuilder;
+        aggregationBuilder.add(baseAggregationBuilder);
+        return this.children;
+    }
+
+    @Override
     public Children count(R name) {
         String field = getAggregationField(name);
         BaseAggregationBuilder baseAggregationBuilder = esAggClient.count(field);

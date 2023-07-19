@@ -53,6 +53,10 @@ public class FaseTest {
     }
 
 
+    @org.junit.jupiter.api.Test
+    public void fastAgg() {
+        fastTestService.agg();
+    }
 
     
 }

@@ -16,6 +16,9 @@ import org.elasticsearch.search.aggregations.bucket.histogram.HistogramAggregati
 import org.elasticsearch.search.aggregations.bucket.missing.MissingAggregationBuilder;
 import org.elasticsearch.search.aggregations.bucket.nested.Nested;
 import org.elasticsearch.search.aggregations.bucket.nested.NestedAggregationBuilder;
+import org.elasticsearch.search.aggregations.bucket.range.DateRangeAggregationBuilder;
+import org.elasticsearch.search.aggregations.bucket.range.IpRangeAggregationBuilder;
+import org.elasticsearch.search.aggregations.bucket.range.RangeAggregationBuilder;
 import org.elasticsearch.search.aggregations.bucket.sampler.DiversifiedAggregationBuilder;
 import org.elasticsearch.search.aggregations.bucket.sampler.SamplerAggregationBuilder;
 import org.elasticsearch.search.aggregations.bucket.significant.SignificantTermsAggregationBuilder;
@@ -287,28 +290,29 @@ public class EsPlus6AggsClient implements EsAggClient {
     }
 
     /**
-
+     *
      */
     @Override
     public BaseAggregationBuilder range(String field) {
-
-        return null;
+        String aggName = field + AGG_DELIMITER + RangeAggregationBuilder.NAME;
+        RangeAggregationBuilder rangeAggregationBuilder = new RangeAggregationBuilder(aggName);
+        return rangeAggregationBuilder;
     }
 
-    /**
-     * given aggName.
-     */
+
     @Override
-    public BaseAggregationBuilder dateStringange(String field) {
-        return null;
+    public BaseAggregationBuilder dateRange(String field) {
+        String aggName = field + AGG_DELIMITER + DateRangeAggregationBuilder.NAME;
+        DateRangeAggregationBuilder dateRangeAggregationBuilder = new DateRangeAggregationBuilder(aggName);
+        return dateRangeAggregationBuilder;
     }
 
-    /**
-     * given aggName.
-     */
+
     @Override
-    public BaseAggregationBuilder ipStringange(String field) {
-        return null;
+    public BaseAggregationBuilder ipRange(String field) {
+        String aggName = field + AGG_DELIMITER + IpRangeAggregationBuilder.NAME;
+        IpRangeAggregationBuilder dateRangeAggregationBuilder = new IpRangeAggregationBuilder(aggName);
+        return dateRangeAggregationBuilder;
     }
 
     /**
