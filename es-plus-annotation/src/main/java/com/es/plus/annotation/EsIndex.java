@@ -64,6 +64,11 @@ public @interface EsIndex {
      */
     boolean tryReindex() default false;
 
+    /**
+     * 启动时创建索引和改变映射
+     */
+    boolean startInit() default true;
+
     Class<?> childClass() default DefaultClass.class;
 
     Class<?> parentClass() default DefaultClass.class;

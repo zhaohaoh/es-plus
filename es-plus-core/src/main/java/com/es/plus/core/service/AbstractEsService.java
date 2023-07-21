@@ -104,6 +104,11 @@ public abstract class AbstractEsService<T> implements InitializingBean {
                 return;
             }
 
+            // 启动时不初始化
+            if (!annotation.startInit()) {
+                return;
+            }
+
             //尝试创建或重建索引
             tryCreateOrReindex(indexClass, esIndexParam);
         } catch (Exception e) {
