@@ -352,8 +352,8 @@ public abstract class AbstractEsChainWrapper<T, R, Children extends AbstractEsCh
     }
 
     @Override
-    public Children between(boolean condition, R name, Object from, Object to, boolean include) {
-        getWrapper().between(condition, name, from, to, include);
+    public Children between(boolean condition, R name, Object from, Object to, boolean fromInclude,boolean toInclude) {
+        getWrapper().between(condition, name, from, to, fromInclude,toInclude);
         return children;
     }
 

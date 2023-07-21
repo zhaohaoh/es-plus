@@ -283,11 +283,11 @@ public interface IEsQueryWrapper<Children, QUERY, R> {
 
     Children between(boolean condition, R name, Object from, Object to);
 
-    default Children between(R name, Object from, Object to, boolean include) {
-        return between(true, name,from, to, include);
+    default Children between(R name, Object from, Object to, boolean fromInclude,boolean toInclude) {
+        return between(true, name,from, to, fromInclude,toInclude);
     }
 
-    Children between(boolean condition, R name, Object from, Object to, boolean include);
+    Children between(boolean condition, R name, Object from, Object to, boolean fromInclude,boolean toInclude);
 
     default Children geoBoundingBox(R name, GeoPoint topLeft, GeoPoint bottomRight) {
         return geoBoundingBox(true, name, topLeft, bottomRight);

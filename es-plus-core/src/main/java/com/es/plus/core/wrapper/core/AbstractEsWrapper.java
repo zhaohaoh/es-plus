@@ -498,9 +498,9 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
     }
 
     @Override
-    public Children between(boolean condition, R name, Object from, Object to, boolean include) {
+    public Children between(boolean condition, R name, Object from, Object to, boolean fromInclude,boolean toInclude) {
         if (condition) {
-            queryBuilders.add(QueryBuilders.rangeQuery(nameToString(name)).from(from, include).to(to, include));
+            queryBuilders.add(QueryBuilders.rangeQuery(nameToString(name)).from(from, fromInclude).to(to, toInclude));
         }
         return children;
     }
