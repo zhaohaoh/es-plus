@@ -287,6 +287,8 @@ public interface IEsAggWrapper<Children, R,T> {
 
     Children bucketSort(R name,List<FieldSortBuilder> sorts);
 
+    Children bucketSort(R name,int from, int size, boolean asc, String... orderColumns);
+
     Children cumulativeSum(R name,String bucketsPath);
 
     Children diff(R name,String bucketsPath);

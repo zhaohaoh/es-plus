@@ -37,12 +37,14 @@ import org.elasticsearch.search.aggregations.bucket.terms.TermsAggregationBuilde
 import org.elasticsearch.search.aggregations.metrics.*;
 import org.elasticsearch.search.aggregations.pipeline.*;
 import org.elasticsearch.search.sort.FieldSortBuilder;
+import org.elasticsearch.search.sort.SortOrder;
 import org.springframework.util.CollectionUtils;
 
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import static com.es.plus.constant.EsConstant.AGG_DELIMITER;
 
@@ -53,11 +55,11 @@ import static com.es.plus.constant.EsConstant.AGG_DELIMITER;
  */
 @SuppressWarnings({"unchecked"})
 public abstract class AbstractEsAggWrapper<T, R, Children extends AbstractEsAggWrapper<T, R, Children>> extends AbstractLambdaAggWrapper<T, R>
-        implements IEsAggWrapper<Children, R,T>, IEsAggFuncWrapper<Children, R,T> {
+        implements IEsAggWrapper<Children, R, T>, IEsAggFuncWrapper<Children, R, T> {
     protected AbstractEsAggWrapper() {
         if (GlobalConfigCache.GLOBAL_CONFIG.getVersion().equals(6)) {
             esAggClient = new EsPlus6AggsClient();
-        }else{
+        } else {
             esAggClient = new EsPlusAggsClient();
         }
     }
@@ -235,8 +237,8 @@ public abstract class AbstractEsAggWrapper<T, R, Children extends AbstractEsAggW
     @Override
     public Children adjacencyMatrix(R name, Map<String, Supplier<EsWrapper<T>>> adjacencyMatrixMap) {
         String field = getAggregationField(name);
-        Map<String,EsParamWrapper<?>> esParamWrapperMap = new HashMap<>();
-        adjacencyMatrixMap.forEach((k,v)->esParamWrapperMap.put(k,v.get().esParamWrapper()));
+        Map<String, EsParamWrapper<?>> esParamWrapperMap = new HashMap<>();
+        adjacencyMatrixMap.forEach((k, v) -> esParamWrapperMap.put(k, v.get().esParamWrapper()));
         BaseAggregationBuilder adjacencyMatrix = esAggClient.adjacencyMatrix(field, esParamWrapperMap);
         currentBuilder = adjacencyMatrix;
         aggregationBuilder.add(currentBuilder);
@@ -249,9 +251,9 @@ public abstract class AbstractEsAggWrapper<T, R, Children extends AbstractEsAggW
     @Override
     public Children adjacencyMatrix(R name, String separator, Map<String, Supplier<EsWrapper<T>>> adjacencyMatrixMap) {
         String field = getAggregationField(name);
-        Map<String,EsParamWrapper<?>> esParamWrapperMap = new HashMap<>();
-        adjacencyMatrixMap.forEach((k,v)->esParamWrapperMap.put(k,v.get().esParamWrapper()));
-        BaseAggregationBuilder adjacencyMatrix = esAggClient.adjacencyMatrix(field, separator,esParamWrapperMap);
+        Map<String, EsParamWrapper<?>> esParamWrapperMap = new HashMap<>();
+        adjacencyMatrixMap.forEach((k, v) -> esParamWrapperMap.put(k, v.get().esParamWrapper()));
+        BaseAggregationBuilder adjacencyMatrix = esAggClient.adjacencyMatrix(field, separator, esParamWrapperMap);
         currentBuilder = adjacencyMatrix;
         aggregationBuilder.add(currentBuilder);
         return this.children;
@@ -708,6 +710,24 @@ public abstract class AbstractEsAggWrapper<T, R, Children extends AbstractEsAggW
     }
 
     @Override
+    public Children bucketSort(R name, int from, int size, boolean asc, String... orderColumns) {
+        String field = getAggregationField(name);
+        String aggName = field + AGG_DELIMITER + BucketSortPipelineAggregationBuilder.NAME;
+        List<FieldSortBuilder> sorts = Arrays.stream(orderColumns).map(o -> {
+            FieldSortBuilder sortBuilder = new FieldSortBuilder(o);
+            sortBuilder.order(asc ? SortOrder.ASC : SortOrder.DESC);
+            return sortBuilder;
+        }).collect(Collectors.toList());
+
+        BucketSortPipelineAggregationBuilder bucketSortPipelineAggregationBuilder = new BucketSortPipelineAggregationBuilder(aggName, sorts);
+        bucketSortPipelineAggregationBuilder.from(from);
+        bucketSortPipelineAggregationBuilder.size(size);
+        currentBuilder = bucketSortPipelineAggregationBuilder;
+        aggregationBuilder.add(currentBuilder);
+        return this.children;
+    }
+
+    @Override
     public Children cumulativeSum(R name, String bucketsPath) {
         String field = getAggregationField(name);
         BaseAggregationBuilder baseAggregationBuilder = esAggClient.cumulativeSum(field, bucketsPath);
@@ -735,7 +755,7 @@ public abstract class AbstractEsAggWrapper<T, R, Children extends AbstractEsAggW
         return this.children;
     }
 
-//    ------------------------------------------------------Function
+//    ------------------------------------------------------Function  es版本6不支持
 
 
     @Override
