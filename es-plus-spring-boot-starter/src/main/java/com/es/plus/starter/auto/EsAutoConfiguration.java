@@ -15,6 +15,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.core.Ordered;
 
+import static com.es.plus.constant.EsConstant.MASTER;
+
 
 /**
  * @Author: hzh
@@ -38,7 +40,7 @@ public class EsAutoConfiguration {
     @Bean
     public EsPlusClientFacade esPlusClientFacade(RestHighLevelClient restHighLevelClient, EsLockFactory esLockFactory) {
         EsPlusClientFacade esPlusClientFacade = ClientContext.buildEsPlusClientFacade(restHighLevelClient, esLockFactory);
-        ClientContext.addClient("master", esPlusClientFacade);
+        ClientContext.addClient(MASTER, esPlusClientFacade);
         return esPlusClientFacade;
     }
 

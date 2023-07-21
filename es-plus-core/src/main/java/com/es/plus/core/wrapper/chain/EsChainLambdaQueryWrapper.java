@@ -13,6 +13,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.time.Duration;
 
+import static com.es.plus.constant.EsConstant.MASTER;
 import static com.es.plus.constant.EsConstant.SCROLL_KEEP_TIME;
 
 /**
@@ -20,7 +21,7 @@ import static com.es.plus.constant.EsConstant.SCROLL_KEEP_TIME;
  * @Date: 2023/2/6 17:08
  */
 public class EsChainLambdaQueryWrapper<T> extends AbstractEsChainWrapper<T, SFunction<T, ?>, EsChainLambdaQueryWrapper<T>, EsLambdaQueryWrapper<T>> {
-    private EsPlusClientFacade esPlusClientFacade = ClientContext.getClient("master");
+    private EsPlusClientFacade esPlusClientFacade = ClientContext.getClient(MASTER);
 
     public EsChainLambdaQueryWrapper(Class<T> clazz) {
         super.tClass = clazz;

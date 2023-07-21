@@ -17,6 +17,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import static com.es.plus.constant.EsConstant.MASTER;
+
 /**
  * @Author: hzh
  * @Date: 2022/9/22 20:24
@@ -25,7 +27,7 @@ import java.util.Map;
 public class EsChainLambdaUpdateWrapper<T> extends AbstractEsChainWrapper<T, SFunction<T, ?>, EsChainLambdaUpdateWrapper<T>, EsLambdaUpdateWrapper<T>> implements Update<EsChainLambdaUpdateWrapper<T>, SFunction<T, ?>>, UpdateOperation<T> {
 
 
-    private EsPlusClientFacade esPlusClientFacade = ClientContext.getClient("master");
+    private EsPlusClientFacade esPlusClientFacade = ClientContext.getClient(MASTER);
 
     public EsChainLambdaUpdateWrapper(Class<T> clazz) {
         super.tClass = clazz;
