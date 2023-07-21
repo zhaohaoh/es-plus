@@ -284,7 +284,7 @@ public interface IEsQueryWrapper<Children, QUERY, R> {
     Children between(boolean condition, R name, Object from, Object to);
 
     default Children between(R name, Object from, Object to, boolean include) {
-        return between(true, name, to, include);
+        return between(true, name,from, to, include);
     }
 
     Children between(boolean condition, R name, Object from, Object to, boolean include);
