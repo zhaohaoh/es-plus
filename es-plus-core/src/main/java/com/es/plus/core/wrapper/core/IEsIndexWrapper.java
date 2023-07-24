@@ -125,4 +125,12 @@ public interface IEsIndexWrapper  {
      * @param alias 别名
      */
     EsIndexWrapper removeAlias(String alias);
+
+    /**
+     * 删除别名
+     *
+     * @param index 索引
+     * @param alias 别名
+     */
+    boolean forceMerge(int maxSegments, boolean onlyExpungeDeletes, boolean flush, String... index);
 }

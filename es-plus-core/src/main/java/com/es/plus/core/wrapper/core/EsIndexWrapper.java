@@ -115,4 +115,9 @@ public class EsIndexWrapper implements IEsIndexWrapper {
         esPlusClientFacade.removeAlias(index, alias);
         return this;
     }
+
+    @Override
+    public boolean forceMerge(int maxSegments, boolean onlyExpungeDeletes, boolean flush, String... index) {
+        return esPlusClientFacade.forceMerge(maxSegments, onlyExpungeDeletes, flush, index);
+    }
 }

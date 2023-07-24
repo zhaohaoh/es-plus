@@ -428,4 +428,12 @@ public class EsPlusClientFacade {
         esPlusIndexClient.removeAlias(index, alias);
     }
 
+    /**
+     * forceMerge
+     *
+     */
+    public boolean forceMerge(int maxSegments, boolean onlyExpungeDeletes, boolean flush, String... index){
+       return esPlusIndexClient.forceMerge(maxSegments, onlyExpungeDeletes, flush, index);
+    }
+
 }
