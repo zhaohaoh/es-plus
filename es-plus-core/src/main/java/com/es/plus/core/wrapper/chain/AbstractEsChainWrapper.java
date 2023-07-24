@@ -398,6 +398,12 @@ public abstract class AbstractEsChainWrapper<T, R, Children extends AbstractEsCh
     }
 
     @Override
+    public Children minScope(float minScope) {
+        getWrapper().minScope(minScope);
+        return this.children;
+    }
+
+    @Override
     public Children boost(float boost) {
         getWrapper().boost(boost);
         return children;

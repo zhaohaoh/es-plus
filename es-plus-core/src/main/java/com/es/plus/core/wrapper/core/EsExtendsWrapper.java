@@ -49,6 +49,12 @@ public interface EsExtendsWrapper<Children, R> {
     Children minimumShouldMatch(String minimumShouldMatch);
 
     /**
+     * 最低匹配分数
+     *
+     */
+    Children minScope(float minScope);
+
+    /**
      * 路由
      *
      * @param routings 路由

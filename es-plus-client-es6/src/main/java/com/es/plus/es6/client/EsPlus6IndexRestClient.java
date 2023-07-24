@@ -16,8 +16,11 @@ import org.elasticsearch.action.admin.indices.alias.Alias;
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequest;
 import org.elasticsearch.action.admin.indices.alias.get.GetAliasesRequest;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
+import org.elasticsearch.action.admin.indices.forcemerge.ForceMergeRequest;
+import org.elasticsearch.action.admin.indices.forcemerge.ForceMergeResponse;
 import org.elasticsearch.action.admin.indices.settings.put.UpdateSettingsRequest;
 import org.elasticsearch.action.bulk.BulkItemResponse;
+import org.elasticsearch.action.support.IndicesOptions;
 import org.elasticsearch.action.support.master.AcknowledgedResponse;
 import org.elasticsearch.client.GetAliasesResponse;
 import org.elasticsearch.client.RequestOptions;
@@ -170,7 +173,7 @@ public class EsPlus6IndexRestClient implements EsPlusIndexClient {
         try {
             AcknowledgedResponse delete = restHighLevelClient.indices().delete(request, RequestOptions.DEFAULT);
             boolean acknowledged = delete.isAcknowledged();
-            printInfoLog("deleteIndex index={} ack:{}", index,acknowledged);
+            printInfoLog("deleteIndex index={} ack:{}", index, acknowledged);
             return acknowledged;
         } catch (IOException e) {
             throw new RuntimeException("delete index error ", e);
@@ -388,6 +391,22 @@ public class EsPlus6IndexRestClient implements EsPlusIndexClient {
                     RequestOptions.DEFAULT);
         } catch (IOException e) {
             throw new EsException("createAlias exception", e);
+        }
+    }
+
+    @Override
+    public boolean forceMerge(int maxSegments, boolean onlyExpungeDeletes, boolean flush, String... index) {
+        ForceMergeRequest request = new ForceMergeRequest(index);
+        request.indicesOptions(IndicesOptions.lenientExpandOpen());
+        request.maxNumSegments(maxSegments);
+        request.onlyExpungeDeletes(onlyExpungeDeletes);
+        request.flush(flush);
+        try {
+            ForceMergeResponse forceMergeResponse = restHighLevelClient.indices().forcemerge(request, RequestOptions.DEFAULT);
+            int successfulShards = forceMergeResponse.getSuccessfulShards();
+            return successfulShards > 0;
+        } catch (IOException e) {
+            throw new EsException("forceMerge exception", e);
         }
     }
 

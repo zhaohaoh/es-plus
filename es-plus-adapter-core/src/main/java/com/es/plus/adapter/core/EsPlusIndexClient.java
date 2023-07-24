@@ -115,7 +115,7 @@ public interface EsPlusIndexClient {
      * @param esSettings es设置
      * @return boolean
      */
-    boolean updateSettings(String index, Map<String,Object> esSettings);
+    boolean updateSettings(String index, Map<String, Object> esSettings);
 
     /**
      * 连接
@@ -130,6 +130,23 @@ public interface EsPlusIndexClient {
      */
     void createAlias(String currentIndex, String alias);
 
+    /**
+     * 删除别名
+     *
+     * @param index 索引
+     * @param alias 别名
+     */
     void removeAlias(String index, String alias);
 
+
+    /**
+     * 力合并
+     *
+     * @param maxSegments     最大段的数量
+     * @param onlyExpungeDeletes 只删除被标记删除的索引。也就是说这次合并只是为了把被垃圾的垃圾文件删除，而去合并有效的数据;
+     * @param flush              是否立即刷新
+     * @param index              索引名
+     * @return boolean
+     */
+    boolean forceMerge(int maxSegments, boolean onlyExpungeDeletes, boolean flush, String... index);
 }

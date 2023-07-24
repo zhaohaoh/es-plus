@@ -10,6 +10,16 @@ public class EsSelect {
 
     private Boolean fetch ;
 
+    private Float minScope;
+
+    public Float getMinScope() {
+        return minScope;
+    }
+
+    public void setMinScope(Float minScope) {
+        this.minScope = minScope;
+    }
+
     public String[] getIncludes() {
         return includes;
     }

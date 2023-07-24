@@ -865,6 +865,9 @@ public class EsPlus6RestClient implements EsPlusClient {
             if (esSelect.getFetch() != null) {
                 sourceBuilder.fetchSource(esSelect.getFetch());
             }
+            if (esSelect.getMinScope()!=null) {
+                sourceBuilder.minScore(esSelect.getMinScope());
+            }
         }
         boolean profile = esQueryParamWrapper.isProfile();
         if (profile) {

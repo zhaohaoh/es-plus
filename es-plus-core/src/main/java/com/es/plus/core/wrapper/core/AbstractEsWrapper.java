@@ -43,13 +43,14 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
      */
     protected abstract Children instance();
 
-
     private EsParamWrapper<T> esParamWrapper;
 
     private List<QueryBuilder> queryBuilders = esParamWrapper().getQueryBuilder().must();
 
     protected EsLambdaAggWrapper<T> esLambdaAggWrapper;
+
     protected EsAggWrapper<T> esAggWrapper;
+
 
     @Override
     public EsParamWrapper<T> esParamWrapper() {
@@ -568,6 +569,13 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
         String[] includes = nameToString(func);
         EsSelect esSelect = getSelect();
         esSelect.setExcludes(includes);
+        return (Children) this;
+    }
+
+    @Override
+    public Children minScope(float minScope) {
+        EsSelect esSelect = getSelect();
+        esSelect.setMinScope(minScope);
         return (Children) this;
     }
 

@@ -840,6 +840,12 @@ public class EsPlusRestClient implements EsPlusClient {
             if (ArrayUtils.isNotEmpty(esSelect.getIncludes()) || ArrayUtils.isNotEmpty(esSelect.getExcludes())) {
                 sourceBuilder.fetchSource(esSelect.getIncludes(), esSelect.getExcludes());
             }
+            if (esSelect.getFetch() != null) {
+                sourceBuilder.fetchSource(esSelect.getFetch());
+            }
+            if (esSelect.getMinScope()!=null) {
+                sourceBuilder.minScore(esSelect.getMinScope());
+            }
         }
         boolean profile = esQueryParamWrapper.isProfile();
         if (profile) {
