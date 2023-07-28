@@ -2,14 +2,16 @@ package com.es.plus.core.wrapper.core;
 
 
 import com.es.plus.adapter.params.*;
-import com.es.plus.adapter.properties.EsParamHolder;
+import com.es.plus.adapter.properties.EsFieldInfo;
+import com.es.plus.adapter.properties.GlobalParamHolder;
+import com.es.plus.adapter.util.DateUtil;
 import com.es.plus.core.wrapper.aggregation.EsAggWrapper;
 import com.es.plus.core.wrapper.aggregation.EsLambdaAggWrapper;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.common.geo.GeoPoint;
 import org.elasticsearch.common.unit.DistanceUnit;
+import org.elasticsearch.common.unit.Fuzziness;
 import org.elasticsearch.index.query.*;
 import org.elasticsearch.join.query.HasChildQueryBuilder;
 import org.elasticsearch.join.query.HasParentQueryBuilder;
@@ -17,10 +19,12 @@ import org.elasticsearch.join.query.ParentIdQueryBuilder;
 import org.elasticsearch.search.sort.SortOrder;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * @Author: hzh
@@ -246,13 +250,10 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
     public Children term(boolean condition, R name, Object value) {
         if (condition) {
             String keyword = nameToString(name);
-//            if (tClass != null) {
-//                //获取需要加.keyword的字段
-//                String key = EsParamHolder.getStringKeyword(tClass, keyword);
-//                if (StringUtils.isNotBlank(key)) {
-//                    keyword = key;
-//                }
-//            }
+            EsFieldInfo esFieldInfo = GlobalParamHolder.getField(tClass, keyword);
+            if (esFieldInfo != null) {
+                value = DateUtil.format(value, esFieldInfo.getDateFormat());
+            }
             TermQueryBuilder termQueryBuilder = QueryBuilders.termQuery(keyword, value);
             currentBuilder = termQueryBuilder;
             queryBuilders.add(termQueryBuilder);
@@ -262,17 +263,17 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
 
 
     @Override
-    public Children terms(boolean condition, R name, Object... value) {
+    public Children terms(boolean condition, R name, Object... values) {
         if (condition) {
             String keyword = nameToString(name);
-            if (tClass != null) {
-                //获取需要加.keyword的字段
-                String key = EsParamHolder.getStringKeyword(tClass, keyword);
-                if (StringUtils.isNotBlank(key)) {
-                    keyword = key;
-                }
+            EsFieldInfo esFieldInfo = GlobalParamHolder.getField(tClass, keyword);
+            TermsQueryBuilder termsQueryBuilder;
+            if (esFieldInfo != null) {
+                List<Object> list = Arrays.stream(values).map(v -> DateUtil.format(v, esFieldInfo.getDateFormat())).collect(Collectors.toList());
+                termsQueryBuilder = QueryBuilders.termsQuery(keyword, list);
+            } else {
+                termsQueryBuilder = QueryBuilders.termsQuery(keyword, values);
             }
-            TermsQueryBuilder termsQueryBuilder = QueryBuilders.termsQuery(keyword, value);
             currentBuilder = termsQueryBuilder;
             queryBuilders.add(termsQueryBuilder);
         }
@@ -282,15 +283,12 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
     @Override
     public Children terms(boolean condition, R name, Collection<?> values) {
         if (condition) {
-            String keyword = nameToString(name);
-            if (tClass != null) {
-                //获取需要加.keyword的字段
-                String key = EsParamHolder.getStringKeyword(tClass, keyword);
-                if (StringUtils.isNotBlank(key)) {
-                    keyword = key;
-                }
+            String fieldName = nameToString(name);
+            EsFieldInfo esFieldInfo = GlobalParamHolder.getField(tClass, fieldName);
+            if (esFieldInfo != null) {
+                values = values.stream().map(v -> DateUtil.format(v, esFieldInfo.getDateFormat())).collect(Collectors.toList());
             }
-            TermsQueryBuilder termsQueryBuilder = QueryBuilders.termsQuery(keyword, values);
+            TermsQueryBuilder termsQueryBuilder = QueryBuilders.termsQuery(fieldName, values);
             currentBuilder = termsQueryBuilder;
             queryBuilders.add(termsQueryBuilder);
         }
@@ -381,9 +379,25 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
 
     //有纠错能力的模糊查询。
     @Override
-    public Children fuzzy(boolean condition, R name, String value) {
+    public Children fuzzy(boolean condition, R name, String value,Fuzziness fuzziness) {
         if (condition) {
             FuzzyQueryBuilder fuzzyQueryBuilder = QueryBuilders.fuzzyQuery(nameToString(name), value);
+            fuzzyQueryBuilder.fuzziness(fuzziness);
+            fuzzyQueryBuilder.prefixLength();
+            currentBuilder = fuzzyQueryBuilder;
+            queryBuilders.add(fuzzyQueryBuilder);
+        }
+        return children;
+    }
+
+    @Override
+    public Children fuzzy(boolean condition, R name, String value,Fuzziness fuzziness,int prefixLength) {
+        if (condition) {
+            FuzzyQueryBuilder fuzzyQueryBuilder = QueryBuilders.fuzzyQuery(nameToString(name), value);
+            if (fuzziness!=null) {
+                fuzzyQueryBuilder.fuzziness(fuzziness);
+            }
+            fuzzyQueryBuilder.prefixLength(prefixLength);
             currentBuilder = fuzzyQueryBuilder;
             queryBuilders.add(fuzzyQueryBuilder);
         }
@@ -425,7 +439,7 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
             //嵌套对象增加父字段名
             esQueryWrapper.parentFieldName = name;
             consumer.accept(esQueryWrapper);
-            NestedQueryBuilder nestedQueryBuilder = QueryBuilders.nestedQuery(name, esQueryWrapper.getQueryBuilder(),ScoreMode.None);
+            NestedQueryBuilder nestedQueryBuilder = QueryBuilders.nestedQuery(name, esQueryWrapper.getQueryBuilder(), ScoreMode.None);
             currentBuilder = nestedQueryBuilder;
             this.queryBuilders.add(nestedQueryBuilder);
         }
@@ -433,7 +447,7 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
     }
 
     @Override
-    public <S> Children nestedQuery(boolean condition, R path, Class<S> sClass, Consumer<EsLambdaQueryWrapper<S>> consumer, ScoreMode mode,InnerHitBuilder innerHitBuilder) {
+    public <S> Children nestedQuery(boolean condition, R path, Class<S> sClass, Consumer<EsLambdaQueryWrapper<S>> consumer, ScoreMode mode, InnerHitBuilder innerHitBuilder) {
         if (condition) {
             String name = nameToString(path);
 
@@ -451,7 +465,7 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
     }
 
     @Override
-    public <S> Children nestedQuery(boolean condition, R path, Consumer<EsQueryWrapper<S>> consumer, ScoreMode mode,InnerHitBuilder innerHitBuilder) {
+    public <S> Children nestedQuery(boolean condition, R path, Consumer<EsQueryWrapper<S>> consumer, ScoreMode mode, InnerHitBuilder innerHitBuilder) {
         if (condition) {
             String name = nameToString(path);
             EsQueryWrapper<S> esQueryWrapper = new EsQueryWrapper<>();
@@ -469,7 +483,12 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
     @Override
     public Children gt(boolean condition, R name, Object from) {
         if (condition) {
-            queryBuilders.add(QueryBuilders.rangeQuery(nameToString(name)).gt(from));
+            String fieldName = nameToString(name);
+            EsFieldInfo esFieldInfo = GlobalParamHolder.getField(tClass, fieldName);
+            if (esFieldInfo != null) {
+                from = DateUtil.format(from, esFieldInfo.getDateFormat());
+            }
+            queryBuilders.add(QueryBuilders.rangeQuery(fieldName).gt(from));
         }
         return children;
     }
@@ -477,6 +496,11 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
     @Override
     public Children ge(boolean condition, R name, Object from) {
         if (condition) {
+            String fieldName = nameToString(name);
+            EsFieldInfo esFieldInfo = GlobalParamHolder.getField(tClass, fieldName);
+            if (esFieldInfo != null) {
+                from = DateUtil.format(from, esFieldInfo.getDateFormat());
+            }
             queryBuilders.add(QueryBuilders.rangeQuery(nameToString(name)).gte(from));
         }
         return children;
@@ -485,6 +509,11 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
     @Override
     public Children lt(boolean condition, R name, Object to) {
         if (condition) {
+            String fieldName = nameToString(name);
+            EsFieldInfo esFieldInfo = GlobalParamHolder.getField(tClass, fieldName);
+            if (esFieldInfo != null) {
+                to = DateUtil.format(to, esFieldInfo.getDateFormat());
+            }
             queryBuilders.add(QueryBuilders.rangeQuery(nameToString(name)).lt(to));
         }
         return children;
@@ -493,23 +522,54 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
     @Override
     public Children le(boolean condition, R name, Object to) {
         if (condition) {
+            String fieldName = nameToString(name);
+            EsFieldInfo esFieldInfo = GlobalParamHolder.getField(tClass, fieldName);
+            if (esFieldInfo != null) {
+                to = DateUtil.format(to, esFieldInfo.getDateFormat());
+            }
             queryBuilders.add(QueryBuilders.rangeQuery(nameToString(name)).lte(to));
         }
         return children;
     }
 
     @Override
-    public Children between(boolean condition, R name, Object from, Object to, boolean fromInclude,boolean toInclude) {
+    public Children range(boolean condition, R name, Object from, Object to, boolean fromInclude, boolean toInclude) {
         if (condition) {
+            String fieldName = nameToString(name);
+            EsFieldInfo esFieldInfo = GlobalParamHolder.getField(tClass, fieldName);
+            if (esFieldInfo != null) {
+                from = DateUtil.format(from, esFieldInfo.getDateFormat());
+                to = DateUtil.format(to, esFieldInfo.getDateFormat());
+            }
             queryBuilders.add(QueryBuilders.rangeQuery(nameToString(name)).from(from, fromInclude).to(to, toInclude));
         }
         return children;
     }
 
     @Override
-    public Children between(boolean condition, R name, Object from, Object to) {
+    public Children range(boolean condition, R name, Object from, Object to) {
         if (condition) {
+            String fieldName = nameToString(name);
+            EsFieldInfo esFieldInfo = GlobalParamHolder.getField(tClass, fieldName);
+            if (esFieldInfo != null) {
+                from = DateUtil.format(from, esFieldInfo.getDateFormat());
+                to = DateUtil.format(to, esFieldInfo.getDateFormat());
+            }
             queryBuilders.add(QueryBuilders.rangeQuery(nameToString(name)).from(from, true).to(to, true));
+        }
+        return children;
+    }
+
+    @Override
+    public Children range(boolean condition, R name, Object from, Object to, String timeZone) {
+        if (condition) {
+            String fieldName = nameToString(name);
+            EsFieldInfo esFieldInfo = GlobalParamHolder.getField(tClass, fieldName);
+            if (esFieldInfo != null) {
+                from = DateUtil.format(from, esFieldInfo.getDateFormat());
+                to = DateUtil.format(to, esFieldInfo.getDateFormat());
+            }
+            queryBuilders.add(QueryBuilders.rangeQuery(nameToString(name)).from(from, true).to(to, true).timeZone(timeZone));
         }
         return children;
     }

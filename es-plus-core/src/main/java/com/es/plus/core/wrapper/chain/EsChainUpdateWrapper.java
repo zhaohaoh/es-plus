@@ -6,7 +6,7 @@ import com.es.plus.core.wrapper.core.EsUpdateWrapper;
 import com.es.plus.core.wrapper.core.Update;
 import com.es.plus.core.ClientContext;
 import com.es.plus.adapter.properties.EsIndexParam;
-import com.es.plus.adapter.properties.EsParamHolder;
+import com.es.plus.adapter.properties.GlobalParamHolder;
 import com.es.plus.core.wrapper.core.UpdateOperation;
 import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.action.bulk.BulkItemResponse;
@@ -30,7 +30,7 @@ public class EsChainUpdateWrapper<T> extends AbstractEsChainWrapper<T, String, E
     public EsChainUpdateWrapper(Class<T> clazz) {
         super.tClass = clazz;
         super.esWrapper = new EsUpdateWrapper<>(tClass);
-        EsIndexParam esIndexParam = EsParamHolder.getEsIndexParam(super.tClass);
+        EsIndexParam esIndexParam = GlobalParamHolder.getEsIndexParam(super.tClass);
         if (esIndexParam != null) {
             index = StringUtils.isBlank(esIndexParam.getAlias())? esIndexParam.getIndex():esIndexParam.getAlias();
             type = esIndexParam.getType();
@@ -40,7 +40,7 @@ public class EsChainUpdateWrapper<T> extends AbstractEsChainWrapper<T, String, E
     public EsChainUpdateWrapper(Class<T> clazz, EsPlusClientFacade esPlusClientFacade) {
         super.tClass = clazz;
         super.esWrapper = new EsUpdateWrapper<>(tClass);
-        EsIndexParam esIndexParam = EsParamHolder.getEsIndexParam(super.tClass);
+        EsIndexParam esIndexParam = GlobalParamHolder.getEsIndexParam(super.tClass);
         if (esIndexParam != null) {
             index = StringUtils.isBlank(esIndexParam.getAlias())? esIndexParam.getIndex():esIndexParam.getAlias();
             type = esIndexParam.getType();

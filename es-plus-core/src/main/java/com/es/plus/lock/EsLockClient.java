@@ -3,7 +3,7 @@ package com.es.plus.lock;
 import com.es.plus.adapter.config.GlobalConfigCache;
 import com.es.plus.adapter.exception.EsException;
 import com.es.plus.adapter.lock.ELockClient;
-import com.es.plus.adapter.properties.EsParamHolder;
+import com.es.plus.adapter.properties.GlobalParamHolder;
 import com.es.plus.adapter.util.JsonUtils;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
@@ -55,7 +55,7 @@ public class EsLockClient implements ELockClient {
 
     @Override
     public UpdateResponse update(String index, Object esData) {
-        UpdateRequest updateRequest = new UpdateRequest(index,GlobalConfigCache.GLOBAL_CONFIG.getType(),EsParamHolder.getDocId(esData)).doc(JsonUtils.toJsonStr(esData), XContentType.JSON);
+        UpdateRequest updateRequest = new UpdateRequest(index,GlobalConfigCache.GLOBAL_CONFIG.getType(), GlobalParamHolder.getDocId(esData)).doc(JsonUtils.toJsonStr(esData), XContentType.JSON);
         //乐观锁重试次数
         updateRequest.retryOnConflict(GlobalConfigCache.GLOBAL_CONFIG.getMaxRetries());
         updateRequest.setRefreshPolicy(GlobalConfigCache.GLOBAL_CONFIG.getRefreshPolicy());

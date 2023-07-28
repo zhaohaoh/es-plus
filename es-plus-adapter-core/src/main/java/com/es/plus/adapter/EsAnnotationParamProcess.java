@@ -3,8 +3,10 @@ package com.es.plus.adapter;
 import com.es.plus.adapter.config.GlobalConfigCache;
 import com.es.plus.adapter.exception.EsException;
 import com.es.plus.adapter.params.EsSettings;
+import com.es.plus.adapter.properties.EsFieldInfo;
 import com.es.plus.adapter.properties.EsIndexParam;
-import com.es.plus.adapter.properties.EsParamHolder;
+import com.es.plus.adapter.properties.GlobalParamHolder;
+import com.es.plus.adapter.util.AnnotationResolveUtil;
 import com.es.plus.adapter.util.ClassUtils;
 import com.es.plus.annotation.EsField;
 import com.es.plus.annotation.EsId;
@@ -87,7 +89,7 @@ public class EsAnnotationParamProcess {
         analysis.put(Analyzer.ANALYZER, child);
         if (ArrayUtils.isNotEmpty(analyzers)) {
             for (String analyzerName : analyzers) {
-                Map map = EsParamHolder.getAnalysis(analyzerName);
+                Map map = GlobalParamHolder.getAnalysis(analyzerName);
                 if (map != null) {
                     child.put(analyzerName, map);
                 }
@@ -95,7 +97,7 @@ public class EsAnnotationParamProcess {
         } else {
             String defaultAnalyzer = GlobalConfigCache.GLOBAL_CONFIG.getDefaultAnalyzer();
             if (StringUtils.isNotBlank(defaultAnalyzer)) {
-                Map map = EsParamHolder.getAnalysis(defaultAnalyzer);
+                Map map = GlobalParamHolder.getAnalysis(defaultAnalyzer);
                 if (map != null) {
                     child.put(defaultAnalyzer, map);
                 }
@@ -105,7 +107,7 @@ public class EsAnnotationParamProcess {
 
     private void putNormalizer(Map<String, Object> analysis) {
         String defaultNormalizer = GlobalConfigCache.GLOBAL_CONFIG.getDefaultNormalizer();
-        Map epNormalizer = EsParamHolder.getAnalysis(defaultNormalizer);
+        Map epNormalizer = GlobalParamHolder.getAnalysis(defaultNormalizer);
         if (!CollectionUtils.isEmpty(epNormalizer)) {
             Map<String, Object> child = new HashMap<>();
             child.put(defaultNormalizer, epNormalizer);
@@ -129,7 +131,7 @@ public class EsAnnotationParamProcess {
             //id缓存.用来自动获取实体类id
             EsId esId = field.getAnnotation(EsId.class);
             if (esId != null) {
-                EsParamHolder.put(tClass, field.getName());
+                GlobalParamHolder.put(tClass, field.getName());
             }
 
             //创建属性对象
@@ -140,8 +142,14 @@ public class EsAnnotationParamProcess {
             // 获取es字段类型
             String fieldType = processNestedObjects(field, esField, properties);
 
-            // 处理字段注解
+            // 处理字段注解和es的映射
             processAnnotationEsField(properties, esField);
+
+            // 解析注解字段
+            EsFieldInfo esFieldInfo = AnnotationResolveUtil.resolveEsField(esField);
+
+            //设置到全局缓存字段
+            GlobalParamHolder.putField(tClass,field.getName(),esFieldInfo);
 
             String fieldName = esField != null && StringUtils.isNotBlank(esField.name()) ? esField.name() : field.getName();
 
@@ -149,9 +157,9 @@ public class EsAnnotationParamProcess {
                 // 字符串类型映射
                 if ((EsFieldType.STRING.name().toLowerCase().equals(fieldType))) {
                     properties.put(EsConstant.TYPE, EsConstant.TEXT);
-                    properties.put(EsConstant.FIELDS, EsParamHolder.getFieldsMap());
+                    properties.put(EsConstant.FIELDS, EsConstant.KEYWORDS_MAP);
                     //双类型字符串的映射转换
-                    EsParamHolder.putTextKeyword(tClass, fieldName);
+                    GlobalParamHolder.putTextKeyword(tClass, fieldName);
                 } else {
                     properties.put(EsConstant.TYPE, fieldType);
                 }
@@ -163,7 +171,10 @@ public class EsAnnotationParamProcess {
         return mappings;
     }
 
-    // 待完成.这里需要处理数据是否需要递归.但是又要处理fileType还没想清楚
+
+    /**
+     * 处理嵌套对象
+     */
     private String processNestedObjects(Field field, EsField esField, Map<String, Object> properties) {
         String fieldType;
         Class<?> fieldClass = field.getType();
@@ -253,8 +264,8 @@ public class EsAnnotationParamProcess {
         }
 
         //获取格式化
-        if (esField.type().equals(EsFieldType.DATE) && StringUtils.isNotBlank(esField.format())) {
-            properties.put(EsConstant.FORMAT, esField.format());
+        if (esField.type().equals(EsFieldType.DATE) && StringUtils.isNotBlank(esField.esFormat())) {
+            properties.put(EsConstant.FORMAT, esField.esFormat());
         }
     }
 

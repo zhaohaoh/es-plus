@@ -12,14 +12,17 @@ import java.util.Map;
 @Data
 public class EsResponse<T> {
     /**
-     * 数据集合
-     */
-    private List<T> list;
-
-    /**
      * 总数
      */
     private long total;
+    /**
+     * 耗时
+     */
+    private long tookInMillis;
+    /**
+     * 数据集合
+     */
+    private List<T> list;
     /**
      * 聚合结果
      */
@@ -47,11 +50,23 @@ public class EsResponse<T> {
      */
     private String scrollId;
 
+    /**
+     * 查询的总分片
+     */
     private int totalShards;
+    /**
+     * 成功的分片
+     */
     private int successfulShards;
+    /**
+     * 跳过的分片
+     */
     private int skippedShards;
+    /**
+     * 分片失败的信息
+     */
     private ShardSearchFailure[] shardFailures;
-    private long tookInMillis;
+
 
     public EsResponse(List<T> list, long count, EsAggResponse<T> esAggregationReponse) {
         this.list = list;

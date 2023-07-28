@@ -5,7 +5,7 @@ import com.es.plus.adapter.tools.LambdaUtils;
 import com.es.plus.adapter.tools.SFunction;
 import com.es.plus.adapter.tools.SerializedLambda;
 import com.es.plus.adapter.exception.EsException;
-import com.es.plus.adapter.properties.EsParamHolder;
+import com.es.plus.adapter.properties.GlobalParamHolder;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.Locale;
@@ -20,7 +20,7 @@ public abstract class AbstractLambdaAggWrapper<T, R> {
         }
         String name = nameToString(sFunction);
 
-        String keyword = EsParamHolder.getStringKeyword(tClass, name);
+        String keyword = GlobalParamHolder.getStringKeyword(tClass, name);
         return StringUtils.isBlank(keyword) ? name : keyword;
     }
 

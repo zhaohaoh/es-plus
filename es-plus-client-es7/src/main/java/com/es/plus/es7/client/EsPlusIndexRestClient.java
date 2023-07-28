@@ -8,7 +8,7 @@ import com.es.plus.adapter.params.EsAliasResponse;
 import com.es.plus.adapter.params.EsIndexResponse;
 import com.es.plus.adapter.params.EsSettings;
 import com.es.plus.adapter.properties.EsIndexParam;
-import com.es.plus.adapter.properties.EsParamHolder;
+import com.es.plus.adapter.properties.GlobalParamHolder;
 import com.es.plus.adapter.util.JsonUtils;
 import com.es.plus.constant.EsConstant;
 import org.apache.commons.lang3.StringUtils;
@@ -65,7 +65,7 @@ public class EsPlusIndexRestClient implements EsPlusIndexClient {
      */
     @Override
     public void createIndex(String index, Class<?> tClass) {
-        EsIndexParam esDocParam = EsParamHolder.getEsIndexParam(tClass);
+        EsIndexParam esDocParam = GlobalParamHolder.getEsIndexParam(tClass);
         if (StringUtils.isBlank(index)) {
             index = esDocParam.getIndex();
         }
@@ -82,7 +82,7 @@ public class EsPlusIndexRestClient implements EsPlusIndexClient {
      */
     @Override
     public void putMapping(String index, Class<?> tClass) {
-        EsIndexParam esDocParam = EsParamHolder.getEsIndexParam(tClass);
+        EsIndexParam esDocParam = GlobalParamHolder.getEsIndexParam(tClass);
         if (StringUtils.isBlank(index)) {
             index = esDocParam.getIndex();
         }
@@ -119,7 +119,7 @@ public class EsPlusIndexRestClient implements EsPlusIndexClient {
      */
     @Override
     public void createIndexMapping(String index, Class<?> tClass) {
-        EsIndexParam esIndexParam = EsParamHolder.getEsIndexParam(tClass);
+        EsIndexParam esIndexParam = GlobalParamHolder.getEsIndexParam(tClass);
         if (StringUtils.isBlank(index)) {
             index = esIndexParam.getIndex();
         }
@@ -138,7 +138,7 @@ public class EsPlusIndexRestClient implements EsPlusIndexClient {
         CreateIndexRequest indexRequest = new CreateIndexRequest(index);
         boolean exists = this.indexExists(indexRequest.index());
 
-        EsIndexParam esIndexParam = EsParamHolder.getEsIndexParam(tClass);
+        EsIndexParam esIndexParam = GlobalParamHolder.getEsIndexParam(tClass);
         //创建索引的settings
         Settings.Builder settings = Settings.builder();
 

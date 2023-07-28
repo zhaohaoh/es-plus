@@ -2,7 +2,7 @@ package com.es.plus.es7.client;
 
 import com.es.plus.adapter.exception.EsException;
 import com.es.plus.adapter.params.EsAggResponse;
-import com.es.plus.adapter.properties.EsParamHolder;
+import com.es.plus.adapter.properties.GlobalParamHolder;
 import com.es.plus.adapter.tools.LambdaUtils;
 import com.es.plus.adapter.tools.SFunction;
 import com.es.plus.adapter.tools.SerializedLambda;
@@ -246,7 +246,7 @@ public class EsPlusAggregations<T> implements EsAggResponse<T> {
     private String getAggregationField(SFunction<T, ?> sFunction) {
         String name = nameToString(sFunction);
 
-        String keyword = EsParamHolder.getStringKeyword(tClass, name);
+        String keyword = GlobalParamHolder.getStringKeyword(tClass, name);
         return StringUtils.isBlank(keyword) ? name : keyword;
     }
 

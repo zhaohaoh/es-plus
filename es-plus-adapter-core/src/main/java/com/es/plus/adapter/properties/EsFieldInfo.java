@@ -1,73 +1,70 @@
-package com.es.plus.annotation;
+package com.es.plus.adapter.properties;
 
 import com.es.plus.constant.EsFieldType;
-
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import lombok.Data;
 
 /**
- * @Author: hzh
- * @Date: 2022/9/5 15:04
+ * es字段参数
+ *
+ * @author hzh
+ * @date 2023/07/25
  */
-@Target(ElementType.FIELD)
-@Retention(RetentionPolicy.RUNTIME)
-public @interface EsField {
+@Data
+public class EsFieldInfo {
     /**
      * 名字
      *
      * @return {@link String}
      */
-    String name() default "";
+    private String name;
 
     /**
      * 类型
      *
      * @return {@link EsFieldType}
      */
-    EsFieldType type() default EsFieldType.AUTO;
+    private EsFieldType type;
 
     /**
      * 是否被索引
      *
      * @return boolean
      */
-    boolean index() default true;
+    private boolean index;
 
     /**
      * 搜索分析仪
      *
      * @return {@link String}
      */
-    String searchAnalyzer() default "";
+    private String searchAnalyzer;
 
     /**
      * 分析仪
      *
      * @return {@link String}
      */
-    String analyzer() default "";
+    private String analyzer;
 
     /**
      * 是否存储
      *
      * @return boolean
      */
-    boolean store() default false;
+    private boolean store;
 
     /**
      * 设置text可以进行聚合操作
      *
      * @return 是否设置可聚合
      */
-    boolean fieldData() default false;
+    private boolean fieldData;
 
     /**
      * 设置keyword字段处理器 只会设置keyword类型字段
      * 全局目前已配置自带的转小写normalizer
      */
-    String normalizer() default "";
+    private String normalizer;
 
     /**
      * 把字段复制到某一个字段。搜索的时候根据这个字段搜索。无需合并倒排链
@@ -76,26 +73,26 @@ public @interface EsField {
      * 因为无需多次检索FST的树
      * 对整合后的字段聚合的话，会得到多个字段的聚合结果  目标对象text和keyword类型都能使用
      */
-    String[] copyTo() default {};
+    private String[] copyTo;
 
     /**
      * 存在
      *
      * @return boolean
      */
-    boolean exist() default true;
+    private boolean exist;
 
     /**
      * es的日期支持的存储格式。 || 可以指定多个   但不是正反序列化使用的格式  但是date转换成string的序列化不归此参数管理
      *
      * @return {@link String}
      */
-    String esFormat() default "yyyy-MM-dd HH:mm:ss||yyyy-MM-dd||yyyy-MM||strict_date_optional_time||epoch_millis";
+    private String esFormat;
 
     /**
      * 指定时间类型序列化存储的格式
      */
-    String dateFormat() default "yyyy-MM-dd HH:mm:ss";
+    private String dateFormat;
 
     /**
      * 全局序数  插入的时候即对聚合进行预处理 提高聚合性能 适用于聚合字段和父子文档
@@ -105,7 +102,7 @@ public @interface EsField {
      * | ----- | ------------------------------------------------------- |
      * | Doc_1 | brown, dog, fox, jumped, lazy, over, quick, the         |
      * | Doc_2 | brown, dogs, foxes, in, lazy, leap, over, quick, summer |
-     *
+     * <p>
      * | Terms | ordinal |
      * | ----- | ------- |
      * | brown | 1       |
@@ -114,7 +111,7 @@ public @interface EsField {
      *
      * @return boolean
      */
-    boolean eagerGlobalOrdinals() default false;
+    private boolean eagerGlobalOrdinals;
 
 
     /**
@@ -122,12 +119,15 @@ public @interface EsField {
      *
      * @return {@link String}
      */
-    String parent() default "";
+    private String parent;
 
     /**
      * 子
      *
      * @return {@link String}
      */
-    String child() default "";
+    private String child;
+
+
 }
+

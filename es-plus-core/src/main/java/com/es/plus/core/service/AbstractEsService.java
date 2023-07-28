@@ -8,7 +8,7 @@ import com.es.plus.adapter.exception.EsException;
 import com.es.plus.adapter.lock.ELock;
 import com.es.plus.adapter.lock.EsLockFactory;
 import com.es.plus.adapter.properties.EsIndexParam;
-import com.es.plus.adapter.properties.EsParamHolder;
+import com.es.plus.adapter.properties.GlobalParamHolder;
 import com.es.plus.annotation.EsId;
 import com.es.plus.annotation.EsIndex;
 import com.es.plus.constant.DefaultClass;
@@ -79,12 +79,12 @@ public abstract class AbstractEsService<T> implements InitializingBean {
             Field[] fields = indexClass.getDeclaredFields();
             for (Field field : fields) {
                 if (field.getAnnotation(EsId.class) != null) {
-                    EsParamHolder.put(clazz, field.getName());
+                    GlobalParamHolder.put(clazz, field.getName());
                 }
             }
 
             //添加索引信息
-            EsIndexParam esIndexParam = EsParamHolder.getEsIndexParam(indexClass);
+            EsIndexParam esIndexParam = GlobalParamHolder.getEsIndexParam(indexClass);
 
             this.index = esIndexParam.getIndex();
 

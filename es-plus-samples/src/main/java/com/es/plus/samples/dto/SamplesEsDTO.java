@@ -54,7 +54,7 @@ public class SamplesEsDTO {
     @EsField(type = EsFieldType.KEYWORD)
     private String baaaqqrr;
 
-    @EsField(type = EsFieldType.DATE,format = "yyyy-MM-dd'T'HH:mm:ss'Z' || yyyy-MM-dd HH:mm:ss || yyyy-MM-dd || yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+    @EsField(type = EsFieldType.DATE, esFormat = "yyyy-MM-dd'T'HH:mm:ss'Z' || yyyy-MM-dd HH:mm:ss || yyyy-MM-dd || yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
     private Date date;
     //
 //    @TableField(exist = false)

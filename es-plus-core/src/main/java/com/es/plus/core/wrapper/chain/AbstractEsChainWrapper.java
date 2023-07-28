@@ -5,7 +5,7 @@ import com.es.plus.adapter.config.GlobalConfigCache;
 import com.es.plus.adapter.exception.EsException;
 import com.es.plus.adapter.params.EsParamWrapper;
 import com.es.plus.adapter.params.EsSelect;
-import com.es.plus.adapter.properties.EsParamHolder;
+import com.es.plus.adapter.properties.GlobalParamHolder;
 import com.es.plus.core.wrapper.aggregation.EsAggWrapper;
 import com.es.plus.core.wrapper.aggregation.EsLambdaAggWrapper;
 import com.es.plus.core.wrapper.core.*;
@@ -13,9 +13,8 @@ import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.common.geo.GeoPoint;
 import org.elasticsearch.common.unit.DistanceUnit;
-import org.elasticsearch.index.query.BoolQueryBuilder;
-import org.elasticsearch.index.query.InnerHitBuilder;
-import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.common.unit.Fuzziness;
+import org.elasticsearch.index.query.*;
 
 import java.util.Collection;
 import java.util.List;
@@ -79,7 +78,7 @@ public abstract class AbstractEsChainWrapper<T, R, Children extends AbstractEsCh
         if (index == null) {
             throw new EsException("index is null");
         }
-        EsParamHolder.set_id(_id);
+        GlobalParamHolder.set_id(_id);
         return this.children;
     }
 
@@ -205,25 +204,25 @@ public abstract class AbstractEsChainWrapper<T, R, Children extends AbstractEsCh
 
     @Override
     public <S> Children nestedQuery(R path, Class<S> sClass, Consumer<EsLambdaQueryWrapper<S>> consumer, ScoreMode mode, InnerHitBuilder innerHitBuilder) {
-        getWrapper().nestedQuery(path, sClass, consumer, mode,innerHitBuilder);
+        getWrapper().nestedQuery(path, sClass, consumer, mode, innerHitBuilder);
         return this.children;
     }
 
     @Override
-    public <S> Children nestedQuery(R path, Consumer<EsQueryWrapper<S>> consumer, ScoreMode mode,InnerHitBuilder innerHitBuilder) {
-        getWrapper().nestedQuery(path, consumer, mode,innerHitBuilder);
+    public <S> Children nestedQuery(R path, Consumer<EsQueryWrapper<S>> consumer, ScoreMode mode, InnerHitBuilder innerHitBuilder) {
+        getWrapper().nestedQuery(path, consumer, mode, innerHitBuilder);
         return this.children;
     }
 
     @Override
-    public <S> Children nestedQuery(boolean condition, R path, Class<S> sClass, Consumer<EsLambdaQueryWrapper<S>> consumer, ScoreMode mode,InnerHitBuilder innerHitBuilder) {
-        getWrapper().nestedQuery(condition, path, sClass, consumer, mode,innerHitBuilder);
+    public <S> Children nestedQuery(boolean condition, R path, Class<S> sClass, Consumer<EsLambdaQueryWrapper<S>> consumer, ScoreMode mode, InnerHitBuilder innerHitBuilder) {
+        getWrapper().nestedQuery(condition, path, sClass, consumer, mode, innerHitBuilder);
         return this.children;
     }
 
     @Override
-    public <S> Children nestedQuery(boolean condition, R path, Consumer<EsQueryWrapper<S>> consumer, ScoreMode mode,InnerHitBuilder innerHitBuilder) {
-        getWrapper().nestedQuery(condition, path, consumer, mode,innerHitBuilder);
+    public <S> Children nestedQuery(boolean condition, R path, Consumer<EsQueryWrapper<S>> consumer, ScoreMode mode, InnerHitBuilder innerHitBuilder) {
+        getWrapper().nestedQuery(condition, path, consumer, mode, innerHitBuilder);
         return this.children;
     }
 
@@ -309,8 +308,13 @@ public abstract class AbstractEsChainWrapper<T, R, Children extends AbstractEsCh
 
     //有纠错能力的模糊查询。
     @Override
-    public Children fuzzy(boolean condition, R name, String value) {
-        getWrapper().fuzzy(condition, name, value);
+    public Children fuzzy(boolean condition, R name, String value, Fuzziness fuzziness) {
+        getWrapper().fuzzy(condition, name, value, fuzziness);
+        return children;
+    }
+    @Override
+    public Children fuzzy(boolean condition, R name, String value,Fuzziness fuzziness,int prefixLength) {
+        getWrapper().fuzzy(condition, name, value, fuzziness,prefixLength);
         return children;
     }
 
@@ -346,16 +350,23 @@ public abstract class AbstractEsChainWrapper<T, R, Children extends AbstractEsCh
     }
 
     @Override
-    public Children between(boolean condition, R name, Object from, Object to) {
-        getWrapper().between(condition, name, from, to);
+    public Children range(boolean condition, R name, Object from, Object to) {
+        getWrapper().range(condition, name, from, to);
         return children;
     }
 
     @Override
-    public Children between(boolean condition, R name, Object from, Object to, boolean fromInclude,boolean toInclude) {
-        getWrapper().between(condition, name, from, to, fromInclude,toInclude);
+    public Children range(boolean condition, R name, Object from, Object to, String timeZone) {
+        getWrapper().range(condition, name, from, to, timeZone);
         return children;
     }
+
+    @Override
+    public Children range(boolean condition, R name, Object from, Object to, boolean fromInclude, boolean toInclude) {
+        getWrapper().range(condition, name, from, to, fromInclude, toInclude);
+        return children;
+    }
+
 
     @Override
     public Children geoBoundingBox(boolean condition, R name, GeoPoint topLeft, GeoPoint bottomRight) {

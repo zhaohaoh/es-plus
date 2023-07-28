@@ -8,7 +8,7 @@ import com.es.plus.adapter.lock.EsReadWriteLock;
 import com.es.plus.adapter.params.EsIndexResponse;
 import com.es.plus.adapter.params.EsSettings;
 import com.es.plus.adapter.properties.EsIndexParam;
-import com.es.plus.adapter.properties.EsParamHolder;
+import com.es.plus.adapter.properties.GlobalParamHolder;
 import com.es.plus.adapter.util.JsonUtils;
 import com.es.plus.annotation.EsIndex;
 import com.es.plus.constant.Commend;
@@ -33,8 +33,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 
-import static com.es.plus.constant.EsConstant.MAX_RESULT_WINDOW;
-import static com.es.plus.constant.EsConstant.NUMBER_OF_SHARDS;
+import static com.es.plus.constant.EsConstant.*;
 
 /**
  * es执行人工具封装
@@ -83,7 +82,7 @@ public class EsReindexProcess {
     public static void tryReindex(EsPlusClientFacade esPlusClientFacade, Class<?> clazz) {
 
         //获取索引信息
-        EsIndexParam esIndexParam = EsParamHolder.getEsIndexParam(clazz);
+        EsIndexParam esIndexParam = GlobalParamHolder.getEsIndexParam(clazz);
 
         //根据别名获取索引结果 获取不到则通过索引名获取并且修改成目前的别名
         EsIndexResponse getIndexResponse = null;
@@ -140,7 +139,7 @@ public class EsReindexProcess {
 
     //有事临时编写的代码
     private static boolean settingsUpdate(EsIndexResponse indexResponse, String currentIndex, Class<?> clazz, EsPlusClientFacade esPlusClientFacade) {
-        EsIndexParam esIndexParam = EsParamHolder.getEsIndexParam(clazz);
+        EsIndexParam esIndexParam = GlobalParamHolder.getEsIndexParam(clazz);
         EsSettings esSettings = esIndexParam.getEsSettings();
         Map<String, String> settings = indexResponse.getSettings();
 
@@ -300,7 +299,7 @@ public class EsReindexProcess {
      */
     public static String getMappingUpdateCommend(Map<String, Object> esIndexMapping, Class<?> clazz) {
         // 获取索引信息
-        EsIndexParam esIndexParam = EsParamHolder.getEsIndexParam(clazz);
+        EsIndexParam esIndexParam = GlobalParamHolder.getEsIndexParam(clazz);
         // 新map添加NUMBER_OF_SHARDS
         Map<String, Object> localIndexMapping = esIndexParam.getMappings();
         // 本地和远程的索引
@@ -314,6 +313,9 @@ public class EsReindexProcess {
             // 获取属性中相同的属性判断是否改变
             Map<String, Object> localMappings = (Map<String, Object>) localIndexMapping.get(EsConstant.PROPERTIES);
             Map<String, Object> esMappings = (Map<String, Object>) esIndexMapping.get(EsConstant.PROPERTIES);
+
+            //排除reindexTime字段
+            esMappings.remove(REINDEX_TIME_FILED);
 
             // 如果减少字段.那么必然要reindex
             if (localMappings.size() < esMappings.size()) {
@@ -333,13 +335,14 @@ public class EsReindexProcess {
                 Map<String, Object> esMapping = (Map) esMappings.get(key);
                 Map<String, Object> localProperties = (Map) localMapping.get(EsConstant.PROPERTIES);
                 Map<String, Object> esProperties = (Map) esMapping.get(EsConstant.PROPERTIES);
+                boolean mappingChange = !localMapping.equals(esMapping);
                 if (localProperties != null && esProperties != null) {
                     String cmd = getCmd(esMapping, localMapping);
                     //如果返回reindex说明有嵌套对象的变更，否则嵌套对象也只是更新或者不处理
                     boolean reindex = cmd.equals(Commend.REINDEX);
-                    return !localMapping.equals(esMapping) && reindex;
+                    return mappingChange && reindex;
                 }
-                return !localMapping.equals(esMapping);
+                return mappingChange;
             });
             // 有字段改变REINDEX
             if (isUpdate) {

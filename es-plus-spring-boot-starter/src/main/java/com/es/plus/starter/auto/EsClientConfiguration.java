@@ -4,7 +4,7 @@ import com.es.plus.adapter.EsPlusClientFacade;
 import com.es.plus.adapter.config.GlobalConfigCache;
 import com.es.plus.adapter.exception.EsException;
 import com.es.plus.adapter.lock.EsLockFactory;
-import com.es.plus.adapter.properties.EsParamHolder;
+import com.es.plus.adapter.properties.GlobalParamHolder;
 import com.es.plus.adapter.util.XcontentBuildUtils;
 import com.es.plus.lock.EsLockClient;
 import com.es.plus.core.ClientContext;
@@ -205,13 +205,13 @@ public class EsClientConfiguration implements InitializingBean {
 
         analysis.forEach((analyzerName, analyzer) -> {
             Map<String, Object> analyzerMap = XcontentBuildUtils.buildAnalyzer(analyzer.getTokenizer(), analyzer.getFilters(), analyzer.getTokenizer());
-            EsParamHolder.putAnalysis(analyzerName, analyzerMap);
+            GlobalParamHolder.putAnalysis(analyzerName, analyzerMap);
         });
 
 
         normalizers.forEach((name, normalizer) -> {
             Map<String, Object> map = XcontentBuildUtils.buildAnalyzer(normalizer.getTokenizer(), normalizer.getFilters(), normalizer.getTokenizer());
-            EsParamHolder.putAnalysis(name, map);
+            GlobalParamHolder.putAnalysis(name, map);
         });
     }
 

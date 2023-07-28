@@ -2,6 +2,8 @@ package com.es.plus.constant;
 
 
 import java.time.Duration;
+import java.util.HashMap;
+import java.util.Map;
 
 public interface EsConstant {
     /* 框架缩写
@@ -165,5 +167,13 @@ public interface EsConstant {
      * 脚本语言 painless的常量
      */
     String PAINLESS = "painless";
+
+    // 字段映射
+    Map<String, Object> KEYWORDS_MAP = new HashMap<String, Object>() {{
+        Map<String, Object> keywordsMap = new HashMap<>();
+        keywordsMap.put(EsConstant.TYPE, "keyword");
+        keywordsMap.put("ignore_above", 256);
+        put("keyword", keywordsMap);
+    }};
 
 }

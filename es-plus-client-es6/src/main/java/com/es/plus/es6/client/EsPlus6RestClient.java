@@ -7,7 +7,7 @@ import com.es.plus.adapter.exception.EsException;
 import com.es.plus.adapter.lock.EsLockFactory;
 import com.es.plus.adapter.params.*;
 import com.es.plus.adapter.properties.EsIndexParam;
-import com.es.plus.adapter.properties.EsParamHolder;
+import com.es.plus.adapter.properties.GlobalParamHolder;
 import com.es.plus.adapter.util.BeanUtils;
 import com.es.plus.adapter.util.FieldUtils;
 import com.es.plus.adapter.util.JsonUtils;
@@ -126,7 +126,7 @@ public class EsPlus6RestClient implements EsPlusClient {
             }
             BulkRequest bulkRequest = new BulkRequest();
             for (Object esData : esDataList) {
-                UpdateRequest updateRequest = new UpdateRequest(index, type, EsParamHolder.getDocId(esData)).doc(JsonUtils.toJsonStr(esData), XContentType.JSON);
+                UpdateRequest updateRequest = new UpdateRequest(index, type, GlobalParamHolder.getDocId(esData)).doc(JsonUtils.toJsonStr(esData), XContentType.JSON);
                 updateRequest.retryOnConflict(GlobalConfigCache.GLOBAL_CONFIG.getMaxRetries());
                 updateRequest.setRefreshPolicy(GlobalConfigCache.GLOBAL_CONFIG.getRefreshPolicy());
                 // 如果没有文档则新增
@@ -182,7 +182,7 @@ public class EsPlus6RestClient implements EsPlusClient {
 
             for (Object esData : esDataList) {
                 IndexRequest indexRequest = new IndexRequest(index, type);
-                indexRequest.id(EsParamHolder.getDocId(esData)).source(JsonUtils.toJsonStr(esData), XContentType.JSON);
+                indexRequest.id(GlobalParamHolder.getDocId(esData)).source(JsonUtils.toJsonStr(esData), XContentType.JSON);
                 if (childIndex) {
                     indexRequest.routing(FieldUtils.getStrFieldValue(esData, "joinField", "parent"));
                 }
@@ -242,7 +242,7 @@ public class EsPlus6RestClient implements EsPlusClient {
                 }
             }
 
-            UpdateRequest updateRequest = new UpdateRequest(index, type, EsParamHolder.getDocId(esData)).doc(JsonUtils.toJsonStr(esData), XContentType.JSON);
+            UpdateRequest updateRequest = new UpdateRequest(index, type, GlobalParamHolder.getDocId(esData)).doc(JsonUtils.toJsonStr(esData), XContentType.JSON);
             //乐观锁重试次数
             updateRequest.retryOnConflict(GlobalConfigCache.GLOBAL_CONFIG.getMaxRetries());
             updateRequest.setRefreshPolicy(GlobalConfigCache.GLOBAL_CONFIG.getRefreshPolicy());
@@ -310,7 +310,7 @@ public class EsPlus6RestClient implements EsPlusClient {
             }
             BulkRequest bulkRequest = new BulkRequest();
             for (Object esData : esDataList) {
-                UpdateRequest updateRequest = new UpdateRequest(index, type, EsParamHolder.getDocId(esData)).doc(JsonUtils.toJsonStr(esData), XContentType.JSON);
+                UpdateRequest updateRequest = new UpdateRequest(index, type, GlobalParamHolder.getDocId(esData)).doc(JsonUtils.toJsonStr(esData), XContentType.JSON);
                 updateRequest.retryOnConflict(GlobalConfigCache.GLOBAL_CONFIG.getMaxRetries());
                 if (childIndex) {
                     updateRequest.routing(FieldUtils.getStrFieldValue(esData, "joinField", "parent"));
@@ -1076,7 +1076,7 @@ public class EsPlus6RestClient implements EsPlusClient {
      */
     private boolean isChildIndex(Object esData) {
         Class<?> clazz = esData.getClass();
-        EsIndexParam esIndexParam = EsParamHolder.getEsIndexParam(clazz);
+        EsIndexParam esIndexParam = GlobalParamHolder.getEsIndexParam(clazz);
         if (esIndexParam != null && esIndexParam.getChildClass() != null && esIndexParam.getChildClass().equals(clazz)) {
             return true;
         } else {

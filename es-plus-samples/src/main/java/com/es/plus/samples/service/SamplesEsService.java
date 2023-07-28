@@ -27,6 +27,9 @@ import java.util.function.Consumer;
 public class SamplesEsService extends EsServiceImpl<SamplesEsDTO> {
 
 
+    /**
+     * 三级嵌套查询，如果不使用框架用原生查询将会非常复杂
+     */
     public void nested() {
         //获取二级查询条件
         Consumer<EsLambdaQueryWrapper<SamplesNestedDTO>> innerConsumer = getSamplesNestedConsumer();

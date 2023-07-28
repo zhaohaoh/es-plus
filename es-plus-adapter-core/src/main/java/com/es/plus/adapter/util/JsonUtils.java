@@ -1,7 +1,11 @@
 package com.es.plus.adapter.util;
 
+import com.es.plus.adapter.json.EsPlusDateSerializer;
+import com.es.plus.adapter.properties.EsFieldInfo;
+import com.es.plus.adapter.properties.GlobalParamHolder;
 import com.es.plus.annotation.EsField;
 import com.es.plus.annotation.EsId;
+import com.es.plus.constant.EsFieldType;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
@@ -18,7 +22,6 @@ import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 import org.apache.commons.lang3.StringUtils;
-
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
@@ -28,6 +31,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 
 /**
  * @author hzh
@@ -35,16 +40,29 @@ import java.util.Map;
  * Json序列化工具类  为空的列不参与序列化   以免es更新的时候多更新了null的列
  */
 public class JsonUtils {
-    // 定义jackson对象
+
+    /**
+     * 定义jackson对象
+     */
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
-    private static final List<String> fmtList = new ArrayList<String>() {{
+    /**
+     * 自定义日期序列化器缓存
+     */
+    private static final Map<String, EsPlusDateSerializer> DATE_SERIALIZER_CACHE = new ConcurrentHashMap<>();
+
+    /**
+     * 反序列化器日期列表 常见的放前面更好
+     */
+    private static final List<String> DESERIALIZER_DATE_LIST = new ArrayList<String>() {{
         add("yyyy-MM-dd HH:mm:ss");
-        add("yyyy-MM-dd HH:mm");
-        add("yyyy-MM-dd HH");
         add("yyyy-MM-dd");
         add("yyyy-MM-dd'T'HH:mm:ss'Z'");
         add("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+        add("yyyy-MM-dd HH:mm");
+        add("yyyy-MM-dd HH");
+        add("yyyy-MM");
+        add("yyyy");
     }};
 
     static {
@@ -62,15 +80,15 @@ public class JsonUtils {
         // 指定序列化输入的类型，类必须是非final修饰的，final修饰的类，比如String,Integer等会跑出异常  指定了类型会写入序列化类的类型，这样不能通用的反序列化
 //        MAPPER.activateDefaultTyping(LaissezFaireSubTypeValidator.instance, ObjectMapper.DefaultTyping.NON_FINAL);
         SimpleModule simpleModule = new SimpleModule();
+        //定义了date类型的字段序列化会走自定义的序列化器。这里定义的4个会用不到，只是默认的。
         simpleModule.addDeserializer(LocalDateTime.class, new LocalDateTimeDeserializer(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
         simpleModule.addSerializer(LocalDateTime.class, new LocalDateTimeSerializer(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
         simpleModule.addSerializer(LocalDate.class, new LocalDateSerializer(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
         simpleModule.addDeserializer(LocalDate.class, new LocalDateDeserializer(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
 
-//        simpleModule.addSerializer(Date.class,new CustomDateSerializer());
-        MAPPER.registerModule(new SpringDataElasticsearchModule());
+        MAPPER.registerModule(new EsPlusModule());
         //默认反序列化返回的时间
-        MAPPER.setDateFormat(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss") {
+        MAPPER.setDateFormat(new SimpleDateFormat() {
             // 这个方法是反序列化需要滴！
             @Override
             public Date parse(String source) {
@@ -85,28 +103,25 @@ public class JsonUtils {
     /***
      * 转换字符串为日期date
      *
-     * 自动匹配转化，支持fmtList中的几种格式
-     * @param dateStr
-     * @param fmtIndex
-     * @return
+     * 自动匹配转化，支持DESERIALIZER_DATE_LIST中的几种格式
      */
     private static Date str2Data(String dateStr, int... fmtIndex) {
         int index = 0;
         if (fmtIndex != null && fmtIndex.length > 0) {
             index = fmtIndex[0];
         }
-        if (index > fmtList.size() - 1) {
+        if (index > DESERIALIZER_DATE_LIST.size() - 1) {
             return null;
         }
-        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+        SimpleDateFormat format = new SimpleDateFormat(DESERIALIZER_DATE_LIST.get(index));
         try {
-            Date date = format.parse(dateStr);
-            return date;
+            Date parse = format.parse(dateStr);
+            long time = parse.getTime();
+            return parse;
         } catch (ParseException e1) {
             return str2Data(dateStr, ++index);
         }
     }
-
 
 
     public static <T> T mapToBean(Map<String, Object> source, Class<T> targetType) {
@@ -178,16 +193,16 @@ public class JsonUtils {
     }
 
 
-    private static class SpringDataElasticsearchModule extends SimpleModule {
+    private static class EsPlusModule extends SimpleModule {
 
         private static final long serialVersionUID = -9168968092458058966L;
 
         /**
-         * Creates a new {@link SpringDataElasticsearchModule} using the given
+         * Creates a new {@link EsPlusModule} using the given
          */
-        public SpringDataElasticsearchModule() {
-            setSerializerModifier(new SpringDataSerializerModifier());
-            setDeserializerModifier(new SpringDataDeserializerModifier());
+        public EsPlusModule() {
+            setSerializerModifier(new EsPlusSerializerModifier());
+            setDeserializerModifier(new EsPlusDeserializerModifier());
         }
 
         /**
@@ -196,7 +211,7 @@ public class JsonUtils {
          * @author Oliver Gierke
          * @since 3.1
          */
-        private static class SpringDataDeserializerModifier extends BeanDeserializerModifier {
+        private static class EsPlusDeserializerModifier extends BeanDeserializerModifier {
 
             @Override
             public List<BeanPropertyDefinition> updateProperties(DeserializationConfig config, BeanDescription beanDesc, List<BeanPropertyDefinition> propDefs) {
@@ -223,19 +238,19 @@ public class JsonUtils {
          * @author hzh
          * @date 2023/04/17
          */
-        private static class SpringDataSerializerModifier extends BeanSerializerModifier {
+        private static class EsPlusSerializerModifier extends BeanSerializerModifier {
 
             @Override
             public List<BeanPropertyWriter> changeProperties(SerializationConfig config,
                                                              BeanDescription description, List<BeanPropertyWriter> properties) {
                 List<BeanPropertyWriter> result = new ArrayList<>(properties.size());
-
                 for (BeanPropertyWriter beanPropertyWriter : properties) {
                     EsField annotation = beanPropertyWriter.getAnnotation(EsField.class);
                     //如果数据不存在则不添加到序列化字段中
                     if (annotation != null && !annotation.exist()) {
                         continue;
                     }
+                    //重命名字段
                     if (annotation != null && StringUtils.isNotBlank(annotation.name())) {
                         String value = annotation.name();
                         NameTransformer transformer = new NameTransformer() {
@@ -250,6 +265,20 @@ public class JsonUtils {
                             }
                         };
                         beanPropertyWriter.rename(transformer);
+                    }
+                    //自定义date序列化
+                    if (annotation != null) {
+                        if (annotation.type().equals(EsFieldType.DATE)) {
+                            Class<?> beanClass = description.getBeanClass();
+                            String name = beanPropertyWriter.getName();
+                            EsFieldInfo esFieldInfo = GlobalParamHolder.getField(beanClass, name);
+                            if (esFieldInfo != null) {
+                                String dateFormat = esFieldInfo.getDateFormat();
+                                EsPlusDateSerializer dateSerializer = DATE_SERIALIZER_CACHE.computeIfAbsent(dateFormat,
+                                        c -> new EsPlusDateSerializer(dateFormat));
+                                beanPropertyWriter.assignSerializer(dateSerializer);
+                            }
+                        }
                     }
                     result.add(beanPropertyWriter);
                 }

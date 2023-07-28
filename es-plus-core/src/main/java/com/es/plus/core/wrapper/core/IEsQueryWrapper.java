@@ -3,6 +3,7 @@ package com.es.plus.core.wrapper.core;
 import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.common.geo.GeoPoint;
 import org.elasticsearch.common.unit.DistanceUnit;
+import org.elasticsearch.common.unit.Fuzziness;
 import org.elasticsearch.index.query.InnerHitBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 
@@ -141,12 +142,19 @@ public interface IEsQueryWrapper<Children, QUERY, R> {
 
     Children wildcard(boolean condition, R name, String value);
 
-    default Children fuzzy(R name, String value) {
-        return fuzzy(true, name, value);
+    default Children fuzzy(R name, String value, Fuzziness fuzziness) {
+        return fuzzy(true, name, value, fuzziness);
     }
 
     //有纠错能力的模糊查询。
-    Children fuzzy(boolean condition, R name, String value);
+    Children fuzzy(boolean condition, R name, String value, Fuzziness fuzziness);
+
+    default Children fuzzy(R name, String value, Fuzziness fuzziness, int prefixLength) {
+        return fuzzy(true, name, value, fuzziness, prefixLength);
+    }
+
+    //有纠错能力的模糊查询。
+    Children fuzzy(boolean condition, R name, String value, Fuzziness fuzziness, int prefixLength);
 
     default Children ids(Collection<String> ids) {
         return ids(true, ids);
@@ -213,8 +221,8 @@ public interface IEsQueryWrapper<Children, QUERY, R> {
      * @param mode     模式
      * @return {@link Children}
      */
-    default <S> Children nestedQuery(R path, Class<S> sClass, Consumer<EsLambdaQueryWrapper<S>> consumer, ScoreMode mode,InnerHitBuilder innerHitBuilder) {
-        return nestedQuery(true, path, sClass, consumer, mode,innerHitBuilder);
+    default <S> Children nestedQuery(R path, Class<S> sClass, Consumer<EsLambdaQueryWrapper<S>> consumer, ScoreMode mode, InnerHitBuilder innerHitBuilder) {
+        return nestedQuery(true, path, sClass, consumer, mode, innerHitBuilder);
     }
 
     /**
@@ -227,7 +235,7 @@ public interface IEsQueryWrapper<Children, QUERY, R> {
      * @param mode      模式
      * @return {@link Children}
      */
-    <S> Children nestedQuery(boolean condition, R path, Class<S> sClass, Consumer<EsLambdaQueryWrapper<S>> consumer, ScoreMode mode,InnerHitBuilder innerHitBuilder);
+    <S> Children nestedQuery(boolean condition, R path, Class<S> sClass, Consumer<EsLambdaQueryWrapper<S>> consumer, ScoreMode mode, InnerHitBuilder innerHitBuilder);
 
     /**
      * 嵌套查询
@@ -239,7 +247,7 @@ public interface IEsQueryWrapper<Children, QUERY, R> {
      * @return {@link Children}
      */
     default <S> Children nestedQuery(R path, Consumer<EsQueryWrapper<S>> consumer, ScoreMode mode, InnerHitBuilder innerHitBuilder) {
-        return nestedQuery(true, path, consumer, mode,innerHitBuilder);
+        return nestedQuery(true, path, consumer, mode, innerHitBuilder);
     }
 
     /**
@@ -277,17 +285,24 @@ public interface IEsQueryWrapper<Children, QUERY, R> {
 
     Children le(boolean condition, R name, Object to);
 
-    default Children between(R name, Object from, Object to) {
-        return between(true, name, from, to);
+    default Children range(R name, Object from, Object to) {
+        return range(true, name, from, to);
     }
 
-    Children between(boolean condition, R name, Object from, Object to);
+    Children range(boolean condition, R name, Object from, Object to);
 
-    default Children between(R name, Object from, Object to, boolean fromInclude,boolean toInclude) {
-        return between(true, name,from, to, fromInclude,toInclude);
+    default Children range(R name, Object from, Object to, String timeZone) {
+        return range(true, name, from, to, timeZone);
     }
 
-    Children between(boolean condition, R name, Object from, Object to, boolean fromInclude,boolean toInclude);
+    Children range(boolean condition, R name, Object from, Object to, String timeZone);
+
+
+    default Children range(R name, Object from, Object to, boolean fromInclude, boolean toInclude) {
+        return range(true, name, from, to, fromInclude, toInclude);
+    }
+
+    Children range(boolean condition, R name, Object from, Object to, boolean fromInclude, boolean toInclude);
 
     default Children geoBoundingBox(R name, GeoPoint topLeft, GeoPoint bottomRight) {
         return geoBoundingBox(true, name, topLeft, bottomRight);

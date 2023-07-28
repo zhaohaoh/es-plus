@@ -12,7 +12,7 @@ import java.util.Date;
 import java.util.Map;
 
 @SpringBootTest(classes = SamplesApplication.class)
-public class FaseTest {
+public class FastTest {
 
     @Autowired
     private FastTestService fastTestService;
@@ -21,7 +21,7 @@ public class FaseTest {
 
     @org.junit.jupiter.api.Test
     public void fast() {
-        EsResponse<Map> list = Es.chainQuery(Map.class).index("sys_user2ttt_s0").list();
+        EsResponse<Map> list = Es.chainQuery(Map.class).index("sys_user2ttt_s0").term("username","ggghhh1").list();
         System.out.println(list);
     }
     @org.junit.jupiter.api.Test
@@ -33,10 +33,10 @@ public class FaseTest {
     @org.junit.jupiter.api.Test
     public void fastSave() {
         FastTestDTO fastTestDTO = new FastTestDTO();
-        fastTestDTO.setId(1L);
-        fastTestDTO.setText("我的个人介绍 我是一篇文章，用于搜索。我的关键词有很多。苹果 梨子 苹果X2 苹果哥哥");
+        fastTestDTO.setId(2L);
+        fastTestDTO.setText("我是第二篇文章苹果 梨子 苹果X2 苹果哥哥");
         fastTestDTO.setAge(25);
-        fastTestDTO.setUsername("酷酷的");
+        fastTestDTO.setUsername("酷酷的2");
         fastTestDTO.setCreateTime(new Date());
         Es.chainUpdate(FastTestDTO.class).save(fastTestDTO);
     }
@@ -58,5 +58,14 @@ public class FaseTest {
         fastTestService.agg();
     }
 
-    
+    @org.junit.jupiter.api.Test
+    public void wildCard() {
+        // 50字符要100多毫秒 80个字符就要400毫秒了
+        EsResponse<FastTestDTO> test = Es.chainLambdaQuery(FastTestDTO.class)
+                .wildcard(FastTestDTO::getText, "*凄切切请求群群群咕咕咕咕咕咕过过过过过过过过过个若若若若若若若若若若若ggrr二位而个干白VNBVR人v个版雇个人全文我test1凄切切请求群群群咕咕咕咕咕咕过过过过过过过过过个若若若若若若若若若若若ggrr二位而个干白VNBVR人v个版雇个人全文我test1*")
+
+                .list();
+        System.out.println(test);
+    }
+
 }
