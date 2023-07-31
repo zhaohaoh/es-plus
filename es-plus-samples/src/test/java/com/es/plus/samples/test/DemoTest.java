@@ -6,6 +6,9 @@ import com.es.plus.samples.SamplesApplication;
 import com.es.plus.samples.dto.FastTestDTO;
 import com.es.plus.samples.service.FastTestService;
 import org.elasticsearch.common.unit.Fuzziness;
+import org.elasticsearch.index.query.BoolQueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.query.TermQueryBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
@@ -34,6 +37,9 @@ public class DemoTest {
     private FastTestService fastTestService;
     @org.junit.jupiter.api.Test
     public void filterTerm(){
+        BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
+        TermQueryBuilder a = QueryBuilders.termQuery("a", "1");
+        boolQueryBuilder.must(a);
         EsResponse<FastTestDTO> list = fastTestService.esChainQueryWrapper().filter()
                 .term(FastTestDTO::getUsername, "酷酷的").list();
         System.out.println(list);
@@ -111,7 +117,7 @@ public class DemoTest {
     public void matchPhrase() throws ParseException {
 
         EsResponse<FastTestDTO> list = fastTestService.esChainQueryWrapper()
-                .matchPhrase(FastTestDTO::getText,"第二篇文章苹果123dff很好呀").list();
+                .matchPhrase(FastTestDTO::getText,"第二篇文章苹果").list();
         System.out.println(list);
     }
 
@@ -123,7 +129,7 @@ public class DemoTest {
     public void fuzzy() throws ParseException {
 
         EsResponse<FastTestDTO> list = fastTestService.esChainQueryWrapper()
-                .fuzzy(FastTestDTO::getUsername,"苦苦的", Fuzziness.TWO,2).list();
+                .fuzzy(FastTestDTO::getUsername,"苦苦的", Fuzziness.ONE).list();
         System.out.println(list);
     }
 
@@ -131,7 +137,7 @@ public class DemoTest {
     public void wildCard() {
         // 50字符要100多毫秒 80个字符就要400毫秒了  仅仅只是建立索引词的时间，并不包含检索。
         EsResponse<FastTestDTO> test = Es.chainLambdaQuery(FastTestDTO.class)
-                .wildcard(FastTestDTO::getText, "*凄切切请求群群群咕咕咕咕咕咕过过过过过过过过过个若若若若若若若若若若若ggrr二位而个干白VNBVR人v个版雇个人全文我test1凄切切请求群群群咕咕咕咕咕咕过过过过过过过过过个若若若若若若若若若若若ggrr二位而个干白VNBVR人v个版雇个人全文我test1*")
+                .wildcard(FastTestDTO::getText, "*凄切切请求群群群咕咕干白VNBVR人v个版雇个人全文我test1*")
 
                 .list();
         System.out.println(test);

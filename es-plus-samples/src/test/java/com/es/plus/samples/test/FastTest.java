@@ -21,9 +21,10 @@ public class FastTest {
 
     @org.junit.jupiter.api.Test
     public void fast() {
-        EsResponse<Map> list = Es.chainQuery(Map.class).index("sys_user2ttt_s0").term("username","ggghhh1").list();
+        EsResponse<Map> list = Es.chainQuery(Map.class).index("fast_test").term("username","酷酷的").list();
         System.out.println(list);
     }
+
     @org.junit.jupiter.api.Test
     public void fastCreateIndex() {
         //没有指定索引的话会取Class中的索引
