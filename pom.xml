@@ -23,8 +23,8 @@
         <spring-boot.version>2.6.3</spring-boot.version>
         <!-- 打包跳过单元测试 -->
         <skipTests>true</skipTests>
-        <!--        0.2.0    -->
-        <rversion>0.2.1</rversion>
+<!--最新版-->
+        <rversion>0.2.2</rversion>
         <elasticsearch.version>7.8.0</elasticsearch.version>
     </properties>
     <licenses>
