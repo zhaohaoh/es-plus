@@ -15,17 +15,12 @@ import com.es.plus.constant.Commend;
 import com.es.plus.constant.EsConstant;
 import com.es.plus.constant.EsFieldType;
 import org.apache.commons.lang3.StringUtils;
-import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.util.set.Sets;
-import org.elasticsearch.common.xcontent.XContentType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.StopWatch;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -111,6 +106,7 @@ public class EsReindexProcess {
 
         //执行对应操作
         if (Objects.equals(updateCommend, Commend.MAPPING_UPDATE)) {
+            log.info("es-plus mapping_update index [{}]",currentIndex);
             esPlusClientFacade.putMapping(currentIndex, clazz);
         } else if (Objects.equals(updateCommend, Commend.REINDEX) || reindex) {
             // 忽略处理reindex
@@ -175,8 +171,9 @@ public class EsReindexProcess {
         return false;
     }
 
+
     private static boolean analysisChange(Map<String, String> settings, Map<String, Object> analysis) {
-        Map<StringBuilder, Object> analysisList = new HashMap<>();
+        Map<StringBuilder, Object> analysisList = new LinkedHashMap<>();
         buildAnalysis(analysis, analysisList, new StringBuilder("index.analysis."));
 
         long count = settings.keySet().stream().filter(a -> a.startsWith("index.analysis.")).count();
@@ -214,12 +211,12 @@ public class EsReindexProcess {
     }
 
     public static void main(String[] args) {
-        EsSettings esSettings = new EsSettings();
-        esSettings.setMaxResultWindow(11);
-        String s = JsonUtils.toJsonStr(esSettings);
-        Settings.Builder builder = Settings.builder().loadFromSource(s, XContentType.JSON);
-        Settings build = builder.build();
-        System.out.println(build);
+//        EsSettings esSettings = new EsSettings();
+//        esSettings.setMaxResultWindow(11);
+//        String s = JsonUtils.toJsonStr(esSettings);
+//        Settings.Builder builder = Settings.builder().loadFromSource(s, XContentType.JSON);
+//        Settings build = builder.build();
+//        System.out.println(build);
     }
 
 
@@ -377,11 +374,11 @@ public class EsReindexProcess {
      * @return {@link Map}<{@link String}, {@link Object}>
      */
     private static Map<String, Object> getUpdateReindexTimeMappins(Map<String, Object> esIndexMapping) {
-        Map<String, Object> mappings = new HashMap<>((Map<String, Object>) esIndexMapping.get(EsConstant.PROPERTIES));
-        Map<String, Object> type = new HashMap<>();
+        Map<String, Object> mappings = new LinkedHashMap<>((Map<String, Object>) esIndexMapping.get(EsConstant.PROPERTIES));
+        Map<String, Object> type = new LinkedHashMap<>();
         type.put(EsConstant.TYPE, EsFieldType.LONG.name().toLowerCase());
         mappings.put(EsConstant.REINDEX_TIME_FILED, type);
-        Map<String, Object> mappins = new HashMap<>();
+        Map<String, Object> mappins = new LinkedHashMap<>();
         mappins.put(EsConstant.PROPERTIES, mappings);
         return mappins;
     }

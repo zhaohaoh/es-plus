@@ -123,7 +123,7 @@ public class EsAnnotationParamProcess {
      */
     public Map<String, Object> buildMappingProperties(Class<?> tClass) {
         List<Field> fieldList = ClassUtils.getFieldList(tClass);
-        Map<String, Object> mappings = new HashMap<>();
+        Map<String, Object> mappings = new LinkedHashMap<>();
 
         //字段解析
         for (Field field : fieldList) {
@@ -135,7 +135,7 @@ public class EsAnnotationParamProcess {
             }
 
             //创建属性对象
-            Map<String, Object> properties = new HashMap<>();
+            Map<String, Object> properties = new LinkedHashMap<>();
             // 解析自定义注解
             EsField esField = field.getAnnotation(EsField.class);
 
@@ -207,7 +207,7 @@ public class EsAnnotationParamProcess {
         }
 
         if (fieldType.equalsIgnoreCase(EsFieldType.JOIN.name())) {
-            Map<String, Object> relation = new HashMap<>(1);
+            Map<String, Object> relation = new LinkedHashMap<>(1);
             relation.put(esField.parent(), esField.child());
             properties.put(EsConstant.EAGER_GLOBAL_ORDINALS, true);
             properties.put(EsConstant.RELATIONS, relation);

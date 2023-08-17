@@ -14,6 +14,7 @@ import org.springframework.util.CollectionUtils;
 
 import java.lang.reflect.Field;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -115,7 +116,7 @@ public class GlobalParamHolder {
             if (indexParam == null) {
                 return null;
             }
-            Map<String, Object> mapping = new HashMap<>(1);
+            Map<String, Object> mapping = new LinkedHashMap<>(1);
             Map<String, Object> mappingProperties = ES_ANNOTATION_PARAM_RESOLVE.buildMappingProperties(finalClazz);
             // 子文档属性
             if (indexParam.getChildClass() != null) {

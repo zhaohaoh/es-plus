@@ -13,11 +13,11 @@ import java.util.Date;
  * 举例4种类型索引
  */
 @Data
-@EsIndex(index = "fast_test")
+@EsIndex(index = "fast_test",tryReindex = true,alias = "fast_test_alias")
 public class FastTestDTO {
     @EsId
     private Long id;
-    @EsField(type = EsFieldType.KEYWORD)
+    @EsField(type = EsFieldType.KEYWORD,eagerGlobalOrdinals = true)
     private String username;
     @EsField(type = EsFieldType.TEXT)
     private String text;

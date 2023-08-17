@@ -1,14 +1,19 @@
 package com.es.plus.samples.test;
 
+import com.es.plus.adapter.params.EsAggResponse;
 import com.es.plus.adapter.params.EsResponse;
 import com.es.plus.core.statics.Es;
+import com.es.plus.core.wrapper.aggregation.EsLambdaAggWrapper;
+import com.es.plus.core.wrapper.chain.EsChainLambdaQueryWrapper;
 import com.es.plus.samples.SamplesApplication;
 import com.es.plus.samples.dto.FastTestDTO;
 import com.es.plus.samples.service.FastTestService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 
 @SpringBootTest(classes = SamplesApplication.class)
@@ -33,13 +38,27 @@ public class FastTest {
 
     @org.junit.jupiter.api.Test
     public void fastSave() {
-        FastTestDTO fastTestDTO = new FastTestDTO();
-        fastTestDTO.setId(2L);
-        fastTestDTO.setText("我是第二篇文章苹果 梨子 苹果X2 苹果哥哥");
-        fastTestDTO.setAge(25);
-        fastTestDTO.setUsername("酷酷的2");
-        fastTestDTO.setCreateTime(new Date());
-        Es.chainUpdate(FastTestDTO.class).save(fastTestDTO);
+        List<FastTestDTO> fastTestDTOs=new ArrayList<>();
+        for (int i = 0; i < 1000000; i++) {
+            FastTestDTO fastTestDTO = new FastTestDTO();
+            fastTestDTO.setId((long)i);
+            fastTestDTO.setText("我是第二篇文章苹果 梨子 苹果X2 苹果哥哥");
+            fastTestDTO.setAge(25);
+            fastTestDTO.setUsername("酷酷的"+i);
+            fastTestDTO.setCreateTime(new Date());
+            fastTestDTOs.add(fastTestDTO);
+        }
+
+        Es.chainUpdate(FastTestDTO.class).saveBatch(fastTestDTOs);
+    }
+
+    @org.junit.jupiter.api.Test
+    public void aaa() {
+        EsChainLambdaQueryWrapper<FastTestDTO> fastTestDTOEsChainLambdaQueryWrapper = Es.chainLambdaQuery(FastTestDTO.class);
+        EsLambdaAggWrapper<FastTestDTO> aggWrapper = fastTestDTOEsChainLambdaQueryWrapper.esLambdaAggWrapper();
+        aggWrapper.terms(FastTestDTO::getUsername,a->a.size(35000));
+        EsAggResponse<FastTestDTO> aggregations = fastTestDTOEsChainLambdaQueryWrapper.aggregations();
+        System.out.println(aggregations);
     }
 
     @org.junit.jupiter.api.Test

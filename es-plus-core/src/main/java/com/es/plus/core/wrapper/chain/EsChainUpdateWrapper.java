@@ -2,16 +2,20 @@ package com.es.plus.core.wrapper.chain;
 
 
 import com.es.plus.adapter.EsPlusClientFacade;
-import com.es.plus.core.wrapper.core.EsUpdateWrapper;
-import com.es.plus.core.wrapper.core.Update;
-import com.es.plus.core.ClientContext;
+import com.es.plus.adapter.config.GlobalConfigCache;
 import com.es.plus.adapter.properties.EsIndexParam;
 import com.es.plus.adapter.properties.GlobalParamHolder;
+import com.es.plus.adapter.util.CollectionUtil;
+import com.es.plus.core.ClientContext;
+import com.es.plus.core.wrapper.core.EsUpdateWrapper;
+import com.es.plus.core.wrapper.core.Update;
 import com.es.plus.core.wrapper.core.UpdateOperation;
 import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
+import org.springframework.util.CollectionUtils;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -77,8 +81,24 @@ public class EsChainUpdateWrapper<T> extends AbstractEsChainWrapper<T, String, E
      * @return {@link List}<{@link BulkItemResponse}>
      */
     @Override
-    public List<BulkItemResponse> updateBatch(Collection<T> t) {
-        return esPlusClientFacade.updateBatch(index, type,t);
+    public List<BulkItemResponse> updateBatch(Collection<T> entityList) {
+        List<BulkItemResponse> failBulkItemResponses = new ArrayList<>();
+        if (CollectionUtils.isEmpty(entityList)) {
+            return failBulkItemResponses;
+        }
+        int batchSize = GlobalConfigCache.GLOBAL_CONFIG.getBatchSize();
+        if (entityList.size() > batchSize) {
+            List<Collection<T>> collections = CollectionUtil.splitList(entityList, batchSize);
+            collections.forEach(list -> {
+                        List<BulkItemResponse> bulkItemResponses =esPlusClientFacade.updateBatch(index,type, list);
+                        failBulkItemResponses.addAll(bulkItemResponses);
+                    }
+            );
+        } else {
+            List<BulkItemResponse> bulkItemResponses = esPlusClientFacade.updateBatch(index,type, entityList);
+            failBulkItemResponses.addAll(bulkItemResponses);
+        }
+        return failBulkItemResponses;
     }
 
     /**
@@ -97,8 +117,24 @@ public class EsChainUpdateWrapper<T> extends AbstractEsChainWrapper<T, String, E
      * @return {@link List}<{@link BulkItemResponse}>
      */
     @Override
-    public List<BulkItemResponse> saveBatch(Collection<T> t) {
-        return esPlusClientFacade.saveBatch(index,type, t);
+    public List<BulkItemResponse> saveBatch(Collection<T> entityList) {
+        List<BulkItemResponse> failBulkItemResponses = new ArrayList<>();
+        if (CollectionUtils.isEmpty(entityList)) {
+            return failBulkItemResponses;
+        }
+        int batchSize = GlobalConfigCache.GLOBAL_CONFIG.getBatchSize();
+        if (entityList.size() > batchSize) {
+            List<Collection<T>> collections = CollectionUtil.splitList(entityList, batchSize);
+            collections.forEach(list -> {
+                        List<BulkItemResponse> bulkItemResponses =esPlusClientFacade.saveBatch(index,type, list);
+                        failBulkItemResponses.addAll(bulkItemResponses);
+                    }
+            );
+        } else {
+            List<BulkItemResponse> bulkItemResponses = esPlusClientFacade.saveBatch(index,type, entityList);
+            failBulkItemResponses.addAll(bulkItemResponses);
+        }
+        return failBulkItemResponses;
     }
 
     /**

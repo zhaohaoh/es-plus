@@ -192,7 +192,7 @@ public class EsPlusIndexRestClient implements EsPlusIndexClient {
             EsIndexResponse esIndexResponse = new EsIndexResponse();
             GetIndexResponse getIndexResponse = restHighLevelClient.indices().get(request, RequestOptions.DEFAULT);
 
-            Map<String, String> settingsMap = new HashMap<>();
+            Map<String, String> settingsMap = new LinkedHashMap<>();
             Collection<Settings> values = getIndexResponse.getSettings().values();
             Optional<Settings> first = values.stream().findFirst();
             first.ifPresent(s -> {

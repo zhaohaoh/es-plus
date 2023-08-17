@@ -52,7 +52,7 @@ public class SamplesEsDTO {
     private String aaaaa;
 
     @EsField(type = EsFieldType.KEYWORD)
-    private String baaaqqrr;
+    private String baaaqq;
 
     @EsField(type = EsFieldType.DATE, esFormat = "yyyy-MM-dd'T'HH:mm:ss'Z' || yyyy-MM-dd HH:mm:ss || yyyy-MM-dd || yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
     private Date date;
