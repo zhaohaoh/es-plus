@@ -17,7 +17,7 @@ import java.util.Date;
 public class FastTestDTO {
     @EsId
     private Long id;
-    @EsField(type = EsFieldType.KEYWORD,eagerGlobalOrdinals = true)
+    @EsField(type = EsFieldType.KEYWORD)
     private String username;
     @EsField(type = EsFieldType.TEXT)
     private String text;

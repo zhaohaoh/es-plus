@@ -16,19 +16,30 @@ public interface UpdateOperation<T> {
      */
     boolean save(T t);
 
-    /**
-     * 删除
-     *
-     * @return {@link BulkByScrollResponse}
-     */
-    boolean removeByIds(Collection<String> ids);
 
     /**
-     * 增量
+     * 保存批处理
      *
-     * @return {@link BulkByScrollResponse}
+     * @param t t
+     * @return {@link List}<{@link BulkItemResponse}>
      */
-    BulkByScrollResponse incrementByWapper();
+    List<BulkItemResponse> saveBatch(Collection<T> t);
+
+    /**
+     * 保存或更新批处理
+     *
+     * @param entityList 实体列表
+     * @return {@link List}<{@link BulkItemResponse}>
+     */
+    List<BulkItemResponse> saveOrUpdateBatch(Collection<T> entityList);
+
+    /**
+     *  更新
+     *
+     * @param t t
+     * @return {@link List}<{@link BulkItemResponse}>
+     */
+     boolean update(T t);
 
     /**
      * 批处理更新
@@ -45,13 +56,21 @@ public interface UpdateOperation<T> {
      */
     BulkByScrollResponse updateByQuery();
 
+
     /**
-     * 保存批处理
+     * 增量
      *
-     * @param t t
-     * @return {@link List}<{@link BulkItemResponse}>
+     * @return {@link BulkByScrollResponse}
      */
-    List<BulkItemResponse> saveBatch(Collection<T> t);
+    BulkByScrollResponse incrementByWapper();
+
+
+    /**
+     * 删除
+     *
+     * @return {@link BulkByScrollResponse}
+     */
+    boolean removeByIds(Collection<String> ids);
 
     /**
      * 删除
@@ -59,4 +78,6 @@ public interface UpdateOperation<T> {
      * @return {@link BulkByScrollResponse}
      */
     BulkByScrollResponse remove();
+
+
 }

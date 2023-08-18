@@ -22,6 +22,13 @@ public interface EsPlusIndexClient {
     void createIndex(String index, Class<?> tClass);
 
     /**
+     * 创建索引
+     *
+     * @param index 索引
+     */
+    void createIndex(String index);
+
+    /**
      * 映射
      *
      * @param index  指数

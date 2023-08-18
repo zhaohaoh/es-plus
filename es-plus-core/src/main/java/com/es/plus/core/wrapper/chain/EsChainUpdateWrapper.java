@@ -2,10 +2,8 @@ package com.es.plus.core.wrapper.chain;
 
 
 import com.es.plus.adapter.EsPlusClientFacade;
-import com.es.plus.adapter.config.GlobalConfigCache;
 import com.es.plus.adapter.properties.EsIndexParam;
 import com.es.plus.adapter.properties.GlobalParamHolder;
-import com.es.plus.adapter.util.CollectionUtil;
 import com.es.plus.core.ClientContext;
 import com.es.plus.core.wrapper.core.EsUpdateWrapper;
 import com.es.plus.core.wrapper.core.Update;
@@ -13,9 +11,7 @@ import com.es.plus.core.wrapper.core.UpdateOperation;
 import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
-import org.springframework.util.CollectionUtils;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -36,7 +32,7 @@ public class EsChainUpdateWrapper<T> extends AbstractEsChainWrapper<T, String, E
         super.esWrapper = new EsUpdateWrapper<>(tClass);
         EsIndexParam esIndexParam = GlobalParamHolder.getEsIndexParam(super.tClass);
         if (esIndexParam != null) {
-            index = StringUtils.isBlank(esIndexParam.getAlias())? esIndexParam.getIndex():esIndexParam.getAlias();
+            index = StringUtils.isBlank(esIndexParam.getAlias()) ? esIndexParam.getIndex() : esIndexParam.getAlias();
             type = esIndexParam.getType();
         }
     }
@@ -46,7 +42,7 @@ public class EsChainUpdateWrapper<T> extends AbstractEsChainWrapper<T, String, E
         super.esWrapper = new EsUpdateWrapper<>(tClass);
         EsIndexParam esIndexParam = GlobalParamHolder.getEsIndexParam(super.tClass);
         if (esIndexParam != null) {
-            index = StringUtils.isBlank(esIndexParam.getAlias())? esIndexParam.getIndex():esIndexParam.getAlias();
+            index = StringUtils.isBlank(esIndexParam.getAlias()) ? esIndexParam.getIndex() : esIndexParam.getAlias();
             type = esIndexParam.getType();
         }
         if (esPlusClientFacade != null) {
@@ -56,22 +52,34 @@ public class EsChainUpdateWrapper<T> extends AbstractEsChainWrapper<T, String, E
 
     @Override
     public boolean save(T t) {
-        return esPlusClientFacade.save(index, type,t);
-    }
-
-    @Override
-    public boolean removeByIds(Collection<String> ids) {
-        return esPlusClientFacade.deleteBatchByIds(index,type,ids);
+        return esPlusClientFacade.save(index, type, t);
     }
 
     /**
-     * 增量
+     * 保存批处理
      *
-     * @return {@link BulkByScrollResponse}
+     * @param t t
+     * @return {@link List}<{@link BulkItemResponse}>
      */
     @Override
-    public BulkByScrollResponse incrementByWapper() {
-        return esPlusClientFacade.increment(index,type, esWrapper.esParamWrapper());
+    public List<BulkItemResponse> saveBatch(Collection<T> entityList) {
+        return esPlusClientFacade.saveBatch(index, type, entityList);
+    }
+
+    /**
+     * 批处理更新
+     *
+     * @return {@link List}<{@link BulkItemResponse}>
+     */
+    @Override
+    public List<BulkItemResponse> saveOrUpdateBatch(Collection<T> entityList) {
+        return esPlusClientFacade.saveOrUpdateBatch(index, type, entityList);
+    }
+
+
+    @Override
+    public boolean update(T t) {
+        return esPlusClientFacade.update(index, type, t);
     }
 
     /**
@@ -82,24 +90,9 @@ public class EsChainUpdateWrapper<T> extends AbstractEsChainWrapper<T, String, E
      */
     @Override
     public List<BulkItemResponse> updateBatch(Collection<T> entityList) {
-        List<BulkItemResponse> failBulkItemResponses = new ArrayList<>();
-        if (CollectionUtils.isEmpty(entityList)) {
-            return failBulkItemResponses;
-        }
-        int batchSize = GlobalConfigCache.GLOBAL_CONFIG.getBatchSize();
-        if (entityList.size() > batchSize) {
-            List<Collection<T>> collections = CollectionUtil.splitList(entityList, batchSize);
-            collections.forEach(list -> {
-                        List<BulkItemResponse> bulkItemResponses =esPlusClientFacade.updateBatch(index,type, list);
-                        failBulkItemResponses.addAll(bulkItemResponses);
-                    }
-            );
-        } else {
-            List<BulkItemResponse> bulkItemResponses = esPlusClientFacade.updateBatch(index,type, entityList);
-            failBulkItemResponses.addAll(bulkItemResponses);
-        }
-        return failBulkItemResponses;
+        return esPlusClientFacade.updateBatch(index, type, entityList);
     }
+
 
     /**
      * 更新
@@ -108,34 +101,26 @@ public class EsChainUpdateWrapper<T> extends AbstractEsChainWrapper<T, String, E
      */
     @Override
     public BulkByScrollResponse updateByQuery() {
-        return esPlusClientFacade.updateByWrapper(index,type, esWrapper.esParamWrapper());
+        return esPlusClientFacade.updateByWrapper(index, type, esWrapper.esParamWrapper());
     }
+
+
     /**
-     * 保存批处理
+     * 增量
      *
-     * @param t t
-     * @return {@link List}<{@link BulkItemResponse}>
+     * @return {@link BulkByScrollResponse}
      */
     @Override
-    public List<BulkItemResponse> saveBatch(Collection<T> entityList) {
-        List<BulkItemResponse> failBulkItemResponses = new ArrayList<>();
-        if (CollectionUtils.isEmpty(entityList)) {
-            return failBulkItemResponses;
-        }
-        int batchSize = GlobalConfigCache.GLOBAL_CONFIG.getBatchSize();
-        if (entityList.size() > batchSize) {
-            List<Collection<T>> collections = CollectionUtil.splitList(entityList, batchSize);
-            collections.forEach(list -> {
-                        List<BulkItemResponse> bulkItemResponses =esPlusClientFacade.saveBatch(index,type, list);
-                        failBulkItemResponses.addAll(bulkItemResponses);
-                    }
-            );
-        } else {
-            List<BulkItemResponse> bulkItemResponses = esPlusClientFacade.saveBatch(index,type, entityList);
-            failBulkItemResponses.addAll(bulkItemResponses);
-        }
-        return failBulkItemResponses;
+    public BulkByScrollResponse incrementByWapper() {
+        return esPlusClientFacade.increment(index, type, esWrapper.esParamWrapper());
     }
+
+
+    @Override
+    public boolean removeByIds(Collection<String> ids) {
+        return esPlusClientFacade.deleteBatchByIds(index, type, ids);
+    }
+
 
     /**
      * 删除
@@ -144,7 +129,7 @@ public class EsChainUpdateWrapper<T> extends AbstractEsChainWrapper<T, String, E
      */
     @Override
     public BulkByScrollResponse remove() {
-        return esPlusClientFacade.deleteByQuery(index,type, esWrapper.esParamWrapper());
+        return esPlusClientFacade.deleteByQuery(index, type, esWrapper.esParamWrapper());
     }
 
     /**
@@ -170,7 +155,7 @@ public class EsChainUpdateWrapper<T> extends AbstractEsChainWrapper<T, String, E
      */
     @Override
     public EsChainUpdateWrapper<T> setScipt(boolean condition, String script, Map<String, Object> sciptParams) {
-        esWrapper.setScipt(condition,script, sciptParams);
+        esWrapper.setScipt(condition, script, sciptParams);
         return this;
     }
 
@@ -227,6 +212,5 @@ public class EsChainUpdateWrapper<T> extends AbstractEsChainWrapper<T, String, E
         esWrapper.increment(condition, column, val);
         return this;
     }
-
 
 }

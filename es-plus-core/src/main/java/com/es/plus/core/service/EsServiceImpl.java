@@ -1,9 +1,7 @@
 package com.es.plus.core.service;
 
 
-import com.es.plus.adapter.config.GlobalConfigCache;
 import com.es.plus.adapter.params.*;
-import com.es.plus.adapter.util.CollectionUtil;
 import com.es.plus.core.wrapper.chain.EsChainLambdaQueryWrapper;
 import com.es.plus.core.wrapper.chain.EsChainUpdateWrapper;
 import com.es.plus.core.wrapper.core.EsQueryWrapper;
@@ -134,34 +132,7 @@ public class EsServiceImpl<T> extends AbstractEsService<T> implements EsService<
      */
     @Override
     public List<BulkItemResponse> saveBatch(Collection<T> entityList) {
-        return saveBatch(entityList, GlobalConfigCache.GLOBAL_CONFIG.getBatchSize());
-    }
-
-    /**
-     * 批量保存
-     *
-     * @param entityList 实体列表
-     * @param batchSize  批量大小
-     * @return {@link List}<{@link BulkItemResponse}>
-     */
-    @Override
-    public List<BulkItemResponse> saveBatch(Collection<T> entityList, int batchSize) {
-        List<BulkItemResponse> failBulkItemResponses = new ArrayList<>();
-        if (CollectionUtils.isEmpty(entityList)) {
-            return failBulkItemResponses;
-        }
-        if (entityList.size() > batchSize) {
-            List<Collection<T>> collections = CollectionUtil.splitList(entityList, batchSize);
-            collections.forEach(list -> {
-                        List<BulkItemResponse> bulkItemResponses = getEsPlusClientFacade().saveBatch(alias,type, list);
-                        failBulkItemResponses.addAll(bulkItemResponses);
-                    }
-            );
-        } else {
-            List<BulkItemResponse> bulkItemResponses = getEsPlusClientFacade().saveBatch(alias,type, entityList);
-            failBulkItemResponses.addAll(bulkItemResponses);
-        }
-        return failBulkItemResponses;
+        return saveBatch(entityList);
     }
 
 
@@ -229,36 +200,9 @@ public class EsServiceImpl<T> extends AbstractEsService<T> implements EsService<
      */
     @Override
     public List<BulkItemResponse> updateBatch(Collection<T> entityList) {
-        return updateBatch(entityList, GlobalConfigCache.GLOBAL_CONFIG.getBatchSize());
+        return updateBatch(entityList);
     }
 
-    /**
-     * 根据ID 批量更新
-     *
-     * @param entityList 实体对象集合
-     * @param batchSize  更新批次数量
-     */
-    @Override
-    public List<BulkItemResponse> updateBatch(Collection<T> entityList, int batchSize) {
-        List<BulkItemResponse> failBulkItemResponses = new ArrayList<>();
-        if (CollectionUtils.isEmpty(entityList)) {
-            return failBulkItemResponses;
-        }
-        if (entityList.size() > batchSize) {
-            List<Collection<T>> collections = CollectionUtil.splitList(entityList, batchSize);
-            collections.forEach(list -> {
-                        failBulkItemResponses.addAll(doUpdateBatch(list));
-                    }
-            );
-        } else {
-            failBulkItemResponses.addAll(doUpdateBatch(entityList));
-        }
-        return failBulkItemResponses;
-    }
-
-    private List<BulkItemResponse> doUpdateBatch(Collection<T> list) {
-        return getEsPlusClientFacade().updateBatch(alias, type, list);
-    }
 
     /**
      * 更新包装

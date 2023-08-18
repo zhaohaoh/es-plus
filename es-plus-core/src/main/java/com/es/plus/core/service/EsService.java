@@ -114,14 +114,6 @@ public interface EsService<T> {
      */
     List<BulkItemResponse> saveBatch(Collection<T> entityList);
 
-    /**
-     * 保存批处理
-     *
-     * @param entityList 实体列表
-     * @param batchSize  批量大小
-     * @return {@link List}<{@link BulkItemResponse}>
-     */
-    List<BulkItemResponse> saveBatch(Collection<T> entityList, int batchSize);
 
     /**
      * 删除根据id
@@ -170,14 +162,6 @@ public interface EsService<T> {
      */
     List<BulkItemResponse> updateBatch(Collection<T> entityList);
 
-    /**
-     * 批处理更新
-     *
-     * @param entityList 实体列表
-     * @param batchSize  批量大小
-     * @return {@link List}<{@link BulkItemResponse}>
-     */
-    List<BulkItemResponse> updateBatch(Collection<T> entityList, int batchSize);
 
     /**
      * 删除索引

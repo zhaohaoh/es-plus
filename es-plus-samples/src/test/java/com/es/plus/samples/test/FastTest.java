@@ -1,13 +1,21 @@
 package com.es.plus.samples.test;
 
-import com.es.plus.adapter.params.EsAggResponse;
+import com.es.plus.adapter.EsPlusClientFacade;
+import com.es.plus.adapter.params.EsIndexResponse;
 import com.es.plus.adapter.params.EsResponse;
+import com.es.plus.core.ClientContext;
 import com.es.plus.core.statics.Es;
-import com.es.plus.core.wrapper.aggregation.EsLambdaAggWrapper;
+import com.es.plus.core.wrapper.aggregation.EsAggWrapper;
 import com.es.plus.core.wrapper.chain.EsChainLambdaQueryWrapper;
+import com.es.plus.es6.client.EsPlus6Aggregations;
 import com.es.plus.samples.SamplesApplication;
 import com.es.plus.samples.dto.FastTestDTO;
 import com.es.plus.samples.service.FastTestService;
+import org.elasticsearch.search.aggregations.BucketOrder;
+import org.elasticsearch.search.aggregations.pipeline.bucketsort.BucketSortPipelineAggregationBuilder;
+import org.elasticsearch.search.sort.FieldSortBuilder;
+import org.elasticsearch.search.sort.SortBuilders;
+import org.elasticsearch.search.sort.SortOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
@@ -39,7 +47,7 @@ public class FastTest {
     @org.junit.jupiter.api.Test
     public void fastSave() {
         List<FastTestDTO> fastTestDTOs=new ArrayList<>();
-        for (int i = 0; i < 1000000; i++) {
+        for (int i = 0; i < 1; i++) {
             FastTestDTO fastTestDTO = new FastTestDTO();
             fastTestDTO.setId((long)i);
             fastTestDTO.setText("我是第二篇文章苹果 梨子 苹果X2 苹果哥哥");
@@ -55,10 +63,26 @@ public class FastTest {
     @org.junit.jupiter.api.Test
     public void aaa() {
         EsChainLambdaQueryWrapper<FastTestDTO> fastTestDTOEsChainLambdaQueryWrapper = Es.chainLambdaQuery(FastTestDTO.class);
-        EsLambdaAggWrapper<FastTestDTO> aggWrapper = fastTestDTOEsChainLambdaQueryWrapper.esLambdaAggWrapper();
-        aggWrapper.terms(FastTestDTO::getUsername,a->a.size(35000));
-        EsAggResponse<FastTestDTO> aggregations = fastTestDTOEsChainLambdaQueryWrapper.aggregations();
+        EsAggWrapper<FastTestDTO> aggWrapper = fastTestDTOEsChainLambdaQueryWrapper.esAggWrapper();
+        aggWrapper.terms("username",a->a.size(10000).order(BucketOrder.aggregation("id_max",true)))
+       .subAggregation(es->es.max("id"));
+
+            List<FieldSortBuilder> fieldSortBuilders=new ArrayList<>();
+        FieldSortBuilder id_max = SortBuilders.fieldSort("id_max").order(SortOrder.ASC);
+        fieldSortBuilders.add(id_max);
+        BucketSortPipelineAggregationBuilder bucketSortPipelineAggregationBuilder = new BucketSortPipelineAggregationBuilder("username_terms",fieldSortBuilders);
+        bucketSortPipelineAggregationBuilder.from(0);
+        bucketSortPipelineAggregationBuilder.size(10);
+
+        EsPlus6Aggregations<FastTestDTO> aggregations = (EsPlus6Aggregations<FastTestDTO>) fastTestDTOEsChainLambdaQueryWrapper.aggregations();
+        Map<String, Long> username_terms = aggregations.getTermsAsMap("username");
         System.out.println(aggregations);
+    }
+
+    @org.junit.jupiter.api.Test
+    public void bbb() {
+        EsResponse<FastTestDTO> test = Es.chainLambdaQuery(FastTestDTO.class).orderByAsc("id").list();
+        System.out.println(test);
     }
 
     @org.junit.jupiter.api.Test
@@ -88,4 +112,33 @@ public class FastTest {
         System.out.println(test);
     }
 
+
+    @org.junit.jupiter.api.Test
+    public void dynamic() {
+
+        EsPlusClientFacade master = ClientContext.getClient("master");
+        EsPlusClientFacade local = ClientContext.getClient("local");
+
+
+        EsResponse<Map> list = Es.chainQuery(master, Map.class).index("distribution_chain_info").list();
+        List<Map> list1 = list.getList();
+        System.out.println(list1);
+        Es.chainLambdaUpdate(local,Map.class).index("distribution_chain_info").saveBatch(list1);
+
+        System.out.println(list1);
+    }
+
+
+    @org.junit.jupiter.api.Test
+    public void mapping() {
+
+        EsPlusClientFacade master = ClientContext.getClient("master");
+        EsPlusClientFacade local = ClientContext.getClient("local");
+
+
+        EsIndexResponse index = Es.chainIndex(master).index("distribution_chain_info").getIndex();
+        Map<String, Object> mappings = index.getMappings();
+
+        Es.chainIndex(local).index("distribution_chain_info").createIndex().putMapping(mappings);
+    }
 }

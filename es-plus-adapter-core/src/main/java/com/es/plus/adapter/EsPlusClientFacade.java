@@ -7,6 +7,7 @@ import com.es.plus.adapter.lock.ELock;
 import com.es.plus.adapter.lock.EsLockFactory;
 import com.es.plus.adapter.lock.EsReadWriteLock;
 import com.es.plus.adapter.params.*;
+import com.es.plus.adapter.util.CollectionUtil;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.client.GetAliasesResponse;
 import org.elasticsearch.client.indices.GetIndexResponse;
@@ -78,6 +79,15 @@ public class EsPlusClientFacade {
         if (!ping) {
             GlobalConfigCache.GLOBAL_CONFIG.setStartInit(false);
         }
+    }
+
+    /**
+     * 创建索引
+     *
+     * @param index 索引
+     */
+    public void createIndex(String index) {
+        esPlusIndexClient.createIndex(index);
     }
 
     /**
@@ -229,7 +239,23 @@ public class EsPlusClientFacade {
      * 数据操作
      */
     public List<BulkItemResponse> saveOrUpdateBatch(String index, String type, Collection<?> esDataList) {
-        return esPlusClient.saveOrUpdateBatch(index, type, esDataList);
+        List<BulkItemResponse> failBulkItemResponses = new ArrayList<>();
+        if (CollectionUtils.isEmpty(esDataList)) {
+            return failBulkItemResponses;
+        }
+        int batchSize = GlobalConfigCache.GLOBAL_CONFIG.getBatchSize();
+        if (esDataList.size() > batchSize) {
+            List<? extends Collection<?>> collections = CollectionUtil.splitList(esDataList, batchSize);
+            collections.forEach(list -> {
+                        List<BulkItemResponse> bulkItemResponses = esPlusClient.saveOrUpdateBatch(index, type, esDataList);
+                        failBulkItemResponses.addAll(bulkItemResponses);
+                    }
+            );
+        } else {
+            List<BulkItemResponse> bulkItemResponses = esPlusClient.saveOrUpdateBatch(index, type, esDataList);
+            failBulkItemResponses.addAll(bulkItemResponses);
+        }
+        return failBulkItemResponses;
     }
 
     /**
@@ -244,7 +270,19 @@ public class EsPlusClientFacade {
         if (CollectionUtils.isEmpty(esDataList)) {
             return failBulkItemResponses;
         }
-        return esPlusClient.saveBatch(index, type, esDataList);
+        int batchSize = GlobalConfigCache.GLOBAL_CONFIG.getBatchSize();
+        if (esDataList.size() > batchSize) {
+            List<? extends Collection<?>> collections = CollectionUtil.splitList(esDataList, batchSize);
+            collections.forEach(list -> {
+                        List<BulkItemResponse> bulkItemResponses = esPlusClient.saveBatch(index, type, esDataList);
+                        failBulkItemResponses.addAll(bulkItemResponses);
+                    }
+            );
+        } else {
+            List<BulkItemResponse> bulkItemResponses = esPlusClient.saveBatch(index, type, esDataList);
+            failBulkItemResponses.addAll(bulkItemResponses);
+        }
+        return failBulkItemResponses;
     }
 
     /**
@@ -271,8 +309,25 @@ public class EsPlusClientFacade {
      * @param index 索引
      * @return {@link List}<{@link BulkItemResponse}>
      */
-    public List<BulkItemResponse> updateBatch(String index, String type, Collection<?> esDataList) {
-        return esPlusClient.updateBatch(index, type, esDataList);
+    public List<BulkItemResponse> updateBatch(String index, String type, Collection<?> entityList) {
+        List<BulkItemResponse> failBulkItemResponses = new ArrayList<>();
+        if (CollectionUtils.isEmpty(entityList)) {
+            return failBulkItemResponses;
+        }
+        int batchSize = GlobalConfigCache.GLOBAL_CONFIG.getBatchSize();
+        if (entityList.size() > batchSize) {
+            List<? extends Collection<?>> collections = CollectionUtil.splitList(entityList, batchSize);
+            collections.forEach(list -> {
+                        List<BulkItemResponse> bulkItemResponses = esPlusClient.updateBatch(index, type, entityList);
+                        failBulkItemResponses.addAll(bulkItemResponses);
+                    }
+            );
+        } else {
+            List<BulkItemResponse> bulkItemResponses = esPlusClient.updateBatch(index, type, entityList);
+            failBulkItemResponses.addAll(bulkItemResponses);
+        }
+
+        return failBulkItemResponses;
     }
 
     /**
@@ -430,10 +485,9 @@ public class EsPlusClientFacade {
 
     /**
      * forceMerge
-     *
      */
-    public boolean forceMerge(int maxSegments, boolean onlyExpungeDeletes, boolean flush, String... index){
-       return esPlusIndexClient.forceMerge(maxSegments, onlyExpungeDeletes, flush, index);
+    public boolean forceMerge(int maxSegments, boolean onlyExpungeDeletes, boolean flush, String... index) {
+        return esPlusIndexClient.forceMerge(maxSegments, onlyExpungeDeletes, flush, index);
     }
 
 }

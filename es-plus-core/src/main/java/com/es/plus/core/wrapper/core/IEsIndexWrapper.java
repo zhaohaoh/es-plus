@@ -12,11 +12,15 @@ public interface IEsIndexWrapper  {
     /**
      * 创建索引
      *
-     * @param index  指数
      * @param tClass t类
      */
     EsIndexWrapper createIndex(Class<?> tClass);
 
+    /**
+     * 创建索引
+     *
+     */
+    EsIndexWrapper createIndex();
     /**
      * 映射
      *

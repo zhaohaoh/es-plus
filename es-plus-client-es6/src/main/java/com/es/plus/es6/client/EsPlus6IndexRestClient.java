@@ -76,6 +76,16 @@ public class EsPlus6IndexRestClient implements EsPlusIndexClient {
         indexRequest(esDocParam, indexRequest);
     }
 
+    @Override
+    public void createIndex(String index) {
+        CreateIndexRequest indexRequest = new CreateIndexRequest(index);
+        try {
+            CreateIndexResponse indexResponse = restHighLevelClient.indices().create(indexRequest, RequestOptions.DEFAULT);
+        } catch (IOException e) {
+            throw new EsException(e);
+        }
+    }
+
     /**
      * 映射
      *

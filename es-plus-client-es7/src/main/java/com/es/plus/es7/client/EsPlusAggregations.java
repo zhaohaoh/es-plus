@@ -22,16 +22,14 @@ import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.search.aggregations.bucket.terms.TermsAggregationBuilder;
 import org.elasticsearch.search.aggregations.metrics.*;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
+import java.util.*;
 
 
 /**
  * @Author: hzh
  * @Date: 2022/6/21 12:31
  */
+
 public class EsPlusAggregations<T> implements EsAggResponse<T> {
     private Aggregations aggregations;
     private Class<T> tClass;
@@ -154,7 +152,7 @@ public class EsPlusAggregations<T> implements EsAggResponse<T> {
      */
     public Map<String, Long> getTermsAsMap(String name) {
         Terms terms = aggregations.get(name + EsConstant.AGG_DELIMITER + TermsAggregationBuilder.NAME);
-        Map<String, Long> data = new HashMap<>();
+        Map<String, Long> data = new LinkedHashMap<>();
         if (terms == null) {
             return data;
         }

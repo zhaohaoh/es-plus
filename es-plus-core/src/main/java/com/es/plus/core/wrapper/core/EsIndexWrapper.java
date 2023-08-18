@@ -38,6 +38,12 @@ public class EsIndexWrapper implements IEsIndexWrapper {
     }
 
     @Override
+    public EsIndexWrapper createIndex() {
+        esPlusClientFacade.createIndex(index);
+        return this;
+    }
+
+    @Override
     public EsIndexWrapper putMapping(Class<?> tClass) {
         esPlusClientFacade.putMapping(index, tClass);
         return this;

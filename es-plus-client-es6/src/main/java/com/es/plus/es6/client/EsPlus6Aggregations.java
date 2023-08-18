@@ -29,10 +29,7 @@ import org.elasticsearch.search.aggregations.metrics.sum.SumAggregationBuilder;
 import org.elasticsearch.search.aggregations.metrics.valuecount.ValueCount;
 import org.elasticsearch.search.aggregations.metrics.weighted_avg.WeightedAvg;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
+import java.util.*;
 
 
 /**
@@ -71,7 +68,7 @@ public class EsPlus6Aggregations<T> implements EsAggResponse<T> {
      */
     public Map<String, Long> getTermsAsMap(SFunction<T, ?> name) {
         Terms terms = aggregations.get(getAggregationField(name) + EsConstant.AGG_DELIMITER + TermsAggregationBuilder.NAME);
-        Map<String, Long> data = new HashMap<>();
+        Map<String, Long> data = new LinkedHashMap<>();
         List<? extends Terms.Bucket> buckets = terms.getBuckets();
         for (Terms.Bucket bucket : buckets) {
             String keyAsString = bucket.getKeyAsString();

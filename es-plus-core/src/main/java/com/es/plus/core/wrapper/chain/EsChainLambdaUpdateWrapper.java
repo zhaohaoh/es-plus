@@ -60,7 +60,7 @@ public class EsChainLambdaUpdateWrapper<T> extends AbstractEsChainWrapper<T, SFu
      */
     @Override
     public boolean save(T t) {
-        return esPlusClientFacade.save(index,type, t);
+        return esPlusClientFacade.save(index, type, t);
     }
 
 
@@ -71,8 +71,31 @@ public class EsChainLambdaUpdateWrapper<T> extends AbstractEsChainWrapper<T, SFu
      */
     @Override
     public BulkByScrollResponse incrementByWapper() {
-        return esPlusClientFacade.increment(index,type, esWrapper.esParamWrapper());
+        return esPlusClientFacade.increment(index, type, esWrapper.esParamWrapper());
     }
+
+
+    /**
+     * 保存批处理
+     *
+     * @param t t
+     * @return {@link List}<{@link BulkItemResponse}>
+     */
+    @Override
+    public List<BulkItemResponse> saveBatch(Collection<T> entityList) {
+        return esPlusClientFacade.saveBatch(index, type, entityList);
+    }
+
+    @Override
+    public List<BulkItemResponse> saveOrUpdateBatch(Collection<T> entityList) {
+        return esPlusClientFacade.saveBatch(index, type, entityList);
+    }
+
+    @Override
+    public boolean update(T t) {
+        return esPlusClientFacade.update(index, type, t);
+    }
+
 
     /**
      * 批处理更新
@@ -86,24 +109,13 @@ public class EsChainLambdaUpdateWrapper<T> extends AbstractEsChainWrapper<T, SFu
     }
 
     /**
-     * 保存批处理
-     *
-     * @param t t
-     * @return {@link List}<{@link BulkItemResponse}>
-     */
-    @Override
-    public List<BulkItemResponse> saveBatch(Collection<T> t) {
-        return esPlusClientFacade.saveBatch(index,type, t);
-    }
-
-    /**
      * 更新
      *
      * @return {@link BulkByScrollResponse}
      */
     @Override
     public BulkByScrollResponse updateByQuery() {
-        return esPlusClientFacade.updateByWrapper(index,type, esWrapper.esParamWrapper());
+        return esPlusClientFacade.updateByWrapper(index, type, esWrapper.esParamWrapper());
     }
 
     /**
@@ -113,12 +125,12 @@ public class EsChainLambdaUpdateWrapper<T> extends AbstractEsChainWrapper<T, SFu
      */
     @Override
     public BulkByScrollResponse remove() {
-        return esPlusClientFacade.deleteByQuery(index,type, esWrapper.esParamWrapper());
+        return esPlusClientFacade.deleteByQuery(index, type, esWrapper.esParamWrapper());
     }
 
     @Override
     public boolean removeByIds(Collection<String> ids) {
-        return esPlusClientFacade.deleteBatchByIds(index,type,ids);
+        return esPlusClientFacade.deleteBatchByIds(index, type, ids);
     }
 
     /**
@@ -144,7 +156,8 @@ public class EsChainLambdaUpdateWrapper<T> extends AbstractEsChainWrapper<T, SFu
      */
     @Override
     public EsChainLambdaUpdateWrapper<T> setScipt(boolean condition, String script, Map<String, Object> sciptParams) {
-        return null;
+        esWrapper.setScipt(condition, script, sciptParams);
+        return this;
     }
 
 

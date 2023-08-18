@@ -74,6 +74,17 @@ public class EsPlusIndexRestClient implements EsPlusIndexClient {
         indexRequest(esDocParam, indexRequest);
     }
 
+    @Override
+    public void createIndex(String index) {
+        CreateIndexRequest indexRequest = new CreateIndexRequest(index);
+        try {
+            CreateIndexResponse indexResponse = restHighLevelClient.indices().create(indexRequest, RequestOptions.DEFAULT);
+        } catch (IOException e) {
+            throw new EsException(e);
+        }
+    }
+
+
     /**
      * 映射
      *
@@ -396,6 +407,10 @@ public class EsPlusIndexRestClient implements EsPlusIndexClient {
         }
     }
 
+    /**
+     * 强制合并
+     *
+     */
     @Override
     public boolean forceMerge(int maxSegments, boolean onlyExpungeDeletes, boolean flush, String... index) {
         ForceMergeRequest request = new ForceMergeRequest(index);
