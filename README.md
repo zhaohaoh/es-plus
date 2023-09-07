@@ -243,7 +243,7 @@ public class SysUserEsService extends EsServiceImpl<SysUser>{
 
 @Component
 @EsInterceptors(value = {
-        //需要拦截的类名和方法。 类EsPlusClient和EsPlusIndexClient。增删改查数据类,索引增删改类
+        //需要拦截的类名和方法。 类EsPlusClient和EsPlusIndexClient。增删改查数据类,索引增删改类。参数中还可以指定索引名。
         @InterceptorElement(type = EsPlusClient.class, methodName = "search")
 })
 public class EsSearchAfterInterceptor implements EsInterceptor {
