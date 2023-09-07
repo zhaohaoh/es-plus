@@ -5,9 +5,10 @@ import com.es.plus.adapter.config.GlobalConfigCache;
 import com.es.plus.adapter.exception.EsException;
 import com.es.plus.adapter.lock.EsLockFactory;
 import com.es.plus.adapter.properties.GlobalParamHolder;
+import com.es.plus.adapter.proxy.EsInterceptor;
 import com.es.plus.adapter.util.XcontentBuildUtils;
-import com.es.plus.lock.EsLockClient;
 import com.es.plus.core.ClientContext;
+import com.es.plus.lock.EsLockClient;
 import com.es.plus.starter.properties.AnalysisProperties;
 import com.es.plus.starter.properties.ClientProperties;
 import com.es.plus.starter.properties.EsProperties;
@@ -46,6 +47,8 @@ public class EsClientConfiguration implements InitializingBean {
 
     @Autowired
     private EsProperties esProperties;
+    @Autowired
+    private List<EsInterceptor> esInterceptors;
 
     /**
      * 不存在才加载，存在的话以默认的为主
@@ -125,7 +128,7 @@ public class EsClientConfiguration implements InitializingBean {
             RestHighLevelClient restHighLevelClient = getRestHighLevelClient(v);
             EsLockClient esLockClient = new EsLockClient(restHighLevelClient);
             EsLockFactory esLockFactory = new EsLockFactory(esLockClient);
-            EsPlusClientFacade esPlusClientFacade = ClientContext.buildEsPlusClientFacade(restHighLevelClient, esLockFactory);
+            EsPlusClientFacade esPlusClientFacade = ClientContext.buildEsPlusClientFacade(restHighLevelClient, esLockFactory,esInterceptors);
             ClientContext.addClient(k, esPlusClientFacade);
         });
     }

@@ -147,7 +147,7 @@ public interface EsPlusIndexClient {
 
 
     /**
-     * 力合并
+     * 合并
      *
      * @param maxSegments     最大段的数量
      * @param onlyExpungeDeletes 只删除被标记删除的索引。也就是说这次合并只是为了把被垃圾的垃圾文件删除，而去合并有效的数据;
@@ -156,4 +156,10 @@ public interface EsPlusIndexClient {
      * @return boolean
      */
     boolean forceMerge(int maxSegments, boolean onlyExpungeDeletes, boolean flush, String... index);
+    /**
+     * 强制刷
+     * @param index              索引名
+     * @return boolean
+     */
+    boolean refresh(String... index);
 }

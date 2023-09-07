@@ -20,6 +20,10 @@ public class EsQueryParamWrapper {
      * 路由分片
      */
     private String[] routings;
+    /**
+     * 偏好
+     */
+    private String preference;
     /*
      *高亮
      */
@@ -32,4 +36,16 @@ public class EsQueryParamWrapper {
      * es排序列表
      */
     protected boolean profile;
+    /**
+     * 页
+     */
+    protected Integer page;
+    /**
+     * 数量
+     */
+    protected Integer size;
+    /**
+     * searchAfterValues
+     */
+    protected Object[] searchAfterValues;
 }

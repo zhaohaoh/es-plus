@@ -19,6 +19,8 @@ import org.elasticsearch.action.admin.indices.alias.get.GetAliasesRequest;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.admin.indices.forcemerge.ForceMergeRequest;
 import org.elasticsearch.action.admin.indices.forcemerge.ForceMergeResponse;
+import org.elasticsearch.action.admin.indices.refresh.RefreshRequest;
+import org.elasticsearch.action.admin.indices.refresh.RefreshResponse;
 import org.elasticsearch.action.admin.indices.settings.put.UpdateSettingsRequest;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.support.IndicesOptions;
@@ -424,6 +426,17 @@ public class EsPlusIndexRestClient implements EsPlusIndexClient {
             return successfulShards > 0;
         } catch (IOException e) {
             throw new EsException("forceMerge exception", e);
+        }
+    }
+
+    @Override
+    public boolean refresh(String... index) {
+        RefreshRequest request = new RefreshRequest(index);
+        try {
+            RefreshResponse refresh = restHighLevelClient.indices().refresh(request, RequestOptions.DEFAULT);
+            return refresh.getSuccessfulShards() == Arrays.stream(index).count();
+        } catch (IOException e) {
+            throw new EsException("refresh exception", e);
         }
     }
 

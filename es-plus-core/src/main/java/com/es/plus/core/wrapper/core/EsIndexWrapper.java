@@ -44,6 +44,13 @@ public class EsIndexWrapper implements IEsIndexWrapper {
     }
 
     @Override
+    public EsIndexWrapper createIndexMapping(Class<?> tClass) {
+        esPlusClientFacade.createIndexMapping(index, tClass);
+        return this;
+    }
+
+
+    @Override
     public EsIndexWrapper putMapping(Class<?> tClass) {
         esPlusClientFacade.putMapping(index, tClass);
         return this;
@@ -52,12 +59,6 @@ public class EsIndexWrapper implements IEsIndexWrapper {
     @Override
     public EsIndexWrapper putMapping(Map<String, Object> mappingProperties) {
         esPlusClientFacade.putMapping(index, mappingProperties);
-        return this;
-    }
-
-    @Override
-    public EsIndexWrapper createIndexMapping(Class<?> tClass) {
-        esPlusClientFacade.createIndexMapping(index, tClass);
         return this;
     }
 

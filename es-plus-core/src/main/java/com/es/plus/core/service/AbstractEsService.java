@@ -6,13 +6,13 @@ import com.es.plus.adapter.config.GlobalConfigCache;
 import com.es.plus.adapter.constants.ConnectFailHandleEnum;
 import com.es.plus.adapter.exception.EsException;
 import com.es.plus.adapter.lock.ELock;
-import com.es.plus.adapter.lock.EsLockFactory;
 import com.es.plus.adapter.properties.EsIndexParam;
 import com.es.plus.adapter.properties.GlobalParamHolder;
 import com.es.plus.annotation.EsId;
 import com.es.plus.annotation.EsIndex;
 import com.es.plus.constant.DefaultClass;
 import com.es.plus.constant.EsConstant;
+import com.es.plus.core.ClientContext;
 import com.es.plus.core.process.EsReindexProcess;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -28,6 +28,7 @@ import java.lang.reflect.Type;
  * @Author: hzh
  * @Date: 2022/1/21 11:11
  */
+
 public abstract class AbstractEsService<T> implements InitializingBean {
     private static final Logger logger = LoggerFactory.getLogger(AbstractEsService.class);
     /**
@@ -47,23 +48,12 @@ public abstract class AbstractEsService<T> implements InitializingBean {
      * clazz
      */
     protected Class<T> clazz;
-
+    //默认,为了加载顺序
     @Autowired
     private EsPlusClientFacade esPlusClientFacade;
 
-
-    /**
-     * es锁客户
-     */
-    @Autowired
-    private EsLockFactory esLockFactory;
-
     public EsPlusClientFacade getEsPlusClientFacade() {
         return esPlusClientFacade;
-    }
-
-    public EsLockFactory getEsLockFactory() {
-        return esLockFactory;
     }
 
     @Override
@@ -85,6 +75,8 @@ public abstract class AbstractEsService<T> implements InitializingBean {
 
             //添加索引信息
             EsIndexParam esIndexParam = GlobalParamHolder.getEsIndexParam(indexClass);
+
+            this.esPlusClientFacade = ClientContext.getClient(esIndexParam.getClientInstance());
 
             this.index = esIndexParam.getIndex();
 
@@ -126,7 +118,7 @@ public abstract class AbstractEsService<T> implements InitializingBean {
 
     private void tryCreateOrReindex(Class<?> indexClass, EsIndexParam esIndexParam) {
         //此处获取的是执行锁
-        ELock eLock = esLockFactory.getLock(index);
+        ELock eLock = esPlusClientFacade.getLock(index);
         boolean lock = eLock.tryLock();
         try {
             if (lock) {

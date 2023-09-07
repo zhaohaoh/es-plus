@@ -12,7 +12,7 @@ import com.es.plus.samples.SamplesApplication;
 import com.es.plus.samples.dto.FastTestDTO;
 import com.es.plus.samples.service.FastTestService;
 import org.elasticsearch.search.aggregations.BucketOrder;
-import org.elasticsearch.search.aggregations.pipeline.bucketsort.BucketSortPipelineAggregationBuilder;
+import org.elasticsearch.search.aggregations.pipeline.BucketSortPipelineAggregationBuilder;
 import org.elasticsearch.search.sort.FieldSortBuilder;
 import org.elasticsearch.search.sort.SortBuilders;
 import org.elasticsearch.search.sort.SortOrder;
@@ -34,7 +34,7 @@ public class FastTest {
 
     @org.junit.jupiter.api.Test
     public void fast() {
-        EsResponse<Map> list = Es.chainQuery(Map.class).index("fast_test").term("username","酷酷的").list();
+        EsResponse<Map> list = Es.chainQuery(Map.class).index("fast_test").term("username","酷酷的").search();
         System.out.println(list);
     }
 
@@ -81,13 +81,13 @@ public class FastTest {
 
     @org.junit.jupiter.api.Test
     public void bbb() {
-        EsResponse<FastTestDTO> test = Es.chainLambdaQuery(FastTestDTO.class).orderByAsc("id").list();
+        EsResponse<FastTestDTO> test = Es.chainLambdaQuery(FastTestDTO.class).orderByAsc("id").search();
         System.out.println(test);
     }
 
     @org.junit.jupiter.api.Test
     public void fastSearch() {
-        EsResponse<FastTestDTO> test = Es.chainLambdaQuery(FastTestDTO.class).match(FastTestDTO::getText, "苹果").list();
+        EsResponse<FastTestDTO> test = Es.chainLambdaQuery(FastTestDTO.class).match(FastTestDTO::getText, "苹果").search();
         System.out.println(test);
     }
 
@@ -108,10 +108,59 @@ public class FastTest {
         EsResponse<FastTestDTO> test = Es.chainLambdaQuery(FastTestDTO.class)
                 .wildcard(FastTestDTO::getText, "*凄切切请求群群群咕咕咕咕咕咕过过过过过过过过过个若若若若若若若若若若若ggrr二位而个干白VNBVR人v个版雇个人全文我test1凄切切请求群群群咕咕咕咕咕咕过过过过过过过过过个若若若若若若若若若若若ggrr二位而个干白VNBVR人v个版雇个人全文我test1*")
 
-                .list();
+                .search();
         System.out.println(test);
     }
 
+    @org.junit.jupiter.api.Test
+    public void searchAfter() {
+//        PageInfo<FastTestDTO> pageInfo = new PageInfo<>(501, 10);
+//        //1000页以内不走缓存。不开启firstSortValues和tailSortValues。保证数据的时效性。 1000页以上走缓存。数据时效性在5分钟，虽然是5分钟。但是会无限续期
+//        if (pageInfo.getPage() * pageInfo.getSize() <= 10000){
+//            EsResponse<FastTestDTO> test = Es.chainLambdaQuery(FastTestDTO.class)
+//                    .includes(FastTestDTO::getId)
+//                    .orderByAsc("id").orderByAsc("username")
+//                    .search();
+//        } else {
+////            PageInfo<FastTestDTO> searchAfterPage = new PageInfo<>(2000, 10);
+////
+////            int i = page * size;
+//            //从redis中获取最接近当前查询页的数据
+//
+//            //计算差值
+//            //int a=4990
+//
+//            //根据差值searchAfter
+//
+//            //最后查找需要的10条数据
+//        }
+
+
+        // 查询  page=1000 size=10   计算5010到10000的数据差
+        // int diff= 5010 到 10000;不计算10
+        // diff = 4990;
+        // 根据4990 的SortValues 查询4990的size的  得到10000的tailSortValues
+        // 根据10000的tailSortValues在向后size=10得到真实需要的数据
+        // 记录真实数据的size firstSortValues  tailSortValues
+
+                    EsResponse<FastTestDTO> test = Es.chainLambdaQuery(FastTestDTO.class)
+                    .includes(FastTestDTO::getId)
+                    .orderByAsc("id").orderByAsc("username")
+                    .search();
+
+
+        EsResponse<FastTestDTO> test1 = Es.chainLambdaQuery(FastTestDTO.class).orderByAsc("id").orderByAsc("username")  .includes(FastTestDTO::getId)
+                .trackScores(true)
+                .minScope(0)
+                .searchAfterValues(test.getTailSortValues()).search(10000);
+
+
+        EsResponse<FastTestDTO> test3 = Es.chainLambdaQuery(FastTestDTO.class).orderByAsc("id").orderByAsc("username")  .includes(FastTestDTO::getId)
+                .fetch(false)
+                .searchAfterValues(test.getTailSortValues()).search(11);
+
+        System.out.println(test);
+    }
 
     @org.junit.jupiter.api.Test
     public void dynamic() {
@@ -120,7 +169,7 @@ public class FastTest {
         EsPlusClientFacade local = ClientContext.getClient("local");
 
 
-        EsResponse<Map> list = Es.chainQuery(master, Map.class).index("distribution_chain_info").list();
+        EsResponse<Map> list = Es.chainQuery(master, Map.class).index("distribution_chain_info").search();
         List<Map> list1 = list.getList();
         System.out.println(list1);
         Es.chainLambdaUpdate(local,Map.class).index("distribution_chain_info").saveBatch(list1);

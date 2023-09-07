@@ -640,6 +640,13 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
     }
 
     @Override
+    public Children trackScores(boolean trackScores) {
+        EsSelect esSelect = getSelect();
+        esSelect.setTrackScores(trackScores);
+        return (Children) this;
+    }
+
+    @Override
     public Children orderBy(String order, R... columns) {
         if (getEsQueryParamWrapper().getEsOrderList() == null) {
             getEsQueryParamWrapper().setEsOrderList(new ArrayList<>());
@@ -721,12 +728,6 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
         return children;
     }
 
-    @Override
-    public Children routings(String... routings) {
-        getEsQueryParamWrapper().setRoutings(routings);
-        return children;
-    }
-
 
     //match方法中配合or使用，百分比匹配
     @Override
@@ -734,6 +735,25 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
         if (currentBuilder instanceof MatchQueryBuilder) {
             ((MatchQueryBuilder) currentBuilder).minimumShouldMatch(minimumShouldMatch);
         }
+        return children;
+    }
+
+    @Override
+    public Children routings(String... routings) {
+        getEsQueryParamWrapper().setRoutings(routings);
+        return children;
+    }
+
+
+    @Override
+    public Children preference(String preference) {
+        getEsQueryParamWrapper().setPreference(preference);
+        return children;
+    }
+
+    @Override
+    public Children searchAfterValues(Object[] searchAfterValues) {
+        getEsQueryParamWrapper().setSearchAfterValues(searchAfterValues);
         return children;
     }
 }

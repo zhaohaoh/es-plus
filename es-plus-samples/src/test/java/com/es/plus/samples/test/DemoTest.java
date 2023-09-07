@@ -41,13 +41,13 @@ public class DemoTest {
         TermQueryBuilder a = QueryBuilders.termQuery("a", "1");
         boolQueryBuilder.must(a);
         EsResponse<FastTestDTO> list = fastTestService.esChainQueryWrapper().filter()
-                .term(FastTestDTO::getUsername, "酷酷的").list();
+                .term(FastTestDTO::getUsername, "酷酷的").search();
         System.out.println(list);
     }
     @org.junit.jupiter.api.Test
     public void mustNotTerm(){
         EsResponse<FastTestDTO> list = fastTestService.esChainQueryWrapper().mustNot()
-                .term(FastTestDTO::getUsername, "酷酷的").list();
+                .term(FastTestDTO::getUsername, "酷酷的").search();
         System.out.println(list);
     }
     @org.junit.jupiter.api.Test
@@ -55,7 +55,7 @@ public class DemoTest {
         EsResponse<FastTestDTO> list = fastTestService.esChainQueryWrapper()
                 .filter().term(FastTestDTO::getUsername,"酷酷的2")
                 .mustNot()
-                .term(FastTestDTO::getUsername, "酷酷的").list();
+                .term(FastTestDTO::getUsername, "酷酷的").search();
         System.out.println(list);
     }
 
@@ -63,7 +63,7 @@ public class DemoTest {
     //must是默认的方式
     public void mustMatch(){
         EsResponse<FastTestDTO> list = fastTestService.esChainQueryWrapper()
-                .match(FastTestDTO::getText,"第二篇文章苹果123dff很好呀").list();
+                .match(FastTestDTO::getText,"第二篇文章苹果123dff很好呀").search();
         System.out.println(list);
     }
 
@@ -73,7 +73,7 @@ public class DemoTest {
     @org.junit.jupiter.api.Test
     public void multiMatch(){
         EsResponse<FastTestDTO> list = fastTestService.esChainQueryWrapper()
-                .multiMatch("苹果",FastTestDTO::getText,FastTestDTO::getUsername).list();
+                .multiMatch("苹果",FastTestDTO::getText,FastTestDTO::getUsername).search();
         System.out.println(list);
     }
 
@@ -87,7 +87,7 @@ public class DemoTest {
         Date date1 = new Date();
         EsResponse<FastTestDTO> list = fastTestService.esChainQueryWrapper()
                 .range(FastTestDTO::getCreateTime, parse.getTime(),
-                        date1.getTime()).list();
+                        date1.getTime()).search();
         System.out.println(list);
     }
 
@@ -96,7 +96,7 @@ public class DemoTest {
     public void term() throws ParseException {
         //为什么能查询出来因为底层对字符串进行了转换 20230701=202307
         EsResponse<FastTestDTO> list = fastTestService.esChainQueryWrapper()
-                .term(FastTestDTO::getCreateTime,"2023-07").list();
+                .term(FastTestDTO::getCreateTime,"2023-07").search();
         System.out.println(list);
     }
 
@@ -105,7 +105,7 @@ public class DemoTest {
     public void terms() throws ParseException {
         //为什么能查询出来因为底层对字符串进行了转换 20230701=202307
         EsResponse<FastTestDTO> list = fastTestService.esChainQueryWrapper()
-                .terms(FastTestDTO::getCreateTime,"2023-07","2023-06").list();
+                .terms(FastTestDTO::getCreateTime,"2023-07","2023-06").search();
         System.out.println(list);
     }
 
@@ -117,7 +117,7 @@ public class DemoTest {
     public void matchPhrase() throws ParseException {
 
         EsResponse<FastTestDTO> list = fastTestService.esChainQueryWrapper()
-                .matchPhrase(FastTestDTO::getText,"第二篇文章苹果").list();
+                .matchPhrase(FastTestDTO::getText,"第二篇文章苹果").search();
         System.out.println(list);
     }
 
@@ -129,7 +129,7 @@ public class DemoTest {
     public void fuzzy() throws ParseException {
 
         EsResponse<FastTestDTO> list = fastTestService.esChainQueryWrapper()
-                .fuzzy(FastTestDTO::getUsername,"苦苦的", Fuzziness.ONE).list();
+                .fuzzy(FastTestDTO::getUsername,"苦苦的", Fuzziness.ONE).search();
         System.out.println(list);
     }
 
@@ -139,7 +139,7 @@ public class DemoTest {
         EsResponse<FastTestDTO> test = Es.chainLambdaQuery(FastTestDTO.class)
                 .wildcard(FastTestDTO::getText, "*凄切切请求群群群咕咕干白VNBVR人v个版雇个人全文我test1*")
 
-                .list();
+                .search();
         System.out.println(test);
     }
 

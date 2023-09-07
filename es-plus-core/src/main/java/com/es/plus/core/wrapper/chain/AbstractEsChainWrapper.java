@@ -88,6 +88,7 @@ public abstract class AbstractEsChainWrapper<T, R, Children extends AbstractEsCh
         return this.children;
     }
 
+
     @Override
     public Children should(boolean condition, Consumer<QUERY> consumer) {
         getWrapper().should(consumer);
@@ -415,6 +416,12 @@ public abstract class AbstractEsChainWrapper<T, R, Children extends AbstractEsCh
     }
 
     @Override
+    public Children trackScores(boolean trackScores) {
+        getWrapper().trackScores(trackScores);
+        return this.children;
+    }
+
+    @Override
     public Children boost(float boost) {
         getWrapper().boost(boost);
         return children;
@@ -451,5 +458,15 @@ public abstract class AbstractEsChainWrapper<T, R, Children extends AbstractEsCh
         return this.children;
     }
 
+    @Override
+    public Children preference(String preference) {
+        getWrapper().preference(preference);
+        return this.children;
+    }
 
+    @Override
+    public Children searchAfterValues(Object[] searchAfterValues) {
+        getWrapper().searchAfterValues(searchAfterValues);
+        return this.children;
+    }
 }

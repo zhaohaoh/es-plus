@@ -5,12 +5,15 @@ import com.es.plus.adapter.config.GlobalConfigCache;
 import com.es.plus.adapter.core.EsPlusClient;
 import com.es.plus.adapter.core.EsPlusIndexClient;
 import com.es.plus.adapter.lock.EsLockFactory;
+import com.es.plus.adapter.proxy.EsInterceptor;
+import com.es.plus.adapter.proxy.EsPlusClientProxy;
 import com.es.plus.es6.client.EsPlus6IndexRestClient;
 import com.es.plus.es6.client.EsPlus6RestClient;
 import com.es.plus.es7.client.EsPlusIndexRestClient;
 import com.es.plus.es7.client.EsPlusRestClient;
 import org.elasticsearch.client.RestHighLevelClient;
 
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -46,17 +49,26 @@ public class ClientContext {
      *
      * @return {@link EsPlusClientFacade}
      */
-    public static EsPlusClientFacade buildEsPlusClientFacade(RestHighLevelClient restHighLevelClient, EsLockFactory esLockFactory) {
-        EsPlusClient esPlusRestClient;
+    public static EsPlusClientFacade buildEsPlusClientFacade(RestHighLevelClient restHighLevelClient, EsLockFactory esLockFactory, List<EsInterceptor> esInterceptors) {
+        EsPlusClient esPlusClient;
         EsPlusIndexClient esPlusIndexRestClient;
         if (GlobalConfigCache.GLOBAL_CONFIG.getVersion().equals(6)) {
-            esPlusRestClient = new EsPlus6RestClient(restHighLevelClient, esLockFactory);
+            esPlusClient = new EsPlus6RestClient(restHighLevelClient, esLockFactory);
             esPlusIndexRestClient = new EsPlus6IndexRestClient(restHighLevelClient);
         }else{
-            esPlusRestClient = new EsPlusRestClient(restHighLevelClient, esLockFactory);
+            esPlusClient = new EsPlusRestClient(restHighLevelClient, esLockFactory);
             esPlusIndexRestClient = new EsPlusIndexRestClient(restHighLevelClient);
         }
 
-        return new EsPlusClientFacade(esPlusRestClient, esPlusIndexRestClient, esLockFactory);
+        EsPlusClientProxy esPlusClientProxy = new EsPlusClientProxy(esPlusClient,esInterceptors);
+
+        EsPlusClient proxy = (EsPlusClient) esPlusClientProxy.getProxy();
+
+
+        EsPlusClientFacade esPlusClientFacade = new EsPlusClientFacade(proxy, esPlusIndexRestClient, esLockFactory);
+
+        return esPlusClientFacade;
     }
+
+
 }

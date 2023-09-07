@@ -26,10 +26,13 @@ import java.util.Map;
  * @Date: 2022/9/13 16:07
  * es客户端的门面
  */
-public class EsPlusClientFacade {
-    private final EsPlusClient esPlusClient;
-    private final EsPlusIndexClient esPlusIndexClient;
-    private final EsLockFactory esLockFactory;
+public class EsPlusClientFacade   {
+    private  EsPlusClient esPlusClient;
+    private  EsPlusIndexClient esPlusIndexClient;
+    private  EsLockFactory esLockFactory;
+
+    public EsPlusClientFacade() {
+    }
 
     public EsPlusClientFacade(EsPlusClient esPlusClient, EsPlusIndexClient esPlusIndexClient, EsLockFactory esLockFactory) {
         this.esPlusClient = esPlusClient;
@@ -405,37 +408,10 @@ public class EsPlusClientFacade {
      * @param index          索引
      * @return {@link EsResponse}<{@link T}>
      */
-    public <T> EsResponse<T> searchByWrapper(String index, String type, EsParamWrapper<T> esParamWrapper, Class<T> tClass) {
-        return esPlusClient.searchByWrapper(index, type, esParamWrapper, tClass);
+    public <T> EsResponse<T> search(String index, String type, EsParamWrapper<T> esParamWrapper, Class<T> tClass) {
+        return esPlusClient.search(index, type, esParamWrapper, tClass);
     }
 
-
-    /**
-     * 搜索分页根据包装器
-     *
-     * @param pageInfo       页面信息
-     * @param esParamWrapper es param包装
-     * @param tClass         t类
-     * @param index          索引
-     * @return {@link EsResponse}<{@link T}>
-     */
-    public <T> EsResponse<T> searchPageByWrapper(String index, String type, PageInfo<T> pageInfo, EsParamWrapper<T> esParamWrapper, Class<T> tClass) {
-        return esPlusClient.searchPageByWrapper(index, type, pageInfo, esParamWrapper, tClass);
-    }
-
-    /**
-     * 搜索翻页 也可以向前搜索，只要更改排序即可
-     * 此方法可以代替实现深度分页
-     *
-     * @param pageInfo       页面信息
-     * @param esParamWrapper es param包装
-     * @param tClass         t类
-     * @param index          索引
-     * @return {@link EsResponse}<{@link T}>
-     */
-    public <T> EsResponse<T> searchAfter(String index, String type, PageInfo<T> pageInfo, EsParamWrapper<T> esParamWrapper, Class<T> tClass) {
-        return esPlusClient.searchAfter(index, type, pageInfo, esParamWrapper, tClass);
-    }
 
     /**
      * 滚动根据包装器
@@ -447,8 +423,8 @@ public class EsPlusClientFacade {
      * @param keepTime       保持时间
      * @param scollId        滚动处理Id
      */
-    public <T> EsResponse<T> scrollByWrapper(String index, String type, EsParamWrapper<T> esParamWrapper, Class<T> tClass, int size, Duration keepTime, String scollId) {
-        return esPlusClient.scrollByWrapper(index, type, esParamWrapper, tClass, size, keepTime, scollId);
+    public <T> EsResponse<T> scroll(String index, String type, EsParamWrapper<T> esParamWrapper, Class<T> tClass, int size, Duration keepTime, String scollId) {
+        return esPlusClient.scroll(index, type, esParamWrapper, tClass, size, keepTime, scollId);
     }
 
 
@@ -490,4 +466,11 @@ public class EsPlusClientFacade {
         return esPlusIndexClient.forceMerge(maxSegments, onlyExpungeDeletes, flush, index);
     }
 
+    public boolean refresh(String... index) {
+        return esPlusIndexClient.refresh(index);
+    }
+
+    public String executeDSL(String dsl, String indexName) {
+        return esPlusClient.executeDSL(dsl,indexName);
+    }
 }

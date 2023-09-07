@@ -117,10 +117,10 @@ public class GlobalParamHolder {
                 return null;
             }
             Map<String, Object> mapping = new LinkedHashMap<>(1);
-            Map<String, Object> mappingProperties = ES_ANNOTATION_PARAM_RESOLVE.buildMappingProperties(finalClazz);
+            Map<String, Object> mappingProperties = ES_ANNOTATION_PARAM_RESOLVE.buildMappingProperties(finalClazz,indexParam);
             // 子文档属性
             if (indexParam.getChildClass() != null) {
-                Map<String, Object> childProperties = ES_ANNOTATION_PARAM_RESOLVE.buildMappingProperties(indexParam.getChildClass());
+                Map<String, Object> childProperties = ES_ANNOTATION_PARAM_RESOLVE.buildMappingProperties(indexParam.getChildClass(),indexParam);
                 childProperties.forEach(mappingProperties::putIfAbsent);
             }
             mapping.put(EsConstant.PROPERTIES, mappingProperties);

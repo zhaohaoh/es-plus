@@ -11,6 +11,7 @@ import com.es.plus.adapter.util.ClassUtils;
 import com.es.plus.annotation.EsField;
 import com.es.plus.annotation.EsId;
 import com.es.plus.annotation.EsIndex;
+import com.es.plus.annotation.Score;
 import com.es.plus.constant.*;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -80,6 +81,7 @@ public class EsAnnotationParamProcess {
         if (childClass != DefaultClass.class) {
             esIndexParam.setChildClass(childClass);
         }
+        esIndexParam.setClientInstance(esIndex.clientInstance());
 
         return esIndexParam;
     }
@@ -121,7 +123,7 @@ public class EsAnnotationParamProcess {
      * @param tClass t类
      * @return {@link Map}<{@link String}, {@link Object}>
      */
-    public Map<String, Object> buildMappingProperties(Class<?> tClass) {
+    public Map<String, Object> buildMappingProperties(Class<?> tClass,EsIndexParam indexParam) {
         List<Field> fieldList = ClassUtils.getFieldList(tClass);
         Map<String, Object> mappings = new LinkedHashMap<>();
 
@@ -132,6 +134,10 @@ public class EsAnnotationParamProcess {
             EsId esId = field.getAnnotation(EsId.class);
             if (esId != null) {
                 GlobalParamHolder.put(tClass, field.getName());
+                continue;
+            }
+            if (field.getAnnotation(Score.class)!=null){
+                indexParam.setScoreField(field.getName());
             }
 
             //创建属性对象
@@ -140,7 +146,7 @@ public class EsAnnotationParamProcess {
             EsField esField = field.getAnnotation(EsField.class);
 
             // 获取es字段类型
-            String fieldType = processNestedObjects(field, esField, properties);
+            String fieldType = processNestedObjects(field, esField, properties,indexParam);
 
             // 处理字段注解和es的映射
             processAnnotationEsField(properties, esField);
@@ -175,7 +181,7 @@ public class EsAnnotationParamProcess {
     /**
      * 处理嵌套对象
      */
-    private String processNestedObjects(Field field, EsField esField, Map<String, Object> properties) {
+    private String processNestedObjects(Field field, EsField esField, Map<String, Object> properties,EsIndexParam indexParam) {
         String fieldType;
         Class<?> fieldClass = field.getType();
         if (esField == null || esField.type().equals(EsFieldType.AUTO)) {
@@ -203,7 +209,7 @@ public class EsAnnotationParamProcess {
         }
 
         if (EsFieldType.OBJECT.name().equalsIgnoreCase(fieldType) || EsFieldType.NESTED.name().equalsIgnoreCase(fieldType)) {
-            properties.put(EsConstant.PROPERTIES, buildMappingProperties(fieldClass));
+            properties.put(EsConstant.PROPERTIES, buildMappingProperties(fieldClass,indexParam));
         }
 
         if (fieldType.equalsIgnoreCase(EsFieldType.JOIN.name())) {

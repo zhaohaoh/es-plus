@@ -3,6 +3,7 @@ package com.es.plus.samples.dto;
 import com.es.plus.annotation.EsField;
 import com.es.plus.annotation.EsId;
 import com.es.plus.annotation.EsIndex;
+import com.es.plus.annotation.Score;
 import com.es.plus.constant.EsFieldType;
 import lombok.Data;
 
@@ -13,7 +14,7 @@ import java.util.Date;
  * 举例4种类型索引
  */
 @Data
-@EsIndex(index = "fast_test",tryReindex = true,alias = "fast_test_alias")
+@EsIndex(index = "fast_test",tryReindex = true,alias = "fast_test_alias",clientInstance = "local")
 public class FastTestDTO {
     @EsId
     private Long id;
@@ -25,4 +26,7 @@ public class FastTestDTO {
     private Integer age;
     @EsField(type = EsFieldType.DATE, esFormat = "yyyy-MM-dd HH:mm:ss||strict_date_optional_time||epoch_millis",dateFormat = "yyyy-MM")
     private Date createTime;
+
+    @Score
+    private Float score;
 }

@@ -4,7 +4,6 @@ package com.es.plus.core.service;
 import com.es.plus.adapter.params.EsAggResponse;
 import com.es.plus.adapter.params.EsResponse;
 import com.es.plus.adapter.params.EsSettings;
-import com.es.plus.adapter.params.PageInfo;
 import com.es.plus.core.wrapper.chain.EsChainLambdaQueryWrapper;
 import com.es.plus.core.wrapper.chain.EsChainUpdateWrapper;
 import com.es.plus.core.wrapper.core.EsQueryWrapper;
@@ -169,6 +168,17 @@ public interface EsService<T> {
     void deleteIndex();
 
     /**
+     * 合并
+     *
+     */
+    boolean forceMerge(int maxSegments, boolean onlyExpungeDeletes, boolean flush);
+    /**
+     * 强制刷
+     * @return boolean
+     */
+    boolean refresh();
+
+    /**
      * 更新根据包装器
      *
      * @param esUpdateWrapper es更新包装器
@@ -182,7 +192,7 @@ public interface EsService<T> {
      * @param id id
      * @return {@link T}
      */
-    T getById(Serializable id);
+    T searchById(Serializable id);
 
     /**
      * 列表根据id
@@ -190,7 +200,7 @@ public interface EsService<T> {
      * @param idList id列表
      * @return {@link List}<{@link T}>
      */
-    List<T> listByIds(Collection<Serializable> idList);
+    List<T> searchByIds(Collection<Serializable> idList);
 
     /**
      * 列表
@@ -198,26 +208,22 @@ public interface EsService<T> {
      * @param esQueryWrapper es查询包装器
      * @return {@link EsResponse}<{@link T}>
      */
-    EsResponse<T> list(EsWrapper<T> esQueryWrapper);
+    EsResponse<T> search(EsWrapper<T> esQueryWrapper);
+    /**
+     * 列表
+     *
+     * @param esQueryWrapper es查询包装器
+     * @return {@link EsResponse}<{@link T}>
+     */
+    EsResponse<T> search(EsWrapper<T> esQueryWrapper,int size);
 
     /**
      * 页面
      *
-     * @param pageInfo       页面信息
      * @param esQueryWrapper es查询包装器
      * @return {@link EsResponse}<{@link T}>
      */
-    EsResponse<T> page(PageInfo<T> pageInfo, EsWrapper<T> esQueryWrapper);
-
-
-    /**
-     * 搜索后
-     *
-     * @param pageInfo
-     * @param esQueryWrapper es查询包装器
-     * @return {@link EsResponse}<{@link T}>
-     */
-    EsResponse<T> searchAfter(PageInfo<T> pageInfo, EsWrapper<T> esQueryWrapper);
+    EsResponse<T> searchPage(int page,int size, EsWrapper<T> esQueryWrapper);
 
     /**
      * 统计

@@ -29,6 +29,11 @@ public class EsIndexParam {
      * 索引映射
      */
     private Map<String, Object> mappings;
+
+    /**
+     * 打分字段
+     */
+    private String scoreField ;
     /**
      * 子索引的类
      */
@@ -37,5 +42,10 @@ public class EsIndexParam {
      * 索引是否已经创建
      */
     private boolean exists = false;
+
+    /**
+     *  客户端实例
+     */
+    private  String clientInstance;
 
 }

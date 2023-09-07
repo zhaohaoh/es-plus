@@ -1,7 +1,6 @@
 package com.es.plus.samples.service;
 
 import com.es.plus.adapter.params.EsResponse;
-import com.es.plus.adapter.params.PageInfo;
 import com.es.plus.core.service.EsServiceImpl;
 import com.es.plus.core.statics.Es;
 import com.es.plus.core.wrapper.aggregation.EsAggWrapper;
@@ -56,7 +55,7 @@ public class SamplesEsService extends EsServiceImpl<SamplesEsDTO> {
                         }, ScoreMode.None,innerHitBuilder);
 
 
-        EsResponse<SamplesEsDTO> esResponse = queryWrapper.list();
+        EsResponse<SamplesEsDTO> esResponse = queryWrapper.search();
         // 查询
         List<SamplesEsDTO> list = esResponse.getList();
         System.out.println(list);
@@ -99,7 +98,7 @@ public class SamplesEsService extends EsServiceImpl<SamplesEsDTO> {
 //                        a.must()
 //                                .term(SamplesEsDTO::getNickName, "dasdsad")
 //                                .term(SamplesEsDTO::getPhone, "1386859111"))
-                .list();
+                .search();
 //        EsResponse<SamplesEsDTO> list2 = esChainQueryWrapper().list();
 //        System.out.println(list2);
         List<SamplesEsDTO> list = esResponse.getList();
@@ -112,7 +111,7 @@ public class SamplesEsService extends EsServiceImpl<SamplesEsDTO> {
         EsChainQueryWrapper<Map> term = Es.chainQuery(Map.class).index("sys_user2ttt_alias").must()
                 .match("username", "HZH").term("email", "abc");
         term.esAggWrapper().terms("keyword");
-        EsResponse<Map> list1 = term.list();
+        EsResponse<Map> list1 = term.search();
 //        Map<String, Long> username1 = list1.getEsAggsResponse().getTermsAsMap("keyword");
 //        System.out.println(username1);
     }
@@ -120,7 +119,7 @@ public class SamplesEsService extends EsServiceImpl<SamplesEsDTO> {
 
     public void agg() {
 
-        EsResponse<SamplesEsDTO> dd = esChainQueryWrapper().must().match(SamplesEsDTO::getUsername, "dd").list();
+        EsResponse<SamplesEsDTO> dd = esChainQueryWrapper().must().match(SamplesEsDTO::getUsername, "dd").search();
         EsAggWrapper<SamplesEsDTO> username = esChainQueryWrapper().esAggWrapper().terms("username");
 
         // 声明语句嵌套关系是must
@@ -137,7 +136,7 @@ public class SamplesEsService extends EsServiceImpl<SamplesEsDTO> {
                 .subAggregation(t -> t.sum(SamplesEsDTO::getId));
         EsResponse<SamplesEsDTO> esResponse = esChainQueryWrapper
                 // 查询
-                .list();
+                .search();
         List<SamplesEsDTO> list = esResponse.getList();
 
         EsPlusAggregations<SamplesEsDTO> esAggsResponse = (EsPlusAggregations<SamplesEsDTO>) esResponse.getEsAggsResponse();
@@ -196,25 +195,25 @@ public class SamplesEsService extends EsServiceImpl<SamplesEsDTO> {
     }
 
     public void newSelect() {
-        EsResponse<SamplesEsDTO> hzh = Es.chainLambdaQuery(SamplesEsDTO.class).term(SamplesEsDTO::getUsername, "hzh").list();
+        EsResponse<SamplesEsDTO> hzh = Es.chainLambdaQuery(SamplesEsDTO.class).term(SamplesEsDTO::getUsername, "hzh").search();
         System.out.println(hzh);
     }
 
     public void searhAfter() {
-        PageInfo<SamplesEsDTO> pageInfo = new PageInfo<>();
-        pageInfo.setSize(3);
+//        PageInfo<SamplesEsDTO> pageInfo = new PageInfo<>();
+//        pageInfo.setSize(3);
 
-        EsResponse<SamplesEsDTO> samplesEsDTOEsResponse = Es.chainLambdaQuery(SamplesEsDTO.class)
-                .orderBy("asc", SamplesEsDTO::getId).searchAfter(pageInfo);
-
-
-        pageInfo.setSearchAfterValues(samplesEsDTOEsResponse.getTailSortValues());
-        EsResponse<SamplesEsDTO> samplesEsDTOEsResponse1 = Es.chainLambdaQuery(SamplesEsDTO.class)
-                .orderBy("DESC", SamplesEsDTO::getId).searchAfter(pageInfo);
-
-        System.out.println(samplesEsDTOEsResponse);
-
-        System.out.println(samplesEsDTOEsResponse1);
+//        EsResponse<SamplesEsDTO> samplesEsDTOEsResponse = Es.chainLambdaQuery(SamplesEsDTO.class)
+//                .orderBy("asc", SamplesEsDTO::getId).searchAfter(null);
+//
+//
+//        pageInfo.setSearchAfterValues(samplesEsDTOEsResponse.getTailSortValues());
+//        EsResponse<SamplesEsDTO> samplesEsDTOEsResponse1 = Es.chainLambdaQuery(SamplesEsDTO.class)
+//                .orderBy("DESC", SamplesEsDTO::getId).searchAfter(null);
+//
+//        System.out.println(samplesEsDTOEsResponse);
+//
+//        System.out.println(samplesEsDTOEsResponse1);
 
     }
 
@@ -226,7 +225,7 @@ public class SamplesEsService extends EsServiceImpl<SamplesEsDTO> {
 
         EsLambdaQueryWrapper<SamplesEsDTO> queryWrapper = new EsLambdaQueryWrapper<>();
         queryWrapper.match(SamplesEsDTO::getUsername, "ggghhh");
-        EsResponse<SamplesEsDTO> list = this.list(queryWrapper);
+        EsResponse<SamplesEsDTO> list = this.search(queryWrapper);
         System.out.println(list);
     }
 }

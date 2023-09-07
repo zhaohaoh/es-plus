@@ -3,7 +3,6 @@ package com.es.plus.adapter.core;
 import com.es.plus.adapter.params.EsAggResponse;
 import com.es.plus.adapter.params.EsParamWrapper;
 import com.es.plus.adapter.params.EsResponse;
-import com.es.plus.adapter.params.PageInfo;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
@@ -15,6 +14,7 @@ import java.util.List;
 public interface EsPlusClient {
 
     RestHighLevelClient getRestHighLevelClient();
+
     /**
      * 是否在执行reindex
      */
@@ -32,7 +32,7 @@ public interface EsPlusClient {
      * @param esDataList 西文数据列表
      * @return {@link List}<{@link BulkItemResponse}>
      */
-    List<BulkItemResponse> saveOrUpdateBatch(String index,String type, Collection<?> esDataList);
+    List<BulkItemResponse> saveOrUpdateBatch(String index, String type, Collection<?> esDataList);
 
     /**
      * 保存批
@@ -41,12 +41,12 @@ public interface EsPlusClient {
      * @param esDataList 西文数据列表
      * @return {@link List}<{@link BulkItemResponse}>
      */
-    List<BulkItemResponse> saveBatch(String index, String type,Collection<?> esDataList);
+    List<BulkItemResponse> saveBatch(String index, String type, Collection<?> esDataList);
 
     /**
      * 保存
      */
-    boolean save(String index,String type, Object esData);
+    boolean save(String index, String type, Object esData);
 
     /**
      * 更新Es数据
@@ -55,7 +55,7 @@ public interface EsPlusClient {
      * @return
      * @throws Exception
      */
-    boolean update(String index,String type, Object esData);
+    boolean update(String index, String type, Object esData);
 
     /**
      * 批处理更新 返回失败数据
@@ -63,12 +63,12 @@ public interface EsPlusClient {
      * @param index 索引
      * @return {@link List}<{@link BulkItemResponse}>
      */
-    List<BulkItemResponse> updateBatch(String index, String type,Collection<?> esDataList);
+    List<BulkItemResponse> updateBatch(String index, String type, Collection<?> esDataList);
 
     /**
      * 更新包装
      */
-    <T> BulkByScrollResponse updateByWrapper(String index,String type, EsParamWrapper<T> esUpdateWrapper);
+    <T> BulkByScrollResponse updateByWrapper(String index, String type, EsParamWrapper<T> esUpdateWrapper);
 
     /**
      * 增量
@@ -77,7 +77,7 @@ public interface EsPlusClient {
      * @param esUpdateWrapper es更新包装
      * @return {@link BulkByScrollResponse}
      */
-    <T> BulkByScrollResponse increment(String index,String type, EsParamWrapper<T> esUpdateWrapper);
+    <T> BulkByScrollResponse increment(String index, String type, EsParamWrapper<T> esUpdateWrapper);
 
     /**
      * 删除
@@ -86,7 +86,7 @@ public interface EsPlusClient {
      * @param id    id
      * @return boolean
      */
-    boolean delete(String index,  String type,String id);
+    boolean delete(String index, String type, String id);
 
     /**
      * 删除,查询
@@ -95,7 +95,7 @@ public interface EsPlusClient {
      * @param esUpdateWrapper es更新包装
      * @return {@link BulkByScrollResponse}
      */
-    <T> BulkByScrollResponse deleteByQuery(String index,String type, EsParamWrapper<T> esUpdateWrapper);
+    <T> BulkByScrollResponse deleteByQuery(String index, String type, EsParamWrapper<T> esUpdateWrapper);
 
     /**
      * 删除批处理
@@ -104,7 +104,7 @@ public interface EsPlusClient {
      * @param esDataList 西文数据列表
      * @return boolean
      */
-    boolean deleteBatch(String index,String type, Collection<String> esDataList);
+    boolean deleteBatch(String index, String type, Collection<String> esDataList);
 
     /**
      * 统计数
@@ -113,7 +113,7 @@ public interface EsPlusClient {
      * @param index          指数
      * @return long
      */
-    <T> long count(String index,String type,EsParamWrapper<T> esParamWrapper);
+    <T> long count(String index, String type, EsParamWrapper<T> esParamWrapper);
 
     /**
      * 搜索包装
@@ -123,23 +123,11 @@ public interface EsPlusClient {
      * @param index          指数
      * @return {@link EsResponse}<{@link T}>
      */
-    <T> EsResponse<T> searchByWrapper(String index,String type,EsParamWrapper<T> esParamWrapper, Class<T> tClass );
-
-    /**
-     * 搜索页面包装
-     *
-     * @param pageInfo       页面信息
-     * @param esParamWrapper es查询包装
-     * @param tClass         t类
-     * @param index          指数
-     * @return {@link EsResponse}<{@link T}>
-     */
-    <T> EsResponse<T> searchPageByWrapper( String index,String type,PageInfo<T> pageInfo, EsParamWrapper<T> esParamWrapper, Class<T> tClass);
+    <T> EsResponse<T> search(String index, String type, EsParamWrapper<T> esParamWrapper, Class<T> tClass);
 
     /**
      * 滚动查询包装
      *
-     * @param scrollHandler  滚动处理程序
      * @param esParamWrapper es查询包装
      * @param tClass         t类
      * @param index          指数
@@ -147,25 +135,23 @@ public interface EsPlusClient {
      * @param keepTime       保持时间
      * @return
      */
-    <T>  EsResponse<T> scrollByWrapper(String index,String type, EsParamWrapper<T> esParamWrapper, Class<T> tClass, int size, Duration keepTime, String scrollId);
+    <T> EsResponse<T> scroll(String index, String type, EsParamWrapper<T> esParamWrapper, Class<T> tClass, int size, Duration keepTime, String scrollId);
 
     /**
      * 聚合
      *
      * @param index          指数
      * @param esParamWrapper es查询包装
-     * @return {@link EsAggregations}<{@link T}>
      */
-    <T> EsAggResponse<T> aggregations(String index,String type, EsParamWrapper<T> esParamWrapper, Class<T> tClass);
+    <T> EsAggResponse<T> aggregations(String index, String type, EsParamWrapper<T> esParamWrapper, Class<T> tClass);
+
 
     /**
-     * 搜索后
+     * 执行dsl
      *
-     * @param pageInfo       页面信息
-     * @param esParamWrapper es参数包装器
-     * @param tClass         t类
-     * @param index          索引
-     * @return {@link EsResponse}<{@link T}>
+     * @param dsl       dsl
+     * @param indexName 索引名字
+     * @return {@link String}
      */
-    <T> EsResponse<T> searchAfter(String index,String type,PageInfo<T> pageInfo, EsParamWrapper<T> esParamWrapper, Class<T> tClass);
+    String executeDSL(String dsl, String indexName);
 }

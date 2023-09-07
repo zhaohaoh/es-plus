@@ -88,4 +88,8 @@ public class GlobalConfig {
      */
     private boolean startInit = true;
 
+    /**
+     * 是否开启日志
+     */
+    private boolean enableSearchLog = true;
 }

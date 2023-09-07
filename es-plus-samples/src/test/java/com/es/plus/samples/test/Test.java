@@ -63,7 +63,7 @@ public class Test {
 
     @org.junit.jupiter.api.Test
     public void fast() {
-        EsResponse<Map> list = Es.chainQuery(Map.class).index("sys_user2ttt_s0").list();
+        EsResponse<Map> list = Es.chainQuery(Map.class).index("sys_user2ttt_s0").search();
         System.out.println(list);
     }
     @org.junit.jupiter.api.Test
@@ -85,13 +85,13 @@ public class Test {
 
     @org.junit.jupiter.api.Test
     public void fastSearch() {
-        EsResponse<FastTestDTO> test = Es.chainLambdaQuery(FastTestDTO.class).match(FastTestDTO::getText, "苹果").list();
+        EsResponse<FastTestDTO> test = Es.chainLambdaQuery(FastTestDTO.class).match(FastTestDTO::getText, "苹果").search();
         System.out.println(test);
     }
 
     @org.junit.jupiter.api.Test
     public void fastSearch2() {
-        EsResponse<FastTestDTO> test = Es.chainLambdaQuery(FastTestDTO.class).match(FastTestDTO::getText, "苹果").list();
+        EsResponse<FastTestDTO> test = Es.chainLambdaQuery(FastTestDTO.class).match(FastTestDTO::getText, "苹果").search();
         System.out.println(test);
     }
 
@@ -162,7 +162,7 @@ public class Test {
     }
 
     @org.junit.jupiter.api.Test
-    public void searhAfter() {
+    public void searchAfter() {
         samplesEsService.searhAfter();
     }
 

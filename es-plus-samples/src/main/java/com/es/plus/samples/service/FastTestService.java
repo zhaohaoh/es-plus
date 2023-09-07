@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 public class FastTestService extends EsServiceImpl<FastTestDTO> {
 
     public void test() {
-        EsResponse<FastTestDTO> test = esChainQueryWrapper().match(FastTestDTO::getText, "苹果").list();
+        EsResponse<FastTestDTO> test = esChainQueryWrapper().match(FastTestDTO::getText, "苹果").search();
         System.out.println(test);
     }
 

@@ -12,14 +12,17 @@ Es-Plus 是Elasticsearch Api增强工具 - 只做增强不做改变，简化`CRU
 - **兼容es多版本**: 同时支持es6.7和es7.8双版本
 - **优雅的nested嵌套查询**: 使用lambda表达式封装实现更优雅的嵌套查询
 - **静态链式es编程**: 支持使用静态类，无需指定对应实体类即可执行。可以简单快速对es的索引进行增删改查。
-- **多数据源es**: 兼容。暂未提供优雅的api
+- **多数据源es**: 通用@EsIndex指定默认数据源
+- **自定义es执行前后拦截器**: @EsInterceptors 具体用法见下面的例子
+
 
 ## 引入
-目前使用快照版本0.2.0
+目前使用版本0.2.3
 本次更新
-- **兼容es多版本**: 同时支持es6.7和es7.8双版本
-- **优雅的nested嵌套查询**: 使用lambda表达式封装实现更优雅的嵌套查询
-- **静态链式es编程**: 支持使用静态类，无需指定对应实体类即可执行增删改查
+- **多数据源es**: 通用@EsIndex指定默认数据源
+- **自定义es执行前后拦截器**: @EsInterceptors 具体用法见下面的例子
+优化了查询api的使用，更贴近es的查询语法
+
 ``` xml
       <dependency>
             <groupId>io.github.zhaohaoh</groupId>
@@ -33,7 +36,7 @@ Es-Plus 是Elasticsearch Api增强工具 - 只做增强不做改变，简化`CRU
 ###  第一步 application.peoperties配置
 
 ```properties
-# es地址 多个逗号分隔
+# es地址 多个逗号分隔   默认数据源 master
 es-plus.address=xxx.xxx.xxx.xxx:9200
 # 是否异步reindex
 es-plus.global-config.reindex-async=false
@@ -52,8 +55,14 @@ es-plus.global-config.global-es-id=id
 es-plus.username=
 es-plus.password=
 
-# es多版本 本次更新
+# es多版本  
 es-plus.global-config.version=7
+
+
+##es多数据源   local是数据源名称，可自定义 
+
+es-plus.client-properties.local.address=localhost:9100
+
 ```
 
 ### 第二步 静态链式编程
@@ -229,6 +238,76 @@ public class SysUserEsService extends EsServiceImpl<SysUser>{
 }
 ```
 
+## 最新拦截器案例
+```java
+
+@Component
+@EsInterceptors(value = {
+        //需要拦截的类名和方法。 类EsPlusClient和EsPlusIndexClient。增删改查数据类,索引增删改类
+        @InterceptorElement(type = EsPlusClient.class, methodName = "search")
+})
+public class EsSearchAfterInterceptor implements EsInterceptor {
+    @Autowired
+    private RedisTemplate<String, Object> redisTemplate;
+    @Autowired
+    @Lazy
+    private EsPlusClientFacade esPlusClientFacade;
+
+    @Override
+    public void before(String index, Method method, Object[] args) {
+        Integer page = null;
+        Integer size = null;
+        EsParamWrapper esParamWrapper = null;
+        EsQueryParamWrapper esQueryParamWrapper = null; 
+        for (Object arg : args) {
+            if (arg instanceof EsParamWrapper) {
+                esParamWrapper = (EsParamWrapper) arg; 
+                esQueryParamWrapper = esParamWrapper.getEsQueryParamWrapper();
+                page = esQueryParamWrapper.getPage();
+                size = esQueryParamWrapper.getSize();
+                if (esQueryParamWrapper.getEsSelect()!= null && !esQueryParamWrapper.getEsSelect().getFetch()){
+                    return;
+                }
+                if (esQueryParamWrapper.getSearchAfterValues()!=null){
+                    return;
+                }
+                break;
+            }
+        }
+        if (esParamWrapper == null || page == null | size == null) {
+            return;
+        } 
+        
+        //执行你的逻辑 
+    }
+
+    @Override
+    public void after(String index, Method method, Object[] args, Object result) {
+        Integer page = null;
+        Integer size = null; 
+        for (Object arg : args) {
+            if (arg instanceof EsParamWrapper) {
+                EsParamWrapper  esParamWrapper = (EsParamWrapper) arg;
+                EsQueryParamWrapper esQueryParamWrapper = esParamWrapper.getEsQueryParamWrapper(); 
+                page = esQueryParamWrapper.getPage();
+                size = esQueryParamWrapper.getSize();
+                if (esQueryParamWrapper.getEsSelect()!= null && !esQueryParamWrapper.getEsSelect().getFetch()){
+                    return;
+                }
+                break;
+            }
+        }
+        int endIndex = page * size;
+        EsResponse response = (EsResponse) result;
+
+
+        //执行你的逻辑
+         
+    }
+ 
+
+}
+```
 
 
 ## Es版本

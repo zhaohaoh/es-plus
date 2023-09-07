@@ -65,6 +65,11 @@ public @interface EsIndex {
     boolean tryReindex() default false;
 
     /**
+     *  客户端实例
+     */
+    String clientInstance() default "master";
+
+    /**
      * 启动时创建索引和改变映射
      */
     boolean startInit() default true;

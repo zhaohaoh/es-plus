@@ -3,17 +3,18 @@ package com.es.plus.starter.auto;
 import com.es.plus.adapter.EsPlusClientFacade;
 import com.es.plus.adapter.lock.ELockClient;
 import com.es.plus.adapter.lock.EsLockFactory;
-import com.es.plus.lock.EsLockClient;
+import com.es.plus.adapter.proxy.EsInterceptor;
 import com.es.plus.core.ClientContext;
-import com.es.plus.starter.properties.EsProperties;
+import com.es.plus.lock.EsLockClient;
 import org.elasticsearch.client.RestHighLevelClient;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigureOrder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.core.Ordered;
+
+import java.util.List;
 
 import static com.es.plus.constant.EsConstant.MASTER;
 
@@ -24,11 +25,9 @@ import static com.es.plus.constant.EsConstant.MASTER;
  */
 @AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
 @Configuration
-@ComponentScan(basePackages = "com.es.plus")
 @DependsOn("esClientConfiguration")
+@ComponentScan(basePackages = "com.es.plus")
 public class EsAutoConfiguration {
-    @Autowired
-    private EsProperties esProperties;
 
     /**
      * es 外观
@@ -37,9 +36,9 @@ public class EsAutoConfiguration {
      * @param esLockFactory              es锁工厂
      * @return {@link EsPlusClientFacade}
      */
-    @Bean
-    public EsPlusClientFacade esPlusClientFacade(RestHighLevelClient restHighLevelClient, EsLockFactory esLockFactory) {
-        EsPlusClientFacade esPlusClientFacade = ClientContext.buildEsPlusClientFacade(restHighLevelClient, esLockFactory);
+    @Bean(value = "esPlusClientFacade")
+    public EsPlusClientFacade esPlusClientFacade(RestHighLevelClient restHighLevelClient, EsLockFactory esLockFactory,List<EsInterceptor> esInterceptors) {
+        EsPlusClientFacade esPlusClientFacade = ClientContext.buildEsPlusClientFacade(restHighLevelClient, esLockFactory,esInterceptors);
         ClientContext.addClient(MASTER, esPlusClientFacade);
         return esPlusClientFacade;
     }

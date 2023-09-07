@@ -55,6 +55,12 @@ public interface EsExtendsWrapper<Children, R> {
     Children minScope(float minScope);
 
     /**
+     * 是否查询分数
+     *
+     */
+    Children trackScores(boolean trackScores);
+
+    /**
      * 路由
      *
      * @param routings 路由
@@ -62,6 +68,7 @@ public interface EsExtendsWrapper<Children, R> {
      */
     Children routings(String... routings);
 
+    Children  preference(String preference);
 
     Children fetch(boolean fetch);
 
@@ -122,4 +129,13 @@ public interface EsExtendsWrapper<Children, R> {
      * 高亮字段
      */
     Children highLight(String field, String preTag, String postTag);
+
+    /**
+     * 搜索值
+     *
+     * @param searchAfterValues 搜索后值
+     * @return {@link Children}
+     */
+    Children searchAfterValues(Object[] searchAfterValues);
+
 }

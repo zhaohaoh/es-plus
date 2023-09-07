@@ -82,6 +82,8 @@ public class EsFieldInfo {
      */
     private boolean exist;
 
+
+
     /**
      * es的日期支持的存储格式。 || 可以指定多个   但不是正反序列化使用的格式  但是date转换成string的序列化不归此参数管理
      *
