@@ -247,11 +247,6 @@ public class SysUserEsService extends EsServiceImpl<SysUser>{
         @InterceptorElement(type = EsPlusClient.class, methodName = "search")
 })
 public class EsSearchAfterInterceptor implements EsInterceptor {
-    @Autowired
-    private RedisTemplate<String, Object> redisTemplate;
-    @Autowired
-    @Lazy
-    private EsPlusClientFacade esPlusClientFacade;
 
     @Override
     public void before(String index, Method method, Object[] args) {
