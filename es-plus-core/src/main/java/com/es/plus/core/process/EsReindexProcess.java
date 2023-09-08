@@ -318,6 +318,10 @@ public class EsReindexProcess {
             if (localMappings.size() < esMappings.size()) {
                 return Commend.REINDEX;
             }
+            // 如果减少字段.那么必然要reindex  针对有type的
+            if (esIndexMapping.size()!=localIndexMapping.size()){
+                return Commend.REINDEX;
+            }
 
             // 本地长度大于等于es长度的话. 需要查询嵌套对象判断子对象需要reindex还是update
             // 取交集 取es中的映射

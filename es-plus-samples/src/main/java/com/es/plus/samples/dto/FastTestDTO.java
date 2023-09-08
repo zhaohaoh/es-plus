@@ -14,7 +14,7 @@ import java.util.Date;
  * 举例4种类型索引
  */
 @Data
-@EsIndex(index = "fast_test",tryReindex = true,alias = "fast_test_alias",clientInstance = "local")
+@EsIndex(index = "fast_test",tryReindex = true,alias = "fast_test_alias")
 public class FastTestDTO {
     @EsId
     private Long id;

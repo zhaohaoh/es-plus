@@ -26,6 +26,6 @@ public class SamplesNestedDTO {
     @EsField(type = EsFieldType.BOOLEAN)
     private Boolean ccccc;
 
-    @EsField(type = EsFieldType.NESTED)
+    @EsField(type = EsFieldType.OBJECT)
     private List<SamplesNestedInnerDTO> samplesNestedInner;
 }
