@@ -1,5 +1,7 @@
 package com.es.plus.samples.service;
 
+import com.es.plus.adapter.params.EsHit;
+import com.es.plus.adapter.params.EsHits;
 import com.es.plus.adapter.params.EsResponse;
 import com.es.plus.core.service.EsServiceImpl;
 import com.es.plus.core.statics.Es;
@@ -15,6 +17,7 @@ import com.es.plus.samples.dto.SamplesNestedDTO;
 import com.es.plus.samples.dto.SamplesNestedInnerDTO;
 import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.index.query.InnerHitBuilder;
+import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -35,11 +38,12 @@ public class SamplesEsService extends EsServiceImpl<SamplesEsDTO> {
         // 声明语句嵌套关系是must
         InnerHitBuilder innerHitBuilder = new InnerHitBuilder("test");
         innerHitBuilder.setSize(10);
+        innerHitBuilder.setFetchSourceContext(new FetchSourceContext(false));
 
 
 
         //一级查询条件
-        EsChainLambdaQueryWrapper<SamplesEsDTO> queryWrapper = esChainQueryWrapper().must()
+        EsChainLambdaQueryWrapper<SamplesEsDTO> queryWrapper = esChainQueryWrapper().must().fetch(false)
                 //二级
                 .nestedQuery(SamplesEsDTO::getSamplesNesteds, SamplesNestedDTO.class,
                         (esQueryWrap) -> {
@@ -50,12 +54,24 @@ public class SamplesEsService extends EsServiceImpl<SamplesEsDTO> {
                             esQueryWrap.must().nestedQuery(SamplesNestedDTO::getSamplesNestedInner, SamplesNestedInnerDTO.class,
                                     (innerQuery) -> {
                                         innerQuery.must().term(SamplesNestedInnerDTO::getUsername, 3)
-                                        .term(SamplesNestedInnerDTO::getState,false);
+                                        .term(SamplesNestedInnerDTO::getState,true);
                                     }, ScoreMode.None, innerHitBuilder1);
                         }, ScoreMode.None,innerHitBuilder);
 
 
         EsResponse<SamplesEsDTO> esResponse = queryWrapper.search();
+        EsHits innerHits = esResponse.getInnerHits();
+        List<EsHit> esHitList = innerHits.getEsHitList();
+        for (EsHit esHit : esHitList) {
+            long innerHitsTotal = esHit.getInnerHitsTotal("test");
+            EsHits esHitEsHits = esHit.getEsInnerHits("test");
+            List<SamplesNestedDTO> test = esHit.getList(SamplesNestedDTO.class, "test");
+            for (EsHit hit : esHitEsHits.getEsHitList()) {
+                List<SamplesNestedInnerDTO> list = hit.getList(SamplesNestedInnerDTO.class,"samplesNesteds.samplesNestedInner");
+                System.out.println();
+            }
+            System.out.println();
+        }
         // 查询
         List<SamplesEsDTO> list = esResponse.getList();
         System.out.println(list);

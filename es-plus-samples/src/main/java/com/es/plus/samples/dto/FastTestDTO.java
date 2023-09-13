@@ -14,7 +14,7 @@ import java.util.Date;
  * 举例4种类型索引
  */
 @Data
-@EsIndex(index = "fast_test",tryReindex = true,alias = "fast_test_alias")
+@EsIndex(index = "fast_test_s0",tryReindex = true ,alias = "fast_test_alias")
 public class FastTestDTO {
     @EsId
     private Long id;
@@ -27,6 +27,12 @@ public class FastTestDTO {
     @EsField(type = EsFieldType.DATE, esFormat = "yyyy-MM-dd HH:mm:ss||strict_date_optional_time||epoch_millis",dateFormat = "yyyy-MM")
     private Date createTime;
 
+    @EsField(type = EsFieldType.KEYWORD,name = "username_test")
+    private String usernameTest;
+    @EsField(type = EsFieldType.KEYWORD,name = "usernameTest1")
+    private String username_test1;
+    @EsField(type = EsFieldType.KEYWORD,name = "usernameTest13")
+    private String username_test13;
     @Score
     private Float score;
 }

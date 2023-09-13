@@ -197,7 +197,8 @@ public class EsPlusRestClient implements EsPlusClient {
 
             for (Object esData : esDataList) {
                 IndexRequest indexRequest = new IndexRequest(index);
-                indexRequest.id(GlobalParamHolder.getDocId(esData)).source(JsonUtils.toJsonStr(esData), XContentType.JSON);
+                String source = JsonUtils.toJsonStr(esData);
+                indexRequest.id(GlobalParamHolder.getDocId(esData)).source(source, XContentType.JSON);
                 if (childIndex) {
                     indexRequest.routing(FieldUtils.getStrFieldValue(esData, "joinField", "parent"));
                 }
@@ -768,7 +769,7 @@ public class EsPlusRestClient implements EsPlusClient {
                         return bean;
                     }).forEach(result::add);
         }
-
+        EsHits esHits = setInnerHits(hits);
         //设置聚合结果
         Aggregations aggregations = searchResponse.getAggregations();
         EsPlusAggregations<T> esAggsResponse = new EsPlusAggregations<>();
@@ -783,6 +784,7 @@ public class EsPlusRestClient implements EsPlusClient {
         esResponse.setSuccessfulShards(searchResponse.getSuccessfulShards());
         esResponse.setTotalShards(searchResponse.getTotalShards());
         esResponse.setScrollId(searchResponse.getScrollId());
+        esResponse.setInnerHits(esHits);
         // 设置最小和最大的排序字段值
         if (ArrayUtils.isNotEmpty(hitArray)) {
             esResponse.setFirstSortValues(hitArray[0].getSortValues());
@@ -805,13 +807,45 @@ public class EsPlusRestClient implements EsPlusClient {
         if (!Float.isNaN(score)) {
             EsIndexParam esIndexParam = GlobalParamHolder.getEsIndexParam(bean.getClass());
             try {
-                Field field = bean.getClass().getDeclaredField(esIndexParam.getScoreField());
-                field.setAccessible(true);
-                field.set(bean, score);
+                if (StringUtils.isNotBlank(esIndexParam.getScoreField())) {
+                    Field field = bean.getClass().getDeclaredField(esIndexParam.getScoreField());
+                    field.setAccessible(true);
+                    field.set(bean, score);
+                }
             } catch (Exception e) {
                 log.error("setScore ", e);
             }
         }
+    }
+
+    private EsHits setInnerHits(SearchHits hits) {
+        if (hits == null||ArrayUtils.isEmpty(hits.getHits())){
+            return null;
+        }
+        long totalHits = hits.getTotalHits().value;
+        EsHits esHits = new EsHits();
+        esHits.setTotal(totalHits);
+
+        List<EsHit> esHitList = new ArrayList<>();
+        esHits.setEsHitList(esHitList);
+        for (SearchHit searchHit : hits.getHits()) {
+            EsHit esHit = new EsHit();
+            String sourceAsString = searchHit.getSourceAsString();
+            esHit.setData(sourceAsString);
+            esHitList.add(esHit);
+            Map<String, SearchHits> innerHits = searchHit.getInnerHits();
+
+            // 填充innerHits
+            if (!CollectionUtils.isEmpty(innerHits)) {
+                Map<String, EsHits> esHitsMap = new HashMap<>();
+                innerHits.forEach((k, v) -> {
+                    EsHits eshits = setInnerHits(v);
+                    esHitsMap.put(k, eshits);
+                });
+                esHit.setInnerHitsMap(esHitsMap);
+            }
+        }
+        return esHits;
     }
 
     /**

@@ -156,12 +156,12 @@ public class GlobalParamHolder {
         ANALYSIS_MAP.put(name, map);
     }
     /**
-     * 取字段信息
+     * 取索引字段信息
      *
      * @param clazz       clazz
      * @param name        名字
      */
-    public static EsFieldInfo getField(Class<?> clazz, String name) {
+    public static EsFieldInfo getIndexField(Class<?> clazz, String name) {
         Map<String, EsFieldInfo> map = FIELDS_INFO_MAP.get(clazz.getName());
         if (CollectionUtils.isEmpty(map)) {
             return null;

@@ -1,11 +1,10 @@
 package com.es.plus.es7.client;
 
-import com.es.plus.adapter.exception.EsException;
 import com.es.plus.adapter.params.EsAggResponse;
+import com.es.plus.adapter.properties.EsFieldInfo;
 import com.es.plus.adapter.properties.GlobalParamHolder;
 import com.es.plus.adapter.tools.LambdaUtils;
 import com.es.plus.adapter.tools.SFunction;
-import com.es.plus.adapter.tools.SerializedLambda;
 import com.es.plus.constant.EsConstant;
 import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.search.aggregations.Aggregation;
@@ -22,7 +21,10 @@ import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.search.aggregations.bucket.terms.TermsAggregationBuilder;
 import org.elasticsearch.search.aggregations.metrics.*;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 
 /**
@@ -249,28 +251,9 @@ public class EsPlusAggregations<T> implements EsAggResponse<T> {
     }
 
     private String nameToString(SFunction<T, ?> function) {
-        SerializedLambda lambda = LambdaUtils.resolve(function);
-        return getColumn(lambda);
-    }
-
-    private String getColumn(SerializedLambda lambda) {
-        return methodToProperty(lambda.getImplMethodName());
-    }
-
-    private String methodToProperty(String name) {
-        if (name.startsWith("is")) {
-            name = name.substring(2);
-        } else if (name.startsWith("get") || name.startsWith("set")) {
-            name = name.substring(3);
-        } else {
-            throw new EsException("Error parsing property name '" + name + "'.  Didn't start with 'is', 'get' or 'set'.");
-        }
-
-        if (name.length() == 1 || (name.length() > 1 && !Character.isUpperCase(name.charAt(1)))) {
-            name = name.substring(0, 1).toLowerCase(Locale.ENGLISH) + name.substring(1);
-        }
-
-        return name;
+        String fieldName = LambdaUtils.getFieldName(function);
+        EsFieldInfo indexField = GlobalParamHolder.getIndexField(tClass, fieldName);
+        return indexField.getName();
     }
 
 

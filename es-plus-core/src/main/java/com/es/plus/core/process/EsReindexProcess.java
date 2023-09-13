@@ -221,7 +221,7 @@ public class EsReindexProcess {
 
 
     /**
-     * 做重建索引
+     * 做重建索引 注意事项。es重建索引的时候，如果旧的字段被删除了并且旧的字段有数据的话，重建索引会自动创建旧的字段
      */
     private static void tryLockReindex(EsPlusClientFacade esPlusClientFacade, Class<?> clazz, EsIndexParam esIndexParam, String currentIndex) {
         ELock eLock = esPlusClientFacade.getLock(esIndexParam.getIndex() + EsConstant.REINDEX_LOCK_SUFFIX);
@@ -257,7 +257,7 @@ public class EsReindexProcess {
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();
 
-        //迁移数据
+        //迁移数据  不能随便修改索引映射的名字。如果改了名字，旧的字段还有数据，那么mapping和数据依然会被带到新的索引去。索引只能改变结构。而不是名字。改名字要先特殊处理字段
         boolean reindex = esPlusClientFacade.reindex(currentIndex, reindexName, null);
         if (!reindex) {
             log.error("es-plus reindex Fail");

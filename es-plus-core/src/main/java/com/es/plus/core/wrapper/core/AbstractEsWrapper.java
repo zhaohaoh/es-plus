@@ -36,8 +36,6 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
     protected AbstractEsWrapper() {
     }
 
-    protected Class<T> tClass;
-
     protected Children children = (Children) this;
 
     protected QueryBuilder currentBuilder;
@@ -250,7 +248,7 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
     public Children term(boolean condition, R name, Object value) {
         if (condition) {
             String keyword = nameToString(name);
-            EsFieldInfo esFieldInfo = GlobalParamHolder.getField(tClass, keyword);
+            EsFieldInfo esFieldInfo = GlobalParamHolder.getIndexField(tClass, keyword);
             if (esFieldInfo != null) {
                 value = DateUtil.format(value, esFieldInfo.getDateFormat());
             }
@@ -266,7 +264,7 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
     public Children terms(boolean condition, R name, Object... values) {
         if (condition) {
             String keyword = nameToString(name);
-            EsFieldInfo esFieldInfo = GlobalParamHolder.getField(tClass, keyword);
+            EsFieldInfo esFieldInfo = GlobalParamHolder.getIndexField(tClass, keyword);
             TermsQueryBuilder termsQueryBuilder;
             if (esFieldInfo != null) {
                 List<Object> list = Arrays.stream(values).map(v -> DateUtil.format(v, esFieldInfo.getDateFormat())).collect(Collectors.toList());
@@ -284,7 +282,7 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
     public Children terms(boolean condition, R name, Collection<?> values) {
         if (condition) {
             String fieldName = nameToString(name);
-            EsFieldInfo esFieldInfo = GlobalParamHolder.getField(tClass, fieldName);
+            EsFieldInfo esFieldInfo = GlobalParamHolder.getIndexField(tClass, fieldName);
             if (esFieldInfo != null) {
                 values = values.stream().map(v -> DateUtil.format(v, esFieldInfo.getDateFormat())).collect(Collectors.toList());
             }
@@ -484,7 +482,7 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
     public Children gt(boolean condition, R name, Object from) {
         if (condition) {
             String fieldName = nameToString(name);
-            EsFieldInfo esFieldInfo = GlobalParamHolder.getField(tClass, fieldName);
+            EsFieldInfo esFieldInfo = GlobalParamHolder.getIndexField(tClass, fieldName);
             if (esFieldInfo != null) {
                 from = DateUtil.format(from, esFieldInfo.getDateFormat());
             }
@@ -497,7 +495,7 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
     public Children ge(boolean condition, R name, Object from) {
         if (condition) {
             String fieldName = nameToString(name);
-            EsFieldInfo esFieldInfo = GlobalParamHolder.getField(tClass, fieldName);
+            EsFieldInfo esFieldInfo = GlobalParamHolder.getIndexField(tClass, fieldName);
             if (esFieldInfo != null) {
                 from = DateUtil.format(from, esFieldInfo.getDateFormat());
             }
@@ -510,7 +508,7 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
     public Children lt(boolean condition, R name, Object to) {
         if (condition) {
             String fieldName = nameToString(name);
-            EsFieldInfo esFieldInfo = GlobalParamHolder.getField(tClass, fieldName);
+            EsFieldInfo esFieldInfo = GlobalParamHolder.getIndexField(tClass, fieldName);
             if (esFieldInfo != null) {
                 to = DateUtil.format(to, esFieldInfo.getDateFormat());
             }
@@ -523,7 +521,7 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
     public Children le(boolean condition, R name, Object to) {
         if (condition) {
             String fieldName = nameToString(name);
-            EsFieldInfo esFieldInfo = GlobalParamHolder.getField(tClass, fieldName);
+            EsFieldInfo esFieldInfo = GlobalParamHolder.getIndexField(tClass, fieldName);
             if (esFieldInfo != null) {
                 to = DateUtil.format(to, esFieldInfo.getDateFormat());
             }
@@ -536,7 +534,7 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
     public Children range(boolean condition, R name, Object from, Object to, boolean fromInclude, boolean toInclude) {
         if (condition) {
             String fieldName = nameToString(name);
-            EsFieldInfo esFieldInfo = GlobalParamHolder.getField(tClass, fieldName);
+            EsFieldInfo esFieldInfo = GlobalParamHolder.getIndexField(tClass, fieldName);
             if (esFieldInfo != null) {
                 from = DateUtil.format(from, esFieldInfo.getDateFormat());
                 to = DateUtil.format(to, esFieldInfo.getDateFormat());
@@ -550,7 +548,7 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
     public Children range(boolean condition, R name, Object from, Object to) {
         if (condition) {
             String fieldName = nameToString(name);
-            EsFieldInfo esFieldInfo = GlobalParamHolder.getField(tClass, fieldName);
+            EsFieldInfo esFieldInfo = GlobalParamHolder.getIndexField(tClass, fieldName);
             if (esFieldInfo != null) {
                 from = DateUtil.format(from, esFieldInfo.getDateFormat());
                 to = DateUtil.format(to, esFieldInfo.getDateFormat());
@@ -564,7 +562,7 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
     public Children range(boolean condition, R name, Object from, Object to, String timeZone) {
         if (condition) {
             String fieldName = nameToString(name);
-            EsFieldInfo esFieldInfo = GlobalParamHolder.getField(tClass, fieldName);
+            EsFieldInfo esFieldInfo = GlobalParamHolder.getIndexField(tClass, fieldName);
             if (esFieldInfo != null) {
                 from = DateUtil.format(from, esFieldInfo.getDateFormat());
                 to = DateUtil.format(to, esFieldInfo.getDateFormat());

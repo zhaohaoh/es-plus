@@ -734,6 +734,8 @@ public class EsPlus6RestClient implements EsPlusClient {
                         return bean;
                     }).forEach(result::add);
         }
+        EsHits esHits = setInnerHits(hits);
+
 
         //设置聚合结果
         Aggregations aggregations = searchResponse.getAggregations();
@@ -749,6 +751,7 @@ public class EsPlus6RestClient implements EsPlusClient {
         esResponse.setSuccessfulShards(searchResponse.getSuccessfulShards());
         esResponse.setTotalShards(searchResponse.getTotalShards());
         esResponse.setScrollId(searchResponse.getScrollId());
+        esResponse.setInnerHits(esHits);
         // 设置最小和最大的排序字段值
         if (ArrayUtils.isNotEmpty(hitArray)) {
             esResponse.setFirstSortValues(hitArray[0].getSortValues());
@@ -763,25 +766,34 @@ public class EsPlus6RestClient implements EsPlusClient {
         return esResponse;
     }
 
-    private Map<String, List<Map<String, Object>>> getInnerHits(SearchHit hit) {
-        Map<String, SearchHits> innerHits = hit.getInnerHits();
-        if (!CollectionUtils.isEmpty(innerHits)) {
-            Map<String, List<Map<String, Object>>> innerHitsMap = new HashMap<>();
-            innerHits.forEach((k, v) -> {
-                List<Map<String, Object>> maps = new ArrayList<>();
-                for (SearchHit valueHit : v) {
-                    Map<String, Object> map = JsonUtils.toMap(valueHit.getSourceAsString());
-                    maps.add(map);
-                    map.put(INNER_HITS_PARENT_ID, hit.getId());
-                    Map<String, List<Map<String, Object>>> innerHitss = getInnerHits(valueHit);
-                    map.put(INNERHITS, innerHitss);
-                }
-                innerHitsMap.put(k, maps);
-            });
-            return innerHitsMap;
+    private EsHits setInnerHits(SearchHits hits) {
+        if (hits == null||ArrayUtils.isEmpty(hits.getHits())){
+            return null;
         }
-        return null;
+        long totalHits = hits.getTotalHits();
+        EsHits esHits = new EsHits();
+        esHits.setTotal(totalHits);
+        List<EsHit> esHitList = new ArrayList<>();
+        esHits.setEsHitList(esHitList);
+        for (SearchHit searchHit : hits.getHits()) {
+            EsHit esHit = new EsHit();
+            esHit.setData(searchHit.getSourceAsString());
+            esHitList.add(esHit);
+            Map<String, SearchHits> innerHits = searchHit.getInnerHits();
+
+            // 填充innerHits
+            if (CollectionUtils.isEmpty(innerHits)) {
+                Map<String, EsHits> esHitsMap = new HashMap<>();
+                innerHits.forEach((k, v) -> {
+                    EsHits eshits = setInnerHits(v);
+                    esHitsMap.put(k, eshits);
+                });
+                esHit.setInnerHitsMap(esHitsMap);
+            }
+        }
+        return esHits;
     }
+
 
     private <T> SearchSourceBuilder getSearchSourceBuilder(EsParamWrapper<T> esParamWrapper) {
         EsQueryParamWrapper esQueryParamWrapper = esParamWrapper.getEsQueryParamWrapper();

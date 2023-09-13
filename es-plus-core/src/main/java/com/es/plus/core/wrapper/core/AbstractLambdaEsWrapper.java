@@ -1,18 +1,18 @@
 package com.es.plus.core.wrapper.core;
 
 
-import com.es.plus.adapter.exception.EsException;
+import com.es.plus.adapter.properties.EsFieldInfo;
+import com.es.plus.adapter.properties.GlobalParamHolder;
 import com.es.plus.adapter.tools.LambdaUtils;
 import com.es.plus.adapter.tools.SFunction;
-import com.es.plus.adapter.tools.SerializedLambda;
 
 import java.util.Arrays;
-import java.util.Locale;
 
 import static com.es.plus.constant.EsConstant.DOT;
 
 public abstract class AbstractLambdaEsWrapper<T, R> {
     protected String parentFieldName;
+    protected Class<T> tClass;
 
     protected final String[] nameToString(R... functions) {
         return Arrays.stream(functions).map(this::nameToString).toArray(String[]::new);
@@ -23,35 +23,11 @@ public abstract class AbstractLambdaEsWrapper<T, R> {
         if (function instanceof String) {
             return parentFieldName != null ? parentFieldName + DOT + function : (String) function;
         }
-        SerializedLambda lambda = LambdaUtils.resolve((SFunction<T, ?>) function);
-        String column = getColumn(lambda);
 
+        String fieldName = LambdaUtils.getFieldName((SFunction<T, ?>) function);
+        EsFieldInfo indexField = GlobalParamHolder.getIndexField(tClass, fieldName);
+        String column = indexField.getName();
         return  parentFieldName != null ? parentFieldName+ DOT + column:column;
-    }
-
-    protected Class<?> getImplClass(R function) {
-        SerializedLambda lambda = LambdaUtils.resolve((SFunction<T, ?>) function);
-        return lambda.getImplClass();
-    }
-
-    private String getColumn(SerializedLambda lambda) {
-        return methodToProperty(lambda.getImplMethodName());
-    }
-
-    private String methodToProperty(String name) {
-        if (name.startsWith("is")) {
-            name = name.substring(2);
-        } else if (name.startsWith("get") || name.startsWith("set")) {
-            name = name.substring(3);
-        } else {
-            throw new EsException("Error parsing property name '" + name + "'.  Didn't start with 'is', 'get' or 'set'.");
-        }
-
-        if (name.length() == 1 || (name.length() > 1 && !Character.isUpperCase(name.charAt(1)))) {
-            name = name.substring(0, 1).toLowerCase(Locale.ENGLISH) + name.substring(1);
-        }
-
-        return name;
     }
 
 }

@@ -16,7 +16,10 @@
 package com.es.plus.adapter.tools;
 
 
+import com.es.plus.adapter.exception.EsException;
+
 import java.lang.ref.WeakReference;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -37,4 +40,28 @@ public final class LambdaUtils {
                 });
     }
 
+    public static <T> String getFieldName(SFunction<T, ?> func) {
+        SerializedLambda serializedLambda = resolve(func);
+        return getName(serializedLambda);
+    }
+
+    private static String getName(SerializedLambda lambda) {
+        return methodToProperty(lambda.getImplMethodName());
+    }
+
+    private static String methodToProperty(String name) {
+        if (name.startsWith("is")) {
+            name = name.substring(2);
+        } else if (name.startsWith("get") || name.startsWith("set")) {
+            name = name.substring(3);
+        } else {
+            throw new EsException("Error parsing property name '" + name + "'.  Didn't start with 'is', 'get' or 'set'.");
+        }
+
+        if (name.length() == 1 || (name.length() > 1 && !Character.isUpperCase(name.charAt(1)))) {
+            name = name.substring(0, 1).toLowerCase(Locale.ENGLISH) + name.substring(1);
+        }
+
+        return name;
+    }
 }

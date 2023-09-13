@@ -53,6 +53,7 @@ public class FastTest {
             fastTestDTO.setText("我是第二篇文章苹果 梨子 苹果X2 苹果哥哥");
             fastTestDTO.setAge(25);
             fastTestDTO.setUsername("酷酷的"+i);
+            fastTestDTO.setUsernameTest("ggg");
             fastTestDTO.setCreateTime(new Date());
             fastTestDTOs.add(fastTestDTO);
         }
@@ -87,7 +88,8 @@ public class FastTest {
 
     @org.junit.jupiter.api.Test
     public void fastSearch() {
-        EsResponse<FastTestDTO> test = Es.chainLambdaQuery(FastTestDTO.class).match(FastTestDTO::getText, "苹果").search();
+        EsResponse<FastTestDTO> test = Es.chainLambdaQuery(FastTestDTO.class).match(FastTestDTO::getText, "苹果")
+                .term(FastTestDTO::getUsernameTest,"ggg").search();
         System.out.println(test);
     }
 

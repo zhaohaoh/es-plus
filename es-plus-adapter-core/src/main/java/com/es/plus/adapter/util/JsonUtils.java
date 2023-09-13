@@ -10,6 +10,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.SerializableString;
 import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.deser.BeanDeserializerModifier;
 import com.fasterxml.jackson.databind.introspect.BeanPropertyDefinition;
@@ -264,14 +265,17 @@ public class JsonUtils {
                                 return transformed;
                             }
                         };
-                        beanPropertyWriter.rename(transformer);
+                        beanPropertyWriter = beanPropertyWriter.rename(transformer);
                     }
+                    String name1 = beanPropertyWriter.getName();
+                    SerializableString serializedName = beanPropertyWriter.getSerializedName();
+                    String value = serializedName.getValue();
                     //自定义date序列化
                     if (annotation != null) {
                         if (annotation.type().equals(EsFieldType.DATE)) {
                             Class<?> beanClass = description.getBeanClass();
                             String name = beanPropertyWriter.getName();
-                            EsFieldInfo esFieldInfo = GlobalParamHolder.getField(beanClass, name);
+                            EsFieldInfo esFieldInfo = GlobalParamHolder.getIndexField(beanClass, name);
                             if (esFieldInfo != null) {
                                 String dateFormat = esFieldInfo.getDateFormat();
                                 EsPlusDateSerializer dateSerializer = DATE_SERIALIZER_CACHE.computeIfAbsent(dateFormat,
@@ -282,6 +286,7 @@ public class JsonUtils {
                     }
                     result.add(beanPropertyWriter);
                 }
+
                 return result;
             }
         }

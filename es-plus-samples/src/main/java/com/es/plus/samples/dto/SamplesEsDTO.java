@@ -61,6 +61,6 @@ public class SamplesEsDTO {
 //    @IgnoreSwaggerParameter
     @EsField(type = EsFieldType.NESTED)
     private List<SamplesNestedDTO> samplesNesteds;
-    @EsField(type = EsFieldType.OBJECT)
+    @EsField(type = EsFieldType.NESTED)
     private List<SamplesNestedDTO> samplesNestedObjects;
 }

@@ -42,9 +42,9 @@ public class EsResponse<T> {
      */
     private Object[] tailSortValues;
     /**
-     * 滚动id
+     * 内部嵌套对象
      */
-    private Map<String, List<Map<String, Object>>> innerHits;
+    private EsHits innerHits;
     /**
      * 滚动id
      */

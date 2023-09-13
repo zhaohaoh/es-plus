@@ -134,7 +134,6 @@ public class EsAnnotationParamProcess {
             EsId esId = field.getAnnotation(EsId.class);
             if (esId != null) {
                 GlobalParamHolder.put(tClass, field.getName());
-                continue;
             }
             if (field.getAnnotation(Score.class)!=null){
                 indexParam.setScoreField(field.getName());
