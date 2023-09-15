@@ -66,13 +66,12 @@ public class EsPlus6IndexRestClient implements EsPlusIndexClient {
      */
     @Override
     public void createIndex(String index, Class<?> tClass) {
-        EsIndexParam esIndexParam = GlobalParamHolder.getEsIndexParam(tClass);
+        EsIndexParam esIndexParam = GlobalParamHolder.getAndInitEsIndexParam(tClass);
         if (StringUtils.isBlank(index)) {
             index = esIndexParam.getIndex();
         }
-        EsIndexParam esDocParam = GlobalParamHolder.getEsIndexParam(tClass);
         CreateIndexRequest indexRequest = new CreateIndexRequest(index);
-        indexRequest(esDocParam, indexRequest);
+        indexRequest(esIndexParam, indexRequest);
     }
 
     @Override
@@ -93,7 +92,7 @@ public class EsPlus6IndexRestClient implements EsPlusIndexClient {
      */
     @Override
     public void putMapping(String index, Class<?> tClass) {
-        EsIndexParam esIndexParam = GlobalParamHolder.getEsIndexParam(tClass);
+        EsIndexParam esIndexParam = GlobalParamHolder.getAndInitEsIndexParam(tClass);
         if (StringUtils.isBlank(index)) {
             index = esIndexParam.getIndex();
         }
@@ -130,7 +129,7 @@ public class EsPlus6IndexRestClient implements EsPlusIndexClient {
      */
     @Override
     public void createIndexMapping(String index, Class<?> tClass) {
-        EsIndexParam esIndexParam = GlobalParamHolder.getEsIndexParam(tClass);
+        EsIndexParam esIndexParam = GlobalParamHolder.getAndInitEsIndexParam(tClass);
         if (StringUtils.isBlank(index)) {
             index = esIndexParam.getIndex();
         }
@@ -149,7 +148,7 @@ public class EsPlus6IndexRestClient implements EsPlusIndexClient {
         CreateIndexRequest indexRequest = new CreateIndexRequest(index);
         boolean exists = this.indexExists(indexRequest.index());
 
-        EsIndexParam esIndexParam = GlobalParamHolder.getEsIndexParam(tClass);
+        EsIndexParam esIndexParam = GlobalParamHolder.getAndInitEsIndexParam(tClass);
         //创建索引的settings
         Settings.Builder settings = Settings.builder();
 

@@ -77,7 +77,7 @@ public class EsReindexProcess {
     public static void tryReindex(EsPlusClientFacade esPlusClientFacade, Class<?> clazz) {
 
         //获取索引信息
-        EsIndexParam esIndexParam = GlobalParamHolder.getEsIndexParam(clazz);
+        EsIndexParam esIndexParam = GlobalParamHolder.getAndInitEsIndexParam(clazz);
 
         //根据别名获取索引结果 获取不到则通过索引名获取并且修改成目前的别名
         EsIndexResponse getIndexResponse = null;
@@ -135,7 +135,7 @@ public class EsReindexProcess {
 
     //有事临时编写的代码
     private static boolean settingsUpdate(EsIndexResponse indexResponse, String currentIndex, Class<?> clazz, EsPlusClientFacade esPlusClientFacade) {
-        EsIndexParam esIndexParam = GlobalParamHolder.getEsIndexParam(clazz);
+        EsIndexParam esIndexParam = GlobalParamHolder.getAndInitEsIndexParam(clazz);
         EsSettings esSettings = esIndexParam.getEsSettings();
         Map<String, String> settings = indexResponse.getSettings();
 
@@ -296,7 +296,7 @@ public class EsReindexProcess {
      */
     public static String getMappingUpdateCommend(Map<String, Object> esIndexMapping, Class<?> clazz) {
         // 获取索引信息
-        EsIndexParam esIndexParam = GlobalParamHolder.getEsIndexParam(clazz);
+        EsIndexParam esIndexParam = GlobalParamHolder.getAndInitEsIndexParam(clazz);
         // 新map添加NUMBER_OF_SHARDS
         Map<String, Object> localIndexMapping = esIndexParam.getMappings();
         // 本地和远程的索引

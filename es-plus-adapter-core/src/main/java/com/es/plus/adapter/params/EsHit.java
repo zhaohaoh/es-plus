@@ -3,10 +3,8 @@ package com.es.plus.adapter.params;
 import com.es.plus.adapter.util.JsonUtils;
 import lombok.Data;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 @Data
@@ -19,7 +17,7 @@ public class EsHit {
     /**
      * es数据
      */
-    private Map<String, EsHits> innerHitsMap;
+    private Map<String, EsHits> innerHitsMap = new ConcurrentHashMap<>();
 
 //
 //    /**

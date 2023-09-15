@@ -32,7 +32,7 @@ public class EsChainLambdaUpdateWrapper<T> extends AbstractEsChainWrapper<T, SFu
     public EsChainLambdaUpdateWrapper(Class<T> clazz) {
         super.tClass = clazz;
         super.esWrapper = new EsLambdaUpdateWrapper<>(tClass);
-        EsIndexParam esIndexParam = GlobalParamHolder.getEsIndexParam(super.tClass);
+        EsIndexParam esIndexParam = GlobalParamHolder.getAndInitEsIndexParam(super.tClass);
         if (esIndexParam != null) {
             index = StringUtils.isBlank(esIndexParam.getAlias()) ? esIndexParam.getIndex() : esIndexParam.getAlias();
             type = esIndexParam.getType();
@@ -42,7 +42,7 @@ public class EsChainLambdaUpdateWrapper<T> extends AbstractEsChainWrapper<T, SFu
     public EsChainLambdaUpdateWrapper(Class<T> clazz, EsPlusClientFacade esPlusClientFacade) {
         super.tClass = clazz;
         super.esWrapper = new EsLambdaUpdateWrapper<>(tClass);
-        EsIndexParam esIndexParam = GlobalParamHolder.getEsIndexParam(super.tClass);
+        EsIndexParam esIndexParam = GlobalParamHolder.getAndInitEsIndexParam(super.tClass);
         if (esIndexParam != null) {
             index = StringUtils.isBlank(esIndexParam.getAlias()) ? esIndexParam.getIndex() : esIndexParam.getAlias();
             type = esIndexParam.getType();

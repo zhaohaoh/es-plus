@@ -251,7 +251,6 @@ public class EsPlus6Aggregations<T> implements EsAggResponse<T> {
 
     private String getAggregationField(SFunction<T, ?> sFunction) {
         String name = nameToString(sFunction);
-
         String keyword = GlobalParamHolder.getStringKeyword(tClass, name);
         return StringUtils.isBlank(keyword) ? name : keyword;
     }
@@ -259,7 +258,7 @@ public class EsPlus6Aggregations<T> implements EsAggResponse<T> {
     private String nameToString(SFunction<T, ?> function) {
         String fieldName = LambdaUtils.getFieldName(function);
         EsFieldInfo indexField = GlobalParamHolder.getIndexField(tClass, fieldName);
-        return  indexField.getName();
+        return indexField != null && StringUtils.isNotBlank(indexField.getName()) ? indexField.getName() : fieldName;
     }
 
 }

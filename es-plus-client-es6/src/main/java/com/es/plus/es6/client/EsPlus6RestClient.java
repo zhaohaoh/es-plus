@@ -164,7 +164,7 @@ public class EsPlus6RestClient implements EsPlusClient {
 
     private boolean isChildIndex(Object esData) {
         Class<?> clazz = esData.getClass();
-        EsIndexParam esIndexParam = GlobalParamHolder.getEsIndexParam(clazz);
+        EsIndexParam esIndexParam = GlobalParamHolder.getAndInitEsIndexParam(clazz);
         if (esIndexParam != null && esIndexParam.getChildClass() != null && esIndexParam.getChildClass().equals(clazz)) {
             return true;
         } else {
@@ -805,7 +805,7 @@ public class EsPlus6RestClient implements EsPlusClient {
     private <T> void setScore(SearchHit hit, T bean) {
         float score = hit.getScore();
         if (!Float.isNaN(score)) {
-            EsIndexParam esIndexParam = GlobalParamHolder.getEsIndexParam(bean.getClass());
+            EsIndexParam esIndexParam = GlobalParamHolder.getAndInitEsIndexParam(bean.getClass());
             try {
                 if (StringUtils.isNotBlank(esIndexParam.getScoreField())) {
                     Field field = bean.getClass().getDeclaredField(esIndexParam.getScoreField());

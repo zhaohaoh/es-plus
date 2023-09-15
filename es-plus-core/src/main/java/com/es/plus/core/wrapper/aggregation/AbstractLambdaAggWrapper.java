@@ -24,6 +24,6 @@ public abstract class AbstractLambdaAggWrapper<T, R> {
     protected String nameToString(R function) {
         String fieldName = LambdaUtils.getFieldName((SFunction<T, ?>) function);
         EsFieldInfo indexField = GlobalParamHolder.getIndexField(tClass, fieldName);
-        return indexField.getName();
+        return indexField != null && StringUtils.isNotBlank(indexField.getName()) ? indexField.getName() : fieldName;
     }
 }

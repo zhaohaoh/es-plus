@@ -8,7 +8,6 @@ import com.es.plus.adapter.exception.EsException;
 import com.es.plus.adapter.lock.ELock;
 import com.es.plus.adapter.properties.EsIndexParam;
 import com.es.plus.adapter.properties.GlobalParamHolder;
-import com.es.plus.annotation.EsId;
 import com.es.plus.annotation.EsIndex;
 import com.es.plus.constant.DefaultClass;
 import com.es.plus.constant.EsConstant;
@@ -20,7 +19,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 
@@ -65,16 +63,8 @@ public abstract class AbstractEsService<T> implements InitializingBean {
             Class<?> indexClass = clazz;
             EsIndex annotation = clazz.getAnnotation(EsIndex.class);
 
-            //添加id字段映射
-            Field[] fields = indexClass.getDeclaredFields();
-            for (Field field : fields) {
-                if (field.getAnnotation(EsId.class) != null) {
-                    GlobalParamHolder.put(clazz, field.getName());
-                }
-            }
-
             //添加索引信息
-            EsIndexParam esIndexParam = GlobalParamHolder.getEsIndexParam(indexClass);
+            EsIndexParam esIndexParam = GlobalParamHolder.getAndInitEsIndexParam(indexClass);
 
             this.esPlusClientFacade = ClientContext.getClient(esIndexParam.getClientInstance());
 

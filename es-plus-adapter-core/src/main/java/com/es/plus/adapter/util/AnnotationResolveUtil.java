@@ -4,6 +4,8 @@ import com.es.plus.adapter.properties.EsFieldInfo;
 import com.es.plus.annotation.EsField;
 import com.es.plus.annotation.EsId;
 
+import java.lang.reflect.Field;
+
 /**
  * 注释解析工具
  *
@@ -43,6 +45,19 @@ public class AnnotationResolveUtil {
         EsFieldInfo esFieldInfo = new EsFieldInfo();
         esFieldInfo.setEsId(true);
         esFieldInfo.setName(esId.name());
+        esFieldInfo.setExist(true);
         return esFieldInfo;
     }
+
+    public  static EsFieldInfo resolveField(Field field){
+        if (field == null) {
+            return null;
+        }
+        EsFieldInfo esFieldInfo = new EsFieldInfo();
+        esFieldInfo.setEsId(false);
+        esFieldInfo.setName(field.getName());
+        esFieldInfo.setExist(true);
+        return esFieldInfo;
+    }
+
 }

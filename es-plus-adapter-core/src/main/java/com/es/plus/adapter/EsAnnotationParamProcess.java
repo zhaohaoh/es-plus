@@ -3,6 +3,7 @@ package com.es.plus.adapter;
 import com.es.plus.adapter.config.GlobalConfigCache;
 import com.es.plus.adapter.exception.EsException;
 import com.es.plus.adapter.params.EsSettings;
+import com.es.plus.adapter.properties.EsEntityInfo;
 import com.es.plus.adapter.properties.EsFieldInfo;
 import com.es.plus.adapter.properties.EsIndexParam;
 import com.es.plus.adapter.properties.GlobalParamHolder;
@@ -123,21 +124,19 @@ public class EsAnnotationParamProcess {
      * @param tClass t类
      * @return {@link Map}<{@link String}, {@link Object}>
      */
-    public Map<String, Object> buildMappingProperties(Class<?> tClass,EsIndexParam indexParam) {
+    public Map<String, Object> buildMappingProperties(Class<?> tClass, EsIndexParam indexParam) {
         List<Field> fieldList = ClassUtils.getFieldList(tClass);
         Map<String, Object> mappings = new LinkedHashMap<>();
-
+        //实体信息
+        EsEntityInfo entityInfo = GlobalParamHolder.getEsEntityInfo(tClass);
         //字段解析
         for (Field field : fieldList) {
             field.setAccessible(true);
             //id缓存.用来自动获取实体类id
             EsId esId = field.getAnnotation(EsId.class);
             EsFieldInfo esFieldInfo = null;
-            if (esId != null) {
-                GlobalParamHolder.put(tClass, field.getName());
-                 esFieldInfo = AnnotationResolveUtil.resolveEsId(esId);
-            }
-            if (field.getAnnotation(Score.class)!=null){
+
+            if (field.getAnnotation(Score.class) != null) {
                 indexParam.setScoreField(field.getName());
             }
 
@@ -147,35 +146,51 @@ public class EsAnnotationParamProcess {
             EsField esField = field.getAnnotation(EsField.class);
 
             // 获取es字段类型
-            String fieldType = processNestedObjects(field, esField, properties,indexParam);
+            String fieldType = processNestedObjects(field, esField, properties, indexParam);
 
             // 处理字段注解和es的映射
             processAnnotationEsField(properties, esField);
 
+            if (esId != null) {
+                esFieldInfo = AnnotationResolveUtil.resolveEsId(esId);
+                entityInfo.setIdName(StringUtils.isNotBlank(esFieldInfo.getName()) ? esFieldInfo.getName() : field.getName());
+            }
             // 解析注解字段
-            if (esFieldInfo==null) {
+            if (esFieldInfo == null) {
                 esFieldInfo = AnnotationResolveUtil.resolveEsField(esField);
             }
-
-
-            //设置到全局缓存字段
-            GlobalParamHolder.putField(tClass,field.getName(),esFieldInfo);
-
-            String fieldName = esField != null && StringUtils.isNotBlank(esField.name()) ? esField.name() : field.getName();
-
-            if (StringUtils.isNotBlank(fieldType)) {
-                // 字符串类型映射
-                if ((EsFieldType.STRING.name().toLowerCase().equals(fieldType))) {
-                    properties.put(EsConstant.TYPE, EsConstant.TEXT);
-                    properties.put(EsConstant.FIELDS, EsConstant.KEYWORDS_MAP);
-                    //双类型字符串的映射转换
-                    GlobalParamHolder.putTextKeyword(tClass, fieldName);
-                } else {
-                    properties.put(EsConstant.TYPE, fieldType);
-                }
+            // 解析实体字段
+            if (esFieldInfo == null) {
+                esFieldInfo = AnnotationResolveUtil.resolveField(field);
             }
-            if (!CollectionUtils.isEmpty(properties)) {
-                mappings.put(fieldName, properties);
+
+            // 设置到实体字段
+            Map<String, EsFieldInfo> fieldsInfoMap = entityInfo.getFieldsInfoMap();
+            fieldsInfoMap.put(field.getName(), esFieldInfo);
+
+            // es映射到实体字段关系
+            Map<String, String> mappingFieldMap = entityInfo.getMappingFieldMap();
+            String esMappingName = esField != null && StringUtils.isNotBlank(esField.name()) ? esField.name() : field.getName();
+            mappingFieldMap.put(esMappingName, field.getName());
+
+            // keyword转换关系
+            Map<String, String> convertKeywordMap = entityInfo.getConvertKeywordMap();
+
+            if (esFieldInfo.isExist()) {
+                if (StringUtils.isNotBlank(fieldType)) {
+                    // 字符串类型映射
+                    if ((EsFieldType.STRING.name().toLowerCase().equals(fieldType))) {
+                        properties.put(EsConstant.TYPE, EsConstant.TEXT);
+                        properties.put(EsConstant.FIELDS, EsConstant.KEYWORDS_MAP);
+                        //双类型字符串的映射转换
+                        convertKeywordMap.put(esMappingName, esMappingName + ".keyword");
+                    } else {
+                        properties.put(EsConstant.TYPE, fieldType);
+                    }
+                }
+                if (!CollectionUtils.isEmpty(properties)) {
+                    mappings.put(esMappingName, properties);
+                }
             }
         }
         return mappings;
@@ -185,7 +200,7 @@ public class EsAnnotationParamProcess {
     /**
      * 处理嵌套对象
      */
-    private String processNestedObjects(Field field, EsField esField, Map<String, Object> properties,EsIndexParam indexParam) {
+    private String processNestedObjects(Field field, EsField esField, Map<String, Object> properties, EsIndexParam indexParam) {
         String fieldType;
         Class<?> fieldClass = field.getType();
         if (esField == null || esField.type().equals(EsFieldType.AUTO)) {
@@ -213,7 +228,7 @@ public class EsAnnotationParamProcess {
         }
 
         if (EsFieldType.OBJECT.name().equalsIgnoreCase(fieldType) || EsFieldType.NESTED.name().equalsIgnoreCase(fieldType)) {
-            properties.put(EsConstant.PROPERTIES, buildMappingProperties(fieldClass,indexParam));
+            properties.put(EsConstant.PROPERTIES, buildMappingProperties(fieldClass, indexParam));
         }
 
         if (fieldType.equalsIgnoreCase(EsFieldType.JOIN.name())) {
