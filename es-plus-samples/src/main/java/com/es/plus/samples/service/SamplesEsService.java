@@ -65,9 +65,9 @@ public class SamplesEsService extends EsServiceImpl<SamplesEsDTO> {
         for (EsHit esHit : esHitList) {
             long innerHitsTotal = esHit.getInnerHitsTotal("test");
             EsHits esHitEsHits = esHit.getEsInnerHits("test");
-            List<SamplesNestedDTO> test = esHit.getList(SamplesNestedDTO.class, "test");
+            List<SamplesNestedDTO> test = esHit.getInnerList(SamplesNestedDTO.class, "test");
             for (EsHit hit : esHitEsHits.getEsHitList()) {
-                List<SamplesNestedInnerDTO> list = hit.getList(SamplesNestedInnerDTO.class,"samplesNesteds.samplesNestedInner");
+                List<SamplesNestedInnerDTO> list = hit.getInnerList(SamplesNestedInnerDTO.class,"samplesNesteds.samplesNestedInner");
                 System.out.println();
             }
             System.out.println();

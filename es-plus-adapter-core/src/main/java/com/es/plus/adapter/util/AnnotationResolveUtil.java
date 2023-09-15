@@ -2,6 +2,7 @@ package com.es.plus.adapter.util;
 
 import com.es.plus.adapter.properties.EsFieldInfo;
 import com.es.plus.annotation.EsField;
+import com.es.plus.annotation.EsId;
 
 /**
  * 注释解析工具
@@ -16,6 +17,7 @@ public class AnnotationResolveUtil {
             return null;
         }
         EsFieldInfo esFieldInfo = new EsFieldInfo();
+        esFieldInfo.setEsId(false);
         esFieldInfo.setAnalyzer(esField.analyzer());
         esFieldInfo.setFieldData(esField.fieldData());
         esFieldInfo.setIndex(esField.index());
@@ -31,6 +33,16 @@ public class AnnotationResolveUtil {
         esFieldInfo.setEsFormat(esField.esFormat());
         esFieldInfo.setSearchAnalyzer(esField.searchAnalyzer());
         esFieldInfo.setEagerGlobalOrdinals(esField.eagerGlobalOrdinals());
+        return esFieldInfo;
+    }
+
+    public  static EsFieldInfo resolveEsId(EsId esId){
+        if (esId == null) {
+            return null;
+        }
+        EsFieldInfo esFieldInfo = new EsFieldInfo();
+        esFieldInfo.setEsId(true);
+        esFieldInfo.setName(esId.name());
         return esFieldInfo;
     }
 }

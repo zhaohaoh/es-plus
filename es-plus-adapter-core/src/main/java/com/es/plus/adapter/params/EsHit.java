@@ -68,7 +68,7 @@ public class EsHit {
     /**
      * 获取当前data的嵌套list
      */
-    public <T> List<T> getList(Class<T> tClass, String fieldName) {
+    public <T> List<T> getInnerList(Class<T> tClass, String fieldName) {
         EsHits esHits = innerHitsMap.get(fieldName);
         if (esHits == null || esHits.getEsHitList() == null) {
             return new ArrayList<>();

@@ -132,8 +132,10 @@ public class EsAnnotationParamProcess {
             field.setAccessible(true);
             //id缓存.用来自动获取实体类id
             EsId esId = field.getAnnotation(EsId.class);
+            EsFieldInfo esFieldInfo = null;
             if (esId != null) {
                 GlobalParamHolder.put(tClass, field.getName());
+                 esFieldInfo = AnnotationResolveUtil.resolveEsId(esId);
             }
             if (field.getAnnotation(Score.class)!=null){
                 indexParam.setScoreField(field.getName());
@@ -151,7 +153,10 @@ public class EsAnnotationParamProcess {
             processAnnotationEsField(properties, esField);
 
             // 解析注解字段
-            EsFieldInfo esFieldInfo = AnnotationResolveUtil.resolveEsField(esField);
+            if (esFieldInfo==null) {
+                esFieldInfo = AnnotationResolveUtil.resolveEsField(esField);
+            }
+
 
             //设置到全局缓存字段
             GlobalParamHolder.putField(tClass,field.getName(),esFieldInfo);

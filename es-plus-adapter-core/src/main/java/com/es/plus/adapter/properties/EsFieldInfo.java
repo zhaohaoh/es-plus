@@ -12,6 +12,12 @@ import lombok.Data;
 @Data
 public class EsFieldInfo {
     /**
+     * 是否id
+     *
+     * @return {@link String}
+     */
+    private Boolean esId;
+    /**
      * 名字
      *
      * @return {@link String}
