@@ -73,7 +73,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.stream.Collectors;
 
-import static com.es.plus.constant.EsConstant.*;
+import static com.es.plus.constant.EsConstant.PAINLESS;
+
 
 /**
  * @Author: hzh
@@ -126,7 +127,7 @@ public class EsPlus6RestClient implements EsPlusClient {
             if (reindexState) {
                 lock = lock(index);
                 if (lock) {
-                    esDataList = esDataList.stream().map(this::handlerUpdateParamter).collect(Collectors.toList());
+                    esDataList = esDataList.stream().map(e -> handlerUpdateParamter(e)).collect(Collectors.toList());
                 }
             }
             BulkRequest bulkRequest = new BulkRequest();
@@ -142,24 +143,33 @@ public class EsPlus6RestClient implements EsPlusClient {
                 bulkRequest.add(updateRequest);
             }
             bulkRequest.setRefreshPolicy(GlobalConfigCache.GLOBAL_CONFIG.getRefreshPolicy());
-            long start = System.currentTimeMillis();
-            BulkResponse res = restHighLevelClient.bulk(bulkRequest, RequestOptions.DEFAULT);
-            printInfoLog(index, "saveOrUpdateBatch body:{} time:{}", JsonUtils.toJsonStr(esDataList), System.currentTimeMillis() - start);
+            BulkResponse res = null;
+            printInfoLog(" {} saveOrUpdateBatch data:{} hasFailures={}", index, JsonUtils.toJsonStr(esDataList));
+            res = restHighLevelClient.bulk(bulkRequest, RequestOptions.DEFAULT);
             for (BulkItemResponse bulkItemResponse : res.getItems()) {
                 if (bulkItemResponse.isFailed()) {
                     responses.add(bulkItemResponse);
-                    printErrorLog(index, "saveOrUpdateBatch one error" + bulkItemResponse.getId() + " message:" + bulkItemResponse.getFailureMessage());
+                    printErrorLog(" {} saveOrUpdateBatch error" + bulkItemResponse.getId() + " message:" + bulkItemResponse.getFailureMessage(), index);
                 }
             }
-        } catch (Exception e) {
-            printErrorLog(index, "saveOrUpdateBatch body:" + JsonUtils.toJsonStr(esDataList), e);
-            throw new EsException("saveOrUpdateBatch Exception ", e);
+        } catch (IOException e) {
+            throw new EsException("saveOrUpdateBatch IOException", e);
         } finally {
             if (lock) {
                 unLock(index);
             }
         }
         return responses;
+    }
+
+    private boolean isChildIndex(Object esData) {
+        Class<?> clazz = esData.getClass();
+        EsIndexParam esIndexParam = GlobalParamHolder.getEsIndexParam(clazz);
+        if (esIndexParam != null && esIndexParam.getChildClass() != null && esIndexParam.getChildClass().equals(clazz)) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
     /**
@@ -179,35 +189,34 @@ public class EsPlus6RestClient implements EsPlusClient {
             if (reindexState) {
                 lock = lock(index);
                 if (lock) {
-                    esDataList = esDataList.stream().map(this::handlerSaveParamter).collect(Collectors.toList());
-                    esDataList = esDataList.stream().map(this::handlerUpdateParamter).collect(Collectors.toList());
+                    esDataList = esDataList.stream().map(e -> handlerSaveParamter(e)).collect(Collectors.toList());
+                    esDataList = esDataList.stream().map(e -> handlerUpdateParamter(e)).collect(Collectors.toList());
                 }
             }
             BulkRequest bulkRequest = new BulkRequest();
 
             for (Object esData : esDataList) {
-                IndexRequest indexRequest = new IndexRequest(index, type);
-                indexRequest.id(GlobalParamHolder.getDocId(esData)).source(JsonUtils.toJsonStr(esData), XContentType.JSON);
+                IndexRequest indexRequest = new IndexRequest(index);
+                String source = JsonUtils.toJsonStr(esData);
+                indexRequest.id(GlobalParamHolder.getDocId(esData)).source(source, XContentType.JSON);
                 if (childIndex) {
                     indexRequest.routing(FieldUtils.getStrFieldValue(esData, "joinField", "parent"));
                 }
                 bulkRequest.add(indexRequest);
             }
             bulkRequest.setRefreshPolicy(GlobalConfigCache.GLOBAL_CONFIG.getRefreshPolicy());
+            BulkResponse res;
 
-
-            long start = System.currentTimeMillis();
-            BulkResponse res = restHighLevelClient.bulk(bulkRequest, RequestOptions.DEFAULT);
-            printInfoLog(index, "saveBatch body:{} time:{}", JsonUtils.toJsonStr(esDataList), System.currentTimeMillis() - start);
+            printInfoLog("saveBatch {}", index);
+            res = restHighLevelClient.bulk(bulkRequest, RequestOptions.DEFAULT);
             for (BulkItemResponse bulkItemResponse : res.getItems()) {
                 if (bulkItemResponse.isFailed()) {
-                    printErrorLog(index, "saveBatch error " + bulkItemResponse.getId() + " message:" + bulkItemResponse.getFailureMessage());
+                    printErrorLog(" {} save error " + bulkItemResponse.getId() + " message:" + bulkItemResponse.getFailureMessage(), index);
                     failBulkItemResponses.add(bulkItemResponse);
                 }
             }
-        } catch (Exception e) {
-            printErrorLog(index, "saveBatch  body:" + JsonUtils.toJsonStr(esDataList), e);
-            throw new EsException("saveBatch Exception ", e);
+        } catch (IOException e) {
+            throw new EsException("SaveBatch IOException", e);
         } finally {
             if (lock) {
                 unLock(index);
@@ -237,6 +246,7 @@ public class EsPlus6RestClient implements EsPlusClient {
      */
     @Override
     public boolean update(String index, String type, Object esData) {
+
         boolean lock = false;
         boolean childIndex = isChildIndex(esData);
         try {
@@ -254,16 +264,15 @@ public class EsPlus6RestClient implements EsPlusClient {
             if (childIndex) {
                 updateRequest.routing(FieldUtils.getStrFieldValue(esData, "joinField", "parent"));
             }
-            long start = System.currentTimeMillis();
             UpdateResponse updateResponse = restHighLevelClient.update(updateRequest, RequestOptions.DEFAULT);
             if (updateResponse.getResult() == DocWriteResponse.Result.DELETED) {
-                printErrorLog(index, "update body={}  error reason: doc  deleted", JsonUtils.toJsonStr(esData));
+                printErrorLog(" {} update data={}  error reason: doc  deleted", index, JsonUtils.toJsonStr(esData));
                 return false;
             } else if (updateResponse.getResult() == DocWriteResponse.Result.NOOP) {
                 //noop标识没有数据改变。前后的值相同
                 return false;
             } else {
-                printInfoLog(index, "update body={} time:{}", JsonUtils.toJsonStr(esData), System.currentTimeMillis() - start);
+                printInfoLog(" {} update success data={}", index, JsonUtils.toJsonStr(esData));
             }
         } catch (IOException e) {
             throw new EsException("elasticsearch update io error", e);
@@ -274,12 +283,11 @@ public class EsPlus6RestClient implements EsPlusClient {
             }
             //找不到
             if (e.status() == RestStatus.NOT_FOUND) {
-                printErrorLog(index, "es update body={}  error reason:  not found doc", JsonUtils.toJsonStr(esData));
+                printErrorLog(" {} update data={}  error reason:  not found doc", index, JsonUtils.toJsonStr(esData));
                 throw new ElasticsearchException(e);
             }
             throw e;
         } catch (Exception e) {
-            printErrorLog(index, "update  body:" + JsonUtils.toJsonStr(esData), e);
             throw new EsException("update error", e);
         } finally {
             if (lock) {
@@ -310,7 +318,7 @@ public class EsPlus6RestClient implements EsPlusClient {
             if (reindexState) {
                 lock = lock(index);
                 if (lock) {
-                    esDataList = esDataList.stream().map(this::handlerUpdateParamter).collect(Collectors.toList());
+                    esDataList = esDataList.stream().map(e -> handlerUpdateParamter(e)).collect(Collectors.toList());
                 }
             }
             BulkRequest bulkRequest = new BulkRequest();
@@ -323,19 +331,17 @@ public class EsPlus6RestClient implements EsPlusClient {
                 bulkRequest.add(updateRequest);
             }
             bulkRequest.setRefreshPolicy(GlobalConfigCache.GLOBAL_CONFIG.getRefreshPolicy());
-
-            long start = System.currentTimeMillis();
-            BulkResponse res = restHighLevelClient.bulk(bulkRequest, RequestOptions.DEFAULT);
-            printInfoLog(index, "updateBatch body:{} time:{}", JsonUtils.toJsonStr(esDataList), System.currentTimeMillis() - start);
+            BulkResponse res = null;
+            printInfoLog("updateBatch index={} data:{} hasFailures={}", index, JsonUtils.toJsonStr(esDataList));
+            res = restHighLevelClient.bulk(bulkRequest, RequestOptions.DEFAULT);
             for (BulkItemResponse bulkItemResponse : res.getItems()) {
                 if (bulkItemResponse.isFailed()) {
                     responses.add(bulkItemResponse);
-                    printErrorLog(index, "updateBatch error" + bulkItemResponse.getId() + " message:" + bulkItemResponse.getFailureMessage());
+                    printErrorLog("updateBatch {} error" + bulkItemResponse.getId() + " message:" + bulkItemResponse.getFailureMessage(), index);
                 }
             }
-        } catch (Exception e) {
-            printErrorLog(index, "updateBatch body:" + JsonUtils.toJsonStr(esDataList), e);
-            throw new EsException("updateBatch Exception", e);
+        } catch (IOException e) {
+            throw new EsException("updateBatch IOException", e);
         } finally {
             if (lock) {
                 unLock(index);
@@ -352,10 +358,10 @@ public class EsPlus6RestClient implements EsPlusClient {
     public <T> BulkByScrollResponse updateByWrapper(String index, String type, EsParamWrapper<T> esParamWrapper) {
         EsUpdateField esUpdateField = esParamWrapper.getEsUpdateField();
         List<EsUpdateField.Field> fields = esUpdateField.getFields();
-        String script = esUpdateField.getScipt();
+        String scipt = esUpdateField.getScipt();
         Map<String, Object> params = esUpdateField.getSciptParams();
         boolean lock = false;
-        if (StringUtils.isBlank(script)) {
+        if (StringUtils.isBlank(scipt)) {
             params = new HashMap<>();
             //构建scipt语句
             StringBuilder sb = new StringBuilder();
@@ -387,19 +393,36 @@ public class EsPlus6RestClient implements EsPlusClient {
                     handleObjectScript(sb, params);
                 }
             }
-            script = sb.toString();
+            scipt = sb.toString();
         }
         try {
-            UpdateByQueryRequest request = getUpdateByQueryRequest(index, type, params, script, esParamWrapper);
-            long start = System.currentTimeMillis();
+            UpdateByQueryRequest request = new UpdateByQueryRequest(index);
+            //版本号不匹配更新失败不停止
+            request.setConflicts(EsConstant.DEFAULT_CONFLICTS);
+            request.setQuery(esParamWrapper.getQueryBuilder());
+            request.setBatchSize(GlobalConfigCache.GLOBAL_CONFIG.getBatchSize());
+            //请求完成后立即刷新索引，保证读一致性
+            request.setRefresh(true);
+            //分片多线程执行任务
+//            request.setSlices(2)
+            String[] routings = esParamWrapper.getEsQueryParamWrapper().getRoutings();
+            if (routings != null) {
+                request.setRouting(routings[0]);
+            }
+            request.setMaxRetries(GlobalConfigCache.GLOBAL_CONFIG.getMaxRetries());
+            //一般需要加上requests_per_second来控制.若不加可能执行时间比较长，造成es瞬间io巨大，属于危险操作.此参数用于限流。真实查询数据是batchsize控制
+            //查询到数据后
+            request.setRequestsPerSecond(GlobalConfigCache.GLOBAL_CONFIG.getBatchSize());
+            request.setIndicesOptions(IndicesOptions.LENIENT_EXPAND_OPEN);
+            Script painless = new Script(ScriptType.INLINE, PAINLESS, scipt, params);
+            request.setScript(painless);
+            printInfoLog("updateByWrapper index:{} requst: script:{},params={}", index, scipt, params);
             BulkByScrollResponse bulkResponse =
                     restHighLevelClient.updateByQuery(request, RequestOptions.DEFAULT);
-            printInfoLog(index, "updateByWrapper script:{},params={} response:{} update count={} time:{}", script, params, bulkResponse, bulkResponse.getUpdated(),
-                    System.currentTimeMillis() - start);
+            printInfoLog("updateByWrapper index:{} response:{} update count={}", index, bulkResponse, bulkResponse.getUpdated());
             return bulkResponse;
-        } catch (Exception e) {
-            printErrorLog(index, "updateByWrapper script:" + script + " params:" + params + " queryBuilder:" + esParamWrapper.getQueryBuilder(), e);
-            throw new EsException("updateByWrapper Exception", e);
+        } catch (IOException e) {
+            throw new EsException("updateByWrapper IOException", e);
         } finally {
             if (lock) {
                 unLock(index);
@@ -429,16 +452,31 @@ public class EsPlus6RestClient implements EsPlusClient {
             }
         }
         try {
-            UpdateByQueryRequest request = getUpdateByQueryRequest(index, type, params, script.toString(), esParamWrapper);
-            printInfoLog(index, "increment requst: script:{},params={}", script, params);
-            long start = System.currentTimeMillis();
+            UpdateByQueryRequest request = new UpdateByQueryRequest(index);
+            //版本号不匹配更新失败不停止
+            request.setConflicts(EsConstant.DEFAULT_CONFLICTS);
+            request.setQuery(esParamWrapper.getQueryBuilder());
+            // 一次批处理的大小.因为是滚动处理的 这里才是这是的批处理查询数据量
+            request.setBatchSize(GlobalConfigCache.GLOBAL_CONFIG.getBatchSize());
+            request.setIndicesOptions(IndicesOptions.LENIENT_EXPAND_OPEN);
+            String[] routings = esParamWrapper.getEsQueryParamWrapper().getRoutings();
+            if (routings != null) {
+                request.setRouting(routings[0]);
+            }
+            request.setMaxRetries(GlobalConfigCache.GLOBAL_CONFIG.getMaxRetries());
+            //一般需要加上requests_per_second来控制.若不加可能执行时间比较长，造成es瞬间io巨大，属于危险操作.此参数用于限流。真实查询数据是batchsize控制
+            request.setRequestsPerSecond(GlobalConfigCache.GLOBAL_CONFIG.getBatchSize());
+
+            Script painless = new Script(ScriptType.INLINE, PAINLESS, script.toString(), params);
+            request.setScript(painless);
+
+            printInfoLog(" {} updateByWrapper increment requst: script:{},params={}", index, script, params);
             BulkByScrollResponse bulkResponse =
                     restHighLevelClient.updateByQuery(request, RequestOptions.DEFAULT);
-            printInfoLog(index, "increment response:{} time:{}", bulkResponse, System.currentTimeMillis() - start);
+            printInfoLog(" {} updateByWrapper increment response:{} update count=", index, bulkResponse);
             return bulkResponse;
-        } catch (Exception e) {
-            printErrorLog(index, "increment  script:" + script + "params:" + params, e);
-            throw new EsException("increment Exception", e);
+        } catch (IOException e) {
+            throw new EsException("updateByWrapper increment IOException", e);
         } finally {
             if (lock) {
                 unLock(index);
@@ -451,51 +489,42 @@ public class EsPlus6RestClient implements EsPlusClient {
         DeleteRequest deleteRequest = new DeleteRequest(index, type, id);
         try {
             deleteRequest.setRefreshPolicy(GlobalConfigCache.GLOBAL_CONFIG.getRefreshPolicy());
-            long start = System.currentTimeMillis();
             restHighLevelClient.delete(deleteRequest, RequestOptions.DEFAULT);
-            printInfoLog(index, "delete id:{}", id, System.currentTimeMillis() - start);
-        } catch (Exception e) {
-            printErrorLog(index, "delete  id:" + id, e);
+            printInfoLog("delete index={}", index);
+        } catch (IOException e) {
             throw new EsException("delete error", e);
         }
         return true;
     }
 
-    /**
-     * 删除根据查询
-     *
-     * @param index          索引
-     * @param esParamWrapper es参数包装器
-     * @return {@link BulkByScrollResponse}
-     */
     @Override
     public <T> BulkByScrollResponse deleteByQuery(String index, String type, EsParamWrapper<T> esParamWrapper) {
-        DeleteByQueryRequest request = new DeleteByQueryRequest(index, type);
+        DeleteByQueryRequest request = new DeleteByQueryRequest(index);
         request.setQuery(esParamWrapper.getQueryBuilder());
         // 更新最大文档数
+//        request.setMaxDocs(GlobalConfigCache.GLOBAL_CONFIG.getMaxDocs());
         request.setMaxRetries(GlobalConfigCache.GLOBAL_CONFIG.getMaxRetries());
         request.setBatchSize(GlobalConfigCache.GLOBAL_CONFIG.getBatchSize());
         // 刷新索引
         request.setRefresh(true);
         // 使用滚动参数来控制“搜索上下文”存活的时间
-        request.setScroll(TimeValue.timeValueMinutes(1));
+        request.setScroll(TimeValue.timeValueMinutes(30));
         // 超时
-        request.setTimeout(TimeValue.timeValueMinutes(1));
+        request.setTimeout(TimeValue.timeValueMinutes(30));
         // 更新时版本冲突
         request.setConflicts(EsConstant.DEFAULT_CONFLICTS);
         String[] routings = esParamWrapper.getEsQueryParamWrapper().getRoutings();
         if (routings != null) {
             request.setRouting(routings[0]);
         }
-        SearchSourceBuilder source = request.getSearchRequest().source();
+
         try {
-            long start = System.currentTimeMillis();
+            SearchSourceBuilder source = request.getSearchRequest().source();
+            printInfoLog(" {} delete body:" + source.toString(), index);
             BulkByScrollResponse bulkByScrollResponse = restHighLevelClient.deleteByQuery(request, RequestOptions.DEFAULT);
-            printInfoLog(index, "deleteByQuery body:{} time:{}" + source.toString(), System.currentTimeMillis() - start);
             return bulkByScrollResponse;
         } catch (Exception e) {
-            printErrorLog(index, "deleteByQuery  body:" + source, e);
-            throw new EsException("deleteByQuery error", e);
+            throw new EsException("es-plus delete error", e);
         }
     }
 
@@ -510,22 +539,13 @@ public class EsPlus6RestClient implements EsPlusClient {
         request.setMaxRetries(GlobalConfigCache.GLOBAL_CONFIG.getMaxRetries());
         request.setQuery(new MatchAllQueryBuilder());
         try {
-            long start = System.currentTimeMillis();
             restHighLevelClient.deleteByQuery(request, RequestOptions.DEFAULT);
-            printInfoLog(index, "deleteAll time:{}", System.currentTimeMillis() - start);
-        } catch (Exception e) {
-            throw new EsException("deleteAll error", e);
+            printInfoLog("deleteAll index={}", index);
+        } catch (IOException e) {
+            throw new EsException("delete error", e);
         }
     }
 
-    /**
-     * 删除批处理
-     *
-     * @param index      索引
-     * @param type       类型
-     * @param esDataList es数据列表
-     * @return boolean
-     */
     @Override
     public boolean deleteBatch(String index, String type, Collection<String> esDataList) {
         if (CollectionUtils.isEmpty(esDataList)) {
@@ -540,18 +560,15 @@ public class EsPlus6RestClient implements EsPlusClient {
 
         bulkRequest.setRefreshPolicy(GlobalConfigCache.GLOBAL_CONFIG.getRefreshPolicy());
         try {
-            long start = System.currentTimeMillis();
             BulkResponse bulkResponse = restHighLevelClient.bulk(bulkRequest, RequestOptions.DEFAULT);
-            printInfoLog(index, "deleteBatch body:{} time:{}", JsonUtils.toJsonStr(esDataList), System.currentTimeMillis() - start);
             BulkItemResponse[] items = bulkResponse.getItems();
             for (BulkItemResponse item : items) {
                 if (item.isFailed()) {
-                    printErrorLog(index, "deleteBatch id={} FailureMessage=:{}", item.getId(), item.getFailureMessage());
+                    printErrorLog("deleteBatch index={} id={} FailureMessage=:{}", index, item.getId(), item.getFailureMessage());
                 }
             }
-        } catch (Exception e) {
-            printErrorLog(index, "deleteBatch body:" + JsonUtils.toJsonStr(esDataList), e);
-            throw new EsException("es deleteBatch error", e);
+        } catch (IOException e) {
+            throw new EsException("es delete error", e);
         }
         return true;
     }
@@ -563,14 +580,11 @@ public class EsPlus6RestClient implements EsPlusClient {
         SearchSourceBuilder query = SearchSourceBuilder.searchSource().query(esParamWrapper.getQueryBuilder());
         countRequest.source(query);
         countRequest.indices(index);
-        countRequest.types(type);
         CountResponse count = null;
         try {
-            long start = System.currentTimeMillis();
+            printInfoLog("count index=:{} body:{}", index, JsonUtils.toJsonStr(esParamWrapper.getQueryBuilder()));
             count = restHighLevelClient.count(countRequest, RequestOptions.DEFAULT);
-            printInfoLog(index, "count body:{} time:{}", JsonUtils.toJsonStr(esParamWrapper.getQueryBuilder()), System.currentTimeMillis() - start);
-        } catch (Exception e) {
-            printErrorLog(index, "count body:" + esParamWrapper.getQueryBuilder(), e);
+        } catch (IOException e) {
             throw new EsException("es-plus count error ", e);
         }
         if (count != null) {
@@ -611,7 +625,6 @@ public class EsPlus6RestClient implements EsPlusClient {
         return esResponse;
     }
 
-
     /**
      * 滚动包装器
      *
@@ -626,10 +639,11 @@ public class EsPlus6RestClient implements EsPlusClient {
     @Override
     public <T> EsResponse<T> scroll(String index, String type, EsParamWrapper<T> esParamWrapper, Class<T> tClass, int size, Duration keepTime, String scrollId) {
         SearchResponse searchResponse;
-        SearchHit[] searchHits;
+        SearchHit[] searchHits = null;
+        List<T> result = new ArrayList<>();
         final Scroll scroll = new Scroll(TimeValue.timeValueMillis(keepTime.toMillis()));
         try {
-            long start = System.currentTimeMillis();
+            EsQueryParamWrapper esQueryParamWrapper = esParamWrapper.getEsQueryParamWrapper();
             if (StringUtils.isNotBlank(scrollId)) {
                 SearchScrollRequest scrollRequest = new SearchScrollRequest(scrollId);
                 scrollRequest.scroll(scroll);
@@ -638,26 +652,23 @@ public class EsPlus6RestClient implements EsPlusClient {
                 searchHits = searchResponse.getHits().getHits();
             } else {
                 SearchRequest searchRequest = new SearchRequest(index);
-                searchRequest.types(type);
                 searchRequest.scroll(scroll);
                 SearchSourceBuilder searchSourceBuilder = getSearchSourceBuilder(esParamWrapper);
-                searchRequest.source(searchSourceBuilder);
+                populateSearchRequest(index, type, searchRequest, esQueryParamWrapper, searchSourceBuilder);
                 //调用scroll处理
                 searchResponse = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
                 scrollId = searchResponse.getScrollId();
                 searchHits = searchResponse.getHits().getHits();
             }
-            EsResponse<T> esResponse = getEsResponse(tClass, esParamWrapper.getEsQueryParamWrapper(), searchResponse);
+            EsResponse<T> esResponse = getEsResponse(tClass, esQueryParamWrapper, searchResponse);
             if (searchHits == null || searchHits.length <= 0) {
                 ClearScrollRequest clearScrollRequest = new ClearScrollRequest();
                 clearScrollRequest.addScrollId(scrollId);
                 ClearScrollResponse clearScrollResponse = restHighLevelClient.clearScroll(clearScrollRequest, RequestOptions.DEFAULT);
                 boolean succeeded = clearScrollResponse.isSucceeded();
             }
-            printInfoLog(index, "scrollByWrapper   scrollId:{} esParamWrapper:{} time:{}", scrollId, esParamWrapper.toString(), System.currentTimeMillis() - start);
             return esResponse;
         } catch (Exception e) {
-            printErrorLog(index, "scrollByWrapper body:" + esParamWrapper.getQueryBuilder() + " scrollId:" + scrollId, e);
             throw new EsException("scroll error", e);
         }
     }
@@ -677,15 +688,15 @@ public class EsPlus6RestClient implements EsPlusClient {
         //设置索引
         searchRequest.source(sourceBuilder);
         searchRequest.indices(index);
-        searchRequest.types(type);
         //查询
         SearchResponse searchResponse = null;
         try {
             long start = System.currentTimeMillis();
+            printInfoLog("aggregations index={} body:{}", index, sourceBuilder);
             searchResponse = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
-            printInfoLog(index, "aggregations body:{} time:{}", sourceBuilder, System.currentTimeMillis() - start);
+            long end = System.currentTimeMillis();
+            printInfoLog("{} aggregations Time={}", index, end - start);
         } catch (Exception e) {
-            printErrorLog(index, "aggregations body:" + sourceBuilder, e);
             throw new EsException("aggregations error", e);
         }
         if (searchResponse.status().getStatus() != 200) {
@@ -698,6 +709,30 @@ public class EsPlus6RestClient implements EsPlusClient {
         return esAggregationReponse;
     }
 
+
+    /**
+     * 填充搜索请求
+     *
+     * @param index               索引
+     * @param searchRequest       搜索请求
+     * @param esQueryParamWrapper es查询参数包装器
+     * @param sourceBuilder       源构建器
+     */
+    private void populateSearchRequest(String index, String type, SearchRequest searchRequest, EsQueryParamWrapper esQueryParamWrapper, SearchSourceBuilder sourceBuilder) {
+        //设置查询语句源数据
+        searchRequest.source(sourceBuilder);
+
+        //设置索引
+        searchRequest.indices(index);
+        searchRequest.types(type);
+
+        //设置偏好
+        searchRequest.preference(esQueryParamWrapper.getPreference());
+
+        if (esQueryParamWrapper.getSearchType() != null) {
+            searchRequest.searchType();
+        }
+    }
 
     @Override
     public String executeDSL(String dsl, String indexName) {
@@ -735,8 +770,6 @@ public class EsPlus6RestClient implements EsPlusClient {
                     }).forEach(result::add);
         }
         EsHits esHits = setInnerHits(hits);
-
-
         //设置聚合结果
         Aggregations aggregations = searchResponse.getAggregations();
         EsPlus6Aggregations<T> esAggsResponse = new EsPlus6Aggregations<>();
@@ -766,6 +799,25 @@ public class EsPlus6RestClient implements EsPlusClient {
         return esResponse;
     }
 
+    /**
+     * 设置分数
+     */
+    private <T> void setScore(SearchHit hit, T bean) {
+        float score = hit.getScore();
+        if (!Float.isNaN(score)) {
+            EsIndexParam esIndexParam = GlobalParamHolder.getEsIndexParam(bean.getClass());
+            try {
+                if (StringUtils.isNotBlank(esIndexParam.getScoreField())) {
+                    Field field = bean.getClass().getDeclaredField(esIndexParam.getScoreField());
+                    field.setAccessible(true);
+                    field.set(bean, score);
+                }
+            } catch (Exception e) {
+                log.error("setScore ", e);
+            }
+        }
+    }
+
     private EsHits setInnerHits(SearchHits hits) {
         if (hits == null||ArrayUtils.isEmpty(hits.getHits())){
             return null;
@@ -773,16 +825,18 @@ public class EsPlus6RestClient implements EsPlusClient {
         long totalHits = hits.getTotalHits();
         EsHits esHits = new EsHits();
         esHits.setTotal(totalHits);
+
         List<EsHit> esHitList = new ArrayList<>();
         esHits.setEsHitList(esHitList);
         for (SearchHit searchHit : hits.getHits()) {
             EsHit esHit = new EsHit();
-            esHit.setData(searchHit.getSourceAsString());
+            String sourceAsString = searchHit.getSourceAsString();
+            esHit.setData(sourceAsString);
             esHitList.add(esHit);
             Map<String, SearchHits> innerHits = searchHit.getInnerHits();
 
             // 填充innerHits
-            if (CollectionUtils.isEmpty(innerHits)) {
+            if (!CollectionUtils.isEmpty(innerHits)) {
                 Map<String, EsHits> esHitsMap = new HashMap<>();
                 innerHits.forEach((k, v) -> {
                     EsHits eshits = setInnerHits(v);
@@ -794,6 +848,34 @@ public class EsPlus6RestClient implements EsPlusClient {
         return esHits;
     }
 
+    /**
+     * 设置高亮
+     *
+     * @param hit  打击
+     * @param bean 豆
+     */
+    private <T> void setHighLishtField(SearchHit hit, T bean) {
+        Map<String, HighlightField> highlightFields = hit.getHighlightFields();
+        if (highlightFields != null && highlightFields.size() > 0) {
+            highlightFields.forEach((k, v) -> {
+                        Text[] texts = v.fragments();
+                        StringBuilder highlightStr = new StringBuilder();
+                        for (Text text : texts) {
+                            highlightStr.append(text);
+                        }
+                        try {
+                            //高亮字段重新put进去
+                            Field field = bean.getClass().getDeclaredField(k);
+                            field.setAccessible(true);
+                            field.set(bean, highlightStr.toString());
+                        } catch (Exception e) {
+                            log.error("es-plus HighlightFields Exception", e);
+                        }
+                    }
+            );
+
+        }
+    }
 
     private <T> SearchSourceBuilder getSearchSourceBuilder(EsParamWrapper<T> esParamWrapper) {
         EsQueryParamWrapper esQueryParamWrapper = esParamWrapper.getEsQueryParamWrapper();
@@ -823,6 +905,7 @@ public class EsPlus6RestClient implements EsPlusClient {
         if (profile) {
             sourceBuilder.profile(profile);
         }
+
         //searchAfter
         if (esQueryParamWrapper.getSearchAfterValues() != null) {
             sourceBuilder.searchAfter(esQueryParamWrapper.getSearchAfterValues());
@@ -840,6 +923,8 @@ public class EsPlus6RestClient implements EsPlusClient {
         } else {
             sourceBuilder.size(GlobalConfigCache.GLOBAL_CONFIG.getSearchSize());
         }
+
+
 
         //设置高亮
         if (esQueryParamWrapper.getEsHighLights() != null) {
@@ -888,46 +973,15 @@ public class EsPlus6RestClient implements EsPlusClient {
 
 
     /**
-     * 获取更新根据查询请求
-     *
-     * @param index          索引
-     * @param params         参数个数
-     * @param script         脚本
-     * @param esParamWrapper es参数包装器
-     * @return {@link UpdateByQueryRequest}
-     */
-    private <T> UpdateByQueryRequest getUpdateByQueryRequest(String index, String type, Map<String, Object> params, String script, EsParamWrapper<T> esParamWrapper) {
-        UpdateByQueryRequest request = new UpdateByQueryRequest(index);
-        request.setDocTypes(type);
-        //版本号不匹配更新失败不停止
-        request.setConflicts(EsConstant.DEFAULT_CONFLICTS);
-        request.setQuery(esParamWrapper.getQueryBuilder());
-        request.setBatchSize(GlobalConfigCache.GLOBAL_CONFIG.getBatchSize());
-        //请求完成后立即刷新索引，保证读一致性
-        request.setRefresh(true);
-        request.setMaxRetries(GlobalConfigCache.GLOBAL_CONFIG.getMaxRetries());
-        //一般需要加上requests_per_second来控制.若不加可能执行时间比较长，造成es瞬间io巨大，属于危险操作.此参数用于限流。真实查询数据是batchsize控制
-        request.setRequestsPerSecond(GlobalConfigCache.GLOBAL_CONFIG.getBatchSize());
-        request.setIndicesOptions(IndicesOptions.LENIENT_EXPAND_OPEN);
-        String[] routings = esParamWrapper.getEsQueryParamWrapper().getRoutings();
-        if (routings != null) {
-            request.setRouting(routings[0]);
-        }
-        Script painless = new Script(ScriptType.INLINE, PAINLESS, script, params);
-        request.setScript(painless);
-        return request;
-    }
-
-    /**
      * 打印信息日志
      *
      * @param format 格式
      * @param params 参数个数
      */
-    private void printInfoLog(String index, String format, Object... params) {
+    private void printInfoLog(String format, Object... params) {
         boolean enableSearchLog = GlobalConfigCache.GLOBAL_CONFIG.isEnableSearchLog();
         if (enableSearchLog) {
-            log.info("es-plus " + index + " " + format, params);
+            log.info("es-plus " + format, params);
         }
     }
 
@@ -937,12 +991,8 @@ public class EsPlus6RestClient implements EsPlusClient {
      * @param format 格式
      * @param params 参数个数
      */
-    private void printErrorLog(String index, String format, Object... params) {
-        log.error("es-plus " + index + " " + format, params);
-    }
-
-    private void printErrorLog(String index, String format, Exception e) {
-        log.error("es-plus " + index + " " + format, e);
+    private void printErrorLog(String format, Object... params) {
+        log.error("es-plus " + format, params);
     }
 
     protected void handleObjectScript(StringBuilder sb, Map<String, Object> params) {
@@ -999,23 +1049,13 @@ public class EsPlus6RestClient implements EsPlusClient {
         return success;
     }
 
-    /**
-     * 释放锁
-     *
-     * @param index 索引
-     *///释放reindex锁
-    private void unLock(String index) {
+    //释放reindex锁
+    public void unLock(String index) {
         Lock readLock = esLockFactory.getReadWrtieLock(index + EsConstant.REINDEX_UPDATE_LOCK).readLock();
         readLock.unlock();
     }
 
-    /**
-     * 设置更新行业
-     *
-     * @param object 对象
-     * @return {@link Object}
-     */
-    private Object setUpdateFeild(Object object) {
+    public Object setUpdateFeild(Object object) {
         EsUpdateField.Field updateFill = updateFill();
         if (updateFill == null) {
             return object;
@@ -1025,89 +1065,4 @@ public class EsPlus6RestClient implements EsPlusClient {
         return beanToMap;
     }
 
-    /**
-     * 是孩子索引
-     *
-     * @param esData es数据
-     * @return boolean
-     */
-    private boolean isChildIndex(Object esData) {
-        Class<?> clazz = esData.getClass();
-        EsIndexParam esIndexParam = GlobalParamHolder.getEsIndexParam(clazz);
-        if (esIndexParam != null && esIndexParam.getChildClass() != null && esIndexParam.getChildClass().equals(clazz)) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    /**
-     * 设置分数
-     */
-    private <T> void setScore(SearchHit hit, T bean) {
-        float score = hit.getScore();
-        if (!Float.isNaN(score)) {
-            EsIndexParam esIndexParam = GlobalParamHolder.getEsIndexParam(bean.getClass());
-            try {
-                Field field = bean.getClass().getDeclaredField(esIndexParam.getScoreField());
-                field.setAccessible(true);
-                field.set(bean, score);
-            } catch (Exception e) {
-                log.error("setScore ", e);
-            }
-        }
-    }
-
-    /**
-     * 设置高亮
-     *
-     * @param hit  打击
-     * @param bean 豆
-     */
-    private <T> void setHighLishtField(SearchHit hit, T bean) {
-        Map<String, HighlightField> highlightFields = hit.getHighlightFields();
-        if (highlightFields != null && highlightFields.size() > 0) {
-            highlightFields.forEach((k, v) -> {
-                        Text[] texts = v.fragments();
-                        StringBuilder highlightStr = new StringBuilder();
-                        for (Text text : texts) {
-                            highlightStr.append(text);
-                        }
-                        try {
-                            //高亮字段重新put进去
-                            Field field = bean.getClass().getDeclaredField(k);
-                            field.setAccessible(true);
-                            field.set(bean, highlightStr.toString());
-                        } catch (Exception e) {
-                            log.error("es-plus HighlightFields Exception", e);
-                        }
-                    }
-            );
-
-        }
-    }
-
-    /**
-     * 填充搜索请求
-     *
-     * @param index               索引
-     * @param searchRequest       搜索请求
-     * @param esQueryParamWrapper es查询参数包装器
-     * @param sourceBuilder       源构建器
-     */
-    private void populateSearchRequest(String index, String type, SearchRequest searchRequest, EsQueryParamWrapper esQueryParamWrapper, SearchSourceBuilder sourceBuilder) {
-        //设置查询语句源数据
-        searchRequest.source(sourceBuilder);
-
-        //设置索引
-        searchRequest.indices(index);
-        searchRequest.types(type);
-
-        //设置偏好
-        searchRequest.preference(esQueryParamWrapper.getPreference());
-
-        if (esQueryParamWrapper.getSearchType() != null) {
-            searchRequest.searchType();
-        }
-    }
 }

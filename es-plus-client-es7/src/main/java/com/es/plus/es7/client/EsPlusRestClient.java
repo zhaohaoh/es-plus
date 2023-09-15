@@ -822,8 +822,15 @@ public class EsPlusRestClient implements EsPlusClient {
         if (hits == null||ArrayUtils.isEmpty(hits.getHits())){
             return null;
         }
-        long totalHits = hits.getTotalHits().value;
+
+        //如果没有嵌套类则不填充
+        boolean anyMatch = Arrays.stream(hits.getHits()).anyMatch(a -> CollectionUtils.isEmpty(a.getInnerHits()));
+        if (anyMatch){
+            return null;
+        }
+
         EsHits esHits = new EsHits();
+        long totalHits = hits.getTotalHits().value;
         esHits.setTotal(totalHits);
 
         List<EsHit> esHitList = new ArrayList<>();
@@ -979,7 +986,10 @@ public class EsPlusRestClient implements EsPlusClient {
      * @param params 参数个数
      */
     private void printInfoLog(String format, Object... params) {
+        boolean enableSearchLog = GlobalConfigCache.GLOBAL_CONFIG.isEnableSearchLog();
+        if (enableSearchLog) {
         log.info("es-plus " + format, params);
+        }
     }
 
     /**
