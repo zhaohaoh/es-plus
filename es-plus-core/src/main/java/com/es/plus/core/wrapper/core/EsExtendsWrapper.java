@@ -3,6 +3,7 @@ package com.es.plus.core.wrapper.core;
 
 import com.es.plus.adapter.params.EsSelect;
 import org.elasticsearch.action.search.SearchType;
+import org.elasticsearch.search.sort.NestedSortBuilder;
 
 public interface EsExtendsWrapper<Children, R> {
 
@@ -93,27 +94,28 @@ public interface EsExtendsWrapper<Children, R> {
     /**
      * 排序
      */
-    Children orderBy(String order, R... columns);
+    Children sortBy(String order, R... columns);
 
     /**
      * 排序
      */
-    Children orderBy(String order, R column);
+    Children sortBy(String order, R column);
 
     /**
      * 排序
      */
-//    Children orderBy(String order, String... columns);
+    Children sortByAsc(String... columns);
 
     /**
      * 排序
      */
-    Children orderByAsc(String... columns);
+
+    Children sortBy(String order, R column, NestedSortBuilder nestedSortBuilder);
 
     /**
      * 排序
      */
-    Children orderByDesc(String... columns);
+    Children sortByDesc(String... columns);
 
     /**
      * es查询类型

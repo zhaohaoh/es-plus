@@ -56,6 +56,7 @@ import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightField;
 import org.elasticsearch.search.profile.ProfileShardResult;
 import org.elasticsearch.search.sort.FieldSortBuilder;
+import org.elasticsearch.search.sort.NestedSortBuilder;
 import org.elasticsearch.search.sort.SortOrder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -957,7 +958,9 @@ public class EsPlusRestClient implements EsPlusClient {
         if (!CollectionUtils.isEmpty(esQueryParamWrapper.getEsOrderList())) {
             List<EsOrder> orderFields = esQueryParamWrapper.getEsOrderList();
             orderFields.forEach(order -> {
-                sourceBuilder.sort(new FieldSortBuilder(order.getName()).order(SortOrder.valueOf(order.getSort())));
+                NestedSortBuilder nestedSortBuilder = order.getNestedSortBuilder();
+                sourceBuilder.sort(new FieldSortBuilder(order.getName()).order(SortOrder.valueOf(order.getSort()))
+                        .setNestedSort(nestedSortBuilder));
             });
         }
         populateGroupField(esParamWrapper, sourceBuilder);

@@ -16,6 +16,7 @@ import org.elasticsearch.index.query.*;
 import org.elasticsearch.join.query.HasChildQueryBuilder;
 import org.elasticsearch.join.query.HasParentQueryBuilder;
 import org.elasticsearch.join.query.ParentIdQueryBuilder;
+import org.elasticsearch.search.sort.NestedSortBuilder;
 import org.elasticsearch.search.sort.SortOrder;
 
 import java.util.ArrayList;
@@ -655,7 +656,7 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
     }
 
     @Override
-    public Children orderBy(String order, R... columns) {
+    public Children sortBy(String order, R... columns) {
         if (getEsQueryParamWrapper().getEsOrderList() == null) {
             getEsQueryParamWrapper().setEsOrderList(new ArrayList<>());
         }
@@ -670,7 +671,7 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
     }
 
     @Override
-    public Children orderBy(String order, R column) {
+    public Children sortBy(String order, R column) {
         if (getEsQueryParamWrapper().getEsOrderList() == null) {
             getEsQueryParamWrapper().setEsOrderList(new ArrayList<>());
         }
@@ -683,7 +684,21 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
     }
 
     @Override
-    public Children orderByAsc(String... columns) {
+    public Children sortBy(String order, R column, NestedSortBuilder nestedSortBuilder){
+        if (getEsQueryParamWrapper().getEsOrderList() == null) {
+            getEsQueryParamWrapper().setEsOrderList(new ArrayList<>());
+        }
+        String name = nameToString(column);
+        EsOrder esOrder = new EsOrder();
+        esOrder.setName(name);
+        esOrder.setSort(order);
+        esOrder.setNestedSortBuilder(nestedSortBuilder);
+        getEsQueryParamWrapper().getEsOrderList().add(esOrder);
+        return children;
+    }
+
+    @Override
+    public Children sortByAsc(String... columns) {
         if (getEsQueryParamWrapper().getEsOrderList() == null) {
             getEsQueryParamWrapper().setEsOrderList(new ArrayList<>());
         }
@@ -697,7 +712,7 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
     }
 
     @Override
-    public Children orderByDesc(String... columns) {
+    public Children sortByDesc(String... columns) {
         if (getEsQueryParamWrapper().getEsOrderList() == null) {
             getEsQueryParamWrapper().setEsOrderList(new ArrayList<>());
         }

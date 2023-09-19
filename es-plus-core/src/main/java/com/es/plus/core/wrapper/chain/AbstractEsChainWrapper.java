@@ -14,7 +14,10 @@ import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.common.geo.GeoPoint;
 import org.elasticsearch.common.unit.DistanceUnit;
 import org.elasticsearch.common.unit.Fuzziness;
-import org.elasticsearch.index.query.*;
+import org.elasticsearch.index.query.BoolQueryBuilder;
+import org.elasticsearch.index.query.InnerHitBuilder;
+import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.search.sort.NestedSortBuilder;
 
 import java.util.Collection;
 import java.util.List;
@@ -126,26 +129,32 @@ public abstract class AbstractEsChainWrapper<T, R, Children extends AbstractEsCh
     }
 
     @Override
-    public Children orderBy(String order, R... columns) {
-        getWrapper().orderBy(order, columns);
+    public Children sortBy(String order, R... columns) {
+        getWrapper().sortBy(order, columns);
         return children;
     }
 
     @Override
-    public Children orderBy(String order, R column) {
-        getWrapper().orderBy(order, column);
+    public Children sortBy(String order, R column) {
+        getWrapper().sortBy(order, column);
         return children;
     }
 
     @Override
-    public Children orderByAsc(String... columns) {
-        getWrapper().orderByAsc(columns);
+    public Children sortByAsc(String... columns) {
+        getWrapper().sortByAsc(columns);
         return children;
     }
 
     @Override
-    public Children orderByDesc(String... columns) {
-        getWrapper().orderByDesc(columns);
+    public Children sortByDesc(String... columns) {
+        getWrapper().sortByDesc(columns);
+        return children;
+    }
+
+    @Override
+    public Children sortBy(String order, R column, NestedSortBuilder nestedSortBuilder){
+        getWrapper().sortBy(order,column,nestedSortBuilder);
         return children;
     }
 

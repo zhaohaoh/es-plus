@@ -82,7 +82,7 @@ public class FastTest {
 
     @org.junit.jupiter.api.Test
     public void bbb() {
-        EsResponse<FastTestDTO> test = Es.chainLambdaQuery(FastTestDTO.class).orderByAsc("id").search();
+        EsResponse<FastTestDTO> test = Es.chainLambdaQuery(FastTestDTO.class).sortByAsc("id").search();
         System.out.println(test);
     }
 
@@ -147,17 +147,17 @@ public class FastTest {
 
                     EsResponse<FastTestDTO> test = Es.chainLambdaQuery(FastTestDTO.class)
                     .includes(FastTestDTO::getId)
-                    .orderByAsc("id").orderByAsc("username")
+                    .sortByAsc("id").sortByAsc("username")
                     .search();
 
 
-        EsResponse<FastTestDTO> test1 = Es.chainLambdaQuery(FastTestDTO.class).orderByAsc("id").orderByAsc("username")  .includes(FastTestDTO::getId)
+        EsResponse<FastTestDTO> test1 = Es.chainLambdaQuery(FastTestDTO.class).sortByAsc("id").sortByAsc("username")  .includes(FastTestDTO::getId)
                 .trackScores(true)
                 .minScope(0)
                 .searchAfterValues(test.getTailSortValues()).search(10000);
 
 
-        EsResponse<FastTestDTO> test3 = Es.chainLambdaQuery(FastTestDTO.class).orderByAsc("id").orderByAsc("username")  .includes(FastTestDTO::getId)
+        EsResponse<FastTestDTO> test3 = Es.chainLambdaQuery(FastTestDTO.class).sortByAsc("id").sortByAsc("username")  .includes(FastTestDTO::getId)
                 .fetch(false)
                 .searchAfterValues(test.getTailSortValues()).search(11);
 
