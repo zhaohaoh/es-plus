@@ -36,7 +36,7 @@ import java.util.Map;
 
 /**
  * @Author: hzh
- * @Date: 2022/6/21 12:31
+ * @Date: 20.2.7/21 12:31
  */
 public class EsPlus6Aggregations<T> implements EsAggResponse<T> {
     private Aggregations aggregations;

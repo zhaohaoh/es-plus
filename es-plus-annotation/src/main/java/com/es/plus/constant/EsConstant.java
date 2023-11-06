@@ -143,7 +143,7 @@ public interface EsConstant {
     /**
      * 重新索引的更新时间
      */
-    String REINDEX_TIME_FILED = "reindexTime";
+    String REINDEX_TIME_FILED = "epReindexTime";
 
     /**
      * 重建索引时的锁 决定索引是否在reindex

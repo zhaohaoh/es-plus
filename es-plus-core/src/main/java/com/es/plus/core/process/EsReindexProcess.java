@@ -105,12 +105,17 @@ public class EsReindexProcess {
         String updateCommend = getMappingUpdateCommend(currentEsMapping, clazz);
 
         //执行对应操作
+        EsIndex annotation = clazz.getAnnotation(EsIndex.class);
+    
+        log.info("EsExecutorUtil tryReindex Commend:{}", updateCommend);
         if (Objects.equals(updateCommend, Commend.MAPPING_UPDATE)) {
+            if (!annotation.updateMapping()) {
+                return;
+            }
             log.info("es-plus mapping_update index [{}]",currentIndex);
             esPlusClientFacade.putMapping(currentIndex, clazz);
         } else if (Objects.equals(updateCommend, Commend.REINDEX) || reindex) {
             // 忽略处理reindex
-            EsIndex annotation = clazz.getAnnotation(EsIndex.class);
             if (!annotation.tryReindex()) {
                 return;
             }
@@ -130,7 +135,6 @@ public class EsReindexProcess {
                 }
             }
         }
-        log.info("EsExecutorUtil tryReindex Commend:{}", updateCommend);
     }
 
     //有事临时编写的代码
@@ -258,7 +262,7 @@ public class EsReindexProcess {
         stopWatch.start();
 
         //迁移数据  不能随便修改索引映射的名字。如果改了名字，旧的字段还有数据，那么mapping和数据依然会被带到新的索引去。索引只能改变结构。而不是名字。改名字要先特殊处理字段
-        boolean reindex = esPlusClientFacade.reindex(currentIndex, reindexName, null);
+        boolean reindex = esPlusClientFacade.reindex(currentIndex, reindexName);
         if (!reindex) {
             log.error("es-plus reindex Fail");
         }

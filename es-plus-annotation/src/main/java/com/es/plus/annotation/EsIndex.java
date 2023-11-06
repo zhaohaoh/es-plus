@@ -63,6 +63,11 @@ public @interface EsIndex {
      * 是否试着重建索引
      */
     boolean tryReindex() default false;
+    
+    /**
+     * 自动创建和更新映射 不会重建索引
+     */
+    boolean updateMapping() default true;
 
     /**
      *  客户端实例

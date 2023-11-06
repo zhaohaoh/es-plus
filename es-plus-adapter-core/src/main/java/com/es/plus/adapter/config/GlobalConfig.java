@@ -79,6 +79,11 @@ public class GlobalConfig {
     private EsIdType esIdType = EsIdType.DEFAULT;
 
     /**
+     * 查询超时时间 最大努力，并不是所有地方都会检查超时。模糊查询肯定不会有效
+     */
+    private Integer searchTimeout = 30;
+
+    /**
      * 启动检查
      */
     private ConnectFailHandleEnum connectFailHandle = ConnectFailHandleEnum.THROW_EXCEPTION;

@@ -91,19 +91,31 @@ public class EsIndexWrapper implements IEsIndexWrapper {
     @Override
     public boolean reindex(String oldIndexName, String reindexName, Long currentTime) {
         esPlusClientFacade.reindex(oldIndexName, reindexName, currentTime);
-        return false;
+        return true;
+    }
+    
+    @Override
+    public boolean reindex(String oldIndexName, String reindexName) {
+        esPlusClientFacade.reindex(oldIndexName, reindexName);
+        return true;
+    }
+    
+    @Override
+    public boolean reindex(String oldIndexName, String reindexName,Map<String,Object> changeMapping) {
+        esPlusClientFacade.reindex(oldIndexName, reindexName,changeMapping);
+        return true;
     }
 
     @Override
     public boolean updateSettings(EsSettings esSettings) {
         esPlusClientFacade.updateSettings(index, esSettings);
-        return false;
+        return true;
     }
 
     @Override
     public boolean updateSettings(Map<String, Object> esSettings) {
         esPlusClientFacade.updateSettings(index, esSettings);
-        return false;
+        return true;
     }
 
     @Override

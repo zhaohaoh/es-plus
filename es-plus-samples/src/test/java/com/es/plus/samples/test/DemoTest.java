@@ -1,7 +1,10 @@
 package com.es.plus.samples.test;
 
 import com.es.plus.adapter.params.EsResponse;
+import com.es.plus.adapter.util.JsonUtils;
 import com.es.plus.core.statics.Es;
+import com.es.plus.core.wrapper.chain.EsChainQueryWrapper;
+import com.es.plus.es6.client.EsPlus6Aggregations;
 import com.es.plus.samples.SamplesApplication;
 import com.es.plus.samples.dto.FastTestDTO;
 import com.es.plus.samples.service.FastTestService;
@@ -9,6 +12,7 @@ import org.elasticsearch.common.unit.Fuzziness;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.TermQueryBuilder;
+import org.elasticsearch.search.aggregations.metrics.sum.Sum;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
@@ -19,7 +23,9 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.util.Collections;
 import java.util.Date;
+import java.util.Map;
 import java.util.TimeZone;
 
 /**
@@ -35,8 +41,19 @@ import java.util.TimeZone;
 public class DemoTest {
     @Autowired
     private FastTestService fastTestService;
+    
+    @org.junit.jupiter.api.Test
+    public void test(){
+        EsChainQueryWrapper<Map> wrapper = Es.chainQuery(Map.class).index("completeorder") ;
+        wrapper.esAggWrapper().sum("tnum");
+        EsPlus6Aggregations<Map> aggregations = (EsPlus6Aggregations<Map>) wrapper.aggregations();
+        Sum tnum = aggregations.getSum("tnum");
+        int value1 = (int)tnum.getValue();
+    }
+    
     @org.junit.jupiter.api.Test
     public void filterTerm(){
+        
         BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
         TermQueryBuilder a = QueryBuilders.termQuery("a", "1");
         boolQueryBuilder.must(a);
@@ -47,7 +64,7 @@ public class DemoTest {
     @org.junit.jupiter.api.Test
     public void mustNotTerm(){
         EsResponse<FastTestDTO> list = fastTestService.esChainQueryWrapper().mustNot()
-                .term(FastTestDTO::getUsername, "酷酷的").search();
+                .terms(FastTestDTO::getUsername, "酷酷的").search();
         System.out.println(list);
     }
     @org.junit.jupiter.api.Test
@@ -142,7 +159,37 @@ public class DemoTest {
                 .search();
         System.out.println(test);
     }
-
+    
+    
+    /**
+     * 根据新的属性映射
+     */
+    @org.junit.jupiter.api.Test
+    public void reindx() {
+        String s = "{\n" + "    \"properties\": {\n" + "        \"text\": {\n"
+                + "            \"type\": \"keyword\"\n" + "        }\n" + "    }\n" + "}";
+    
+        Map<String, Object> map = JsonUtils.toMap(s);
+        Map changeMapping = (Map) map.get("properties");
+        Es.chainIndex().reindex("reindex_test","fast_test_s1",changeMapping);
+    }
+    
+    @org.junit.jupiter.api.Test
+    public void deleteIndex() {
+        Es.chainIndex().deleteIndex("fast_test_s1");
+    }
+    
+    
+    @org.junit.jupiter.api.Test
+    public void update() {
+//        FastTestDTO fastTestDTO = new FastTestDTO();
+//        fastTestDTO.setText("12345");
+//        fastTestDTO.setId(1L);
+//        fastTestDTO.setTestList(Collections.singletonList("12312"));
+//        Es.chainUpdate(FastTestDTO.class).save(fastTestDTO);
+        
+        Es.chainUpdate(FastTestDTO.class).set("testList",null).ids(Collections.singletonList("1")).updateByQuery();
+    }
 
     public static void main(String[] args) throws ParseException {
         LocalDateTime parse1 = LocalDateTime.parse("2023-06-01 00:00:00", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));

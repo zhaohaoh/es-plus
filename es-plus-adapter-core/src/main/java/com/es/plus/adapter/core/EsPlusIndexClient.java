@@ -26,7 +26,7 @@ public interface EsPlusIndexClient {
      *
      * @param index 索引
      */
-    void createIndex(String index);
+    boolean createIndex(String index);
 
     /**
      * 映射
@@ -34,7 +34,7 @@ public interface EsPlusIndexClient {
      * @param index  指数
      * @param tClass t类
      */
-    void putMapping(String index, Class<?> tClass);
+    boolean putMapping(String index, Class<?> tClass);
 
     /**
      * 映射
@@ -105,6 +105,23 @@ public interface EsPlusIndexClient {
      * @return
      */
     boolean reindex(String oldIndexName, String reindexName, Long currentTime);
+    /**
+     * 迁移重建索引
+     *
+     * @param oldIndexName
+     * @param reindexName
+     * @return
+     */
+    boolean reindex(String oldIndexName, String reindexName);
+    
+    /**
+     * 迁移重建索引
+     *
+     * @param oldIndexName
+     * @param reindexName
+     * @return
+     */
+    boolean reindex(String oldIndexName, String reindexName,Map<String,Object> changeProperties);
 
     /**
      * 更新设置

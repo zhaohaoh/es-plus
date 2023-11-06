@@ -43,6 +43,8 @@ import org.springframework.util.CollectionUtils;
 import java.io.IOException;
 import java.util.*;
 
+import static com.es.plus.constant.EsConstant.PROPERTIES;
+
 /**
  * es索引管理者
  *
@@ -50,14 +52,16 @@ import java.util.*;
  * @date 2022/09/03
  */
 public class EsPlus6IndexRestClient implements EsPlusIndexClient {
+    
     private static final Logger log = LoggerFactory.getLogger(EsPlus6IndexRestClient.class);
+    
     private final RestHighLevelClient restHighLevelClient;
-
-
+    
+    
     public EsPlus6IndexRestClient(RestHighLevelClient restHighLevelClient) {
         this.restHighLevelClient = restHighLevelClient;
     }
-
+    
     /**
      * 创建索引
      *
@@ -73,17 +77,20 @@ public class EsPlus6IndexRestClient implements EsPlusIndexClient {
         CreateIndexRequest indexRequest = new CreateIndexRequest(index);
         indexRequest(esIndexParam, indexRequest);
     }
-
+    
     @Override
-    public void createIndex(String index) {
+    public boolean createIndex(String index) {
         CreateIndexRequest indexRequest = new CreateIndexRequest(index);
+        
+        CreateIndexResponse indexResponse = null;
         try {
-            CreateIndexResponse indexResponse = restHighLevelClient.indices().create(indexRequest, RequestOptions.DEFAULT);
+            indexResponse = restHighLevelClient.indices().create(indexRequest, RequestOptions.DEFAULT);
         } catch (IOException e) {
-            throw new EsException(e);
+            return false;
         }
+        return indexResponse.isAcknowledged();
     }
-
+    
     /**
      * 映射
      *
@@ -91,7 +98,7 @@ public class EsPlus6IndexRestClient implements EsPlusIndexClient {
      * @param tClass t类
      */
     @Override
-    public void putMapping(String index, Class<?> tClass) {
+    public boolean putMapping(String index, Class<?> tClass) {
         EsIndexParam esIndexParam = GlobalParamHolder.getAndInitEsIndexParam(tClass);
         if (StringUtils.isBlank(index)) {
             index = esIndexParam.getIndex();
@@ -103,11 +110,13 @@ public class EsPlus6IndexRestClient implements EsPlusIndexClient {
             putMappingRequest.source(mappingProperties);
             printInfoLog("putMapping info={}", JsonUtils.toJsonStr(mappingProperties));
             restHighLevelClient.indices().putMapping(putMappingRequest, RequestOptions.DEFAULT);
+            return true;
         } catch (IOException e) {
-            throw new EsException("mappingRequest error", e);
+            printErrorLog("putMapping:{}", e);
+            return false;
         }
     }
-
+    
     @Override
     public void putMapping(String index, Map<String, Object> mappingProperties) {
         try {
@@ -120,7 +129,7 @@ public class EsPlus6IndexRestClient implements EsPlusIndexClient {
             throw new EsException("mappingRequest error", e);
         }
     }
-
+    
     /**
      * 创建索引映射
      *
@@ -135,7 +144,7 @@ public class EsPlus6IndexRestClient implements EsPlusIndexClient {
         }
         doCreateIndexMapping(index, esIndexParam);
     }
-
+    
     /**
      * 创建索引没有别名
      *
@@ -147,11 +156,11 @@ public class EsPlus6IndexRestClient implements EsPlusIndexClient {
         // 如果已经存在
         CreateIndexRequest indexRequest = new CreateIndexRequest(index);
         boolean exists = this.indexExists(indexRequest.index());
-
+        
         EsIndexParam esIndexParam = GlobalParamHolder.getAndInitEsIndexParam(tClass);
         //创建索引的settings
         Settings.Builder settings = Settings.builder();
-
+        
         EsSettings esSettings = esIndexParam.getEsSettings();
         if (esSettings != null) {
             String json = JsonUtils.toJsonStr(esSettings);
@@ -159,11 +168,11 @@ public class EsPlus6IndexRestClient implements EsPlusIndexClient {
         }
         try {
             if (!exists) {
-                indexRequest
-                        .settings(settings)
-                        .mapping(esIndexParam.getMappings());
-                printInfoLog("createMapping settings={},mappings:{}", settings.build().toString(), JsonUtils.toJsonStr(esIndexParam.getMappings()));
-                CreateIndexResponse indexResponse = restHighLevelClient.indices().create(indexRequest, RequestOptions.DEFAULT);
+                indexRequest.settings(settings).mapping(esIndexParam.getMappings());
+                printInfoLog("createMapping settings={},mappings:{}", settings.build().toString(),
+                        JsonUtils.toJsonStr(esIndexParam.getMappings()));
+                CreateIndexResponse indexResponse = restHighLevelClient.indices()
+                        .create(indexRequest, RequestOptions.DEFAULT);
                 return indexResponse.isAcknowledged();
             }
         } catch (Exception e) {
@@ -171,7 +180,7 @@ public class EsPlus6IndexRestClient implements EsPlusIndexClient {
         }
         return false;
     }
-
+    
     /**
      * 删除索引
      */
@@ -187,8 +196,8 @@ public class EsPlus6IndexRestClient implements EsPlusIndexClient {
             throw new RuntimeException("delete index error ", e);
         }
     }
-
-
+    
+    
     /**
      * 得到索引
      *
@@ -201,14 +210,13 @@ public class EsPlus6IndexRestClient implements EsPlusIndexClient {
         try {
             EsIndexResponse esIndexResponse = new EsIndexResponse();
             GetIndexResponse getIndexResponse = restHighLevelClient.indices().get(request, RequestOptions.DEFAULT);
-
+            
             Map<String, String> settingsMap = new HashMap<>();
             getIndexResponse.getSettings().values().stream().findFirst().ifPresent(s -> {
                 Set<String> names = s.keySet();
                 names.forEach(name -> settingsMap.put(name, s.get(name)));
             });
-
-
+            
             String[] indices = getIndexResponse.getIndices();
             Map<String, MappingMetaData> mappings = getIndexResponse.getMappings();
             Map<String, Object> sourceAsMap = mappings.values().stream().findFirst().get().getSourceAsMap();
@@ -225,7 +233,7 @@ public class EsPlus6IndexRestClient implements EsPlusIndexClient {
             throw e;
         }
     }
-
+    
     /**
      * 得到别名索引
      *
@@ -237,7 +245,8 @@ public class EsPlus6IndexRestClient implements EsPlusIndexClient {
         GetAliasesRequest request = new GetAliasesRequest(alias);
         try {
             EsAliasResponse esAliasResponse = new EsAliasResponse();
-            GetAliasesResponse aliasesResponse = restHighLevelClient.indices().getAlias(request, RequestOptions.DEFAULT);
+            GetAliasesResponse aliasesResponse = restHighLevelClient.indices()
+                    .getAlias(request, RequestOptions.DEFAULT);
             Set<String> indexs = aliasesResponse.getAliases().keySet();
             esAliasResponse.setIndexs(indexs);
             return esAliasResponse;
@@ -245,8 +254,8 @@ public class EsPlus6IndexRestClient implements EsPlusIndexClient {
             throw new EsException("getIndex IOException", e);
         }
     }
-
-
+    
+    
     /**
      * 查询index是否存在
      */
@@ -258,7 +267,7 @@ public class EsPlus6IndexRestClient implements EsPlusIndexClient {
             throw new EsException("index exists", e);
         }
     }
-
+    
     /**
      * 更新别名
      *
@@ -273,19 +282,74 @@ public class EsPlus6IndexRestClient implements EsPlusIndexClient {
                 IndicesAliasesRequest.AliasActions.Type.ADD).index(reindexName).alias(alias);
         IndicesAliasesRequest.AliasActions removeAction = new IndicesAliasesRequest.AliasActions(
                 IndicesAliasesRequest.AliasActions.Type.REMOVE).index(oldIndexName).alias(alias);
-
+        
         IndicesAliasesRequest indicesAliasesRequest = new IndicesAliasesRequest();
         indicesAliasesRequest.addAliasAction(addIndexAction);
         indicesAliasesRequest.addAliasAction(removeAction);
         try {
-            AcknowledgedResponse acknowledgedResponse = restHighLevelClient.indices().updateAliases(indicesAliasesRequest,
-                    RequestOptions.DEFAULT);
+            AcknowledgedResponse acknowledgedResponse = restHighLevelClient.indices()
+                    .updateAliases(indicesAliasesRequest, RequestOptions.DEFAULT);
             return acknowledgedResponse.isAcknowledged();
         } catch (IOException e) {
-            throw new EsException("reindex exception oldIndexName:" + oldIndexName + ", reindexName:  " + reindexName, e);
+            throw new EsException("reindex exception oldIndexName:" + oldIndexName + ", reindexName:  " + reindexName,
+                    e);
         }
     }
-
+    
+    /**
+     * 迁移重建索引
+     *
+     * @param oldIndexName
+     * @param reindexName
+     * @return
+     */
+    @Override
+    public boolean reindex(String oldIndexName, String reindexName) {
+        ReindexRequest reindexRequest = new ReindexRequest();
+        reindexRequest.setSourceIndices(oldIndexName);
+        reindexRequest.setDestIndex(reindexName);
+        reindexRequest.setDestOpType(EsConstant.DEFAULT_DEST_OP_TYPE);
+        reindexRequest.setConflicts(EsConstant.DEFAULT_CONFLICTS);
+        reindexRequest.setRefresh(true);
+        reindexRequest.getSearchRequest().source().fetchSource(null, EsConstant.REINDEX_TIME_FILED);
+        reindexRequest.setSourceBatchSize(GlobalConfigCache.GLOBAL_CONFIG.getBatchSize());
+        reindexRequest.setTimeout(TimeValue.timeValueNanos(Long.MAX_VALUE));
+        try {
+            BulkByScrollResponse response = restHighLevelClient.reindex(reindexRequest, RequestOptions.DEFAULT);
+            List<BulkItemResponse.Failure> bulkFailures = response.getBulkFailures();
+            if (CollectionUtils.isEmpty(bulkFailures)) {
+                return true;
+            }
+            return false;
+        } catch (Exception e) {
+            throw new EsException("reindex exception oldIndexName:" + oldIndexName + ", reindexName:  " + reindexName,
+                    e);
+        }
+    }
+    
+    /**
+     * 重新索引
+     *
+     * @param oldIndexName     老索引名称
+     * @param reindexName      重新索引名称
+     * @param changeMapping 更改属性映射
+     * @return boolean
+     */
+    @Override
+    public boolean reindex(String oldIndexName, String reindexName, Map<String, Object> changeMapping) {
+        boolean exists = indexExists(reindexName);
+        if (!exists) {
+            EsIndexResponse indexResponse = getIndex(oldIndexName);
+            Map<String, Object> mappings = indexResponse.getMappings();
+            //更换新的配置属性
+            Map<String, Object> properties = (Map<String, Object>) mappings.get(PROPERTIES);
+            properties.putAll(changeMapping);
+            boolean index = createIndex(reindexName);
+            putMapping(reindexName, mappings);
+        }
+        return reindex(oldIndexName, reindexName);
+    }
+    
     /**
      * 迁移重建索引
      *
@@ -313,10 +377,11 @@ public class EsPlus6IndexRestClient implements EsPlusIndexClient {
             }
             return false;
         } catch (Exception e) {
-            throw new EsException("reindex exception oldIndexName:" + oldIndexName + ", reindexName:  " + reindexName, e);
+            throw new EsException("reindex exception oldIndexName:" + oldIndexName + ", reindexName:  " + reindexName,
+                    e);
         }
     }
-
+    
     /**
      * 更新设置
      *
@@ -330,7 +395,7 @@ public class EsPlus6IndexRestClient implements EsPlusIndexClient {
         Settings settings = Settings.builder().loadFromSource(json, XContentType.JSON).build();
         //创建索引的settings
         UpdateSettingsRequest updateSettingsRequest = new UpdateSettingsRequest(settings, index);
-
+        
         //执行put
         AcknowledgedResponse settingsResult = null;
         try {
@@ -338,18 +403,18 @@ public class EsPlus6IndexRestClient implements EsPlusIndexClient {
         } catch (IOException e) {
             throw new EsException(e);
         }
-
+        
         //成功的话，返回结果是true
         return settingsResult.isAcknowledged();
     }
-
+    
     @Override
     public boolean updateSettings(String index, Map<String, Object> esSettings) {
         String json = JsonUtils.toJsonStr(esSettings);
         Settings settings = Settings.builder().loadFromSource(json, XContentType.JSON).build();
         //创建索引的settings
         UpdateSettingsRequest updateSettingsRequest = new UpdateSettingsRequest(settings, index);
-
+        
         //执行put
         AcknowledgedResponse settingsResult = null;
         try {
@@ -357,11 +422,11 @@ public class EsPlus6IndexRestClient implements EsPlusIndexClient {
         } catch (IOException e) {
             throw new EsException(e);
         }
-
+        
         //成功的话，返回结果是true
         return settingsResult.isAcknowledged();
     }
-
+    
     /**
      * 连接
      */
@@ -373,7 +438,7 @@ public class EsPlus6IndexRestClient implements EsPlusIndexClient {
             return false;
         }
     }
-
+    
     @Override
     public void createAlias(String currentIndex, String alias) {
         IndicesAliasesRequest.AliasActions addIndexAction = new IndicesAliasesRequest.AliasActions(
@@ -381,13 +446,13 @@ public class EsPlus6IndexRestClient implements EsPlusIndexClient {
         IndicesAliasesRequest indicesAliasesRequest = new IndicesAliasesRequest();
         indicesAliasesRequest.addAliasAction(addIndexAction);
         try {
-            AcknowledgedResponse acknowledgedResponse = restHighLevelClient.indices().updateAliases(indicesAliasesRequest,
-                    RequestOptions.DEFAULT);
+            AcknowledgedResponse acknowledgedResponse = restHighLevelClient.indices()
+                    .updateAliases(indicesAliasesRequest, RequestOptions.DEFAULT);
         } catch (IOException e) {
             throw new EsException("createAlias exception", e);
         }
     }
-
+    
     @Override
     public void removeAlias(String index, String alias) {
         IndicesAliasesRequest.AliasActions remove = new IndicesAliasesRequest.AliasActions(
@@ -395,13 +460,13 @@ public class EsPlus6IndexRestClient implements EsPlusIndexClient {
         IndicesAliasesRequest indicesAliasesRequest = new IndicesAliasesRequest();
         indicesAliasesRequest.addAliasAction(remove);
         try {
-            AcknowledgedResponse acknowledgedResponse = restHighLevelClient.indices().updateAliases(indicesAliasesRequest,
-                    RequestOptions.DEFAULT);
+            AcknowledgedResponse acknowledgedResponse = restHighLevelClient.indices()
+                    .updateAliases(indicesAliasesRequest, RequestOptions.DEFAULT);
         } catch (IOException e) {
             throw new EsException("createAlias exception", e);
         }
     }
-
+    
     @Override
     public boolean forceMerge(int maxSegments, boolean onlyExpungeDeletes, boolean flush, String... index) {
         ForceMergeRequest request = new ForceMergeRequest(index);
@@ -410,14 +475,15 @@ public class EsPlus6IndexRestClient implements EsPlusIndexClient {
         request.onlyExpungeDeletes(onlyExpungeDeletes);
         request.flush(flush);
         try {
-            ForceMergeResponse forceMergeResponse = restHighLevelClient.indices().forcemerge(request, RequestOptions.DEFAULT);
+            ForceMergeResponse forceMergeResponse = restHighLevelClient.indices()
+                    .forcemerge(request, RequestOptions.DEFAULT);
             int successfulShards = forceMergeResponse.getSuccessfulShards();
             return successfulShards > 0;
         } catch (IOException e) {
             throw new EsException("forceMerge exception", e);
         }
     }
-
+    
     @Override
     public boolean refresh(String... index) {
         RefreshRequest request = new RefreshRequest(index);
@@ -428,8 +494,8 @@ public class EsPlus6IndexRestClient implements EsPlusIndexClient {
             throw new EsException("refresh exception", e);
         }
     }
-
-
+    
+    
     /**
      * 索引请求
      *
@@ -451,14 +517,14 @@ public class EsPlus6IndexRestClient implements EsPlusIndexClient {
         }
         try {
             //将settings封装到一个IndexClient对象中
-            indexRequest
-                    .settings(settings);
-            CreateIndexResponse indexResponse = restHighLevelClient.indices().create(indexRequest, RequestOptions.DEFAULT);
+            indexRequest.settings(settings);
+            CreateIndexResponse indexResponse = restHighLevelClient.indices()
+                    .create(indexRequest, RequestOptions.DEFAULT);
         } catch (IOException e) {
             throw new EsException(e);
         }
     }
-
+    
     /**
      * 创建索引映射
      *
@@ -469,7 +535,7 @@ public class EsPlus6IndexRestClient implements EsPlusIndexClient {
         CreateIndexRequest indexRequest = new CreateIndexRequest(index);
         //创建索引的settings
         Settings.Builder settings = Settings.builder();
-
+        
         EsSettings esSettings = esIndexParam.getEsSettings();
         if (esSettings != null) {
             String json = JsonUtils.toJsonStr(esSettings);
@@ -478,40 +544,40 @@ public class EsPlus6IndexRestClient implements EsPlusIndexClient {
         if (StringUtils.isNotBlank(esIndexParam.getAlias())) {
             indexRequest.alias(new Alias(esIndexParam.getAlias()));
         }
-
+        
         try {
             boolean exists = this.indexExists(indexRequest.index());
             if (!exists) {
-                indexRequest
-                        .settings(settings)
-                        .mapping(esIndexParam.getMappings());
-                printInfoLog("doCreateIndexMapping index={} settings={},mappings:{}", indexRequest.index(), settings.build().toString(), JsonUtils.toJsonStr(esIndexParam.getMappings()));
-                CreateIndexResponse indexResponse = restHighLevelClient.indices().create(indexRequest, RequestOptions.DEFAULT);
+                indexRequest.settings(settings).mapping(esIndexParam.getMappings());
+                printInfoLog("doCreateIndexMapping index={} settings={},mappings:{}", indexRequest.index(),
+                        settings.build().toString(), JsonUtils.toJsonStr(esIndexParam.getMappings()));
+                CreateIndexResponse indexResponse = restHighLevelClient.indices()
+                        .create(indexRequest, RequestOptions.DEFAULT);
             }
         } catch (IOException e) {
             throw new EsException("elasticsearch mappingRequest error", e);
         }
     }
-
-
+    
+    
     /**
      * 打印信息日志
      *
-     * @param format 格式
-     * @param params 参数个数
+     * @param message 信息
+     * @param params  参数个数
      */
-    private void printInfoLog(String format, Object... params) {
-        log.info("es-plus " + format, params);
+    private void printInfoLog(String message, Object... params) {
+        log.info("es-plus " + message, params);
     }
-
+    
     /**
      * 打印错误日志
      *
-     * @param format 格式
-     * @param params 参数个数
+     * @param message 错误信息
+     * @param params  参数个数
      */
-    private void printErrorLog(String format, Object... params) {
-        log.error("es-plus " + format, params);
+    private void printErrorLog(String message, Object... params) {
+        log.error("es-plus " + message, params);
     }
-
+    
 }

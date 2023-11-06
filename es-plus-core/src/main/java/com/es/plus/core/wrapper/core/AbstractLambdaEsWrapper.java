@@ -53,6 +53,8 @@ public abstract class AbstractLambdaEsWrapper<T, R> {
                     String fieldName = mappingFieldMap.get(last);
                     return StringUtils.isBlank(fieldName) ? esName : fieldName;
                 }
+            }else{
+                return esName;
             }
         }
 

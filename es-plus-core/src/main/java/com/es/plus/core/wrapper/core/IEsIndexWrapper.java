@@ -21,6 +21,7 @@ public interface IEsIndexWrapper  {
      *
      */
     EsIndexWrapper createIndex();
+    
     /**
      * 映射
      *
@@ -90,7 +91,18 @@ public interface IEsIndexWrapper  {
      * @return
      */
     boolean reindex(String oldIndexName, String reindexName, Long currentTime);
-
+    
+    
+    /**
+     * 迁移重建索引
+     *
+     * @param oldIndexName
+     * @param reindexName
+     * @return
+     */
+    boolean reindex(String oldIndexName, String reindexName);
+     
+      boolean reindex(String oldIndexName, String reindexName,Map<String,Object> changeProperties);
     /**
      * 更新设置
      *

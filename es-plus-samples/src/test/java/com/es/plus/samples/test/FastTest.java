@@ -12,7 +12,7 @@ import com.es.plus.samples.SamplesApplication;
 import com.es.plus.samples.dto.FastTestDTO;
 import com.es.plus.samples.service.FastTestService;
 import org.elasticsearch.search.aggregations.BucketOrder;
-import org.elasticsearch.search.aggregations.pipeline.BucketSortPipelineAggregationBuilder;
+import org.elasticsearch.search.aggregations.pipeline.bucketsort.BucketSortPipelineAggregationBuilder;
 import org.elasticsearch.search.sort.FieldSortBuilder;
 import org.elasticsearch.search.sort.SortBuilders;
 import org.elasticsearch.search.sort.SortOrder;
@@ -108,7 +108,7 @@ public class FastTest {
     public void wildCard() {
         // 50字符要100多毫秒 80个字符就要400毫秒了
         EsResponse<FastTestDTO> test = Es.chainLambdaQuery(FastTestDTO.class)
-                .wildcard(FastTestDTO::getText, "*凄切切请求群群群咕咕咕咕咕咕过过过过过过过过过个若若若若若若若若若若若ggrr二位而个干白VNBVR人v个版雇个人全文我test1凄切切请求群群群咕咕咕咕咕咕过过过过过过过过过个若若若若若若若若若若若ggrr二位而个干白VNBVR人v个版雇个人全文我test1*")
+                .wildcard(FastTestDTO::getText, "*凄切切请求群哈哈好哈哈哈任天堂吞吞吐吐吞吞吐吐吞吞吐吐天太热富贵花广发华福广汇股份蒂冈群咕咕咕咕咕咕过过过过个若若若若若若若若若ggrr二位而gggggGG古古怪怪滚滚滚官方电饭锅短发女孩苟富贵哈哈哈哈哈哈哈哈哈富贵个干白VNBVR人v个版雇个人全文我test1凄切切请求群群群咕咕咕咕咕咕过过过过过过过过过个若若若若若若若若若若若ggrr二位而个干白VNBVR人v个版雇个人全文我test1*")
 
                 .search();
         System.out.println(test);

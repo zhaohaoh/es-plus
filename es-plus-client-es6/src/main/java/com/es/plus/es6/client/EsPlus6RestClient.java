@@ -198,7 +198,7 @@ public class EsPlus6RestClient implements EsPlusClient {
             for (Object esData : esDataList) {
                 IndexRequest indexRequest = new IndexRequest(index);
                 String source = JsonUtils.toJsonStr(esData);
-                indexRequest.id(GlobalParamHolder.getDocId(esData)).source(source, XContentType.JSON);
+                indexRequest.id(GlobalParamHolder.getDocId(esData)).source(source, XContentType.JSON).type(type);
                 if (childIndex) {
                     indexRequest.routing(FieldUtils.getStrFieldValue(esData, "joinField", "parent"));
                 }
@@ -369,17 +369,19 @@ public class EsPlus6RestClient implements EsPlusClient {
                 String name = field.getName();
                 //除了基本类型和字符串。日期的对象需要进行转化
                 Object value = field.getValue();
-                if (value instanceof Date) {
-                    SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                    Date date = (Date) value;
-                    value = simpleDateFormat.format(date);
-                } else if (value instanceof LocalDateTime) {
-                    value = ((LocalDateTime) value).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-                } else if (value instanceof LocalDate) {
-                    value = ((LocalDate) value).format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-                } else if (value instanceof List) {
-                } else if (!ResolveUtils.isCommonDataType(value.getClass()) && !ResolveUtils.isWrapClass(value.getClass())) {
-                    value = BeanUtils.beanToMap(value);
+                if (value!=null) {
+                    if (value instanceof Date) {
+                        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                        Date date = (Date) value;
+                        value = simpleDateFormat.format(date);
+                    } else if (value instanceof LocalDateTime) {
+                        value = ((LocalDateTime) value).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+                    } else if (value instanceof LocalDate) {
+                        value = ((LocalDate) value).format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+                    } else if (value instanceof List) {
+                    } else if (!ResolveUtils.isCommonDataType(value.getClass()) && !ResolveUtils.isWrapClass(value.getClass())) {
+                        value = BeanUtils.beanToMap(value);
+                    }
                 }
                 //list直接覆盖 丢进去 无需再特殊处理
                 params.put(name, value);
@@ -954,6 +956,11 @@ public class EsPlus6RestClient implements EsPlusClient {
             });
         }
         populateGroupField(esParamWrapper, sourceBuilder);
+
+
+        Integer searchTimeout = GlobalConfigCache.GLOBAL_CONFIG.getSearchTimeout();
+        sourceBuilder.timeout(TimeValue.timeValueSeconds(searchTimeout));
+
         return sourceBuilder;
     }
 

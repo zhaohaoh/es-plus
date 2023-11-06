@@ -105,11 +105,12 @@ public class Es {
         return new EsIndexWrapper(esPlusClientFacade);
     }
     /**
-     * 链更新
+     * 索引
      *
      * @return {@link EsChainUpdateWrapper}<{@link T}>
      */
     public static <T> EsIndexWrapper chainIndex() {
         return new EsIndexWrapper();
     }
+    
 }

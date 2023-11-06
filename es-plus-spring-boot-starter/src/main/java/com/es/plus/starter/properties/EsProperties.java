@@ -54,6 +54,8 @@ public class EsProperties {
      */
 
     private Integer connectTimeOut = 60;
+
+
     /**
      * 连接超时时间
      */

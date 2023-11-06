@@ -89,8 +89,8 @@ public class EsPlusClientFacade   {
      *
      * @param index 索引
      */
-    public void createIndex(String index) {
-        esPlusIndexClient.createIndex(index);
+    public boolean createIndex(String index) {
+       return esPlusIndexClient.createIndex(index);
     }
 
     /**
@@ -110,8 +110,8 @@ public class EsPlusClientFacade   {
      * @param index  指数
      * @param tClass t类
      */
-    public void putMapping(String index, Class<?> tClass) {
-        esPlusIndexClient.putMapping(index, tClass);
+    public boolean putMapping(String index, Class<?> tClass) {
+      return   esPlusIndexClient.putMapping(index, tClass);
     }
 
 
@@ -197,7 +197,17 @@ public class EsPlusClientFacade   {
     public boolean replaceAlias(String oldIndexName, String reindexName, String alias) {
         return esPlusIndexClient.replaceAlias(oldIndexName, reindexName, alias);
     }
-
+    
+    /**
+     * 迁移重建索引
+     *
+     * @param oldIndexName
+     * @param reindexName
+     * @return
+     */
+    public boolean reindex(String oldIndexName, String reindexName) {
+        return esPlusIndexClient.reindex(oldIndexName, reindexName);
+    }
 
     /**
      * 迁移重建索引
@@ -208,6 +218,10 @@ public class EsPlusClientFacade   {
      */
     public boolean reindex(String oldIndexName, String reindexName, Long currentTime) {
         return esPlusIndexClient.reindex(oldIndexName, reindexName, currentTime);
+    }
+    
+    public boolean reindex(String oldIndexName, String reindexName, Map<String,Object> changeMapping) {
+        return esPlusIndexClient.reindex(oldIndexName, reindexName, changeMapping);
     }
 
 
