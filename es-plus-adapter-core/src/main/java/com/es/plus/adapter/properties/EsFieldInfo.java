@@ -101,7 +101,10 @@ public class EsFieldInfo {
      * 指定时间类型序列化存储的格式
      */
     private String dateFormat;
-
+    /**
+     * 转换字符串的时区
+     */
+    private String timeZone;
     /**
      * 全局序数  插入的时候即对聚合进行预处理 提高聚合性能 适用于聚合字段和父子文档
      * 适用场景：高基数聚合 即非重复属性多的字段

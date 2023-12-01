@@ -147,7 +147,6 @@ public class EsPlusClientProxy implements InvocationHandler {
         } else {
             log.warn("EsInterceptor index is null");
         }
-        ArrayList<Object> objects = new ArrayList<>();
         return index;
     }
 

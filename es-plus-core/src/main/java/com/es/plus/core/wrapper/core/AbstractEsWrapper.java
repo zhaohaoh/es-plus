@@ -252,7 +252,7 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
             String fieldName = nameToFieldName(name);
             EsFieldInfo esFieldInfo = GlobalParamHolder.getIndexField(tClass, fieldName);
             if (esFieldInfo != null) {
-                value = DateUtil.format(value, esFieldInfo.getDateFormat());
+                value = DateUtil.format(value, esFieldInfo.getDateFormat(),esFieldInfo.getTimeZone());
             }
             TermQueryBuilder termQueryBuilder = QueryBuilders.termQuery(keyword, value);
             currentBuilder = termQueryBuilder;
@@ -270,7 +270,7 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
             EsFieldInfo esFieldInfo = GlobalParamHolder.getIndexField(tClass, fieldName);
             TermsQueryBuilder termsQueryBuilder;
             if (esFieldInfo != null) {
-                List<Object> list = Arrays.stream(values).map(v -> DateUtil.format(v, esFieldInfo.getDateFormat())).collect(Collectors.toList());
+                List<Object> list = Arrays.stream(values).map(v -> DateUtil.format(v, esFieldInfo.getDateFormat(),esFieldInfo.getTimeZone())).collect(Collectors.toList());
                 termsQueryBuilder = QueryBuilders.termsQuery(keyword, list);
             } else {
                 termsQueryBuilder = QueryBuilders.termsQuery(keyword, values);
@@ -288,7 +288,7 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
             String fieldName = nameToFieldName(name);
             EsFieldInfo esFieldInfo = GlobalParamHolder.getIndexField(tClass, fieldName);
             if (esFieldInfo != null) {
-                values = values.stream().map(v -> DateUtil.format(v, esFieldInfo.getDateFormat())).collect(Collectors.toList());
+                values = values.stream().map(v -> DateUtil.format(v, esFieldInfo.getDateFormat(),esFieldInfo.getTimeZone())).collect(Collectors.toList());
             }
             TermsQueryBuilder termsQueryBuilder = QueryBuilders.termsQuery(column, values);
             currentBuilder = termsQueryBuilder;
@@ -489,7 +489,7 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
             String fieldName = nameToFieldName(name);
             EsFieldInfo esFieldInfo = GlobalParamHolder.getIndexField(tClass, fieldName);
             if (esFieldInfo != null) {
-                from = DateUtil.format(from, esFieldInfo.getDateFormat());
+                from = DateUtil.format(from, esFieldInfo.getDateFormat(),esFieldInfo.getTimeZone());
             }
             queryBuilders.add(QueryBuilders.rangeQuery(esName).gt(from));
         }
@@ -503,7 +503,7 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
             String fieldName = nameToFieldName(name);
             EsFieldInfo esFieldInfo = GlobalParamHolder.getIndexField(tClass, fieldName);
             if (esFieldInfo != null) {
-                from = DateUtil.format(from, esFieldInfo.getDateFormat());
+                from = DateUtil.format(from, esFieldInfo.getDateFormat(),esFieldInfo.getTimeZone());
             }
             queryBuilders.add(QueryBuilders.rangeQuery(esName).gte(from));
         }
@@ -517,7 +517,7 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
             String fieldName = nameToFieldName(name);
             EsFieldInfo esFieldInfo = GlobalParamHolder.getIndexField(tClass, fieldName);
             if (esFieldInfo != null) {
-                to = DateUtil.format(to, esFieldInfo.getDateFormat());
+                to = DateUtil.format(to, esFieldInfo.getDateFormat(),esFieldInfo.getTimeZone());
             }
             queryBuilders.add(QueryBuilders.rangeQuery(esName).lt(to));
         }
@@ -531,7 +531,7 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
             String fieldName = nameToFieldName(name);
             EsFieldInfo esFieldInfo = GlobalParamHolder.getIndexField(tClass, fieldName);
             if (esFieldInfo != null) {
-                to = DateUtil.format(to, esFieldInfo.getDateFormat());
+                to = DateUtil.format(to, esFieldInfo.getDateFormat(),esFieldInfo.getTimeZone());
             }
             queryBuilders.add(QueryBuilders.rangeQuery(esName).lte(to));
         }
@@ -545,8 +545,8 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
             String fieldName = nameToFieldName(name);
             EsFieldInfo esFieldInfo = GlobalParamHolder.getIndexField(tClass, fieldName);
             if (esFieldInfo != null) {
-                from = DateUtil.format(from, esFieldInfo.getDateFormat());
-                to = DateUtil.format(to, esFieldInfo.getDateFormat());
+                from = DateUtil.format(from, esFieldInfo.getDateFormat(),esFieldInfo.getTimeZone());
+                to = DateUtil.format(to, esFieldInfo.getDateFormat(),esFieldInfo.getTimeZone());
             }
             queryBuilders.add(QueryBuilders.rangeQuery(esName).from(from, fromInclude).to(to, toInclude));
         }
@@ -560,8 +560,8 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
             String fieldName = nameToFieldName(name);
             EsFieldInfo esFieldInfo = GlobalParamHolder.getIndexField(tClass, fieldName);
             if (esFieldInfo != null) {
-                from = DateUtil.format(from, esFieldInfo.getDateFormat());
-                to = DateUtil.format(to, esFieldInfo.getDateFormat());
+                from = DateUtil.format(from, esFieldInfo.getDateFormat(),esFieldInfo.getTimeZone());
+                to = DateUtil.format(to, esFieldInfo.getDateFormat(),esFieldInfo.getTimeZone());
             }
             queryBuilders.add(QueryBuilders.rangeQuery(esName).from(from, true).to(to, true));
         }
@@ -575,8 +575,8 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
             String fieldName = nameToFieldName(name);
             EsFieldInfo esFieldInfo = GlobalParamHolder.getIndexField(tClass, fieldName);
             if (esFieldInfo != null) {
-                from = DateUtil.format(from, esFieldInfo.getDateFormat());
-                to = DateUtil.format(to, esFieldInfo.getDateFormat());
+                from = DateUtil.format(from, esFieldInfo.getDateFormat(),esFieldInfo.getTimeZone());
+                to = DateUtil.format(to, esFieldInfo.getDateFormat(),esFieldInfo.getTimeZone());
             }
             queryBuilders.add(QueryBuilders.rangeQuery(esName).from(from, true).to(to, true).timeZone(timeZone));
         }

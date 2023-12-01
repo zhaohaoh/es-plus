@@ -79,7 +79,7 @@ public class Test {
         fastTestDTO.setText("我的个人介绍 我是一篇文章，用于搜索。我的关键词有很多。苹果 梨子 苹果X2 苹果哥哥");
         fastTestDTO.setAge(25);
         fastTestDTO.setUsername("酷酷的");
-        fastTestDTO.setCreateTime(new Date());
+        fastTestDTO.setCreateTime(System.currentTimeMillis());
         Es.chainUpdate(FastTestDTO.class).save(fastTestDTO);
     }
 

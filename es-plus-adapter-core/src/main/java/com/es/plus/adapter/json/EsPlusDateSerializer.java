@@ -15,14 +15,19 @@ import java.io.IOException;
  */
 public class EsPlusDateSerializer extends JsonSerializer<Object> {
     private final String format;
-
-    public EsPlusDateSerializer(String format) {
+    private final String timeZone;
+    public EsPlusDateSerializer(String format,String timeZone) {
         this.format = format;
+        this.timeZone = timeZone;
     }
 
     @Override
     public void serialize(Object value, JsonGenerator jgen, SerializerProvider provider) throws IOException {
-        Object data = DateUtil.format(value, format);
+        if (value instanceof Long){
+            jgen.writeNumber((Long)value);
+            return;
+        }
+        Object data = DateUtil.format(value, format,timeZone);
         jgen.writeString((String) data);
     }
 }

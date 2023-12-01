@@ -32,6 +32,7 @@ public class AnnotationResolveUtil {
         esFieldInfo.setParent(esField.parent());
         esFieldInfo.setType(esField.type());
         esFieldInfo.setDateFormat(esField.dateFormat());
+        esFieldInfo.setTimeZone(esField.timeZone());
         esFieldInfo.setEsFormat(esField.esFormat());
         esFieldInfo.setSearchAnalyzer(esField.searchAnalyzer());
         esFieldInfo.setEagerGlobalOrdinals(esField.eagerGlobalOrdinals());

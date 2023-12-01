@@ -96,7 +96,10 @@ public @interface EsField {
      * 指定时间类型序列化存储的格式
      */
     String dateFormat() default "yyyy-MM-dd HH:mm:ss";
-
+    /**
+     * 指定时区 建议指定0时区 因为es会把字符串当成0时区处理
+     */
+    String timeZone() default "";
     /**
      * 全局序数  插入的时候即对聚合进行预处理 提高聚合性能 适用于聚合字段和父子文档
      * 适用场景：高基数聚合 即非重复属性多的字段

@@ -279,7 +279,7 @@ public class JsonUtils {
                             if (esFieldInfo != null) {
                                 String dateFormat = esFieldInfo.getDateFormat();
                                 EsPlusDateSerializer dateSerializer = DATE_SERIALIZER_CACHE.computeIfAbsent(dateFormat,
-                                        c -> new EsPlusDateSerializer(dateFormat));
+                                        c -> new EsPlusDateSerializer(dateFormat,esFieldInfo.getTimeZone()));
                                 beanPropertyWriter.assignSerializer(dateSerializer);
                             }
                         }

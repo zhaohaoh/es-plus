@@ -22,7 +22,6 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Map;
@@ -192,7 +191,7 @@ public class DemoTest {
     }
 
     public static void main(String[] args) throws ParseException {
-        LocalDateTime parse1 = LocalDateTime.parse("2023-06-01 00:00:00", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        LocalDateTime parse1 = LocalDateTime.now();
         Instant instant = parse1.toInstant(ZoneOffset.ofHours(0));
         long l = instant.toEpochMilli();
         System.out.println(l);
