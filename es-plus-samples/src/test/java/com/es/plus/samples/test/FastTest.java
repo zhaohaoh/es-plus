@@ -20,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -53,7 +54,7 @@ public class FastTest {
             fastTestDTO.setAge(25);
             fastTestDTO.setUsername("酷酷的"+i);
             fastTestDTO.setUsernameTest("ggg");
-            fastTestDTO.setCreateTime(System.currentTimeMillis());
+            fastTestDTO.setCreateTime(new Date());
             fastTestDTOs.add(fastTestDTO);
         }
 

@@ -7,6 +7,7 @@ import com.es.plus.annotation.Score;
 import com.es.plus.constant.EsFieldType;
 import lombok.Data;
 
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -27,8 +28,8 @@ public class FastTestDTO {
     
     @EsField(type = EsFieldType.KEYWORD)
     private List<String> testList;
-    @EsField(type = EsFieldType.DATE, esFormat = "yyyy-MM-dd HH:mm:ss||strict_date_optional_time||epoch_millis"  )
-    private long createTime;
+    @EsField(type = EsFieldType.DATE, esFormat = "yyyy-MM-dd HH:mm:ss||strict_date_optional_time||epoch_millis",dateFormat = "yyyy-MM-dd HH:mm:ss")
+    private Date createTime;
 
     @EsField(type = EsFieldType.KEYWORD,name = "username_test")
     private String usernameTest;
