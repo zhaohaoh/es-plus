@@ -96,8 +96,9 @@ public @interface EsField {
      * 指定时间类型序列化存储的格式
      */
     String dateFormat() default "yyyy-MM-dd HH:mm:ss";
+    
     /**
-     * 指定时区 建议指定0时区 因为es会把字符串当成0时区处理
+     * 指定时区 建议指定0时区 因为es会把字符串当成0时区处理  +0
      */
     String timeZone() default "";
     /**
