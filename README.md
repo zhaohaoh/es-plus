@@ -17,7 +17,7 @@ Es-Plus 是Elasticsearch Api增强工具 - 只做增强不做改变，简化`CRU
 
 
 ## 引入
-目前使用版本0.2.7
+目前使用版本0.2.8
 本次更新
 - **多数据源es**: 通用@EsIndex指定默认数据源
 - **自定义es执行前后拦截器**: @EsInterceptors 具体用法见下面的例子
