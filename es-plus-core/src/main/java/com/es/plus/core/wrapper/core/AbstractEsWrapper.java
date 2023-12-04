@@ -4,6 +4,7 @@ package com.es.plus.core.wrapper.core;
 import com.es.plus.adapter.params.*;
 import com.es.plus.adapter.properties.EsFieldInfo;
 import com.es.plus.adapter.properties.GlobalParamHolder;
+import com.es.plus.adapter.proxy.EsUpdateField;
 import com.es.plus.adapter.util.DateUtil;
 import com.es.plus.core.wrapper.aggregation.EsAggWrapper;
 import com.es.plus.core.wrapper.aggregation.EsLambdaAggWrapper;

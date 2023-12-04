@@ -1,7 +1,7 @@
 package com.es.plus.adapter.config;
 
 import com.es.plus.adapter.exception.EsException;
-import com.es.plus.adapter.params.EsUpdateField;
+import com.es.plus.adapter.proxy.EsUpdateField;
 import com.es.plus.adapter.util.ClassUtils;
 
 import java.lang.reflect.Field;

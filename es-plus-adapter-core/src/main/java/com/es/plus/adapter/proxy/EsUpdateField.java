@@ -1,4 +1,4 @@
-package com.es.plus.adapter.params;
+package com.es.plus.adapter.proxy;
 
 
 import java.util.*;

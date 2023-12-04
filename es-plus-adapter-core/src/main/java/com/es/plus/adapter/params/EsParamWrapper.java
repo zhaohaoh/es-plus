@@ -1,5 +1,6 @@
 package com.es.plus.adapter.params;
 
+import com.es.plus.adapter.proxy.EsUpdateField;
 import lombok.Data;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
@@ -10,21 +11,24 @@ import java.util.List;
 
 @Data
 public class EsParamWrapper<T> {
+    
     /**
      * es查询参数包装器
      */
     private EsQueryParamWrapper esQueryParamWrapper = new EsQueryParamWrapper();
+    
     /**
      * 查询构建器
      */
     protected BoolQueryBuilder queryBuilder = QueryBuilders.boolQuery();
+    
     /*
      * 更新字段封装
      */
-    protected EsUpdateField esUpdateField=new EsUpdateField();
-
+    protected EsUpdateField esUpdateField = new EsUpdateField();
+    
     /*
      *聚合封装
      */
-    protected  List<BaseAggregationBuilder> aggregationBuilder = new ArrayList<>();
+    protected List<BaseAggregationBuilder> aggregationBuilder = new ArrayList<>();
 }

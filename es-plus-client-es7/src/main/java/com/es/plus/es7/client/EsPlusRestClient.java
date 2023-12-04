@@ -8,6 +8,7 @@ import com.es.plus.adapter.lock.EsLockFactory;
 import com.es.plus.adapter.params.*;
 import com.es.plus.adapter.properties.EsIndexParam;
 import com.es.plus.adapter.properties.GlobalParamHolder;
+import com.es.plus.adapter.proxy.EsUpdateField;
 import com.es.plus.adapter.util.BeanUtils;
 import com.es.plus.adapter.util.FieldUtils;
 import com.es.plus.adapter.util.JsonUtils;

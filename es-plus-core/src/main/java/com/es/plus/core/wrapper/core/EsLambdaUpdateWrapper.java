@@ -1,7 +1,7 @@
 package com.es.plus.core.wrapper.core;
 
 
-import com.es.plus.adapter.params.EsUpdateField;
+import com.es.plus.adapter.proxy.EsUpdateField;
 import com.es.plus.adapter.tools.SFunction;
 
 import java.util.List;

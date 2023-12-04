@@ -23,17 +23,43 @@ import org.elasticsearch.client.RestClientBuilder;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.autoconfigure.elasticsearch.ElasticsearchRestClientAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.util.CollectionUtils;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 
-import static com.es.plus.constant.Analyzer.*;
+import static com.es.plus.constant.Analyzer.ASCIIFOLDING;
+import static com.es.plus.constant.Analyzer.EP_IK_MAX_WORD;
+import static com.es.plus.constant.Analyzer.EP_IK_SMART;
+import static com.es.plus.constant.Analyzer.EP_KEYWORD;
+import static com.es.plus.constant.Analyzer.EP_LANGUAGE;
+import static com.es.plus.constant.Analyzer.EP_NORMALIZER;
+import static com.es.plus.constant.Analyzer.EP_PATTERN;
+import static com.es.plus.constant.Analyzer.EP_SIMPLE;
+import static com.es.plus.constant.Analyzer.EP_SNOWBALL;
+import static com.es.plus.constant.Analyzer.EP_STANDARD;
+import static com.es.plus.constant.Analyzer.EP_STOP;
+import static com.es.plus.constant.Analyzer.EP_WHITESPACE;
+import static com.es.plus.constant.Analyzer.IK_MAX_WORD;
+import static com.es.plus.constant.Analyzer.IK_SMART;
+import static com.es.plus.constant.Analyzer.KEYWORD;
+import static com.es.plus.constant.Analyzer.LANGUAGE;
+import static com.es.plus.constant.Analyzer.LOWERCASE;
+import static com.es.plus.constant.Analyzer.PATTERN;
+import static com.es.plus.constant.Analyzer.SIMPLE;
+import static com.es.plus.constant.Analyzer.SNOWBALL;
+import static com.es.plus.constant.Analyzer.STANDARD;
+import static com.es.plus.constant.Analyzer.STEMMER;
+import static com.es.plus.constant.Analyzer.STOP;
+import static com.es.plus.constant.Analyzer.WHITESPACE;
 
 /**
  * @Author: hzh
@@ -42,7 +68,6 @@ import static com.es.plus.constant.Analyzer.*;
  */
 @Configuration
 @EnableConfigurationProperties(EsProperties.class)
-@AutoConfigureBefore(ElasticsearchRestClientAutoConfiguration.class)
 public class EsClientConfiguration implements InitializingBean {
 
     @Autowired
