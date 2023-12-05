@@ -60,7 +60,11 @@ public interface EsExtendsWrapper<Children, R> {
      *
      */
     Children trackScores(boolean trackScores);
-
+    /**
+     * 是否精确查询总数
+     *
+     */
+    Children trackTotalHits(boolean trackTotalHits);
     /**
      * 路由
      *
@@ -68,9 +72,15 @@ public interface EsExtendsWrapper<Children, R> {
      * @return {@link Children 本身}
      */
     Children routings(String... routings);
-
+    
+    /**
+     * 来指定分片查询的优先级
+     */
     Children  preference(String preference);
-
+    
+    /**
+     * 是否拉取数据list。 false的话不只检索不获取检索到的数据。
+     */
     Children fetch(boolean fetch);
 
     /**

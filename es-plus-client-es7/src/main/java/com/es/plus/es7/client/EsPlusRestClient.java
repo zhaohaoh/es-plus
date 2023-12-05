@@ -894,7 +894,10 @@ public class EsPlusRestClient implements EsPlusClient {
         BoolQueryBuilder queryBuilder = esParamWrapper.getQueryBuilder();
         SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
         sourceBuilder.query(queryBuilder);
-
+        //超过1万条加了才能返回
+        if (GlobalConfigCache.GLOBAL_CONFIG.isTrackTotalHits()) {
+            sourceBuilder.trackTotalHits(true);
+        }
         EsSelect esSelect = esQueryParamWrapper.getEsSelect();
         if (esSelect != null) {
             if (ArrayUtils.isNotEmpty(esSelect.getIncludes()) || ArrayUtils.isNotEmpty(esSelect.getExcludes())) {
@@ -908,6 +911,9 @@ public class EsPlusRestClient implements EsPlusClient {
             }
             if (esSelect.getTrackScores() != null) {
                 sourceBuilder.trackScores(esSelect.getTrackScores());
+            }
+            if (esSelect.getTrackTotalHits() != null) {
+                sourceBuilder.trackTotalHits(esSelect.getTrackTotalHits());
             }
         }
         boolean profile = esQueryParamWrapper.isProfile();
@@ -951,10 +957,7 @@ public class EsPlusRestClient implements EsPlusClient {
                 sourceBuilder.highlighter(highlightBuilder);
             }
         }
-        //超过1万条加了才能返回
-        if (GlobalConfigCache.GLOBAL_CONFIG.isTrackTotalHits()) {
-            sourceBuilder.trackTotalHits(true);
-        }
+      
         //排序
         if (!CollectionUtils.isEmpty(esQueryParamWrapper.getEsOrderList())) {
             List<EsOrder> orderFields = esQueryParamWrapper.getEsOrderList();

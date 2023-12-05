@@ -24,6 +24,7 @@ import org.elasticsearch.client.RestHighLevelClient;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -79,7 +80,8 @@ public class EsClientConfiguration implements InitializingBean {
      * 不存在才加载，存在的话以默认的为主
      */
     @Bean
-    @ConditionalOnMissingBean
+    @ConditionalOnMissingBean(RestHighLevelClient.class)
+    @ConditionalOnProperty(value = "es.plus.address",havingValue = "true")
     public RestHighLevelClient restHighLevelClient() {
         // 处理地址
         String address = esProperties.getAddress();

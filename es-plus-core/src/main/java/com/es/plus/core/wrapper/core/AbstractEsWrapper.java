@@ -648,14 +648,22 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
         esSelect.setMinScope(minScope);
         return (Children) this;
     }
-
+    
+    //在字段上排序时，不会计算分数。 通过将 track_scores 设置为 true，仍将计算和跟踪分数
     @Override
     public Children trackScores(boolean trackScores) {
         EsSelect esSelect = getSelect();
         esSelect.setTrackScores(trackScores);
         return (Children) this;
     }
-
+    
+    @Override
+    public Children trackTotalHits(boolean trackTotalHits) {
+        EsSelect esSelect = getSelect();
+        esSelect.setTrackTotalHits(trackTotalHits);
+        return (Children) this;
+    }
+    
     @Override
     public Children sortBy(String order, R... columns) {
         if (getEsQueryParamWrapper().getEsOrderList() == null) {

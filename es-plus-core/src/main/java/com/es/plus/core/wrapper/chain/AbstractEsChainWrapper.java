@@ -399,7 +399,10 @@ public abstract class AbstractEsChainWrapper<T, R, Children extends AbstractEsCh
     public BoolQueryBuilder getQueryBuilder() {
         return getWrapper().getQueryBuilder();
     }
-
+    
+    /**
+     * 是否拉取数据list。
+     */
     @Override
     public Children fetch(boolean fetch) {
         getWrapper().fetch(fetch);
@@ -429,7 +432,13 @@ public abstract class AbstractEsChainWrapper<T, R, Children extends AbstractEsCh
         getWrapper().trackScores(trackScores);
         return this.children;
     }
-
+    
+    @Override
+    public Children trackTotalHits(boolean trackTotalHits) {
+        getWrapper().trackTotalHits(trackTotalHits);
+        return this.children;
+    }
+    
     @Override
     public Children boost(float boost) {
         getWrapper().boost(boost);
