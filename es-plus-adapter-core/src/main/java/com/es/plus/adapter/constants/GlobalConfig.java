@@ -1,8 +1,8 @@
-package com.es.plus.adapter.config;
+package com.es.plus.adapter.constants;
 
 
-import com.es.plus.adapter.constants.ConnectFailHandleEnum;
-import com.es.plus.adapter.constants.EsIdType;
+
+import com.es.plus.adapter.config.ConnectFailHandleEnum;
 import com.es.plus.constant.Analyzer;
 import lombok.Data;
 import org.elasticsearch.action.support.WriteRequest;

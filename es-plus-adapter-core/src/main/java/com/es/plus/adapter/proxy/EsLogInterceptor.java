@@ -1,5 +1,6 @@
 package com.es.plus.adapter.proxy;
 
+import com.es.plus.adapter.constants.EsPlusMethodConstant;
 import com.es.plus.adapter.core.EsPlusClient;
 import com.es.plus.adapter.params.EsParamWrapper;
 import com.es.plus.adapter.params.EsResponse;
@@ -11,7 +12,7 @@ import java.util.List;
 
 @Component
 @EsInterceptors(value = {
-        @InterceptorElement(type = EsPlusClient.class,methodName = "search")
+        @InterceptorElement(type = EsPlusClient.class,methodName = EsPlusMethodConstant.SEARCH)
 })
 public class EsLogInterceptor implements EsInterceptor{
     // EsParamWrapper 参数

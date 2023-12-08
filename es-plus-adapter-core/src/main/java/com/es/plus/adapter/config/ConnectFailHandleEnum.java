@@ -1,4 +1,4 @@
-package com.es.plus.adapter.constants;
+package com.es.plus.adapter.config;
 
 import lombok.AllArgsConstructor;
 

@@ -3,7 +3,7 @@ package com.es.plus.core.service;
 
 import com.es.plus.adapter.EsPlusClientFacade;
 import com.es.plus.adapter.config.GlobalConfigCache;
-import com.es.plus.adapter.constants.ConnectFailHandleEnum;
+import com.es.plus.adapter.config.ConnectFailHandleEnum;
 import com.es.plus.adapter.exception.EsException;
 import com.es.plus.adapter.lock.ELock;
 import com.es.plus.adapter.properties.EsIndexParam;

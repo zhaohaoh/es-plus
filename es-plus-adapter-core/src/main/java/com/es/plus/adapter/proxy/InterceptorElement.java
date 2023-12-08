@@ -7,7 +7,7 @@ import java.lang.annotation.*;
 @Target(ElementType.TYPE)
 public @interface InterceptorElement {
     /**
-     * 拦截的索引名 不填默认所有
+     * 拦截的类名 有多版本控制
      */
     Class<?> type();
     /**
