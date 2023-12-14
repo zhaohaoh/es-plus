@@ -67,6 +67,8 @@ public class FastTest {
         EsAggWrapper<FastTestDTO> aggWrapper = fastTestDTOEsChainLambdaQueryWrapper.esAggWrapper();
         aggWrapper.terms("username",a->a.size(10000).order(BucketOrder.aggregation("id_max",true)))
        .subAggregation(es->es.max("id"));
+    //例子
+//        aggWrapper.filter("a",()-> this.fastTestService.esQueryWrapper().term("",""));
 
             List<FieldSortBuilder> fieldSortBuilders=new ArrayList<>();
         FieldSortBuilder id_max = SortBuilders.fieldSort("id_max").order(SortOrder.ASC);

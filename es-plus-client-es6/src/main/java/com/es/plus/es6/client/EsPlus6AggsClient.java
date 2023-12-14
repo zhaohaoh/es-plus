@@ -142,13 +142,14 @@ public class EsPlus6AggsClient implements EsAggClient {
     @Override
     public BaseAggregationBuilder filter(String field, EsParamWrapper<?> esParamWrapper) {
         String aggName = field + AGG_DELIMITER + FilterAggregationBuilder.NAME;
-        FilterAggregationBuilder filterAggregationBuilder = new FilterAggregationBuilder(aggName,esParamWrapper.getQueryBuilder());
+        FilterAggregationBuilder filterAggregationBuilder = new FilterAggregationBuilder(aggName,esParamWrapper.getEsQueryParamWrapper()
+                .getQueryBuilder());
         return filterAggregationBuilder;
     }
 
     @Override
     public BaseAggregationBuilder filters(String field, EsParamWrapper<?>... esParamWrapper) {
-        QueryBuilder[] boolQueryBuilders = Arrays.stream(esParamWrapper).map(EsParamWrapper::getQueryBuilder).toArray(QueryBuilder[]::new);
+        QueryBuilder[] boolQueryBuilders = Arrays.stream(esParamWrapper).map(e->e.getEsQueryParamWrapper().getQueryBuilder()).toArray(QueryBuilder[]::new);
         String aggName = field + AGG_DELIMITER + FiltersAggregationBuilder.NAME;
         FiltersAggregationBuilder filterAggregationBuilder = new FiltersAggregationBuilder(aggName,boolQueryBuilders);
         return filterAggregationBuilder;
@@ -157,7 +158,7 @@ public class EsPlus6AggsClient implements EsAggClient {
     @Override
     public BaseAggregationBuilder adjacencyMatrix(String field, Map<String, EsParamWrapper<?>> esParamWrapper) {
         Map<String,QueryBuilder> queryBuilderMap=new HashMap<>();
-        esParamWrapper.forEach((k,v)->queryBuilderMap.put(k,v.getQueryBuilder()));
+        esParamWrapper.forEach((k,v)->queryBuilderMap.put(k,v.getEsQueryParamWrapper().getQueryBuilder()));
         String aggName = field + AGG_DELIMITER + FiltersAggregationBuilder.NAME;
         AdjacencyMatrixAggregationBuilder adjacencyMatrixAggregationBuilder = new AdjacencyMatrixAggregationBuilder(aggName,queryBuilderMap);
         return adjacencyMatrixAggregationBuilder;
@@ -166,7 +167,7 @@ public class EsPlus6AggsClient implements EsAggClient {
     @Override
     public BaseAggregationBuilder adjacencyMatrix(String name, String separator, Map<String, EsParamWrapper<?>> esParamWrapper) {
         Map<String,QueryBuilder> queryBuilderMap=new HashMap<>();
-        esParamWrapper.forEach((k,v)->queryBuilderMap.put(k,v.getQueryBuilder()));
+        esParamWrapper.forEach((k,v)->queryBuilderMap.put(k,v.getEsQueryParamWrapper().getQueryBuilder()));
         String aggName = name + AGG_DELIMITER + FiltersAggregationBuilder.NAME;
         AdjacencyMatrixAggregationBuilder adjacencyMatrixAggregationBuilder = new AdjacencyMatrixAggregationBuilder(aggName,separator,queryBuilderMap);
         return adjacencyMatrixAggregationBuilder;

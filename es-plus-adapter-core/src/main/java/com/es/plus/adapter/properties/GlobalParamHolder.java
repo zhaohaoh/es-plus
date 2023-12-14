@@ -2,7 +2,7 @@ package com.es.plus.adapter.properties;
 
 import com.es.plus.adapter.EsAnnotationParamProcess;
 import com.es.plus.adapter.config.GlobalConfigCache;
-import com.es.plus.adapter.config.EsIdType;
+import com.es.plus.adapter.constants.EsIdType;
 import com.es.plus.adapter.exception.EsException;
 import com.es.plus.adapter.util.ClassUtils;
 import com.es.plus.annotation.EsIndex;

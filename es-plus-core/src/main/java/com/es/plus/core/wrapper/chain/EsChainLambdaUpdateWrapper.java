@@ -78,7 +78,6 @@ public class EsChainLambdaUpdateWrapper<T> extends AbstractEsChainWrapper<T, SFu
     /**
      * 保存批处理
      *
-     * @param t t
      * @return {@link List}<{@link BulkItemResponse}>
      */
     @Override

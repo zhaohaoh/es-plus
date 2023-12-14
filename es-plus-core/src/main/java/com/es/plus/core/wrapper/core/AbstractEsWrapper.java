@@ -49,7 +49,7 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
 
     private EsParamWrapper<T> esParamWrapper;
 
-    private List<QueryBuilder> queryBuilders = esParamWrapper().getQueryBuilder().must();
+    private List<QueryBuilder> queryBuilders = esParamWrapper().getEsQueryParamWrapper().getQueryBuilder().must();
 
     protected EsLambdaAggWrapper<T> esLambdaAggWrapper;
 
@@ -73,7 +73,8 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
     public EsLambdaAggWrapper<T> esLambdaAggWrapper() {
         if (esLambdaAggWrapper == null) {
             esLambdaAggWrapper = new EsLambdaAggWrapper<>(tClass);
-            esParamWrapper.setAggregationBuilder(esLambdaAggWrapper.getAggregationBuilder());
+            EsQueryParamWrapper esQueryParamWrapper = esParamWrapper.getEsQueryParamWrapper();
+            esQueryParamWrapper.setAggregationBuilder(esLambdaAggWrapper.getAggregationBuilder());
         }
         return esLambdaAggWrapper;
     }
@@ -82,7 +83,8 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
     public EsAggWrapper<T> esAggWrapper() {
         if (esAggWrapper == null) {
             esAggWrapper = new EsAggWrapper<>(tClass);
-            esParamWrapper.setAggregationBuilder(esAggWrapper.getAggregationBuilder());
+            EsQueryParamWrapper esQueryParamWrapper = esParamWrapper.getEsQueryParamWrapper();
+            esQueryParamWrapper.setAggregationBuilder(esAggWrapper.getAggregationBuilder());
         }
         return esAggWrapper;
     }
@@ -104,7 +106,7 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
 
 
     public BoolQueryBuilder getQueryBuilder() {
-        return esParamWrapper().getQueryBuilder();
+        return esParamWrapper().getEsQueryParamWrapper().getQueryBuilder();
     }
 
     //获取select的字段

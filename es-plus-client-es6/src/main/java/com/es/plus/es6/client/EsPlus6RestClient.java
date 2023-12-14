@@ -369,6 +369,7 @@ public class EsPlus6RestClient implements EsPlusClient {
      */
     @Override
     public <T> BulkByScrollResponse updateByWrapper(String index, String type, EsParamWrapper<T> esParamWrapper) {
+        EsQueryParamWrapper esQueryParamWrapper = esParamWrapper.getEsQueryParamWrapper();
         EsUpdateField esUpdateField = esParamWrapper.getEsUpdateField();
         List<EsUpdateField.Field> fields = esUpdateField.getFields();
         String scipt = esUpdateField.getScipt();
@@ -415,13 +416,13 @@ public class EsPlus6RestClient implements EsPlusClient {
             UpdateByQueryRequest request = new UpdateByQueryRequest(index);
             //版本号不匹配更新失败不停止
             request.setConflicts(EsConstant.DEFAULT_CONFLICTS);
-            request.setQuery(esParamWrapper.getQueryBuilder());
+            request.setQuery(esQueryParamWrapper.getQueryBuilder());
             request.setBatchSize(GlobalConfigCache.GLOBAL_CONFIG.getBatchSize());
             //请求完成后立即刷新索引，保证读一致性
             request.setRefresh(true);
             //分片多线程执行任务
             //            request.setSlices(2)
-            String[] routings = esParamWrapper.getEsQueryParamWrapper().getRoutings();
+            String[] routings = esQueryParamWrapper.getRoutings();
             if (routings != null) {
                 request.setRouting(routings[0]);
             }
@@ -448,6 +449,7 @@ public class EsPlus6RestClient implements EsPlusClient {
     
     @Override
     public <T> BulkByScrollResponse increment(String index, String type, EsParamWrapper<T> esParamWrapper) {
+        EsQueryParamWrapper esQueryParamWrapper = esParamWrapper.getEsQueryParamWrapper();
         boolean lock = false;
         List<EsUpdateField.Field> fields = esParamWrapper.getEsUpdateField().getIncrementFields();
         Map<String, Object> params = new HashMap<>();
@@ -471,11 +473,11 @@ public class EsPlus6RestClient implements EsPlusClient {
             UpdateByQueryRequest request = new UpdateByQueryRequest(index);
             //版本号不匹配更新失败不停止
             request.setConflicts(EsConstant.DEFAULT_CONFLICTS);
-            request.setQuery(esParamWrapper.getQueryBuilder());
+            request.setQuery(esQueryParamWrapper.getQueryBuilder());
             // 一次批处理的大小.因为是滚动处理的 这里才是这是的批处理查询数据量
             request.setBatchSize(GlobalConfigCache.GLOBAL_CONFIG.getBatchSize());
             request.setIndicesOptions(IndicesOptions.LENIENT_EXPAND_OPEN);
-            String[] routings = esParamWrapper.getEsQueryParamWrapper().getRoutings();
+            String[] routings = esQueryParamWrapper.getRoutings();
             if (routings != null) {
                 request.setRouting(routings[0]);
             }
@@ -514,8 +516,9 @@ public class EsPlus6RestClient implements EsPlusClient {
     
     @Override
     public <T> BulkByScrollResponse deleteByQuery(String index, String type, EsParamWrapper<T> esParamWrapper) {
+        EsQueryParamWrapper esQueryParamWrapper = esParamWrapper.getEsQueryParamWrapper();
         DeleteByQueryRequest request = new DeleteByQueryRequest(index);
-        request.setQuery(esParamWrapper.getQueryBuilder());
+        request.setQuery(esQueryParamWrapper.getQueryBuilder());
         // 更新最大文档数
         //        request.setMaxDocs(GlobalConfigCache.GLOBAL_CONFIG.getMaxDocs());
         request.setMaxRetries(GlobalConfigCache.GLOBAL_CONFIG.getMaxRetries());
@@ -593,13 +596,14 @@ public class EsPlus6RestClient implements EsPlusClient {
     //统计
     @Override
     public <T> long count(String index, String type, EsParamWrapper<T> esParamWrapper) {
+        EsQueryParamWrapper esQueryParamWrapper = esParamWrapper.getEsQueryParamWrapper();
         CountRequest countRequest = new CountRequest();
-        SearchSourceBuilder query = SearchSourceBuilder.searchSource().query(esParamWrapper.getQueryBuilder());
+        SearchSourceBuilder query = SearchSourceBuilder.searchSource().query(esQueryParamWrapper.getQueryBuilder());
         countRequest.source(query);
         countRequest.indices(index);
         CountResponse count = null;
         try {
-            printSearchInfoLog("count index=:{} body:{}", index, JsonUtils.toJsonStr(esParamWrapper.getQueryBuilder()));
+            printSearchInfoLog("count index=:{} body:{}", index, JsonUtils.toJsonStr(esQueryParamWrapper.getQueryBuilder()));
             count = restHighLevelClient.count(countRequest, RequestOptions.DEFAULT);
         } catch (IOException e) {
             throw new EsException("es-plus count error ", e);
@@ -698,9 +702,11 @@ public class EsPlus6RestClient implements EsPlusClient {
     @Override
     public <T> EsAggResponse<T> aggregations(String index, String type, EsParamWrapper<T> esParamWrapper,
             Class<T> tClass) {
+    
+        EsQueryParamWrapper esQueryParamWrapper = esParamWrapper.getEsQueryParamWrapper();
         SearchRequest searchRequest = new SearchRequest();
         //查询条件组合
-        BoolQueryBuilder queryBuilder = esParamWrapper.getQueryBuilder();
+        BoolQueryBuilder queryBuilder = esQueryParamWrapper.getQueryBuilder();
         SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
         sourceBuilder.query(queryBuilder);
         sourceBuilder.size(0);
@@ -901,7 +907,7 @@ public class EsPlus6RestClient implements EsPlusClient {
         Integer page = esQueryParamWrapper.getPage();
         Integer size = esQueryParamWrapper.getSize();
         //查询条件组合
-        BoolQueryBuilder queryBuilder = esParamWrapper.getQueryBuilder();
+        BoolQueryBuilder queryBuilder = esQueryParamWrapper.getQueryBuilder();
         SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
         sourceBuilder.query(queryBuilder);
         
@@ -984,7 +990,8 @@ public class EsPlus6RestClient implements EsPlusClient {
     
     //填充分组字段
     private <T> void populateGroupField(EsParamWrapper<T> esParamWrapper, SearchSourceBuilder sourceBuilder) {
-        List<BaseAggregationBuilder> aggregationBuilders = esParamWrapper.getAggregationBuilder();
+        EsQueryParamWrapper esQueryParamWrapper = esParamWrapper.getEsQueryParamWrapper();
+        List<BaseAggregationBuilder> aggregationBuilders = esQueryParamWrapper.getAggregationBuilder();
         if (aggregationBuilders != null) {
             for (BaseAggregationBuilder aggregation : aggregationBuilders) {
                 if (aggregation instanceof AggregationBuilder) {
@@ -1014,7 +1021,6 @@ public class EsPlus6RestClient implements EsPlusClient {
     
     
     private void printSearchInfoLog(String format, Object... params) {
-        log.info("es-plus " + format, params);
         boolean enableSearchLog = GlobalConfigCache.GLOBAL_CONFIG.isEnableSearchLog();
         if (enableSearchLog) {
             log.info("es-plus " + format, params);
