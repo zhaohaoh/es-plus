@@ -12,7 +12,7 @@ public class EsLambdaQueryWrapper<T> extends AbstractEsWrapper<T, SFunction<T,?>
      * @param tClass
      */
     public EsLambdaQueryWrapper(Class<T> tClass) {
-        super.tClass = tClass;
+        super(tClass);
     }
 
     public EsLambdaQueryWrapper() {

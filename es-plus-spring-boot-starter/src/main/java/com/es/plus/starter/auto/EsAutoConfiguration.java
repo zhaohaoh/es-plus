@@ -3,7 +3,7 @@ package com.es.plus.starter.auto;
 import com.es.plus.adapter.EsPlusClientFacade;
 import com.es.plus.adapter.lock.ELockClient;
 import com.es.plus.adapter.lock.EsLockFactory;
-import com.es.plus.adapter.proxy.EsInterceptor;
+import com.es.plus.adapter.interceptor.EsInterceptor;
 import com.es.plus.core.ClientContext;
 import com.es.plus.lock.EsLockClient;
 import org.elasticsearch.client.RestHighLevelClient;

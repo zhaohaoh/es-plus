@@ -1,10 +1,11 @@
-package com.es.plus.adapter.proxy;
+package com.es.plus.adapter.interceptor;
 
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.aop.support.AopUtils;
 import org.springframework.core.DefaultParameterNameDiscoverer;
+import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.CollectionUtils;
@@ -15,6 +16,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import static com.es.plus.constant.EsConstant.INDEX;
+import static com.es.plus.constant.EsConstant.TYPE;
 
 @Slf4j
 public class EsPlusClientProxy implements InvocationHandler {
@@ -52,7 +54,8 @@ public class EsPlusClientProxy implements InvocationHandler {
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
         Object result;
-        String index = getIndex(method, args);
+        String index = getParamValue(INDEX,method, args);
+        String type = getParamValue(TYPE,method, args);
         String methodName = method.getName();
         try {
             if (isHashCodeMethod(method) && !hashCodeDefined) {
@@ -67,21 +70,32 @@ public class EsPlusClientProxy implements InvocationHandler {
             if (isIngoreMethod(method)) {
                 return method.invoke(target, args);
             }
+    
+            //如果本地线程强制关闭拦截器
+            Boolean isInterceptor = InterceptorLocalContext.get();
+            if (isInterceptor !=null && !isInterceptor){
+                return method.invoke(target, args);
+            }
+            
             List<EsInterceptor> esInterceptors = getEsInterceptors(methodName, index);
             if (CollectionUtils.isEmpty(esInterceptors)) {
                 return method.invoke(target, args);
             }
+      
+            
+            //前置处理
             for (EsInterceptor esInterceptor : esInterceptors) {
-                esInterceptor.before(index, method, args);
+                esInterceptor.before(index,type, method, args);
             }
 
             result = method.invoke(target, args);
+            
+            //后置过程
+            for (EsInterceptor esInterceptor : esInterceptors) {
+                esInterceptor.after(index, type,method, args, result);
+            }
         } catch (InvocationTargetException e) {
             throw e.getCause();
-        }
-        //后置过程
-        for (EsInterceptor esInterceptor : esInterceptors) {
-            esInterceptor.after(index, method, args, result);
         }
         return result;
     }
@@ -89,7 +103,7 @@ public class EsPlusClientProxy implements InvocationHandler {
     private List<EsInterceptor> getEsInterceptors(String name, String index) {
         List<EsInterceptor> canInterceptors = new ArrayList<>();
         for (EsInterceptor esInterceptor : esInterceptors) {
-            EsInterceptors interceptors = esInterceptor.getClass().getAnnotation(EsInterceptors.class);
+            EsInterceptors interceptors = AnnotationUtils.findAnnotation(esInterceptor.getClass(), EsInterceptors.class);
             if (interceptors == null) {
                 log.info("EsInterceptors is null");
             }
@@ -125,8 +139,8 @@ public class EsPlusClientProxy implements InvocationHandler {
     }
 
     @SneakyThrows
-    private String getIndex(Method method, Object[] args) {
-        String index = null;
+    private String getParamValue(String name,Method method, Object[] args) {
+        String param = null;
 
         String[] parameterNames;
         boolean match = Arrays.stream(method.getParameters()).anyMatch(Parameter::isNamePresent);
@@ -139,15 +153,17 @@ public class EsPlusClientProxy implements InvocationHandler {
         if (parameterNames != null) {
             for (int i = 0; i < parameterNames.length; i++) {
                 String parameterName = parameterNames[i];
-                if (parameterName.equals(INDEX)) {
-                    index = args[i].toString();
-                    break;
+                if (parameterName!=null) {
+                    if (parameterName.equals(name)) {
+                        param = args[i].toString();
+                        break;
+                    }
                 }
             }
         } else {
             log.warn("EsInterceptor index is null");
         }
-        return index;
+        return param;
     }
 
 

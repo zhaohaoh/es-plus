@@ -251,7 +251,7 @@ public class EsServiceImpl<T> extends AbstractEsService<T> implements EsService<
         EsQueryWrapper<T> esQueryWrapper = new EsQueryWrapper<>(clazz);
         esQueryWrapper.ids(ids);
         //查询
-        EsResponse<T> esResponse = getEsPlusClientFacade().search(alias, type, esQueryWrapper.esParamWrapper(), clazz);
+        EsResponse<T> esResponse = getEsPlusClientFacade().search(alias, type, esQueryWrapper.esParamWrapper());
         List<T> list = esResponse.getList();
         if (CollectionUtils.isEmpty(list)) {
             return null;
@@ -270,7 +270,7 @@ public class EsServiceImpl<T> extends AbstractEsService<T> implements EsService<
         EsQueryWrapper<T> esQueryWrapper = new EsQueryWrapper<>(clazz);
         esQueryWrapper.ids(idList.stream().map(Objects::toString).collect(Collectors.toList()));
         //查询
-        return getEsPlusClientFacade().search(alias, type, esQueryWrapper.esParamWrapper(), clazz).getList();
+        return getEsPlusClientFacade().search(alias, type, esQueryWrapper.esParamWrapper()).getList();
     }
 
     /**
@@ -285,7 +285,8 @@ public class EsServiceImpl<T> extends AbstractEsService<T> implements EsService<
         if (esQueryWrapper == null) {
             esQueryWrapper = matchAll();
         }
-        return getEsPlusClientFacade().search(alias, type, esQueryWrapper.esParamWrapper(), clazz);
+        esQueryWrapper.esParamWrapper().setTClass(this.clazz);
+        return getEsPlusClientFacade().search(alias, type, esQueryWrapper.esParamWrapper());
     }
 
     /**
@@ -295,9 +296,10 @@ public class EsServiceImpl<T> extends AbstractEsService<T> implements EsService<
      */
     @Override
     public EsResponse<T> search(EsWrapper<T> esQueryWrapper,int size) {
+        esQueryWrapper.esParamWrapper().setTClass(this.clazz);
         EsQueryParamWrapper esQueryParamWrapper = esQueryWrapper.esParamWrapper().getEsQueryParamWrapper();
         esQueryParamWrapper.setSize(size);
-        return getEsPlusClientFacade().search(alias, type,esQueryWrapper.esParamWrapper(), clazz);
+        return getEsPlusClientFacade().search(alias, type,esQueryWrapper.esParamWrapper());
     }
 
     /**
@@ -314,7 +316,8 @@ public class EsServiceImpl<T> extends AbstractEsService<T> implements EsService<
         EsQueryParamWrapper esQueryParamWrapper = esQueryWrapper.esParamWrapper().getEsQueryParamWrapper();
         esQueryParamWrapper.setPage(page);
         esQueryParamWrapper.setSize(size);
-        return getEsPlusClientFacade().search(alias, type,esQueryWrapper.esParamWrapper(), clazz);
+        esQueryWrapper.esParamWrapper().setTClass(this.clazz);
+        return getEsPlusClientFacade().search(alias, type,esQueryWrapper.esParamWrapper());
     }
 
     /**
@@ -338,7 +341,8 @@ public class EsServiceImpl<T> extends AbstractEsService<T> implements EsService<
      */
     @Override
     public EsAggResponse<T> aggregations(EsWrapper<T> esQueryWrapper) {
-        return getEsPlusClientFacade().aggregations(alias, type, esQueryWrapper.esParamWrapper(), clazz);
+        esQueryWrapper.esParamWrapper().setTClass(this.clazz);
+        return getEsPlusClientFacade().aggregations(alias, type, esQueryWrapper.esParamWrapper());
     }
 
     /**
@@ -349,8 +353,9 @@ public class EsServiceImpl<T> extends AbstractEsService<T> implements EsService<
      */
     @Override
     public EsResponse<T> profile(EsWrapper<T> esQueryWrapper) {
+        esQueryWrapper.esParamWrapper().setTClass(this.clazz);
         esQueryWrapper.esParamWrapper().getEsQueryParamWrapper().setProfile(true);
-        return getEsPlusClientFacade().search(alias, type, esQueryWrapper.esParamWrapper(), clazz);
+        return getEsPlusClientFacade().search(alias, type, esQueryWrapper.esParamWrapper());
     }
 
     /**
@@ -366,8 +371,9 @@ public class EsServiceImpl<T> extends AbstractEsService<T> implements EsService<
         if (esQueryWrapper == null) {
             esQueryWrapper = matchAll();
         }
-
-        return getEsPlusClientFacade().scroll(alias, type, esQueryWrapper.esParamWrapper(), clazz, size, keepTime, scollId);
+        esQueryWrapper.esParamWrapper().setTClass(this.clazz);
+        esQueryWrapper.esParamWrapper().getEsQueryParamWrapper().setSize(size);
+        return getEsPlusClientFacade().scroll(alias, type, esQueryWrapper.esParamWrapper(), keepTime, scollId);
     }
 
     /**

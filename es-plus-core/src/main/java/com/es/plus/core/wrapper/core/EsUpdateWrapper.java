@@ -1,7 +1,7 @@
 package com.es.plus.core.wrapper.core;
 
 
-import com.es.plus.adapter.proxy.EsUpdateField;
+import com.es.plus.adapter.interceptor.EsUpdateField;
 
 import java.util.List;
 import java.util.Map;

@@ -151,7 +151,13 @@ public class GlobalParamHolder {
      * @param name  名字
      */
     public static EsFieldInfo getIndexField(Class<?> clazz, String name) {
+        if (clazz == null){
+            return null;
+        }
         EsEntityInfo esEntityInfo = ES_ENTITY_INFO_MAP.computeIfAbsent(clazz.getName(), e -> new EsEntityInfo());
+        if (esEntityInfo==null){
+            return null;
+        }
         return esEntityInfo.getFieldsInfoMap().get(name);
     }
 

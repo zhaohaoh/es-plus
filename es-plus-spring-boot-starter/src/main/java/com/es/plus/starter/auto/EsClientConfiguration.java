@@ -5,7 +5,7 @@ import com.es.plus.adapter.config.GlobalConfigCache;
 import com.es.plus.adapter.exception.EsException;
 import com.es.plus.adapter.lock.EsLockFactory;
 import com.es.plus.adapter.properties.GlobalParamHolder;
-import com.es.plus.adapter.proxy.EsInterceptor;
+import com.es.plus.adapter.interceptor.EsInterceptor;
 import com.es.plus.adapter.util.XcontentBuildUtils;
 import com.es.plus.core.ClientContext;
 import com.es.plus.lock.EsLockClient;

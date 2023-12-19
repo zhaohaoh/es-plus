@@ -1,4 +1,4 @@
-package com.es.plus.adapter.proxy;
+package com.es.plus.adapter.interceptor;
 
 import com.es.plus.adapter.constants.EsPlusMethodConstant;
 import com.es.plus.adapter.core.EsPlusClient;
@@ -16,13 +16,13 @@ import java.lang.reflect.Method;
 public class EsLogInterceptor implements EsInterceptor{
     
     @Override
-    public void before(String index, Method method, EsParamWrapper<?> esParamWrapper) {
+    public void before(String index,String type, Method method, EsParamWrapper<?> esParamWrapper) {
         EsQueryParamWrapper esQueryParamWrapper = esParamWrapper.getEsQueryParamWrapper();
         BoolQueryBuilder queryBuilder = esQueryParamWrapper.getQueryBuilder();
     }
     
     @Override
-    public void after(String index, Method method, EsParamWrapper<?> esParamWrapper, Object result) {
+    public void after(String index, String type,Method method, EsParamWrapper<?> esParamWrapper, Object result) {
     
     }
 }

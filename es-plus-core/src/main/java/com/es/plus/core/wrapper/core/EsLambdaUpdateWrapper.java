@@ -1,7 +1,7 @@
 package com.es.plus.core.wrapper.core;
 
 
-import com.es.plus.adapter.proxy.EsUpdateField;
+import com.es.plus.adapter.interceptor.EsUpdateField;
 import com.es.plus.adapter.tools.SFunction;
 
 import java.util.List;
@@ -38,7 +38,7 @@ public class EsLambdaUpdateWrapper<T> extends AbstractEsWrapper<T, SFunction<T, 
     }
 
     public EsLambdaUpdateWrapper(Class<T> tClass) {
-        super.tClass = tClass;
+        super(tClass);
     }
 
     public EsLambdaUpdateWrapper() {

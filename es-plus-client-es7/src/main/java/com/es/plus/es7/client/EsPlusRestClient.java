@@ -8,7 +8,7 @@ import com.es.plus.adapter.lock.EsLockFactory;
 import com.es.plus.adapter.params.*;
 import com.es.plus.adapter.properties.EsIndexParam;
 import com.es.plus.adapter.properties.GlobalParamHolder;
-import com.es.plus.adapter.proxy.EsUpdateField;
+import com.es.plus.adapter.interceptor.EsUpdateField;
 import com.es.plus.adapter.util.BeanUtils;
 import com.es.plus.adapter.util.FieldUtils;
 import com.es.plus.adapter.util.JsonUtils;
@@ -216,7 +216,7 @@ public class EsPlusRestClient implements EsPlusClient {
             }
             bulkRequest.setRefreshPolicy(GlobalConfigCache.GLOBAL_CONFIG.getRefreshPolicy());
             BulkResponse res;
-    
+            
             printInfoLog("saveBatch {}", index);
             res = restHighLevelClient.bulk(bulkRequest, RequestOptions.DEFAULT);
             for (BulkItemResponse bulkItemResponse : res.getItems()) {
@@ -486,7 +486,7 @@ public class EsPlusRestClient implements EsPlusClient {
             
             Script painless = new Script(ScriptType.INLINE, PAINLESS, script.toString(), params);
             request.setScript(painless);
-    
+            
             printInfoLog(" {} updateByWrapper increment requst: script:{},params={}", index, script, params);
             BulkByScrollResponse bulkResponse = restHighLevelClient.updateByQuery(request, RequestOptions.DEFAULT);
             printInfoLog(" {} updateByWrapper increment response:{} update count=", index, bulkResponse);
@@ -602,7 +602,8 @@ public class EsPlusRestClient implements EsPlusClient {
         countRequest.indices(index);
         CountResponse count = null;
         try {
-            printSearchInfoLog("count index=:{} body:{}", index, JsonUtils.toJsonStr(esQueryParamWrapper.getQueryBuilder()));
+            printSearchInfoLog("count index=:{} body:{}", index,
+                    JsonUtils.toJsonStr(esQueryParamWrapper.getQueryBuilder()));
             count = restHighLevelClient.count(countRequest, RequestOptions.DEFAULT);
         } catch (IOException e) {
             throw new EsException("es-plus count error ", e);
@@ -614,7 +615,7 @@ public class EsPlusRestClient implements EsPlusClient {
     }
     
     @Override
-    public <T> EsResponse<T> search(String index, String type, EsParamWrapper<T> esParamWrapper, Class<T> tClass) {
+    public <T> EsResponse<T> search(String index, String type, EsParamWrapper<T> esParamWrapper) {
         SearchRequest searchRequest = new SearchRequest();
         
         EsQueryParamWrapper esQueryParamWrapper = esParamWrapper.getEsQueryParamWrapper();
@@ -641,7 +642,7 @@ public class EsPlusRestClient implements EsPlusClient {
         if (searchResponse.status().getStatus() != 200) {
             throw new EsException("es-plus search error:" + searchResponse.status().getStatus());
         }
-        EsResponse<T> esResponse = getEsResponse(tClass, esQueryParamWrapper, searchResponse);
+        EsResponse<T> esResponse = getEsResponse(esParamWrapper.getTClass(), esQueryParamWrapper, searchResponse);
         return esResponse;
     }
     
@@ -649,16 +650,14 @@ public class EsPlusRestClient implements EsPlusClient {
      * 滚动包装器
      *
      * @param esParamWrapper es参数包装器
-     * @param tClass         t类
      * @param index          索引
-     * @param size           大小
      * @param keepTime       保持时间
      * @param scrollId       滚动id
      * @return {@link EsResponse}<{@link T}>
      */
     @Override
-    public <T> EsResponse<T> scroll(String index, String type, EsParamWrapper<T> esParamWrapper, Class<T> tClass,
-            int size, Duration keepTime, String scrollId) {
+    public <T> EsResponse<T> scroll(String index, String type, EsParamWrapper<T> esParamWrapper,
+            Duration keepTime, String scrollId) {
         SearchResponse searchResponse;
         SearchHit[] searchHits = null;
         List<T> result = new ArrayList<>();
@@ -681,7 +680,7 @@ public class EsPlusRestClient implements EsPlusClient {
                 scrollId = searchResponse.getScrollId();
                 searchHits = searchResponse.getHits().getHits();
             }
-            EsResponse<T> esResponse = getEsResponse(tClass, esQueryParamWrapper, searchResponse);
+            EsResponse<T> esResponse = getEsResponse(esParamWrapper.getTClass(), esQueryParamWrapper, searchResponse);
             if (searchHits == null || searchHits.length <= 0) {
                 ClearScrollRequest clearScrollRequest = new ClearScrollRequest();
                 clearScrollRequest.addScrollId(scrollId);
@@ -699,8 +698,7 @@ public class EsPlusRestClient implements EsPlusClient {
      * 聚合
      */
     @Override
-    public <T> EsAggResponse<T> aggregations(String index, String type, EsParamWrapper<T> esParamWrapper,
-            Class<T> tClass) {
+    public <T> EsAggResponse<T> aggregations(String index, String type, EsParamWrapper<T> esParamWrapper) {
         EsQueryParamWrapper esQueryParamWrapper = esParamWrapper.getEsQueryParamWrapper();
         SearchRequest searchRequest = new SearchRequest();
         //查询条件组合
@@ -729,7 +727,7 @@ public class EsPlusRestClient implements EsPlusClient {
         Aggregations aggregations = searchResponse.getAggregations();
         EsPlusAggregations<T> esAggregationReponse = new EsPlusAggregations<>();
         esAggregationReponse.setAggregations(aggregations);
-        esAggregationReponse.settClass(tClass);
+        esAggregationReponse.settClass(esParamWrapper.getTClass());
         return esAggregationReponse;
     }
     
@@ -760,8 +758,8 @@ public class EsPlusRestClient implements EsPlusClient {
     }
     
     @Override
-    public String executeDSL(String dsl, String indexName) {
-        Request request = new Request("get", indexName + "_search");
+    public String executeDSL(String dsl, String index) {
+        Request request = new Request("get", index + "_search");
         request.setJsonEntity(dsl);
         Response response = null;
         try {
@@ -793,7 +791,7 @@ public class EsPlusRestClient implements EsPlusClient {
                 return bean;
             }).forEach(result::add);
         }
-        EsHits esHits = setInnerHits(hits);
+        EsHits esHits = setInnerHits(hits,false);
         //设置聚合结果
         Aggregations aggregations = searchResponse.getAggregations();
         EsPlusAggregations<T> esAggsResponse = new EsPlusAggregations<>();
@@ -842,7 +840,7 @@ public class EsPlusRestClient implements EsPlusClient {
         }
     }
     
-    private EsHits setInnerHits(SearchHits hits) {
+    private EsHits setInnerHits(SearchHits hits, boolean populate) {
         if (hits == null || ArrayUtils.isEmpty(hits.getHits())) {
             return null;
         }
@@ -861,8 +859,11 @@ public class EsPlusRestClient implements EsPlusClient {
         esHits.setEsHitList(esHitList);
         for (SearchHit searchHit : hits.getHits()) {
             EsHit esHit = new EsHit();
-            String sourceAsString = searchHit.getSourceAsString();
-            esHit.setData(sourceAsString);
+            //一级数据不填充
+            if (populate) {
+                String sourceAsString = searchHit.getSourceAsString();
+                esHit.setData(sourceAsString);
+            }
             esHitList.add(esHit);
             Map<String, SearchHits> innerHits = searchHit.getInnerHits();
             
@@ -870,7 +871,7 @@ public class EsPlusRestClient implements EsPlusClient {
             if (!CollectionUtils.isEmpty(innerHits)) {
                 Map<String, EsHits> esHitsMap = new HashMap<>();
                 innerHits.forEach((k, v) -> {
-                    EsHits eshits = setInnerHits(v);
+                    EsHits eshits = setInnerHits(v,true);
                     esHitsMap.put(k, eshits);
                 });
                 esHit.setInnerHitsMap(esHitsMap);

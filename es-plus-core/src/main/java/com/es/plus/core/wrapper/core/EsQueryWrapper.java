@@ -10,7 +10,7 @@ public class EsQueryWrapper<T> extends AbstractEsWrapper<T, String, EsQueryWrapp
      * @param tClass
      */
     public EsQueryWrapper(Class<T> tClass) {
-        super.tClass = tClass;
+        super(tClass);
     }
 
     public EsQueryWrapper() {

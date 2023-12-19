@@ -3,8 +3,6 @@ package com.es.plus.samples.test;
 import com.es.plus.adapter.params.EsResponse;
 import com.es.plus.adapter.util.JsonUtils;
 import com.es.plus.core.statics.Es;
-import com.es.plus.core.wrapper.chain.EsChainQueryWrapper;
-import com.es.plus.es6.client.EsPlus6Aggregations;
 import com.es.plus.samples.SamplesApplication;
 import com.es.plus.samples.dto.FastTestDTO;
 import com.es.plus.samples.service.FastTestService;
@@ -12,7 +10,6 @@ import org.elasticsearch.common.unit.Fuzziness;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.TermQueryBuilder;
-import org.elasticsearch.search.aggregations.metrics.sum.Sum;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
@@ -41,14 +38,7 @@ public class DemoTest {
     @Autowired
     private FastTestService fastTestService;
     
-    @org.junit.jupiter.api.Test
-    public void test(){
-        EsChainQueryWrapper<Map> wrapper = Es.chainQuery(Map.class).index("completeorder") ;
-        wrapper.esAggWrapper().sum("tnum");
-        EsPlus6Aggregations<Map> aggregations = (EsPlus6Aggregations<Map>) wrapper.aggregations();
-        Sum tnum = aggregations.getSum("tnum");
-        int value1 = (int)tnum.getValue();
-    }
+  
     
     @org.junit.jupiter.api.Test
     public void filterTerm(){

@@ -1,4 +1,4 @@
-package com.es.plus.adapter.proxy;
+package com.es.plus.adapter.interceptor;
 
 import java.lang.annotation.*;
 

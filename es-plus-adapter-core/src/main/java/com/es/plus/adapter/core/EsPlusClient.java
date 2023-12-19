@@ -119,23 +119,20 @@ public interface EsPlusClient {
      * 搜索包装
      *
      * @param esParamWrapper es查询包装
-     * @param tClass         t类
      * @param index          指数
      * @return {@link EsResponse}<{@link T}>
      */
-    <T> EsResponse<T> search(String index, String type, EsParamWrapper<T> esParamWrapper, Class<T> tClass);
+    <T> EsResponse<T> search(String index, String type, EsParamWrapper<T> esParamWrapper);
 
     /**
      * 滚动查询包装
      *
      * @param esParamWrapper es查询包装
-     * @param tClass         t类
      * @param index          指数
-     * @param size           大小
      * @param keepTime       保持时间
      * @return
      */
-    <T> EsResponse<T> scroll(String index, String type, EsParamWrapper<T> esParamWrapper, Class<T> tClass, int size, Duration keepTime, String scrollId);
+    <T> EsResponse<T> scroll(String index, String type, EsParamWrapper<T> esParamWrapper, Duration keepTime, String scrollId);
 
     /**
      * 聚合
@@ -143,15 +140,15 @@ public interface EsPlusClient {
      * @param index          指数
      * @param esParamWrapper es查询包装
      */
-    <T> EsAggResponse<T> aggregations(String index, String type, EsParamWrapper<T> esParamWrapper, Class<T> tClass);
+    <T> EsAggResponse<T> aggregations(String index, String type, EsParamWrapper<T> esParamWrapper);
 
 
     /**
      * 执行dsl
      *
      * @param dsl       dsl
-     * @param indexName 索引名字
+     * @param index 索引名字
      * @return {@link String}
      */
-    String executeDSL(String dsl, String indexName);
+    String executeDSL(String dsl, String index);
 }

@@ -1,6 +1,6 @@
 package com.es.plus.adapter.params;
 
-import com.es.plus.adapter.proxy.EsUpdateField;
+import com.es.plus.adapter.interceptor.EsUpdateField;
 import lombok.Data;
 
 @Data
@@ -15,4 +15,8 @@ public class EsParamWrapper<T> {
      * 更新字段封装
      */
     protected EsUpdateField esUpdateField = new EsUpdateField();
+    /**
+     * class类
+     */
+    private Class<T> tClass;
 }

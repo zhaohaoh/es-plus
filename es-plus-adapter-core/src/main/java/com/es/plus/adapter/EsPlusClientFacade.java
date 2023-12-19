@@ -418,12 +418,11 @@ public class EsPlusClientFacade   {
      * 搜索根据包装器
      *
      * @param esParamWrapper es param包装
-     * @param tClass         t类
      * @param index          索引
      * @return {@link EsResponse}<{@link T}>
      */
-    public <T> EsResponse<T> search(String index, String type, EsParamWrapper<T> esParamWrapper, Class<T> tClass) {
-        return esPlusClient.search(index, type, esParamWrapper, tClass);
+    public <T> EsResponse<T> search(String index, String type, EsParamWrapper<T> esParamWrapper) {
+        return esPlusClient.search(index, type, esParamWrapper);
     }
 
 
@@ -431,14 +430,12 @@ public class EsPlusClientFacade   {
      * 滚动根据包装器
      *
      * @param esParamWrapper es param包装
-     * @param tClass         t类
      * @param index          指数
-     * @param size           大小
      * @param keepTime       保持时间
      * @param scollId        滚动处理Id
      */
-    public <T> EsResponse<T> scroll(String index, String type, EsParamWrapper<T> esParamWrapper, Class<T> tClass, int size, Duration keepTime, String scollId) {
-        return esPlusClient.scroll(index, type, esParamWrapper, tClass, size, keepTime, scollId);
+    public <T> EsResponse<T> scroll(String index, String type, EsParamWrapper<T> esParamWrapper, Duration keepTime, String scollId) {
+        return esPlusClient.scroll(index, type, esParamWrapper, keepTime, scollId);
     }
 
 
@@ -447,10 +444,9 @@ public class EsPlusClientFacade   {
      *
      * @param index          指数
      * @param esParamWrapper es param包装
-     * @param tClass         t类
      */
-    public <T> EsAggResponse<T> aggregations(String index, String type, EsParamWrapper<T> esParamWrapper, Class<T> tClass) {
-        return esPlusClient.aggregations(index, type, esParamWrapper, tClass);
+    public <T> EsAggResponse<T> aggregations(String index, String type, EsParamWrapper<T> esParamWrapper) {
+        return esPlusClient.aggregations(index, type, esParamWrapper);
     }
 
     /**
@@ -484,7 +480,7 @@ public class EsPlusClientFacade   {
         return esPlusIndexClient.refresh(index);
     }
 
-    public String executeDSL(String dsl, String indexName) {
-        return esPlusClient.executeDSL(dsl,indexName);
+    public String executeDSL(String dsl, String index) {
+        return esPlusClient.executeDSL(dsl,index);
     }
 }

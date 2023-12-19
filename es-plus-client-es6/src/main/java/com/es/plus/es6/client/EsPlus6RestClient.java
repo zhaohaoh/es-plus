@@ -8,7 +8,7 @@ import com.es.plus.adapter.lock.EsLockFactory;
 import com.es.plus.adapter.params.*;
 import com.es.plus.adapter.properties.EsIndexParam;
 import com.es.plus.adapter.properties.GlobalParamHolder;
-import com.es.plus.adapter.proxy.EsUpdateField;
+import com.es.plus.adapter.interceptor.EsUpdateField;
 import com.es.plus.adapter.util.BeanUtils;
 import com.es.plus.adapter.util.FieldUtils;
 import com.es.plus.adapter.util.JsonUtils;
@@ -615,7 +615,7 @@ public class EsPlus6RestClient implements EsPlusClient {
     }
     
     @Override
-    public <T> EsResponse<T> search(String index, String type, EsParamWrapper<T> esParamWrapper, Class<T> tClass) {
+    public <T> EsResponse<T> search(String index, String type, EsParamWrapper<T> esParamWrapper) {
         SearchRequest searchRequest = new SearchRequest();
         
         EsQueryParamWrapper esQueryParamWrapper = esParamWrapper.getEsQueryParamWrapper();
@@ -642,7 +642,7 @@ public class EsPlus6RestClient implements EsPlusClient {
         if (searchResponse.status().getStatus() != 200) {
             throw new EsException("es-plus search error:" + searchResponse.status().getStatus());
         }
-        EsResponse<T> esResponse = getEsResponse(tClass, esQueryParamWrapper, searchResponse);
+        EsResponse<T> esResponse = getEsResponse(esParamWrapper.getTClass(), esQueryParamWrapper, searchResponse);
         return esResponse;
     }
     
@@ -650,16 +650,14 @@ public class EsPlus6RestClient implements EsPlusClient {
      * 滚动包装器
      *
      * @param esParamWrapper es参数包装器
-     * @param tClass         t类
      * @param index          索引
-     * @param size           大小
      * @param keepTime       保持时间
      * @param scrollId       滚动id
      * @return {@link EsResponse}<{@link T}>
      */
     @Override
-    public <T> EsResponse<T> scroll(String index, String type, EsParamWrapper<T> esParamWrapper, Class<T> tClass,
-            int size, Duration keepTime, String scrollId) {
+    public <T> EsResponse<T> scroll(String index, String type, EsParamWrapper<T> esParamWrapper,
+            Duration keepTime, String scrollId) {
         SearchResponse searchResponse;
         SearchHit[] searchHits = null;
         List<T> result = new ArrayList<>();
@@ -682,7 +680,7 @@ public class EsPlus6RestClient implements EsPlusClient {
                 scrollId = searchResponse.getScrollId();
                 searchHits = searchResponse.getHits().getHits();
             }
-            EsResponse<T> esResponse = getEsResponse(tClass, esQueryParamWrapper, searchResponse);
+            EsResponse<T> esResponse = getEsResponse(esParamWrapper.getTClass(), esQueryParamWrapper, searchResponse);
             if (searchHits == null || searchHits.length <= 0) {
                 ClearScrollRequest clearScrollRequest = new ClearScrollRequest();
                 clearScrollRequest.addScrollId(scrollId);
@@ -700,8 +698,7 @@ public class EsPlus6RestClient implements EsPlusClient {
      * 聚合
      */
     @Override
-    public <T> EsAggResponse<T> aggregations(String index, String type, EsParamWrapper<T> esParamWrapper,
-            Class<T> tClass) {
+    public <T> EsAggResponse<T> aggregations(String index, String type, EsParamWrapper<T> esParamWrapper) {
     
         EsQueryParamWrapper esQueryParamWrapper = esParamWrapper.getEsQueryParamWrapper();
         SearchRequest searchRequest = new SearchRequest();
@@ -714,6 +711,7 @@ public class EsPlus6RestClient implements EsPlusClient {
         //设置索引
         searchRequest.source(sourceBuilder);
         searchRequest.indices(index);
+        searchRequest.types(type);
         //查询
         SearchResponse searchResponse = null;
         try {
@@ -731,7 +729,7 @@ public class EsPlus6RestClient implements EsPlusClient {
         Aggregations aggregations = searchResponse.getAggregations();
         EsPlus6Aggregations<T> esAggregationReponse = new EsPlus6Aggregations<>();
         esAggregationReponse.setAggregations(aggregations);
-        esAggregationReponse.settClass(tClass);
+        esAggregationReponse.settClass(esParamWrapper.getTClass());
         return esAggregationReponse;
     }
     
@@ -762,8 +760,8 @@ public class EsPlus6RestClient implements EsPlusClient {
     }
     
     @Override
-    public String executeDSL(String dsl, String indexName) {
-        Request request = new Request("get", indexName + "_search");
+    public String executeDSL(String dsl, String index) {
+        Request request = new Request("get", index + "_search");
         request.setJsonEntity(dsl);
         Response response = null;
         try {
@@ -795,7 +793,7 @@ public class EsPlus6RestClient implements EsPlusClient {
                 return bean;
             }).forEach(result::add);
         }
-        EsHits esHits = setInnerHits(hits);
+        EsHits esHits = setInnerHits(hits,false);
         //设置聚合结果
         Aggregations aggregations = searchResponse.getAggregations();
         EsPlus6Aggregations<T> esAggsResponse = new EsPlus6Aggregations<>();
@@ -844,10 +842,16 @@ public class EsPlus6RestClient implements EsPlusClient {
         }
     }
     
-    private EsHits setInnerHits(SearchHits hits) {
+    private EsHits setInnerHits(SearchHits hits,boolean populate) {
         if (hits == null || ArrayUtils.isEmpty(hits.getHits())) {
             return null;
         }
+        //如果没有嵌套类则不填充
+        boolean anyMatch = Arrays.stream(hits.getHits()).anyMatch(a -> CollectionUtils.isEmpty(a.getInnerHits()));
+        if (anyMatch) {
+            return null;
+        }
+        
         long totalHits = hits.getTotalHits();
         EsHits esHits = new EsHits();
         esHits.setTotal(totalHits);
@@ -856,16 +860,19 @@ public class EsPlus6RestClient implements EsPlusClient {
         esHits.setEsHitList(esHitList);
         for (SearchHit searchHit : hits.getHits()) {
             EsHit esHit = new EsHit();
-            String sourceAsString = searchHit.getSourceAsString();
-            esHit.setData(sourceAsString);
-            esHitList.add(esHit);
+            //一级数据不填充
+            if (populate){
+                String sourceAsString = searchHit.getSourceAsString();
+                esHit.setData(sourceAsString);
+            }
+             esHitList.add(esHit);
             Map<String, SearchHits> innerHits = searchHit.getInnerHits();
             
             // 填充innerHits
             if (!CollectionUtils.isEmpty(innerHits)) {
                 Map<String, EsHits> esHitsMap = new HashMap<>();
                 innerHits.forEach((k, v) -> {
-                    EsHits eshits = setInnerHits(v);
+                    EsHits eshits = setInnerHits(v,true);
                     esHitsMap.put(k, eshits);
                 });
                 esHit.setInnerHitsMap(esHitsMap);

@@ -238,7 +238,8 @@ public class SamplesEsService extends EsServiceImpl<SamplesEsDTO> {
         EsLambdaUpdateWrapper<SamplesEsDTO> updateWrapper = new EsLambdaUpdateWrapper<>();
         updateWrapper.match(SamplesEsDTO::getUsername, "ggghhh").set(SamplesEsDTO::getEmail, "bbbbbb");
         this.updateByQuery(updateWrapper);
-
+        
+        
         EsLambdaQueryWrapper<SamplesEsDTO> queryWrapper = new EsLambdaQueryWrapper<>();
         queryWrapper.match(SamplesEsDTO::getUsername, "ggghhh");
         EsResponse<SamplesEsDTO> list = this.search(queryWrapper);

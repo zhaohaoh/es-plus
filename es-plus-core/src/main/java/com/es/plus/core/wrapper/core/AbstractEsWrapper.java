@@ -4,7 +4,7 @@ package com.es.plus.core.wrapper.core;
 import com.es.plus.adapter.params.*;
 import com.es.plus.adapter.properties.EsFieldInfo;
 import com.es.plus.adapter.properties.GlobalParamHolder;
-import com.es.plus.adapter.proxy.EsUpdateField;
+import com.es.plus.adapter.interceptor.EsUpdateField;
 import com.es.plus.adapter.util.DateUtil;
 import com.es.plus.core.wrapper.aggregation.EsAggWrapper;
 import com.es.plus.core.wrapper.aggregation.EsLambdaAggWrapper;
@@ -36,6 +36,13 @@ import java.util.stream.Collectors;
 public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper<T, R, Children>> extends AbstractLambdaEsWrapper<T, R>
         implements IEsQueryWrapper<Children, Children, R>, EsWrapper<T>, EsExtendsWrapper<Children, R> {
     protected AbstractEsWrapper() {
+        //成员变量比构造方法更快执行
+        queryBuilders = esParamWrapper().getEsQueryParamWrapper().getQueryBuilder().must();
+    }
+    protected AbstractEsWrapper(Class<T> tClass) {
+        //成员变量比构造方法更快执行 所以在这里加载
+        super.tClass=tClass;
+        queryBuilders = esParamWrapper().getEsQueryParamWrapper().getQueryBuilder().must();
     }
 
     protected Children children = (Children) this;
@@ -49,7 +56,7 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
 
     private EsParamWrapper<T> esParamWrapper;
 
-    private List<QueryBuilder> queryBuilders = esParamWrapper().getEsQueryParamWrapper().getQueryBuilder().must();
+    private List<QueryBuilder> queryBuilders;
 
     protected EsLambdaAggWrapper<T> esLambdaAggWrapper;
 
@@ -60,6 +67,9 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
     public EsParamWrapper<T> esParamWrapper() {
         if (esParamWrapper == null) {
             esParamWrapper = new EsParamWrapper<>();
+            if (tClass!=null){
+                esParamWrapper.setTClass(tClass);
+            }
         }
         return esParamWrapper;
     }
