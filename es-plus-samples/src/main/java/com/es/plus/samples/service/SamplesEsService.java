@@ -186,11 +186,11 @@ public class SamplesEsService extends EsServiceImpl<SamplesEsDTO> {
 
     public void scroll() {
         String scrollId = null;
-        int page = 2;
+        int page = 3;
         int size = 2;
 
         for (int i = 0; i < page; i++) {
-            EsResponse<SamplesEsDTO> hzh = esChainQueryWrapper().must().match(SamplesEsDTO::getUsername, "HZH")
+            EsResponse<SamplesEsDTO> hzh = esChainQueryWrapper().must()
                     .sortByAsc("id").scroll(size, scrollId);
             scrollId = hzh.getScrollId();
             System.out.println(hzh);
