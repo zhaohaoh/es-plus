@@ -20,42 +20,47 @@ import static com.es.plus.constant.EsConstant.TYPE;
 
 @Slf4j
 public class EsPlusClientProxy implements InvocationHandler {
+    
     private final Object target;
+    
     private final Class<?>[] proxiedInterfaces;
+    
     private List<EsInterceptor> esInterceptors;
+    
     private static final DefaultParameterNameDiscoverer discoverer = new DefaultParameterNameDiscoverer();
+    
     /**
      * Is the {@link #equals} method defined on the proxied interfaces?
      */
     private boolean equalsDefined;
-
+    
     /**
      * Is the {@link #hashCode} method defined on the proxied interfaces?
      */
     private boolean hashCodeDefined;
-
+    
     public EsPlusClientProxy(Object target, List<EsInterceptor> esInterceptors) {
         this.target = target;
         this.proxiedInterfaces = target.getClass().getInterfaces();
         this.esInterceptors = esInterceptors;
     }
-
+    
     public Object getProxy() {
         return getProxy(ClassUtils.getDefaultClassLoader());
     }
-
+    
     public Object getProxy(@Nullable ClassLoader classLoader) {
         Object proxyInstance = Proxy.newProxyInstance(classLoader, this.proxiedInterfaces, this);
         findDefinedEqualsAndHashCodeMethods(proxiedInterfaces);
-
+        
         return proxyInstance;
     }
-
+    
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
         Object result;
-        String index = getParamValue(INDEX,method, args);
-        String type = getParamValue(TYPE,method, args);
+        String index = getParamValue(INDEX, method, args);
+        String type = getParamValue(TYPE, method, args);
         String methodName = method.getName();
         try {
             if (isHashCodeMethod(method) && !hashCodeDefined) {
@@ -70,10 +75,10 @@ public class EsPlusClientProxy implements InvocationHandler {
             if (isIngoreMethod(method)) {
                 return method.invoke(target, args);
             }
-    
+            
             //如果本地线程强制关闭拦截器
             Boolean isInterceptor = InterceptorLocalContext.get();
-            if (isInterceptor !=null && !isInterceptor){
+            if (isInterceptor != null && !isInterceptor) {
                 return method.invoke(target, args);
             }
             
@@ -81,29 +86,32 @@ public class EsPlusClientProxy implements InvocationHandler {
             if (CollectionUtils.isEmpty(esInterceptors)) {
                 return method.invoke(target, args);
             }
-      
             
             //前置处理
             for (EsInterceptor esInterceptor : esInterceptors) {
-                esInterceptor.before(index,type, method, args);
+                esInterceptor.before(index, type, method, args);
             }
-
+            
             result = method.invoke(target, args);
             
             //后置过程
             for (EsInterceptor esInterceptor : esInterceptors) {
-                esInterceptor.after(index, type,method, args, result);
+                esInterceptor.after(index, type, method, args, result);
             }
         } catch (InvocationTargetException e) {
             throw e.getCause();
         }
         return result;
     }
-
+    
     private List<EsInterceptor> getEsInterceptors(String name, String index) {
         List<EsInterceptor> canInterceptors = new ArrayList<>();
+        if (CollectionUtils.isEmpty(esInterceptors)) {
+            return canInterceptors;
+        }
         for (EsInterceptor esInterceptor : esInterceptors) {
-            EsInterceptors interceptors = AnnotationUtils.findAnnotation(esInterceptor.getClass(), EsInterceptors.class);
+            EsInterceptors interceptors = AnnotationUtils
+                    .findAnnotation(esInterceptor.getClass(), EsInterceptors.class);
             if (interceptors == null) {
                 log.info("EsInterceptors is null");
             }
@@ -112,7 +120,7 @@ public class EsPlusClientProxy implements InvocationHandler {
             for (InterceptorElement element : elements) {
                 String[] indexs = element.index();
                 String[] methodNames = element.methodName();
-
+                
                 Class<?> aClass = com.es.plus.adapter.util.ClassUtils.getClass(target.getClass());
                 if (!element.type().isAssignableFrom(aClass)) {
                     continue;
@@ -137,11 +145,11 @@ public class EsPlusClientProxy implements InvocationHandler {
         }
         return canInterceptors;
     }
-
+    
     @SneakyThrows
-    private String getParamValue(String name,Method method, Object[] args) {
+    private String getParamValue(String name, Method method, Object[] args) {
         String param = null;
-
+        
         String[] parameterNames;
         boolean match = Arrays.stream(method.getParameters()).anyMatch(Parameter::isNamePresent);
         if (match) {
@@ -153,7 +161,7 @@ public class EsPlusClientProxy implements InvocationHandler {
         if (parameterNames != null) {
             for (int i = 0; i < parameterNames.length; i++) {
                 String parameterName = parameterNames[i];
-                if (parameterName!=null) {
+                if (parameterName != null) {
                     if (parameterName.equals(name)) {
                         param = args[i].toString();
                         break;
@@ -165,8 +173,8 @@ public class EsPlusClientProxy implements InvocationHandler {
         }
         return param;
     }
-
-
+    
+    
     //查询是否有自定义的方法。是否重写tostring和
     private void findDefinedEqualsAndHashCodeMethods(Class<?>[] proxiedInterfaces) {
         for (Class<?> proxiedInterface : proxiedInterfaces) {
@@ -184,18 +192,19 @@ public class EsPlusClientProxy implements InvocationHandler {
             }
         }
     }
-
+    
     public static boolean isIngoreMethod(@Nullable Method method) {
         String[] strings = {"getRestHighLevelClient", "getReindexState", "setReindexState"};
-        boolean match = Arrays.stream(strings).anyMatch(a -> method != null && method.getParameterCount() == 0 && a.equals(method.getName()));
+        boolean match = Arrays.stream(strings)
+                .anyMatch(a -> method != null && method.getParameterCount() == 0 && a.equals(method.getName()));
         return match;
     }
-
-
+    
+    
     public static boolean isHashCodeMethod(@Nullable Method method) {
         return method != null && method.getParameterCount() == 0 && "hashCode".equals(method.getName());
     }
-
+    
     /**
      * Determine whether the given method is a "toString" method.
      *
@@ -204,7 +213,7 @@ public class EsPlusClientProxy implements InvocationHandler {
     public static boolean isToStringMethod(@Nullable Method method) {
         return (method != null && method.getParameterCount() == 0 && "toString".equals(method.getName()));
     }
-
+    
     public static boolean isEqualsMethod(@Nullable Method method) {
         if (method == null) {
             return false;
@@ -217,5 +226,5 @@ public class EsPlusClientProxy implements InvocationHandler {
         }
         return method.getParameterTypes()[0] == Object.class;
     }
-
+    
 }
