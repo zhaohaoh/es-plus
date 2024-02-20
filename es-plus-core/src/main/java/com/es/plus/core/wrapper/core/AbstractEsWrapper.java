@@ -144,6 +144,9 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
 
     @Override
     public Children must(boolean condition, Consumer<Children> consumer) {
+        if (!condition){
+            return this.children;
+        }
         final Children children = instance();
         consumer.accept(children);
         this.children.getQueryBuilder().must(children.getQueryBuilder());
@@ -152,6 +155,9 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
 
     @Override
     public Children should(boolean condition, Consumer<Children> consumer) {
+        if (!condition){
+            return this.children;
+        }
         final Children children = instance();
         consumer.accept(children);
         this.children.getQueryBuilder().should(children.getQueryBuilder());
@@ -160,6 +166,9 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
 
     @Override
     public Children mustNot(boolean condition, Consumer<Children> consumer) {
+        if (!condition){
+            return this.children;
+        }
         final Children children = instance();
         consumer.accept(children);
         this.children.getQueryBuilder().mustNot(children.getQueryBuilder());
@@ -168,6 +177,9 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
 
     @Override
     public Children filter(boolean condition, Consumer<Children> consumer) {
+        if (!condition){
+            return this.children;
+        }
         final Children children = instance();
         consumer.accept(children);
         this.children.getQueryBuilder().filter(children.getQueryBuilder());
