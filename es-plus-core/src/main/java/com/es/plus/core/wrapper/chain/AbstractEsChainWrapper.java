@@ -8,7 +8,13 @@ import com.es.plus.adapter.params.EsSelect;
 import com.es.plus.adapter.properties.GlobalParamHolder;
 import com.es.plus.core.wrapper.aggregation.EsAggWrapper;
 import com.es.plus.core.wrapper.aggregation.EsLambdaAggWrapper;
-import com.es.plus.core.wrapper.core.*;
+import com.es.plus.core.wrapper.core.AbstractEsWrapper;
+import com.es.plus.core.wrapper.core.EsExtendsWrapper;
+import com.es.plus.core.wrapper.core.EsLambdaQueryWrapper;
+import com.es.plus.core.wrapper.core.EsQueryWrapper;
+import com.es.plus.core.wrapper.core.EsStaitcsWrapper;
+import com.es.plus.core.wrapper.core.EsWrapper;
+import com.es.plus.core.wrapper.core.IEsQueryWrapper;
 import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.common.geo.GeoPoint;
@@ -17,6 +23,7 @@ import org.elasticsearch.common.unit.Fuzziness;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.InnerHitBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.script.Script;
 import org.elasticsearch.search.sort.NestedSortBuilder;
 
 import java.util.Collection;
@@ -251,6 +258,12 @@ public abstract class AbstractEsChainWrapper<T, R, Children extends AbstractEsCh
     @Override
     public Children term(boolean condition, R name, Object value) {
         getWrapper().term(condition, name, value);
+        return children;
+    }
+    
+    @Override
+    public Children script(boolean condition, Script script) {
+        getWrapper().script(condition, script);
         return children;
     }
 

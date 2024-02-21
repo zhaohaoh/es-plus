@@ -6,6 +6,7 @@ import org.elasticsearch.common.unit.DistanceUnit;
 import org.elasticsearch.common.unit.Fuzziness;
 import org.elasticsearch.index.query.InnerHitBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.script.Script;
 
 import java.util.Collection;
 import java.util.List;
@@ -80,6 +81,12 @@ public interface IEsQueryWrapper<Children, QUERY, R> {
     }
 
     Children term(boolean condition, R name, Object value);
+    
+    default Children script(Script script) {
+        return script(true, script);
+    }
+    
+    Children script(boolean condition, Script script);
 
     default Children terms(R name, Object... value) {
         return terms(true, name, value);

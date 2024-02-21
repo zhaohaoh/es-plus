@@ -17,6 +17,7 @@ import org.elasticsearch.index.query.*;
 import org.elasticsearch.join.query.HasChildQueryBuilder;
 import org.elasticsearch.join.query.HasParentQueryBuilder;
 import org.elasticsearch.join.query.ParentIdQueryBuilder;
+import org.elasticsearch.script.Script;
 import org.elasticsearch.search.sort.NestedSortBuilder;
 import org.elasticsearch.search.sort.SortOrder;
 
@@ -282,6 +283,16 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
             TermQueryBuilder termQueryBuilder = QueryBuilders.termQuery(keyword, value);
             currentBuilder = termQueryBuilder;
             queryBuilders.add(termQueryBuilder);
+        }
+        return children;
+    }
+    
+    @Override
+    public Children script(boolean condition,Script script) {
+        if (condition) {
+            ScriptQueryBuilder scriptQueryBuilder = QueryBuilders.scriptQuery(script);
+            currentBuilder = scriptQueryBuilder;
+            queryBuilders.add(scriptQueryBuilder);
         }
         return children;
     }
