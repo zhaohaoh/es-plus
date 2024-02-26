@@ -434,7 +434,8 @@ public class EsPlus6IndexRestClient implements EsPlusIndexClient {
     public boolean ping() {
         try {
             return restHighLevelClient.ping(RequestOptions.DEFAULT);
-        } catch (IOException e) {
+        } catch (Exception e) {
+            log.error("es initPing error",e);
             return false;
         }
     }
