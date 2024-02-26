@@ -140,7 +140,6 @@ public class EsClientConfiguration implements InitializingBean {
                 return requestConfigBuilder;
             });
         }
-        log.info("初始化RestHighLevelClient :{}",builder);
         return new RestHighLevelClient(builder);
     }
 
