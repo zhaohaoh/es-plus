@@ -79,7 +79,7 @@ public class EsClientConfiguration implements InitializingBean {
      */
     @Bean
     @ConditionalOnMissingBean(RestHighLevelClient.class)
-    @ConditionalOnProperty(value = "es.plus.address",havingValue = "true")
+    @ConditionalOnProperty(value = "es-plus.address")
     public RestHighLevelClient restHighLevelClient() {
         // 处理地址
         String address = esProperties.getAddress();
