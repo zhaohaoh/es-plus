@@ -10,6 +10,7 @@ import com.es.plus.core.ClientContext;
 import com.es.plus.starter.properties.AnalysisProperties;
 import com.es.plus.starter.properties.ClientProperties;
 import com.es.plus.starter.properties.EsProperties;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpHost;
 import org.apache.http.auth.AuthScope;
@@ -65,6 +66,7 @@ import static com.es.plus.constant.Analyzer.WHITESPACE;
  * @Date: 2022/9/6 14:34
  * 默认注册高级客户端.需要适配其他客户端也在这个类中添加
  */
+@Slf4j
 @Configuration
 @EnableConfigurationProperties(EsProperties.class)
 public class EsClientConfiguration implements InitializingBean {
@@ -86,7 +88,9 @@ public class EsClientConfiguration implements InitializingBean {
         if (StringUtils.isEmpty(address)) {
             throw new EsException("please config the es address");
         }
-
+        
+        log.info("初始化esProperties :{}",esProperties);
+        
         String schema = esProperties.getSchema();
         List<HttpHost> hostList = new ArrayList<>();
         Arrays.stream(address.split(",")).forEach(item -> hostList.add(new HttpHost(item.split(":")[0],
@@ -136,7 +140,6 @@ public class EsClientConfiguration implements InitializingBean {
                 return requestConfigBuilder;
             });
         }
-
         return new RestHighLevelClient(builder);
     }
 
