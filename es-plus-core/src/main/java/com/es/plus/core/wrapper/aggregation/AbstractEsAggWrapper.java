@@ -70,7 +70,8 @@ public abstract class AbstractEsAggWrapper<T, R, Children extends AbstractEsAggW
     protected List<BaseAggregationBuilder> aggregationBuilder = new ArrayList<>();
     protected BaseAggregationBuilder currentBuilder;
     protected EsAggClient esAggClient;
-
+    protected AggregatorFactories.Builder subAggregations;
+    
     public List<BaseAggregationBuilder> getAggregationBuilder() {
         return aggregationBuilder;
     }
@@ -81,15 +82,17 @@ public abstract class AbstractEsAggWrapper<T, R, Children extends AbstractEsAggW
         consumer.accept(children);
         List<BaseAggregationBuilder> aggregationBuilder = children.getAggregationBuilder();
         if (!CollectionUtils.isEmpty(aggregationBuilder)) {
-            AggregatorFactories.Builder builder = new AggregatorFactories.Builder();
+            if (subAggregations == null){
+                subAggregations = new AggregatorFactories.Builder();
+            }
             for (BaseAggregationBuilder baseAggregationBuilder : aggregationBuilder) {
                 if (baseAggregationBuilder instanceof AggregationBuilder) {
-                    builder.addAggregator((AggregationBuilder) baseAggregationBuilder);
+                    subAggregations.addAggregator((AggregationBuilder) baseAggregationBuilder);
                 } else {
-                    builder.addPipelineAggregator((PipelineAggregationBuilder) baseAggregationBuilder);
+                    subAggregations.addPipelineAggregator((PipelineAggregationBuilder) baseAggregationBuilder);
                 }
             }
-            currentBuilder.subAggregations(builder);
+            currentBuilder.subAggregations(subAggregations);
         }
         return this.children;
     }
