@@ -60,7 +60,8 @@ public class EsFieldInfo {
     private boolean store;
 
     /**
-     * 设置text可以进行聚合操作
+     * 设置text可以进行聚合操作 会有性能问题。会把text数据加载到内存中。  默认keyword类型使用的是Doc Values
+     * 默认建立doc_values,即字段类型为keyword，他不会创建分词，就会默认建立doc_value，如果我们不想该字段参与聚合排序，我们可以设置doc_values=false
      *
      * @return 是否设置可聚合
      */

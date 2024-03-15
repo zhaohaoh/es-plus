@@ -264,7 +264,7 @@ public class EsPlusClientFacade   {
         if (esDataList.size() > batchSize) {
             List<? extends Collection<?>> collections = CollectionUtil.splitList(esDataList, batchSize);
             collections.forEach(list -> {
-                        List<BulkItemResponse> bulkItemResponses = esPlusClient.saveOrUpdateBatch(index, type, esDataList);
+                        List<BulkItemResponse> bulkItemResponses = esPlusClient.saveOrUpdateBatch(index, type, list);
                         failBulkItemResponses.addAll(bulkItemResponses);
                     }
             );
@@ -291,7 +291,7 @@ public class EsPlusClientFacade   {
         if (esDataList.size() > batchSize) {
             List<? extends Collection<?>> collections = CollectionUtil.splitList(esDataList, batchSize);
             collections.forEach(list -> {
-                        List<BulkItemResponse> bulkItemResponses = esPlusClient.saveBatch(index, type, esDataList);
+                        List<BulkItemResponse> bulkItemResponses = esPlusClient.saveBatch(index, type, list);
                         failBulkItemResponses.addAll(bulkItemResponses);
                     }
             );
@@ -335,7 +335,7 @@ public class EsPlusClientFacade   {
         if (entityList.size() > batchSize) {
             List<? extends Collection<?>> collections = CollectionUtil.splitList(entityList, batchSize);
             collections.forEach(list -> {
-                        List<BulkItemResponse> bulkItemResponses = esPlusClient.updateBatch(index, type, entityList);
+                        List<BulkItemResponse> bulkItemResponses = esPlusClient.updateBatch(index, type, list);
                         failBulkItemResponses.addAll(bulkItemResponses);
                     }
             );

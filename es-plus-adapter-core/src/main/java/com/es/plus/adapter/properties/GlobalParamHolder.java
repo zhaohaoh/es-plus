@@ -27,7 +27,7 @@ public class GlobalParamHolder {
     // 属性解析器
     private static final EsAnnotationParamProcess ES_ANNOTATION_PARAM_RESOLVE = new EsAnnotationParamProcess();
     // id的线程本地变量
-    private static final ThreadLocal<String> _ID = new ThreadLocal<>();
+    private static final  Map<String,String> _ID = new ConcurrentHashMap<>();
 
     // 分词处理器
     private static final Map<String, Map> ANALYSIS_MAP = new ConcurrentHashMap<>();
@@ -40,19 +40,25 @@ public class GlobalParamHolder {
         return ES_ENTITY_INFO_MAP.computeIfAbsent(clazzName.getName(),a->new EsEntityInfo());
     }
 
-    public static <T> String getDocId(T obj) {
+    public static <T> String getDocId(String index,T obj) {
         Class<T> clazz = (Class<T>) ClassUtils.getClass(obj.getClass());
         try {
             EsEntityInfo esEntityInfo = ES_ENTITY_INFO_MAP.get(clazz.getName());
-            //先获取线程本地id名
-            String idFeildName = _id();
-            if (idFeildName == null) {
-                //如果对象字段获取不到id走自动生成
+    
+            String idFeildName = null;
+            //对象字段
+            if (esEntityInfo!=null){
                 idFeildName = esEntityInfo.getIdName();
-                if (idFeildName == null) {
-                    idFeildName = GlobalConfigCache.GLOBAL_CONFIG.getGlobalEsId();
-                }
             }
+             //获取索引映射的id
+             if (idFeildName == null) {
+                 idFeildName = _id(index);
+             }
+             //默认id规则
+             if (idFeildName == null) {
+                idFeildName = GlobalConfigCache.GLOBAL_CONFIG.getGlobalEsId();
+             }
+          
             //如果map字段获取不到id走自动生成
             if (obj instanceof Map) {
                 Object id = ((Map<?, ?>) obj).get(idFeildName);
@@ -83,14 +89,14 @@ public class GlobalParamHolder {
     }
 
 
-    public static String _id() {
-        String _id = _ID.get();
-        _ID.remove();
+    public static String _id(String index) {
+        String _id = _ID.get(index);
         return _id;
     }
 
-    public static void set_id(String _id) {
-        _ID.set(_id);
+    public static void set_id(String index,String _id) {
+    
+        _ID.put(index,_id);
     }
 
 

@@ -138,7 +138,7 @@ public class EsPlusRestClient implements EsPlusClient {
             }
             BulkRequest bulkRequest = new BulkRequest();
             for (Object esData : esDataList) {
-                UpdateRequest updateRequest = new UpdateRequest(index, type, GlobalParamHolder.getDocId(esData))
+                UpdateRequest updateRequest = new UpdateRequest(index, type, GlobalParamHolder.getDocId(index,esData))
                         .doc(JsonUtils.toJsonStr(esData), XContentType.JSON);
                 updateRequest.retryOnConflict(GlobalConfigCache.GLOBAL_CONFIG.getMaxRetries());
                 updateRequest.setRefreshPolicy(GlobalConfigCache.GLOBAL_CONFIG.getRefreshPolicy());
@@ -208,7 +208,7 @@ public class EsPlusRestClient implements EsPlusClient {
             for (Object esData : esDataList) {
                 IndexRequest indexRequest = new IndexRequest(index);
                 String source = JsonUtils.toJsonStr(esData);
-                indexRequest.id(GlobalParamHolder.getDocId(esData)).source(source, XContentType.JSON);
+                indexRequest.id(GlobalParamHolder.getDocId(index,esData)).source(source, XContentType.JSON);
                 if (childIndex) {
                     indexRequest.routing(FieldUtils.getStrFieldValue(esData, "joinField", "parent"));
                 }
@@ -268,7 +268,7 @@ public class EsPlusRestClient implements EsPlusClient {
                 }
             }
             
-            UpdateRequest updateRequest = new UpdateRequest(index, type, GlobalParamHolder.getDocId(esData))
+            UpdateRequest updateRequest = new UpdateRequest(index, type, GlobalParamHolder.getDocId(index,esData))
                     .doc(JsonUtils.toJsonStr(esData), XContentType.JSON);
             //乐观锁重试次数
             updateRequest.retryOnConflict(GlobalConfigCache.GLOBAL_CONFIG.getMaxRetries());
@@ -335,7 +335,7 @@ public class EsPlusRestClient implements EsPlusClient {
             }
             BulkRequest bulkRequest = new BulkRequest();
             for (Object esData : esDataList) {
-                UpdateRequest updateRequest = new UpdateRequest(index, type, GlobalParamHolder.getDocId(esData))
+                UpdateRequest updateRequest = new UpdateRequest(index, type, GlobalParamHolder.getDocId(index,esData))
                         .doc(JsonUtils.toJsonStr(esData), XContentType.JSON);
                 updateRequest.retryOnConflict(GlobalConfigCache.GLOBAL_CONFIG.getMaxRetries());
                 if (childIndex) {

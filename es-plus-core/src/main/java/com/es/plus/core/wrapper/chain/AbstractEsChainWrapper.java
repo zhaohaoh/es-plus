@@ -88,7 +88,7 @@ public abstract class AbstractEsChainWrapper<T, R, Children extends AbstractEsCh
         if (index == null) {
             throw new EsException("index is null");
         }
-        GlobalParamHolder.set_id(_id);
+        GlobalParamHolder.set_id(index,_id);
         return this.children;
     }
 
