@@ -9,6 +9,13 @@ public interface EsAggResponse<T> {
      * @return {@link Aggregations}
      */
     Aggregations getAggregations();
+    
+    /**
+     * 获取es-plus提供的聚合
+     *
+     * @return {@link Aggregations}
+     */
+    EsAggResult<T> getEsAggResult(EsAggResultQuery esAggResultQuery);
 
     /**
      * 设置聚合

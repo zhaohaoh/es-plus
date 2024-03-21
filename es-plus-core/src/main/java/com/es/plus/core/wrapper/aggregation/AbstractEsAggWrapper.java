@@ -84,7 +84,16 @@ public abstract class AbstractEsAggWrapper<T, R, Children extends AbstractEsAggW
         if (!CollectionUtils.isEmpty(aggregationBuilder)) {
             if (subAggregations == null){
                 subAggregations = new AggregatorFactories.Builder();
+                //当前的聚合数据加入
+                if (currentBuilder instanceof AggregationBuilder){
+                    AggregationBuilder aggregations =   (AggregationBuilder) currentBuilder;
+                    Collection<AggregationBuilder> subAggregations = aggregations.getSubAggregations();
+                    for (AggregationBuilder subAggregation : subAggregations) {
+                        this.subAggregations.addAggregator(subAggregation);
+                    }
+                }
             }
+            
             for (BaseAggregationBuilder baseAggregationBuilder : aggregationBuilder) {
                 if (baseAggregationBuilder instanceof AggregationBuilder) {
                     subAggregations.addAggregator((AggregationBuilder) baseAggregationBuilder);
@@ -92,6 +101,7 @@ public abstract class AbstractEsAggWrapper<T, R, Children extends AbstractEsAggW
                     subAggregations.addPipelineAggregator((PipelineAggregationBuilder) baseAggregationBuilder);
                 }
             }
+            
             currentBuilder.subAggregations(subAggregations);
         }
         return this.children;

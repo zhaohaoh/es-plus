@@ -4,15 +4,24 @@ package com.es.plus.es7.client;
 import com.es.plus.adapter.config.GlobalConfigCache;
 import com.es.plus.adapter.core.EsPlusClient;
 import com.es.plus.adapter.exception.EsException;
+import com.es.plus.adapter.interceptor.EsUpdateField;
 import com.es.plus.adapter.lock.EsLockFactory;
-import com.es.plus.adapter.params.*;
+import com.es.plus.adapter.params.EsAggResponse;
+import com.es.plus.adapter.params.EsHighLight;
+import com.es.plus.adapter.params.EsHit;
+import com.es.plus.adapter.params.EsHits;
+import com.es.plus.adapter.params.EsOrder;
+import com.es.plus.adapter.params.EsParamWrapper;
+import com.es.plus.adapter.params.EsQueryParamWrapper;
+import com.es.plus.adapter.params.EsResponse;
+import com.es.plus.adapter.params.EsSelect;
 import com.es.plus.adapter.properties.EsIndexParam;
 import com.es.plus.adapter.properties.GlobalParamHolder;
-import com.es.plus.adapter.interceptor.EsUpdateField;
 import com.es.plus.adapter.util.BeanUtils;
 import com.es.plus.adapter.util.FieldUtils;
 import com.es.plus.adapter.util.JsonUtils;
 import com.es.plus.adapter.util.ResolveUtils;
+import com.es.plus.adapter.util.SearchHitsUtil;
 import com.es.plus.constant.EsConstant;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -24,7 +33,11 @@ import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.index.IndexRequest;
-import org.elasticsearch.action.search.*;
+import org.elasticsearch.action.search.ClearScrollRequest;
+import org.elasticsearch.action.search.ClearScrollResponse;
+import org.elasticsearch.action.search.SearchRequest;
+import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.search.SearchScrollRequest;
 import org.elasticsearch.action.support.IndicesOptions;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.action.update.UpdateResponse;
@@ -34,7 +47,6 @@ import org.elasticsearch.client.Response;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.client.core.CountRequest;
 import org.elasticsearch.client.core.CountResponse;
-import org.elasticsearch.common.text.Text;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.query.BoolQueryBuilder;
@@ -54,7 +66,6 @@ import org.elasticsearch.search.aggregations.BaseAggregationBuilder;
 import org.elasticsearch.search.aggregations.PipelineAggregationBuilder;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
-import org.elasticsearch.search.fetch.subphase.highlight.HighlightField;
 import org.elasticsearch.search.profile.ProfileShardResult;
 import org.elasticsearch.search.sort.FieldSortBuilder;
 import org.elasticsearch.search.sort.NestedSortBuilder;
@@ -64,13 +75,19 @@ import org.slf4j.LoggerFactory;
 import org.springframework.util.CollectionUtils;
 
 import java.io.IOException;
-import java.lang.reflect.Field;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.stream.Collectors;
@@ -632,10 +649,9 @@ public class EsPlusRestClient implements EsPlusClient {
         //查询
         SearchResponse searchResponse = null;
         try {
-            long start = System.currentTimeMillis();
             searchResponse = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
-            long end = System.currentTimeMillis();
-            printSearchInfoLog("search index={} body:{} Time={}", index, sourceBuilder, end - start);
+            long millis = searchResponse.getTook().getMillis();
+            printSearchInfoLog("search index={} body:{} tookMills={}", index, sourceBuilder, millis);
         } catch (Exception e) {
             throw new EsException("es-plus search body=" + sourceBuilder, e);
         }
@@ -713,11 +729,10 @@ public class EsPlusRestClient implements EsPlusClient {
         //查询
         SearchResponse searchResponse = null;
         try {
-            long start = System.currentTimeMillis();
             printSearchInfoLog("aggregations index={} body:{}", index, sourceBuilder);
             searchResponse = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
-            long end = System.currentTimeMillis();
-            printSearchInfoLog("{} aggregations Time={}", index, end - start);
+            long millis = searchResponse.getTook().getMillis();
+            printSearchInfoLog("{} aggregations tookMills={}", index, millis);
         } catch (Exception e) {
             throw new EsException("aggregations error", e);
         }
@@ -777,20 +792,7 @@ public class EsPlusRestClient implements EsPlusClient {
         //获取结果集
         SearchHits hits = searchResponse.getHits();
         SearchHit[] hitArray = hits.getHits();
-        List<T> result = new ArrayList<>();
-        if (hitArray != null && hitArray.length > 0) {
-            Arrays.stream(hitArray).filter(hit -> StringUtils.isNotBlank(hit.getSourceAsString())).map(hit -> {
-                T bean = JsonUtils.toBean(hit.getSourceAsString(), tClass);
-                if (tClass.equals(Map.class)) {
-                    return bean;
-                }
-                //设置高亮
-                setHighLishtField(hit, bean);
-                //设置分数
-                setScore(hit, bean);
-                return bean;
-            }).forEach(result::add);
-        }
+        List<T> result = SearchHitsUtil.parseList(tClass, hitArray);
         EsHits esHits = setInnerHits(hits,false);
         //设置聚合结果
         Aggregations aggregations = searchResponse.getAggregations();
@@ -820,25 +822,8 @@ public class EsPlusRestClient implements EsPlusClient {
         }
         return esResponse;
     }
+   
     
-    /**
-     * 设置分数
-     */
-    private <T> void setScore(SearchHit hit, T bean) {
-        float score = hit.getScore();
-        if (!Float.isNaN(score)) {
-            EsIndexParam esIndexParam = GlobalParamHolder.getAndInitEsIndexParam(bean.getClass());
-            try {
-                if (StringUtils.isNotBlank(esIndexParam.getScoreField())) {
-                    Field field = bean.getClass().getDeclaredField(esIndexParam.getScoreField());
-                    field.setAccessible(true);
-                    field.set(bean, score);
-                }
-            } catch (Exception e) {
-                log.error("setScore ", e);
-            }
-        }
-    }
     
     private EsHits setInnerHits(SearchHits hits, boolean populate) {
         if (hits == null || ArrayUtils.isEmpty(hits.getHits())) {
@@ -880,33 +865,6 @@ public class EsPlusRestClient implements EsPlusClient {
         return esHits;
     }
     
-    /**
-     * 设置高亮
-     *
-     * @param hit  打击
-     * @param bean 豆
-     */
-    private <T> void setHighLishtField(SearchHit hit, T bean) {
-        Map<String, HighlightField> highlightFields = hit.getHighlightFields();
-        if (highlightFields != null && highlightFields.size() > 0) {
-            highlightFields.forEach((k, v) -> {
-                Text[] texts = v.fragments();
-                StringBuilder highlightStr = new StringBuilder();
-                for (Text text : texts) {
-                    highlightStr.append(text);
-                }
-                try {
-                    //高亮字段重新put进去
-                    Field field = bean.getClass().getDeclaredField(k);
-                    field.setAccessible(true);
-                    field.set(bean, highlightStr.toString());
-                } catch (Exception e) {
-                    log.error("es-plus HighlightFields Exception", e);
-                }
-            });
-            
-        }
-    }
     
     private <T> SearchSourceBuilder getSearchSourceBuilder(EsParamWrapper<T> esParamWrapper) {
         EsQueryParamWrapper esQueryParamWrapper = esParamWrapper.getEsQueryParamWrapper();

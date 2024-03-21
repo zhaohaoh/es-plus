@@ -1,12 +1,16 @@
 package com.es.plus.es7.client;
 
 import com.es.plus.adapter.params.EsAggResponse;
+import com.es.plus.adapter.params.EsAggResult;
+import com.es.plus.adapter.params.EsAggResultQuery;
 import com.es.plus.adapter.properties.EsFieldInfo;
 import com.es.plus.adapter.properties.GlobalParamHolder;
 import com.es.plus.adapter.tools.LambdaUtils;
 import com.es.plus.adapter.tools.SFunction;
+import com.es.plus.adapter.util.SearchHitsUtil;
 import com.es.plus.constant.EsConstant;
 import org.apache.commons.lang3.StringUtils;
+import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.aggregations.Aggregations;
 import org.elasticsearch.search.aggregations.bucket.adjacency.AdjacencyMatrix;
@@ -19,7 +23,16 @@ import org.elasticsearch.search.aggregations.bucket.significant.SignificantTerms
 import org.elasticsearch.search.aggregations.bucket.significant.SignificantTermsAggregationBuilder;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.search.aggregations.bucket.terms.TermsAggregationBuilder;
-import org.elasticsearch.search.aggregations.metrics.*;
+import org.elasticsearch.search.aggregations.metrics.Avg;
+import org.elasticsearch.search.aggregations.metrics.AvgAggregationBuilder;
+import org.elasticsearch.search.aggregations.metrics.Max;
+import org.elasticsearch.search.aggregations.metrics.MaxAggregationBuilder;
+import org.elasticsearch.search.aggregations.metrics.Min;
+import org.elasticsearch.search.aggregations.metrics.Sum;
+import org.elasticsearch.search.aggregations.metrics.SumAggregationBuilder;
+import org.elasticsearch.search.aggregations.metrics.TopHits;
+import org.elasticsearch.search.aggregations.metrics.ValueCount;
+import org.elasticsearch.search.aggregations.metrics.WeightedAvg;
 
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -58,44 +71,74 @@ public class EsPlusAggregations<T> implements EsAggResponse<T> {
     public Aggregation get(String name) {
         return aggregations.get(name);
     }
-
-    /**
-     * 得到聚合的map
-     */
-    public Map<String, Long> getTermsAsMap(SFunction<T, ?> name) {
-        Terms terms = aggregations.get(getAggregationField(name) + EsConstant.AGG_DELIMITER + TermsAggregationBuilder.NAME);
-        Map<String, Long> data = new HashMap<>();
-        List<? extends Terms.Bucket> buckets = terms.getBuckets();
-        for (Terms.Bucket bucket : buckets) {
-            String keyAsString = bucket.getKeyAsString();
-            data.put(keyAsString, bucket.getDocCount());
-        }
-        return data;
-    }
-
+    
     /**
      * 得到esplus封装的map
-     *
-     * @param name 名字
-     * @return {@link Map}<{@link String}, {@link EsPLusTerms}<{@link T}>>
      */
-//    public Map<String, EsPLusTerms<T>> getEsPLusTermsAsMap(SFunction<T, ?> name) {
-//        Terms terms = aggregations.get(getAggregationField(name) + EsConstant.AGG_DELIMITER + TermsAggregationBuilder.NAME);
-//        Map<String, EsPLusTerms<T>> data = new HashMap<>();
-//        List<? extends Terms.Bucket> buckets = terms.getBuckets();
-//        for (Terms.Bucket bucket : buckets) {
-//            String keyAsString = bucket.getKeyAsString();
-//            EsPLusTerms<T> pLusTerms = new EsPLusTerms<>();
-//            pLusTerms.setDocCount(bucket.getDocCount());
-//            pLusTerms.setDocCountError(bucket.getDocCountError());
-//            EsAggregations<T> tEsAggregationsResponse = new EsAggregations<>();
-//            tEsAggregationsResponse.settClass(tClass);
-//            tEsAggregationsResponse.setAggregations(bucket.getAggregations());
-//            pLusTerms.setEsAggregationsReponse(tEsAggregationsResponse);
-//            data.put(keyAsString, pLusTerms);
-//        }
-//        return data;
-//    }
+    @Override
+    public EsAggResult<T> getEsAggResult(EsAggResultQuery esAggResultQuery) {
+        return getResult(esAggResultQuery, aggregations);
+    }
+    
+    private EsAggResult<T> getResult(EsAggResultQuery esAggResultQuery, Aggregations aggregations) {
+        if (esAggResultQuery == null) {
+            return new EsAggResult<>();
+        }
+        if (aggregations == null) {
+            return new EsAggResult<>();
+        }
+        EsAggResult<T> esAgg = new EsAggResult<>();
+        String count = esAggResultQuery.getCount();
+        if (StringUtils.isNotBlank(count)) {
+            ValueCount value = aggregations.get(count);
+            esAgg.setCount(value.getValue());
+        }
+        String avg = esAggResultQuery.getAvg();
+        if (StringUtils.isNotBlank(avg)) {
+            Avg value = aggregations.get(avg);
+            esAgg.setAvg(value.getValue());
+        }
+        String max = esAggResultQuery.getMax();
+        if (StringUtils.isNotBlank(max)) {
+            Max value = aggregations.get(max);
+            esAgg.setMax(value.getValue());
+        }
+        String sum = esAggResultQuery.getSum();
+        if (StringUtils.isNotBlank(sum)) {
+            Sum value = aggregations.get(sum);
+            esAgg.setSum(value.getValue());
+        }
+        String min = esAggResultQuery.getMin();
+        if (StringUtils.isNotBlank(min)) {
+            Min value = aggregations.get(min);
+            esAgg.setMin(value.getValue());
+        }
+        String topHits = esAggResultQuery.getTopHits();
+        if (StringUtils.isNotBlank(topHits)) {
+            TopHits value = aggregations.get(topHits);
+            SearchHits hits = value.getHits();
+            List<T> result = SearchHitsUtil.parseList(tClass, hits.getHits());
+            esAgg.setTopHits(result);
+        }
+        String term = esAggResultQuery.getTerm();
+        if (StringUtils.isNotBlank(term)) {
+            Terms value = aggregations.get(term);
+            Map<String, EsAggResult<T>> data = new HashMap<>();
+            esAgg.setEsAggTermsMap(data);
+            List<? extends Terms.Bucket> buckets = value.getBuckets();
+            for (Terms.Bucket bucket : buckets) {
+                Aggregations bucketAggregations = bucket.getAggregations();
+                EsAggResult<T> agg = getResult(esAggResultQuery.getSubQuery(), bucketAggregations);
+                long docCount = bucket.getDocCount();
+                agg.setTermDocCount(docCount);
+                String keyAsString = bucket.getKeyAsString();
+                data.put(keyAsString, agg);
+            }
+        }
+        
+        return esAgg;
+    }
+ 
     public Terms getTerms(SFunction<T, ?> name) {
         return aggregations.get(getAggregationField(name) + EsConstant.AGG_DELIMITER + TermsAggregationBuilder.NAME);
     }
@@ -166,30 +209,7 @@ public class EsPlusAggregations<T> implements EsAggResponse<T> {
         }
         return data;
     }
-
-    /**
-     * 得到esplus封装的map
-     *
-     * @param name 名字
-     * @return {@link Map}<{@link String}, {@link EsPLusTerms}<{@link T}>>
-     */
-//    public Map<String, EsPLusTerms<T>> getEsPLusTermsAsMap(String name) {
-//        Terms terms = aggregations.get(name + EsConstant.AGG_DELIMITER + TermsAggregationBuilder.NAME);
-//        Map<String, EsPLusTerms<T>> data = new HashMap<>();
-//        List<? extends Terms.Bucket> buckets = terms.getBuckets();
-//        for (Terms.Bucket bucket : buckets) {
-//            String keyAsString = bucket.getKeyAsString();
-//            EsPLusTerms<T> pLusTerms = new EsPLusTerms<>();
-//            pLusTerms.setDocCount(bucket.getDocCount());
-//            pLusTerms.setDocCountError(bucket.getDocCountError());
-//            EsAggregations<T> tEsAggregationsResponse = new EsAggregations<>();
-//            tEsAggregationsResponse.settClass(tClass);
-//            tEsAggregationsResponse.setAggregations(bucket.getAggregations());
-//            pLusTerms.setEsAggregationsReponse(tEsAggregationsResponse);
-//            data.put(keyAsString, pLusTerms);
-//        }
-//        return data;
-//    }
+    
     public Terms getTerms(String name) {
         return aggregations.get(name + EsConstant.AGG_DELIMITER + TermsAggregationBuilder.NAME);
     }
