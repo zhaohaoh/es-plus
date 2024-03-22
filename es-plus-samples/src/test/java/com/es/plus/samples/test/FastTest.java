@@ -1,7 +1,6 @@
 package com.es.plus.samples.test;
 
 import com.es.plus.adapter.EsPlusClientFacade;
-import com.es.plus.adapter.params.EsAggResult;
 import com.es.plus.adapter.params.EsIndexResponse;
 import com.es.plus.adapter.params.EsResponse;
 import com.es.plus.core.ClientContext;
@@ -79,7 +78,7 @@ public class FastTest {
         bucketSortPipelineAggregationBuilder.size(10);
 
         EsPlus6Aggregations<FastTestDTO> aggregations = (EsPlus6Aggregations<FastTestDTO>) fastTestDTOEsChainLambdaQueryWrapper.aggregations();
-        Map<String, EsAggResult<FastTestDTO>> username = aggregations.getTermsAsMap("username");
+       
         System.out.println(aggregations);
     }
 

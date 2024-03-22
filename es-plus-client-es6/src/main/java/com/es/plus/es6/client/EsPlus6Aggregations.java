@@ -68,7 +68,7 @@ public class EsPlus6Aggregations<T> implements EsAggResponse<T> {
     /**
      * 根据名称获取聚合
      */
-    public Aggregation getEsAggResult(String name) {
+    public Aggregation getAggregation(String name) {
         return aggregations.get(name);
     }
     
