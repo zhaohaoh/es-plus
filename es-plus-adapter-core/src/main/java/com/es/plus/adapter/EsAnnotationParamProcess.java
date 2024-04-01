@@ -55,6 +55,12 @@ public class EsAnnotationParamProcess {
         }
         // 索引配置
         EsSettings esSettings = new EsSettings();
+        if (ArrayUtils.isNotEmpty(esIndex.sortField())){
+            esSettings.setSortField(esIndex.sortField());
+        }
+        if (ArrayUtils.isNotEmpty(esIndex.sortOrder())){
+            esSettings.setSortOrder(esIndex.sortOrder());
+        }
         esSettings.setNumberOfShards(esIndex.shard());
         esSettings.setNumberOfReplicas(esIndex.replices());
         esSettings.setRefreshInterval(esIndex.initRefreshInterval());

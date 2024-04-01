@@ -12,7 +12,7 @@ import com.es.plus.samples.SamplesApplication;
 import com.es.plus.samples.dto.FastTestDTO;
 import com.es.plus.samples.service.FastTestService;
 import org.elasticsearch.search.aggregations.BucketOrder;
-import org.elasticsearch.search.aggregations.pipeline.bucketsort.BucketSortPipelineAggregationBuilder;
+import org.elasticsearch.search.aggregations.pipeline.BucketSortPipelineAggregationBuilder;
 import org.elasticsearch.search.sort.FieldSortBuilder;
 import org.elasticsearch.search.sort.SortBuilders;
 import org.elasticsearch.search.sort.SortOrder;
@@ -47,7 +47,7 @@ public class FastTest {
     @org.junit.jupiter.api.Test
     public void fastSave() {
         List<FastTestDTO> fastTestDTOs=new ArrayList<>();
-        for (int i = 0; i < 1; i++) {
+        for (int i = 101; i < 5000; i++) {
             FastTestDTO fastTestDTO = new FastTestDTO();
             fastTestDTO.setId((long)i);
             fastTestDTO.setText("我是第二篇文章苹果 梨子 苹果X2 苹果哥哥");
@@ -59,6 +59,12 @@ public class FastTest {
         }
 
         Es.chainUpdate(FastTestDTO.class).saveBatch(fastTestDTOs);
+    }
+    @org.junit.jupiter.api.Test
+    public void forceMerge() {
+      
+        
+        Es.chainIndex().index("fast_test_new").forceMerge(1000,true,true,"fast_test_new");
     }
 
     @org.junit.jupiter.api.Test

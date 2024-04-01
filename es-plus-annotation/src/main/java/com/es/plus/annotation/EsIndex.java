@@ -23,7 +23,15 @@ public @interface EsIndex {
      * 类型 高版本已默认_doc。旧版本需要手动设置
      */
     String type() default "_doc";
-
+    
+    /**
+     * 类型 高版本已默认_doc。旧版本需要手动设置
+     */
+    String[] sortField() default {};
+    /**
+     * 类型 高版本已默认_doc。旧版本需要手动设置
+     */
+    String[] sortOrder() default {};
     /**
      * 分片
      */

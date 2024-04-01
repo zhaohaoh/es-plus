@@ -17,6 +17,10 @@ public class EsSettings {
     //自定义路由值可以转发的目的分片数。默认为 1，只能在索引创建时设置。此值必须小于index.number_of_shards
     @JsonProperty("routing_partition_size")
     private Integer routingPartitionSize;
+    @JsonProperty("index.sort.field")
+    private String[] sortField;
+    @JsonProperty("index.sort.order")
+    private String[] sortOrder;
     /**
      * 动态
      */

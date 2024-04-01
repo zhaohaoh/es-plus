@@ -161,7 +161,7 @@ public class SamplesEsService extends EsServiceImpl<SamplesEsDTO> {
 //        Map<String, Object> map = JsonUtils.beanToMap(asMap);
 //        System.out.println(map);
 //        Terms terms = esAggsResponse.getTerms(SamplesEsDTO::getUsername);
-        Map<String, Long> termsAsMap = esAggsResponse.getTermsAsMap(SamplesEsDTO::getUsername);
+//        Map<String, Long> termsAsMap = esAggsResponse.getTermsAsMap(SamplesEsDTO::getUsername);
     }
 
     public void profile1() {

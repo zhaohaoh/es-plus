@@ -15,7 +15,7 @@ import java.util.List;
  * 举例4种类型索引
  */
 @Data
-@EsIndex(index = "fast_test_s0",tryReindex = true ,alias = "fast_test_alias")
+@EsIndex(index = "fast_test_new",tryReindex = true)
 public class FastTestDTO {
     @EsId
     private Long id;
