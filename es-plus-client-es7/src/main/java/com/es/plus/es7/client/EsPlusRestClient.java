@@ -87,6 +87,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
@@ -940,7 +941,8 @@ public class EsPlusRestClient implements EsPlusClient {
             List<EsOrder> orderFields = esQueryParamWrapper.getEsOrderList();
             orderFields.forEach(order -> {
                 NestedSortBuilder nestedSortBuilder = order.getNestedSortBuilder();
-                sourceBuilder.sort(new FieldSortBuilder(order.getName()).order(SortOrder.valueOf(order.getSort()))
+                sourceBuilder.sort(new FieldSortBuilder(order.getName()).order(SortOrder.valueOf(order.getSort().toUpperCase(
+                        Locale.ROOT)))
                         .setNestedSort(nestedSortBuilder));
             });
         }

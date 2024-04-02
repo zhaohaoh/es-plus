@@ -8,7 +8,6 @@ import com.es.plus.core.ClientContext;
 import com.es.plus.core.wrapper.core.EsUpdateWrapper;
 import com.es.plus.core.wrapper.core.Update;
 import com.es.plus.core.wrapper.core.UpdateOperation;
-import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
 
@@ -32,7 +31,7 @@ public class EsChainUpdateWrapper<T> extends AbstractEsChainWrapper<T, String, E
         super.esWrapper = new EsUpdateWrapper<>(tClass);
         EsIndexParam esIndexParam = GlobalParamHolder.getAndInitEsIndexParam(super.tClass);
         if (esIndexParam != null) {
-            index = StringUtils.isBlank(esIndexParam.getAlias()) ? esIndexParam.getIndex() : esIndexParam.getAlias();
+            index = esIndexParam.getIndex() ;
             type = esIndexParam.getType();
         }
     }
@@ -42,7 +41,7 @@ public class EsChainUpdateWrapper<T> extends AbstractEsChainWrapper<T, String, E
         super.esWrapper = new EsUpdateWrapper<>(tClass);
         EsIndexParam esIndexParam = GlobalParamHolder.getAndInitEsIndexParam(super.tClass);
         if (esIndexParam != null) {
-            index = StringUtils.isBlank(esIndexParam.getAlias()) ? esIndexParam.getIndex() : esIndexParam.getAlias();
+            index = esIndexParam.getIndex();
             type = esIndexParam.getType();
         }
         if (esPlusClientFacade != null) {
