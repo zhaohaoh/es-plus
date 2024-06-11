@@ -5,13 +5,8 @@
     <modelVersion>4.0.0</modelVersion>
     <packaging>pom</packaging>
     <modules>
-        <module>es-plus-spring-boot-starter</module>
-        <module>es-plus-annotation</module>
-        <module>es-plus-core</module>
-        <module>es-plus-samples</module>
-        <module>es-plus-client-es6</module>
-        <module>es-plus-client-es7</module>
-        <module>es-plus-adapter-core</module>
+        <module>es-plus-pom</module>
+        <module>es-plus-parent</module>
     </modules>
     <groupId>io.github.zhaohaoh</groupId>
     <artifactId>es-plus</artifactId>
@@ -170,18 +165,6 @@
             </plugin>
         </plugins>
     </build>
-
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>io.github.zhaohaoh</groupId>
-                <artifactId>es-plus-pom</artifactId>
-                <version>${rversion}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>
