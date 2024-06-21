@@ -33,6 +33,7 @@ import org.elasticsearch.client.indices.CreateIndexResponse;
 import org.elasticsearch.client.indices.GetIndexRequest;
 import org.elasticsearch.client.indices.GetIndexResponse;
 import org.elasticsearch.client.indices.PutMappingRequest;
+import org.elasticsearch.cluster.metadata.AliasMetadata;
 import org.elasticsearch.cluster.metadata.MappingMetadata;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.unit.TimeValue;
@@ -292,7 +293,7 @@ public class EsPlusIndexRestClient implements EsPlusIndexClient {
      * @return boolean
      */
     @Override
-    public boolean replaceAlias(String oldIndexName, String reindexName, String alias) {
+    public boolean swapAlias(String oldIndexName, String reindexName, String alias) {
         IndicesAliasesRequest.AliasActions addIndexAction = new IndicesAliasesRequest.AliasActions(
                 IndicesAliasesRequest.AliasActions.Type.ADD).index(reindexName).alias(alias);
         IndicesAliasesRequest.AliasActions removeAction = new IndicesAliasesRequest.AliasActions(
@@ -309,6 +310,47 @@ public class EsPlusIndexRestClient implements EsPlusIndexClient {
             throw new EsException("reindex exception oldIndexName:" + oldIndexName + ", reindexName:  " + reindexName,
                     e);
         }
+    }
+    
+    @Override
+    public boolean replaceAlias(String index, String oldAlias, String alias) {
+        IndicesAliasesRequest.AliasActions addIndexAction = new IndicesAliasesRequest.AliasActions(
+                IndicesAliasesRequest.AliasActions.Type.ADD).index(index).alias(alias);
+        IndicesAliasesRequest.AliasActions removeAction = new IndicesAliasesRequest.AliasActions(
+                IndicesAliasesRequest.AliasActions.Type.REMOVE).index(index).alias(oldAlias);
+        
+        IndicesAliasesRequest indicesAliasesRequest = new IndicesAliasesRequest();
+        indicesAliasesRequest.addAliasAction(addIndexAction);
+        indicesAliasesRequest.addAliasAction(removeAction);
+        try {
+            AcknowledgedResponse acknowledgedResponse = restHighLevelClient.indices()
+                    .updateAliases(indicesAliasesRequest, RequestOptions.DEFAULT);
+            return acknowledgedResponse.isAcknowledged();
+        } catch (IOException e) {
+            throw new EsException("replaceAlias exception index:" + index + ", oldAlias:  " + oldAlias,
+                    e);
+        }
+    }
+    
+    @Override
+    public String getAliasByIndex(String index) {
+        GetAliasesRequest getAliasesRequest = new GetAliasesRequest();
+        getAliasesRequest.indices(index);
+        
+        GetAliasesResponse getAliasesResponse = null;
+        try {
+            getAliasesResponse = restHighLevelClient.indices().getAlias(getAliasesRequest, RequestOptions.DEFAULT);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        
+        if (getAliasesResponse!=null && getAliasesResponse.getAliases() != null && !CollectionUtils
+                .isEmpty(getAliasesResponse.getAliases().values())) {
+            Collection<Set<AliasMetadata>> values = getAliasesResponse.getAliases().values();
+            AliasMetadata aliasMetaData = values.stream().findFirst().get().stream().findFirst().get();
+            return aliasMetaData.getAlias();
+        }
+        return null;
     }
     
     /**

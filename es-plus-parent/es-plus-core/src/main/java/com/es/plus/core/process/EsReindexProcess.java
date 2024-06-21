@@ -15,7 +15,6 @@ import com.es.plus.constant.EsConstant;
 import com.es.plus.core.statics.Es;
 import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.common.util.set.Sets;
-import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.StopWatch;
@@ -83,7 +82,7 @@ public class EsReindexProcess {
      * @param esPlusClientFacade es索引执行人
      * @param clazz              clazz
      */
-    public static void tryReindex(EsPlusClientFacade esPlusClientFacade, Class<?> clazz) {
+    public static boolean tryReindex(EsPlusClientFacade esPlusClientFacade, Class<?> clazz) {
         
         //获取索引信息
         EsIndexParam esIndexParam = GlobalParamHolder.getAndInitEsIndexParam(clazz);
@@ -96,7 +95,13 @@ public class EsReindexProcess {
             getIndexResponse = esPlusClientFacade.getIndex(esIndexParam.getAlias());
             if (getIndexResponse == null) {
                 getIndexResponse = esPlusClientFacade.getIndex(esIndexParam.getIndex());
-                esPlusClientFacade.createAlias(getIndexResponse.getIndices()[0], esIndexParam.getAlias());
+                String index = getIndexResponse.getIndices()[0];
+                String oldAlias = esPlusClientFacade.getAliasByIndex(index);
+                if (oldAlias==null){
+                    esPlusClientFacade.createAlias(index, esIndexParam.getAlias());
+                }else{
+                    esPlusClientFacade.replaceAlias(index,oldAlias, esIndexParam.getAlias());
+                }
             }
         }
         
@@ -118,7 +123,7 @@ public class EsReindexProcess {
         log.info("EsExecutorUtil tryReindex Commend:{}", updateCommend);
         if (Objects.equals(updateCommend, Commend.MAPPING_UPDATE)) {
             if (!annotation.updateMapping()) {
-                return;
+                return false;
             }
             log.info("es-plus mapping_update index [{}]", currentIndex);
             esPlusClientFacade.putMapping(currentIndex, clazz);
@@ -126,7 +131,7 @@ public class EsReindexProcess {
             // 忽略处理reindex
             if (!annotation.tryReindex()) {
                 log.info("es-plus index happened change but is not reindex  indexName: [{}]", currentIndex);
-                return;
+                return false;
             }
             if (StringUtils.isBlank(annotation.alias())) {
                 throw new EsException(annotation.index() + " tryReindex alias Cannot be null");
@@ -138,8 +143,10 @@ public class EsReindexProcess {
                 } else {
                     tryLockReindex(esPlusClientFacade, clazz, esIndexParam, currentIndex);
                 }
+                return true;
             }
         }
+          return false;
     }
     
     //有事临时编写的代码
@@ -271,46 +278,18 @@ public class EsReindexProcess {
             log.error("es-plus reindex Fail");
         }
         
+        //增量数据用户自己保障
+        
         stopWatch.stop();
         
         log.info("es-plus first reindex End currentIndex:{} newIndex:{} totalTimeSeconds:{}", currentIndex, reindexName,
                 stopWatch.getTotalTimeSeconds());
-    
-    
-        // 第二次迁移残留数据  是为了缩小迁移范围
-        //获取重建索引的字段的值
-        reindexFieldValue = getReindexValue(clazz, esIndexParam, currentIndex);
-        
-        if (reindexFieldValue == null) {
-            return;
-        }
-        
-        BoolQueryBuilder queryBuilder2 = Es.chainQuery(clazz).ge(esIndexParam.getReindexField(),reindexFieldValue)
-                .getQueryBuilder();
-    
-        reindex = esPlusClientFacade.reindex(currentIndex, reindexName, queryBuilder2);
-        if (!reindex) {
-            throw new EsException("es-plus second reindex Fail");
-        }
         
         //切换索引名
         esPlusClientFacade.replaceAlias(currentIndex, reindexName, esIndexParam.getAlias());
-    
-        // 第三次迁移残留数据
-        //获取重建索引的字段的值
-        reindexFieldValue = getReindexValue(clazz, esIndexParam, currentIndex);
-    
-        if (reindexFieldValue == null) {
-            return;
-        }
-    
-        BoolQueryBuilder queryBuilder3 = Es.chainQuery(clazz).ge(esIndexParam.getReindexField(),reindexFieldValue)
-                .getQueryBuilder();
-    
-        reindex = esPlusClientFacade.reindex(currentIndex, reindexName, queryBuilder3);
-        if (!reindex) {
-            throw new EsException("es-plus second reindex Fail");
-        }
+        
+        //切换当前索引名
+        esIndexParam.setIndex(reindexName);
         
         // 不删除老索引 备份历史数据 用户手动删除
         //        esPlusClientFacade.deleteIndex(currentIndex);

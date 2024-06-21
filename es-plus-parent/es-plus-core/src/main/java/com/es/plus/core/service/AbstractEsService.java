@@ -19,38 +19,42 @@ import org.springframework.beans.factory.SmartInitializingSingleton;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * @Author: hzh
  * @Date: 2022/1/21 11:11
  */
 public abstract class AbstractEsService<T> implements SmartInitializingSingleton {
+    
     private static final Logger logger = LoggerFactory.getLogger(AbstractEsService.class);
+    
     /**
      * 类型
      */
     protected String type;
+    
     /**
      * 索引,这里存的是别名
      */
     protected String alias;
+    
     /**
      * 索引
      */
     protected String index;
-
+    
     /**
      * clazz
      */
     protected Class<T> clazz;
-  
+    
     private EsPlusClientFacade esPlusClientFacade;
-
+    
     public EsPlusClientFacade getEsPlusClientFacade() {
         return esPlusClientFacade;
     }
-    
- 
     
     @Override
     @SuppressWarnings({"unchecked"})
@@ -60,44 +64,46 @@ public abstract class AbstractEsService<T> implements SmartInitializingSingleton
             clazz = (Class<T>) tClazz;
             Class<?> indexClass = clazz;
             EsIndex annotation = clazz.getAnnotation(EsIndex.class);
-
+            
             //添加索引信息
             EsIndexParam esIndexParam = GlobalParamHolder.getAndInitEsIndexParam(indexClass);
-    
+            
             this.esPlusClientFacade = ClientContext.getClient(esIndexParam.getClientInstance());
-
-            if (esPlusClientFacade==null){
+            
+            if (esPlusClientFacade == null) {
                 return;
             }
             
             this.index = esIndexParam.getIndex();
-
+            
             //有别名取别名，没有别名就取索引名。  本框架别名就是真实操作的索引名，优先取别名进行查询
             this.alias = StringUtils.isBlank(esIndexParam.getAlias()) ? this.alias = index : esIndexParam.getAlias();
-
+            
             type = annotation.type();
-
+            
             // 如果是子文档不执行创建索引的相关操作
             Class<?> parentClass = annotation.parentClass();
             if (parentClass != DefaultClass.class) {
                 return;
             }
-
+            
             //启动时不初始化
             if (!GlobalConfigCache.GLOBAL_CONFIG.isStartInit()) {
                 return;
             }
-
+            
             // 启动时不初始化
             if (!annotation.startInit()) {
                 return;
             }
-
+            
             //尝试创建或重建索引
             tryCreateOrReindex(indexClass, esIndexParam);
         } catch (Exception e) {
-            if (StringUtils.isNotBlank(e.getLocalizedMessage()) && e.getLocalizedMessage().contains("ConnectException")) {
-                if (GlobalConfigCache.GLOBAL_CONFIG.getConnectFailHandle().equals(ConnectFailHandleEnum.THROW_EXCEPTION)) {
+            if (StringUtils.isNotBlank(e.getLocalizedMessage()) && e.getLocalizedMessage()
+                    .contains("ConnectException")) {
+                if (GlobalConfigCache.GLOBAL_CONFIG.getConnectFailHandle()
+                        .equals(ConnectFailHandleEnum.THROW_EXCEPTION)) {
                     throw new EsException(e);
                 } else {
                     GlobalConfigCache.GLOBAL_CONFIG.setStartInit(false);
@@ -107,7 +113,7 @@ public abstract class AbstractEsService<T> implements SmartInitializingSingleton
             }
         }
     }
-
+    
     private void tryCreateOrReindex(Class<?> indexClass, EsIndexParam esIndexParam) {
         //此处获取的是执行锁
         ELock eLock = esPlusClientFacade.getLock(index);
@@ -117,20 +123,50 @@ public abstract class AbstractEsService<T> implements SmartInitializingSingleton
                 //取索引名判断，会同时判断索引名和别名
                 boolean exists = esPlusClientFacade.indexExists(this.index) || esPlusClientFacade.indexExists(alias);
                 if (exists) {
-                    EsReindexProcess.tryReindex(esPlusClientFacade, indexClass);
+                    boolean isReindex = EsReindexProcess.tryReindex(esPlusClientFacade, indexClass);
+                    if (isReindex) {
+                        task(esIndexParam);
+                    }
                 } else {
                     esPlusClientFacade.createIndexMapping(this.index, indexClass);
                     exists = true;
                 }
                 esIndexParam.setExists(exists);
                 logger.info("init es-plus indexResponse={} exists={}", this.index, exists);
+            } else {
+                //异步更新reindex后的index的任务
+                task(esIndexParam);
             }
+           
         } finally {
             if (lock) {
                 eLock.unlock();
             }
         }
     }
-
-
+    
+    /**
+     * 每10秒获取一次索引别名。检测reindex是否完成。
+     */
+    public void task(EsIndexParam esIndexParam) {
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        executor.submit(()->{
+            while (true) {
+                // 定时任务
+                String index = esPlusClientFacade.getAliasIndex(alias).getIndexs().stream().findFirst().get();
+                if (!index.equals(this.index)) {
+                    logger.info("reindex maybe success changeIndex newIndex={} oldIndex:{}", index,this.index);
+                    esIndexParam.setIndex(index);
+                    this.index = esIndexParam.getIndex();
+                    break;
+                }
+                try {
+                    Thread.sleep(10000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+       
+    }
 }

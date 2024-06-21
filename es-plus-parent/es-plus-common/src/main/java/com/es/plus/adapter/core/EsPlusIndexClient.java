@@ -96,7 +96,7 @@ public interface EsPlusIndexClient {
      * @param alias        别名
      * @return boolean
      */
-    boolean replaceAlias(String oldIndexName, String reindexName, String alias);
+    boolean swapAlias(String oldIndexName, String reindexName, String alias);
 
     /**
      * 迁移重建索引
@@ -180,4 +180,12 @@ public interface EsPlusIndexClient {
      * @return boolean
      */
     boolean refresh(String... index);
+    /**
+     * 替换别名
+     */
+    boolean replaceAlias(String indexName, String oldAlias, String alias);
+    /**
+     * 获取索引别名
+     */
+    String getAliasByIndex(String index);
 }

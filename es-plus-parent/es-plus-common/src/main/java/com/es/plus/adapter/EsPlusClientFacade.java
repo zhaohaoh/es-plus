@@ -200,8 +200,18 @@ public class EsPlusClientFacade   {
      * @param alias        别名
      * @return boolean
      */
-    public boolean replaceAlias(String oldIndexName, String reindexName, String alias) {
-        return esPlusIndexClient.replaceAlias(oldIndexName, reindexName, alias);
+    public boolean swapAlias(String oldIndexName, String reindexName, String alias) {
+        return esPlusIndexClient.swapAlias(oldIndexName, reindexName, alias);
+    }
+    
+    /**
+     * 更新别名
+     *
+     * @param alias        别名
+     * @return boolean
+     */
+    public boolean replaceAlias(String indexName, String oldAlias, String alias) {
+        return esPlusIndexClient.replaceAlias(indexName, oldAlias, alias);
     }
     
     /**
@@ -464,6 +474,7 @@ public class EsPlusClientFacade   {
     public void createAlias(String currentIndex, String alias) {
         esPlusIndexClient.createAlias(currentIndex, alias);
     }
+    
 
     /**
      * 删除别名
@@ -488,5 +499,10 @@ public class EsPlusClientFacade   {
 
     public String executeDSL(String dsl, String index) {
         return esPlusClient.executeDSL(dsl,index);
+    }
+    
+    
+    public String getAliasByIndex(String index) {
+     return    esPlusIndexClient.getAliasByIndex(index);
     }
 }

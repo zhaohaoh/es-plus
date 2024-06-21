@@ -32,6 +32,7 @@ import org.elasticsearch.client.indices.CreateIndexResponse;
 import org.elasticsearch.client.indices.GetIndexRequest;
 import org.elasticsearch.client.indices.GetIndexResponse;
 import org.elasticsearch.client.indices.PutMappingRequest;
+import org.elasticsearch.cluster.metadata.AliasMetaData;
 import org.elasticsearch.cluster.metadata.MappingMetaData;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.unit.TimeValue;
@@ -46,6 +47,7 @@ import org.springframework.util.CollectionUtils;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -285,7 +287,7 @@ public class EsPlus6IndexRestClient implements EsPlusIndexClient {
      * @return boolean
      */
     @Override
-    public boolean replaceAlias(String oldIndexName, String reindexName, String alias) {
+    public boolean swapAlias(String oldIndexName, String reindexName, String alias) {
         IndicesAliasesRequest.AliasActions addIndexAction = new IndicesAliasesRequest.AliasActions(
                 IndicesAliasesRequest.AliasActions.Type.ADD).index(reindexName).alias(alias);
         IndicesAliasesRequest.AliasActions removeAction = new IndicesAliasesRequest.AliasActions(
@@ -299,9 +301,50 @@ public class EsPlus6IndexRestClient implements EsPlusIndexClient {
                     .updateAliases(indicesAliasesRequest, RequestOptions.DEFAULT);
             return acknowledgedResponse.isAcknowledged();
         } catch (IOException e) {
-            throw new EsException("reindex exception oldIndexName:" + oldIndexName + ", reindexName:  " + reindexName,
+            throw new EsException("swapAlias exception oldIndexName:" + oldIndexName + ", reindexName:  " + reindexName,
                     e);
         }
+    }
+    
+    
+    @Override
+    public boolean replaceAlias(String index, String oldAlias, String alias) {
+        IndicesAliasesRequest.AliasActions addIndexAction = new IndicesAliasesRequest.AliasActions(
+                IndicesAliasesRequest.AliasActions.Type.ADD).index(index).alias(alias);
+        IndicesAliasesRequest.AliasActions removeAction = new IndicesAliasesRequest.AliasActions(
+                IndicesAliasesRequest.AliasActions.Type.REMOVE).index(index).alias(oldAlias);
+        
+        IndicesAliasesRequest indicesAliasesRequest = new IndicesAliasesRequest();
+        indicesAliasesRequest.addAliasAction(addIndexAction);
+        indicesAliasesRequest.addAliasAction(removeAction);
+        try {
+            AcknowledgedResponse acknowledgedResponse = restHighLevelClient.indices()
+                    .updateAliases(indicesAliasesRequest, RequestOptions.DEFAULT);
+            return acknowledgedResponse.isAcknowledged();
+        } catch (IOException e) {
+            throw new EsException("replaceAlias exception index:" + index + ", oldAlias:  " + oldAlias, e);
+        }
+    }
+    
+    @Override
+    public String getAliasByIndex(String index) {
+        GetAliasesRequest getAliasesRequest = new GetAliasesRequest();
+        getAliasesRequest.indices(index);
+        
+        GetAliasesResponse getAliasesResponse = null;
+        try {
+            getAliasesResponse = restHighLevelClient.indices().getAlias(getAliasesRequest, RequestOptions.DEFAULT);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        
+        if (getAliasesResponse!=null && getAliasesResponse.getAliases() != null && !CollectionUtils
+                .isEmpty(getAliasesResponse.getAliases().values())) {
+            Collection<Set<AliasMetaData>> values = getAliasesResponse.getAliases().values();
+            AliasMetaData aliasMetaData = values.stream().findFirst().get().stream().findFirst().get();
+            return aliasMetaData.getAlias();
+        }
+        return null;
     }
     
     /**
@@ -338,8 +381,8 @@ public class EsPlus6IndexRestClient implements EsPlusIndexClient {
     /**
      * 重新索引
      *
-     * @param oldIndexName     老索引名称
-     * @param reindexName      重新索引名称
+     * @param oldIndexName  老索引名称
+     * @param reindexName   重新索引名称
      * @param changeMapping 更改属性映射
      * @return boolean
      */
@@ -374,13 +417,14 @@ public class EsPlus6IndexRestClient implements EsPlusIndexClient {
         reindexRequest.setConflicts(EsConstant.DEFAULT_CONFLICTS);
         reindexRequest.setRefresh(true);
         reindexRequest.getSearchRequest().source().fetchSource(null, EsConstant.REINDEX_TIME_FILED);
-//        reindexRequest.setSourceQuery(QueryBuilders.rangeQuery(EsConstant.REINDEX_TIME_FILED).gte(currentTime));
+        //        reindexRequest.setSourceQuery(QueryBuilders.rangeQuery(EsConstant.REINDEX_TIME_FILED).gte(currentTime));
         reindexRequest.setSourceQuery(queryBuilder);
         reindexRequest.setSourceBatchSize(GlobalConfigCache.GLOBAL_CONFIG.getBatchSize());
         reindexRequest.setTimeout(TimeValue.timeValueNanos(Long.MAX_VALUE));
         try {
-            if (queryBuilder!=null){
-                log.info("reindex oldIndexName:{},targetName:{} queryBuilder:{}",oldIndexName,reindexName, queryBuilder);
+            if (queryBuilder != null) {
+                log.info("reindex oldIndexName:{},targetName:{} queryBuilder:{}", oldIndexName, reindexName,
+                        queryBuilder);
             }
             BulkByScrollResponse response = restHighLevelClient.reindex(reindexRequest, RequestOptions.DEFAULT);
             List<BulkItemResponse.Failure> bulkFailures = response.getBulkFailures();
@@ -447,7 +491,7 @@ public class EsPlus6IndexRestClient implements EsPlusIndexClient {
         try {
             return restHighLevelClient.ping(RequestOptions.DEFAULT);
         } catch (Exception e) {
-            log.error("es initPing error",e);
+            log.error("es initPing error", e);
             return false;
         }
     }

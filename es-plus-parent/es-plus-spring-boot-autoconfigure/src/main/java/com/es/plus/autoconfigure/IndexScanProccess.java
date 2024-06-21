@@ -147,14 +147,16 @@ public class IndexScanProccess implements InitializingBean, ApplicationListener<
             EsPlusClientFacade esPlusClientFacade = ClientContext.getClient(esIndex.clientInstance());
             EsAliasResponse aliasResponse = esPlusClientFacade.getAliasIndex(esIndexParam.getAlias());
             Set<String> indexs = aliasResponse.getIndexs();
-            if (indexs.size() > 1) {
-                throw new EsException("存在多个索引指向同一个索引别名，请检查");
+            if (!CollectionUtils.isEmpty(indexs)){
+                if (indexs.size() > 1) {
+                    throw new EsException("存在多个索引指向同一个索引别名，请检查");
+                }
+                String index = indexs.stream().findFirst().get();
+                if (!index.equals(esIndex.index())) {
+                    log.error("索引已设置别名 别名获取到的索引和注解设置的索引不一致，请检查。" + " 最终设置的索引:{} 注解上的索引:{} 别名:{}", index, esIndex.index(),esIndex.alias());
+                }
+                esIndexParam.setIndex(index);
             }
-            String index = indexs.stream().findFirst().get();
-            if (!index.equals(esIndex.index())) {
-                log.error("索引已设置别名 别名获取到的索引和注解设置的索引不一致，请检查。" + " 最终设置的索引:{} 注解上的索引:{}", index, esIndex.index());
-            }
-            esIndexParam.setIndex(index);
         }
         
         // 索引配置
