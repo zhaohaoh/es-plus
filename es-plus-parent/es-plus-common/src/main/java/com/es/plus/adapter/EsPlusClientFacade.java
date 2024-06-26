@@ -206,9 +206,23 @@ public class EsPlusClientFacade   {
     
     /**
      * 更新别名
-     *
-     * @param alias        别名
-     * @return boolean
+     POST /_aliases
+     * {
+     *     "actions": [
+     *         {
+     *             "add": {
+     *                 "index": "my_index3",
+     *                 "alias": "my_alias"
+     *             }
+     *         },
+     *         {
+     *             "remove": {
+     *                 "index": "my_index1",
+     *                 "alias": "my_alias"
+     *             }
+     *         }
+     *     ]
+     * }
      */
     public boolean replaceAlias(String indexName, String oldAlias, String alias) {
         return esPlusIndexClient.replaceAlias(indexName, oldAlias, alias);
