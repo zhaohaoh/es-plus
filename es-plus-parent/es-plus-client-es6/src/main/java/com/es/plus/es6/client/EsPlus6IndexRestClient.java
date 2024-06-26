@@ -37,6 +37,7 @@ import org.elasticsearch.cluster.metadata.MappingMetaData;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentType;
+import org.elasticsearch.index.VersionType;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.elasticsearch.index.reindex.ReindexRequest;
@@ -53,6 +54,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static com.es.plus.constant.EsConstant.DEFAULT_REINDEX_VERSION_TYPE;
 import static com.es.plus.constant.EsConstant.PROPERTIES;
 
 /**
@@ -362,6 +364,7 @@ public class EsPlus6IndexRestClient implements EsPlusIndexClient {
         reindexRequest.setDestOpType(EsConstant.DEFAULT_DEST_OP_TYPE);
         reindexRequest.setConflicts(EsConstant.DEFAULT_CONFLICTS);
         reindexRequest.setRefresh(true);
+        reindexRequest.setDestVersionType(VersionType.valueOf(DEFAULT_REINDEX_VERSION_TYPE));
         reindexRequest.getSearchRequest().source().fetchSource(null, EsConstant.REINDEX_TIME_FILED);
         reindexRequest.setSourceBatchSize(GlobalConfigCache.GLOBAL_CONFIG.getBatchSize());
         reindexRequest.setTimeout(TimeValue.timeValueNanos(Long.MAX_VALUE));
@@ -416,6 +419,7 @@ public class EsPlus6IndexRestClient implements EsPlusIndexClient {
         reindexRequest.setDestOpType(EsConstant.DEFAULT_DEST_OP_TYPE);
         reindexRequest.setConflicts(EsConstant.DEFAULT_CONFLICTS);
         reindexRequest.setRefresh(true);
+        reindexRequest.setDestVersionType(VersionType.valueOf(DEFAULT_REINDEX_VERSION_TYPE));
         reindexRequest.getSearchRequest().source().fetchSource(null, EsConstant.REINDEX_TIME_FILED);
         //        reindexRequest.setSourceQuery(QueryBuilders.rangeQuery(EsConstant.REINDEX_TIME_FILED).gte(currentTime));
         reindexRequest.setSourceQuery(queryBuilder);

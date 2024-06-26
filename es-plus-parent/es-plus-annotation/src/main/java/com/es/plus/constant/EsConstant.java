@@ -109,6 +109,10 @@ public interface EsConstant {
      */
     String DEFAULT_CONFLICTS = "proceed";
     /**
+     * 默认冲突处理
+     */
+    String DEFAULT_REINDEX_VERSION_TYPE = "EXTERNAL";
+    /**
      * 自动创建的索引后缀
      */
     String SO_SUFFIX = "_s0";
