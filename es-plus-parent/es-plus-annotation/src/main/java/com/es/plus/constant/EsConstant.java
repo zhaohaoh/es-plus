@@ -101,7 +101,7 @@ public interface EsConstant {
      */
     String NUMBER_OF_REPLICAS = "index.number_of_replicas";
     /**
-     * 默认迁移操作规则 覆盖index   create只创建      index和EXTERNAL搭配使用可以达到版本号大于目标版本号才会更新  create和EXTERNAL一起使用，还是以create为准
+     * 默认迁移操作规则 覆盖index   create只创建      index和EXTERNAL搭配使用可以达到版本号大于目标版本号才会更新  create和EXTERNAL一起使用，也会版本号大于目标版本号才会更新
      */
     String DEFAULT_DEST_OP_TYPE = "index";
     /**
