@@ -12,14 +12,12 @@ import com.es.plus.adapter.util.JsonUtils;
 import com.es.plus.annotation.EsIndex;
 import com.es.plus.constant.Commend;
 import com.es.plus.constant.EsConstant;
-import com.es.plus.core.statics.Es;
 import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.common.util.set.Sets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.StopWatch;
 
-import java.lang.reflect.Field;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -120,7 +118,6 @@ public class EsReindexProcess {
         //执行对应操作
         EsIndex annotation = clazz.getAnnotation(EsIndex.class);
         
-        log.info("EsExecutorUtil tryReindex Commend:{}", updateCommend);
         if (Objects.equals(updateCommend, Commend.MAPPING_UPDATE)) {
             if (!annotation.updateMapping()) {
                 return false;
@@ -136,7 +133,11 @@ public class EsReindexProcess {
             if (StringUtils.isBlank(annotation.alias())) {
                 throw new EsException(annotation.index() + " tryReindex alias Cannot be null");
             }
-            if (GlobalConfigCache.GLOBAL_CONFIG.isAutoReindex()) {
+            if (GlobalConfigCache.GLOBAL_CONFIG.isAutoReindex()){
+                if (StringUtils.isBlank(GlobalConfigCache.GLOBAL_CONFIG.getReindexScope())) {
+                    log.error("es-plus cannot ensure reindex integrity  reindex scope is blank  index:{}",currentIndex);
+                }
+                log.info("EsExecutorUtil index:{} tryReindex Commend:{}",currentIndex, updateCommend);
                 if (GlobalConfigCache.GLOBAL_CONFIG.isReindexAsync()) {
                     reindexExecutor
                             .execute(() -> tryLockReindex(esPlusClientFacade, clazz, esIndexParam, currentIndex));
@@ -250,13 +251,7 @@ public class EsReindexProcess {
     
     private static void doReindex(EsPlusClientFacade esPlusClientFacade, Class<?> clazz, EsIndexParam esIndexParam,
             String currentIndex, String reindexName) {
-        
-        //获取重建索引的字段的值
-        Object reindexFieldValue = getReindexValue(clazz, esIndexParam, currentIndex);
-        if (reindexFieldValue == null) {
-            return;
-        }
-        
+         
         //创建没有别名的新索引
         esPlusClientFacade.createIndexWithoutAlias(reindexName, clazz);
         
@@ -290,24 +285,7 @@ public class EsReindexProcess {
         log.info("es-plus doReindex All End currentIndex:{} newIndex:{}", currentIndex, reindexName);
     }
     
-    private static Object getReindexValue(Class<?> clazz, EsIndexParam esIndexParam, String currentIndex) {
-        //重建索引用来过滤新增数据的值
-        Object reindexFieldValue = null;
-        try {
-            Object one = Es.chainQuery(clazz).sortByDesc(esIndexParam.getReindexField()).search(1).getOne();
-            Field declaredField = one.getClass().getDeclaredField(esIndexParam.getReindexField());
-            declaredField.setAccessible(true);
-            reindexFieldValue = declaredField.get(one);
-        } catch (Exception e) {
-            log.error("reindex getReindexField error:", e);
-        }
-        
-        if (reindexFieldValue == null) {
-            log.error("reindex getReindexField fieldValue cannot be null so not reindex currentIndex:{}", currentIndex);
-            return null;
-        }
-        return reindexFieldValue;
-    }
+ 
     
     /**
      * 获取指令
@@ -383,13 +361,17 @@ public class EsReindexProcess {
         return incrementLastNumber(currentIndex);
     }
     
+    public static void main(String[] args) {
+        String fastTestNewV19 = getReindexName("fast_test_new_v99");
+        System.out.println(fastTestNewV19);
+    }
     
     public static String incrementLastNumber(String input) {
         if (input == null) {
             return null;
         }
         // 正则表达式匹配字符串末尾的数字
-        Pattern pattern = Pattern.compile("(.*)(\\d+)$");
+        Pattern pattern = Pattern.compile("^(.*?)(\\d+)$");
         Matcher matcher = pattern.matcher(input);
         
         if (matcher.matches()) {

@@ -6,11 +6,14 @@ import com.es.plus.adapter.interceptor.EsInterceptors;
 import com.es.plus.adapter.interceptor.InterceptorElement;
 import com.es.plus.adapter.interceptor.MethodEnum;
 import com.es.plus.adapter.lock.ELock;
+import com.es.plus.adapter.lock.EsLockFactory;
+import com.es.plus.constant.EsConstant;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.List;
 
 /**
  *  期望实现reindex的时候双写索引。具体怎么做还没想好，因为拦截器只能提前注入。
@@ -22,25 +25,28 @@ import java.util.Arrays;
 public class EsReindexInterceptor implements EsInterceptor {
     
    
-    private boolean reindexIntercptor;
+    private List<String> reindexList;
  
-    private final  ELock eLock;
+    private final EsLockFactory esLockFactory;
     
-    public EsReindexInterceptor(ELock eLock) {
-        this.eLock = eLock;
+    public EsReindexInterceptor(EsLockFactory esLockFactory) {
+        this.esLockFactory = esLockFactory;
     }
     
-    public void setReindexIntercptor(boolean reindexIntercptor) {
-        this.reindexIntercptor = reindexIntercptor;
+    public void setReindexList(List<String> reindexList) {
+        this.reindexList = reindexList;
     }
     
     @Override
     public void after(String index, String type, Method method, Object[] args, Object result,
             EsPlusClient esPlusClient) {
         
-        if (!reindexIntercptor){
+        if (reindexList.contains(index)){
             return;
         }
+        
+        ELock eLock = esLockFactory.getLock(index + EsConstant.REINDEX_LOCK_SUFFIX);
+        
         Object lockValue = eLock.getLockValue();
         if (lockValue!=null){
             Object[] newArr = Arrays.copyOf(args, args.length);

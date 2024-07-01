@@ -154,7 +154,7 @@ public class EsClientConfiguration implements InitializingBean {
         }
         clientProperties.forEach((k, v) -> {
             RestHighLevelClient restHighLevelClient = getRestHighLevelClient(v);
-            EsPlusClientFacade esPlusClientFacade = ClientContext.buildEsPlusClientFacade(restHighLevelClient,esInterceptors);
+            EsPlusClientFacade esPlusClientFacade = ClientContext.buildEsPlusClientFacade(v.getAddress(),restHighLevelClient,esInterceptors);
             ClientContext.addClient(k, esPlusClientFacade);
         });
     }

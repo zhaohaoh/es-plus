@@ -119,12 +119,7 @@ public class IndexScanProccess implements InitializingBean, ApplicationListener<
     
           
             EsPlusClientFacade esPlusClientFacade = ClientContext.getClient(esIndexParam.getClientInstance());
-    
-            ELock reindexLock = esPlusClientFacade.getLock(esIndexParam.getIndex() + EsConstant.REINDEX_LOCK_SUFFIX);
-            //重建索引时的拦截器
-            EsReindexInterceptor esInterceptor = new EsReindexInterceptor(reindexLock);
-            esInterceptor.setReindexIntercptor(GlobalConfigCache.GLOBAL_CONFIG.isReindexIntercptor());
-            esPlusClientFacade.addInterceptor(esInterceptor);
+            
             try {
                 //尝试创建或重建索引
                 tryCreateOrReindex(esPlusClientFacade,indexClass, esIndexParam);
@@ -142,8 +137,24 @@ public class IndexScanProccess implements InitializingBean, ApplicationListener<
                 }
             }
         }
+        
+        
+        
+        //1.全部索引都reindex    2.当前索引在重建索引的名单中
+        String reindexScope = GlobalConfigCache.GLOBAL_CONFIG.getReindexScope();
+        if (StringUtils.isNotBlank(reindexScope)){
+            Collection<EsPlusClientFacade> clients = ClientContext.getClients();
+            for (EsPlusClientFacade esPlusClientFacade : clients) {
+                List<String> indexList = Arrays.stream(reindexScope.split(",")).collect(Collectors.toList());
+                //重建索引时的拦截器
+                EsReindexInterceptor esInterceptor = new EsReindexInterceptor(esPlusClientFacade.getEsLockFactory());
+                esInterceptor.setReindexList(indexList);
+                esPlusClientFacade.addInterceptor(esInterceptor);
+            
+                log.info("reindexScope :{} esPlusClientFacade host:{} addInterceptor",reindexScope,esPlusClientFacade.getHost());
+            }
+        }
     }
-    
     
     private void tryCreateOrReindex(EsPlusClientFacade esPlusClientFacade,Class<?> indexClass, EsIndexParam esIndexParam) {
         String index = esIndexParam.getIndex();
@@ -158,7 +169,7 @@ public class IndexScanProccess implements InitializingBean, ApplicationListener<
                 if (exists) {
                     boolean isReindex = EsReindexProcess.tryReindex(esPlusClientFacade, indexClass);
                     if (isReindex) {
-                        task(esPlusClientFacade,esIndexParam);
+                        reindexTask(esPlusClientFacade,esIndexParam);
                     }
                 } else {
                     esPlusClientFacade.createIndexMapping(index, indexClass);
@@ -168,7 +179,7 @@ public class IndexScanProccess implements InitializingBean, ApplicationListener<
                 log.info("init es-plus indexResponse={} exists={}",index, exists);
             } else {
                 //异步更新reindex后的index的任务
-                task(esPlusClientFacade,esIndexParam);
+                reindexTask(esPlusClientFacade,esIndexParam);
             }
             
         } finally {
@@ -179,9 +190,9 @@ public class IndexScanProccess implements InitializingBean, ApplicationListener<
     }
     
     /**
-     * 每10秒获取一次索引别名。检测reindex是否完成。
+     *   重建索引的任务  每10秒获取一次索引别名。检测reindex是否完成。
      */
-    public void task(EsPlusClientFacade esPlusClientFacade,EsIndexParam esIndexParam) {
+    public void reindexTask(EsPlusClientFacade esPlusClientFacade,EsIndexParam esIndexParam) {
         String annotationIndex = esIndexParam.getIndex();
         String alias = esIndexParam.getAlias();
         ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -193,14 +204,13 @@ public class IndexScanProccess implements InitializingBean, ApplicationListener<
                     log.info("reindex maybe success changeIndex newIndex={} oldIndex:{}", index,annotationIndex);
                     esIndexParam.setIndex(index);
                     //解锁
-                    ELock eLock = esPlusClientFacade.getLock(esIndexParam.getIndex() + EsConstant.REINDEX_LOCK_SUFFIX);
+                    ELock eLock = esPlusClientFacade.getLock(annotationIndex + EsConstant.REINDEX_LOCK_SUFFIX);
                     eLock.unlock();
                     break;
                 }
                 try {
                     Thread.sleep(10000);
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
                 }
             }
         });
@@ -243,10 +253,7 @@ public class IndexScanProccess implements InitializingBean, ApplicationListener<
         if (StringUtils.isBlank(esIndex.index())) {
             throw new EsException("es entity annotation @EsIndex no has index");
         }
-        
-        if (StringUtils.isNotBlank(esIndex.reindexField())) {
-            esIndexParam.setReindexField(esIndex.reindexField());
-        }
+      
         
         esIndexParam.setType(esIndex.type());
         esIndexParam.setIndex(esIndex.index() + esSuffix);

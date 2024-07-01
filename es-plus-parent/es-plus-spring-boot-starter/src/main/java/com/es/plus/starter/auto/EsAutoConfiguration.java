@@ -6,9 +6,11 @@ import com.es.plus.adapter.lock.ELockClient;
 import com.es.plus.adapter.lock.EsLockFactory;
 import com.es.plus.autoconfigure.config.FileConfigMonitor;
 import com.es.plus.autoconfigure.config.NacosConfigMointor;
+import com.es.plus.autoconfigure.properties.EsProperties;
 import com.es.plus.core.ClientContext;
 import com.es.plus.lock.EsLockClient;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigureOrder;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -32,6 +34,10 @@ import static com.es.plus.constant.EsConstant.MASTER;
 @ComponentScan(basePackages = "com.es.plus")
 public class EsAutoConfiguration {
     
+    
+    @Autowired
+    private EsProperties esProperties;
+    
     /**
      * es 外观
      *
@@ -43,7 +49,7 @@ public class EsAutoConfiguration {
     public EsPlusClientFacade esPlusClientFacade(RestHighLevelClient restHighLevelClient, EsLockFactory esLockFactory,
             List<EsInterceptor> esInterceptors) {
         EsPlusClientFacade esPlusClientFacade = ClientContext
-                .buildEsPlusClientFacade(restHighLevelClient, esLockFactory, esInterceptors);
+                .buildEsPlusClientFacade(esProperties.getAddress(),restHighLevelClient, esLockFactory, esInterceptors);
         ClientContext.addClient(MASTER, esPlusClientFacade);
         return esPlusClientFacade;
     }

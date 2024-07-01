@@ -46,9 +46,7 @@ public class EsAnnotationParamProcess {
         if (StringUtils.isBlank(esIndex.index())) {
             throw new EsException("es entity annotation @EsIndex no has index");
         }
-        if (StringUtils.isNotBlank(esIndex.reindexField())) {
-            esIndexParam.setReindexField(esIndex.reindexField());
-        }
+   
         esIndexParam.setType(esIndex.type());
         esIndexParam.setIndex(esIndex.index() + esSuffix);
         if (StringUtils.isNotBlank(esIndex.alias())) {

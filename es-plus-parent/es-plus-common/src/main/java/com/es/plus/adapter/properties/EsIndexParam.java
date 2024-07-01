@@ -47,8 +47,5 @@ public class EsIndexParam {
      *  客户端实例
      */
     private  String clientInstance;
-    /**
-     *  重建索引依赖的字段
-     */
-    private String reindexField;
+  
 }

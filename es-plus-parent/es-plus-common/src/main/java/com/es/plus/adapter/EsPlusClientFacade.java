@@ -39,15 +39,25 @@ public class EsPlusClientFacade   {
     private  EsPlusIndexClient esPlusIndexClient;
     private  EsLockFactory esLockFactory;
     private  EsPlusClientProxy esPlusClientProxy;
+    private String host;
 
     public EsPlusClientFacade() {
     }
-
-    public EsPlusClientFacade(EsPlusClientProxy esPlusClientProxy, EsPlusIndexClient esPlusIndexClient, EsLockFactory esLockFactory) {
+    
+    public String getHost() {
+        return host;
+    }
+    
+    public EsPlusClientFacade(EsPlusClientProxy esPlusClientProxy, EsPlusIndexClient esPlusIndexClient, EsLockFactory esLockFactory,String host) {
         this.esPlusClientProxy=esPlusClientProxy;
         this.esPlusClient = (EsPlusClient)esPlusClientProxy.getProxy();
         this.esPlusIndexClient = esPlusIndexClient;
         this.esLockFactory = esLockFactory;
+        this.host = host;
+    }
+    
+    public EsLockFactory getEsLockFactory() {
+        return esLockFactory;
     }
     
     public void addInterceptor(EsInterceptor esInterceptor){

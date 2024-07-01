@@ -1,18 +1,23 @@
 package com.es.plus.autoconfigure.config;
 
 import com.es.plus.adapter.EsPlusClientFacade;
+import com.es.plus.adapter.config.GlobalConfigCache;
 import com.es.plus.autoconfigure.interceptor.EsReindexInterceptor;
 import com.es.plus.core.ClientContext;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.PropertiesFactoryBean;
 import org.springframework.beans.factory.config.YamlPropertiesFactoryBean;
 import org.springframework.core.io.ByteArrayResource;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.Properties;
+import java.util.stream.Collectors;
 
 @Slf4j
 public abstract class AbstractConfigManager {
@@ -28,16 +33,32 @@ public abstract class AbstractConfigManager {
     @SneakyThrows
     protected void listenerChange(String name, String input) {
         Properties properties = getProperties(name, input);
-        Object value = properties.get("es-plus.global-config.reindexIntercptor");
-        log.info("listenerChange es-plus.global-config.reindexIntercptor:{}",value);
-        if (value != null) {
-            boolean reindexIntercptor = Boolean.parseBoolean(value.toString());
+        Object value = properties.get("es-plus.global-config.reindex-scope");
+        log.info("listenerChange es-plus.global-config.reindex-scope:{}",value);
+        if (value != null && !value.toString().equals(GlobalConfigCache.GLOBAL_CONFIG.getReindexScope())) {
+            GlobalConfigCache.GLOBAL_CONFIG.setReindexScope(value.toString());
+            
+            String reindexScope = GlobalConfigCache.GLOBAL_CONFIG.getReindexScope();
+            //重建索引时的拦截器
             Collection<EsPlusClientFacade> clients = ClientContext.getClients();
-            for (EsPlusClientFacade client : clients) {
-                EsReindexInterceptor esInterceptor = (EsReindexInterceptor) client
-                        .getEsInterceptor(EsReindexInterceptor.class);
-                if (esInterceptor != null) {
-                    esInterceptor.setReindexIntercptor(reindexIntercptor);
+            //如果存在reindex的索引则加载拦截器。否则去掉拦截器提高性能
+            if (StringUtils.isNotBlank(reindexScope)){
+                List<String> indexList = Arrays.stream(reindexScope.split(",")).collect(Collectors.toList());
+                for (EsPlusClientFacade esPlusClientFacade : clients) {
+                    EsReindexInterceptor esInterceptor = (EsReindexInterceptor) esPlusClientFacade
+                            .getEsInterceptor(EsReindexInterceptor.class);
+                    if (esInterceptor != null) {
+                        esInterceptor.setReindexList(indexList);
+                    }else{
+                        EsReindexInterceptor esReindexInterceptor = new EsReindexInterceptor(esPlusClientFacade.getEsLockFactory());
+                        esPlusClientFacade.addInterceptor(esReindexInterceptor);
+                    }
+                    log.info("listenerChange reindexScope :{} esPlusClientFacade host:{} addInterceptor",reindexScope,esPlusClientFacade.getHost());
+                }
+            }else{
+                for (EsPlusClientFacade esPlusClientFacade : clients) {
+                    esPlusClientFacade.remoteInterceptor(EsReindexInterceptor.class);
+                    log.info("reindexScope :{} esPlusClientFacade host:{} remoteInterceptor",reindexScope,esPlusClientFacade.getHost());
                 }
             }
         }

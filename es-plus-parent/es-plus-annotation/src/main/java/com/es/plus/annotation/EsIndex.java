@@ -86,10 +86,6 @@ public @interface EsIndex {
      * 启动时创建索引和改变映射
      */
     boolean startInit() default true;
-    /**
-     * 重建索引的时候根据字段来进行二次reindex
-     */
-    String reindexField() default "";
     
     Class<?> childClass() default DefaultClass.class;
 

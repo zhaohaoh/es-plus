@@ -65,6 +65,11 @@ public class EsPlusClientProxy implements InvocationHandler {
     }
     
     public void addInterceptor(EsInterceptor esInterceptor){
+        boolean anyMatch = esInterceptors.stream().anyMatch(a -> a.getClass().equals(esInterceptor.getClass()));
+        //已经存在相同类型的拦截器
+        if (anyMatch){
+            return;
+        }
         esInterceptors.add(esInterceptor);
     }
     

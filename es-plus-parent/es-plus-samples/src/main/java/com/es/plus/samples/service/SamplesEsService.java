@@ -39,8 +39,7 @@ public class SamplesEsService extends EsServiceImpl<SamplesEsDTO> {
         innerHitBuilder.setSize(10);
         innerHitBuilder.setFetchSourceContext(new FetchSourceContext(false));
 
-
-
+ 
         //一级查询条件
         EsChainLambdaQueryWrapper<SamplesEsDTO> queryWrapper = esChainQueryWrapper().must().fetch(false)
                 //二级

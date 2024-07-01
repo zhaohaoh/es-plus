@@ -15,7 +15,7 @@ import java.util.List;
  * 举例4种类型索引
  */
 @Data
-@EsIndex(index = "fast_test_new_v6",alias = "fast_test_new_alias",tryReindex = true,reindexField = "createTime")
+@EsIndex(index = "fast_test_new_v6",alias = "fast_test_new_alias",tryReindex = true)
 public class FastTestDTO {
     @EsId
     private Long id;
@@ -31,7 +31,7 @@ public class FastTestDTO {
     @EsField(type = EsFieldType.DATE, esFormat = "yyyy-MM-dd HH:mm:ss||strict_date_optional_time||epoch_millis",dateFormat = "yyyy-MM-dd HH:mm:ss",timeZone = "+0")
     private Date createTime;
 
-    @EsField(type = EsFieldType.TEXT ,name = "username_test")
+    @EsField(type = EsFieldType.KEYWORD ,name = "username_test")
     private String usernameTest;
     @EsField(type = EsFieldType.KEYWORD,name = "usernameTest1")
     private String username_test1;

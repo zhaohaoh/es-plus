@@ -54,7 +54,7 @@ public class ClientContext {
      *
      * @return {@link EsPlusClientFacade}
      */
-    public static EsPlusClientFacade buildEsPlusClientFacade(RestHighLevelClient restHighLevelClient, EsLockFactory esLockFactory, List<EsInterceptor> esInterceptors) {
+    public static EsPlusClientFacade buildEsPlusClientFacade(String host,RestHighLevelClient restHighLevelClient, EsLockFactory esLockFactory, List<EsInterceptor> esInterceptors) {
         EsPlusClient esPlusClient;
         EsPlusIndexClient esPlusIndexRestClient;
         if (GlobalConfigCache.GLOBAL_CONFIG.getVersion().equals(6)) {
@@ -68,12 +68,12 @@ public class ClientContext {
         EsPlusClientProxy esPlusClientProxy = new EsPlusClientProxy(esPlusClient,esInterceptors);
 
        
-        EsPlusClientFacade esPlusClientFacade = new EsPlusClientFacade(esPlusClientProxy, esPlusIndexRestClient, esLockFactory);
+        EsPlusClientFacade esPlusClientFacade = new EsPlusClientFacade(esPlusClientProxy, esPlusIndexRestClient, esLockFactory,host);
 
         return esPlusClientFacade;
     }
     
-    public static EsPlusClientFacade buildEsPlusClientFacade(RestHighLevelClient restHighLevelClient,List<EsInterceptor> esInterceptors) {
+    public static EsPlusClientFacade buildEsPlusClientFacade(String host,RestHighLevelClient restHighLevelClient,List<EsInterceptor> esInterceptors) {
         EsPlusClient esPlusClient;
         EsPlusIndexClient esPlusIndexRestClient;
         EsLockClient esLockClient = new EsLockClient(restHighLevelClient);
@@ -90,7 +90,7 @@ public class ClientContext {
         
         EsPlusClient proxy = (EsPlusClient) esPlusClientProxy.getProxy();
         
-        EsPlusClientFacade esPlusClientFacade = new EsPlusClientFacade(esPlusClientProxy, esPlusIndexRestClient, esLockFactory);
+        EsPlusClientFacade esPlusClientFacade = new EsPlusClientFacade(esPlusClientProxy, esPlusIndexRestClient, esLockFactory,host);
         
         return esPlusClientFacade;
     }
