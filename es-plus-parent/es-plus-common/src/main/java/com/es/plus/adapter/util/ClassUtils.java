@@ -2,11 +2,20 @@ package com.es.plus.adapter.util;
 
 
 import com.es.plus.adapter.exception.EsException;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.DefaultParameterNameDiscoverer;
 import org.springframework.util.CollectionUtils;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.*;
+import java.lang.reflect.Parameter;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
@@ -15,9 +24,13 @@ import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toMap;
 
 
+@Slf4j
 public class ClassUtils {
 
     private static final Map<Class<?>, List<Field>> CLASS_FIELD_CACHE = new ConcurrentHashMap<>();
+    
+    private static final DefaultParameterNameDiscoverer discoverer = new DefaultParameterNameDiscoverer();
+    
     /**
      * 代理 class 的名称
      */
@@ -122,5 +135,33 @@ public class ClassUtils {
             }
         }
         return cl;
+    }
+    
+    @SneakyThrows
+    public static String getParamValue(String name, Method method, Object[] args,Object target) {
+        String param = null;
+        
+        String[] parameterNames;
+        boolean match = Arrays.stream(method.getParameters()).anyMatch(Parameter::isNamePresent);
+        if (match) {
+            parameterNames = Arrays.stream(method.getParameters()).map(Parameter::getName).toArray(String[]::new);
+        } else {
+            Method method1 = target.getClass().getMethod(method.getName(), method.getParameterTypes());
+            parameterNames = discoverer.getParameterNames(method1);
+        }
+        if (parameterNames != null) {
+            for (int i = 0; i < parameterNames.length; i++) {
+                String parameterName = parameterNames[i];
+                if (parameterName != null) {
+                    if (parameterName.equals(name)) {
+                        param = args[i].toString();
+                        break;
+                    }
+                }
+            }
+        } else {
+            log.warn("getParamValue value is null");
+        }
+        return param;
     }
 }

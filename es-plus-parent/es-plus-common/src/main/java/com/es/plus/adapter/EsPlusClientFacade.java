@@ -3,6 +3,8 @@ package com.es.plus.adapter;
 import com.es.plus.adapter.config.GlobalConfigCache;
 import com.es.plus.adapter.core.EsPlusClient;
 import com.es.plus.adapter.core.EsPlusIndexClient;
+import com.es.plus.adapter.interceptor.EsInterceptor;
+import com.es.plus.adapter.interceptor.EsPlusClientProxy;
 import com.es.plus.adapter.lock.ELock;
 import com.es.plus.adapter.lock.EsLockFactory;
 import com.es.plus.adapter.lock.EsReadWriteLock;
@@ -36,14 +38,29 @@ public class EsPlusClientFacade   {
     private  EsPlusClient esPlusClient;
     private  EsPlusIndexClient esPlusIndexClient;
     private  EsLockFactory esLockFactory;
+    private  EsPlusClientProxy esPlusClientProxy;
 
     public EsPlusClientFacade() {
     }
 
-    public EsPlusClientFacade(EsPlusClient esPlusClient, EsPlusIndexClient esPlusIndexClient, EsLockFactory esLockFactory) {
-        this.esPlusClient = esPlusClient;
+    public EsPlusClientFacade(EsPlusClientProxy esPlusClientProxy, EsPlusIndexClient esPlusIndexClient, EsLockFactory esLockFactory) {
+        this.esPlusClientProxy=esPlusClientProxy;
+        this.esPlusClient = (EsPlusClient)esPlusClientProxy.getProxy();
         this.esPlusIndexClient = esPlusIndexClient;
         this.esLockFactory = esLockFactory;
+    }
+    
+    public void addInterceptor(EsInterceptor esInterceptor){
+        esPlusClientProxy.addInterceptor(esInterceptor);
+    }
+    public EsInterceptor getEsInterceptor(Class<?> clazz){
+        List<EsInterceptor> esInterceptors = esPlusClientProxy.getEsInterceptors();
+        for (EsInterceptor esInterceptor : esInterceptors) {
+            if (clazz.equals(esInterceptor.getClass())){
+                return esInterceptor;
+            }
+        }
+        return null;
     }
 
     /**
@@ -518,5 +535,10 @@ public class EsPlusClientFacade   {
     
     public String getAliasByIndex(String index) {
      return    esPlusIndexClient.getAliasByIndex(index);
+    }
+    
+    public void remoteInterceptor(Class<?> clazz) {
+        esPlusClientProxy.removeInterceptor(clazz);
+        System.out.println(esPlusClientProxy.getEsInterceptors());
     }
 }

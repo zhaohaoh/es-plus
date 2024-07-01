@@ -7,9 +7,9 @@ import com.es.plus.adapter.interceptor.EsInterceptor;
 import com.es.plus.adapter.properties.GlobalParamHolder;
 import com.es.plus.adapter.util.XcontentBuildUtils;
 import com.es.plus.core.ClientContext;
-import com.es.plus.starter.properties.AnalysisProperties;
-import com.es.plus.starter.properties.ClientProperties;
-import com.es.plus.starter.properties.EsProperties;
+import com.es.plus.autoconfigure.properties.AnalysisProperties;
+import com.es.plus.autoconfigure.properties.ClientProperties;
+import com.es.plus.autoconfigure.properties.EsProperties;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpHost;
@@ -73,7 +73,7 @@ public class EsClientConfiguration implements InitializingBean {
 
     @Autowired
     private EsProperties esProperties;
-    @Autowired
+    @Autowired(required = false)
     private List<EsInterceptor> esInterceptors;
 
     /**

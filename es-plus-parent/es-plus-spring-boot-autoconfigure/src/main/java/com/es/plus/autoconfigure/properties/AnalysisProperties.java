@@ -1,4 +1,4 @@
-package com.es.plus.starter.properties;
+package com.es.plus.autoconfigure.properties;
 
 import lombok.Data;
 

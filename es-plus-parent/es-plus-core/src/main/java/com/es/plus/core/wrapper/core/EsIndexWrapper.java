@@ -84,8 +84,8 @@ public class EsIndexWrapper implements IEsIndexWrapper {
     }
 
     @Override
-    public boolean replaceAlias(String oldIndexName, String newIndexName, String alias) {
-        return esPlusClientFacade.replaceAlias(oldIndexName, newIndexName, alias);
+    public boolean replaceAlias(String indexName, String oldAlias, String alias) {
+        return esPlusClientFacade.replaceAlias(indexName, oldAlias, alias);
     }
 
     @Override

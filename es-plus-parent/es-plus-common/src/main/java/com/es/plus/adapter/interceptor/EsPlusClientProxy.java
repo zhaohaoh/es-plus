@@ -1,16 +1,18 @@
 package com.es.plus.adapter.interceptor;
 
-import lombok.SneakyThrows;
+import com.es.plus.adapter.core.EsPlusClient;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.aop.support.AopUtils;
-import org.springframework.core.DefaultParameterNameDiscoverer;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.CollectionUtils;
 
-import java.lang.reflect.*;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -25,9 +27,9 @@ public class EsPlusClientProxy implements InvocationHandler {
     
     private final Class<?>[] proxiedInterfaces;
     
-    private List<EsInterceptor> esInterceptors;
+    private List<EsInterceptor> esInterceptors=new ArrayList<>();
     
-    private static final DefaultParameterNameDiscoverer discoverer = new DefaultParameterNameDiscoverer();
+
     
     /**
      * Is the {@link #equals} method defined on the proxied interfaces?
@@ -42,25 +44,40 @@ public class EsPlusClientProxy implements InvocationHandler {
     public EsPlusClientProxy(Object target, List<EsInterceptor> esInterceptors) {
         this.target = target;
         this.proxiedInterfaces = target.getClass().getInterfaces();
-        this.esInterceptors = esInterceptors;
+         if (!CollectionUtils.isEmpty(esInterceptors)){
+             this.esInterceptors = esInterceptors;
+          }
     }
     
     public Object getProxy() {
         return getProxy(ClassUtils.getDefaultClassLoader());
     }
     
+    
     public Object getProxy(@Nullable ClassLoader classLoader) {
         Object proxyInstance = Proxy.newProxyInstance(classLoader, this.proxiedInterfaces, this);
         findDefinedEqualsAndHashCodeMethods(proxiedInterfaces);
-        
         return proxyInstance;
     }
+    
+    public List<EsInterceptor> getEsInterceptors() {
+        return esInterceptors;
+    }
+    
+    public void addInterceptor(EsInterceptor esInterceptor){
+        esInterceptors.add(esInterceptor);
+    }
+    
+    public void removeInterceptor(Class<?> clazz) {
+        esInterceptors.removeIf(a->a.getClass().equals(clazz));
+    }
+    
     
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
         Object result;
-        String index = getParamValue(INDEX, method, args);
-        String type = getParamValue(TYPE, method, args);
+        String index = com.es.plus.adapter.util.ClassUtils.getParamValue(INDEX, method, args,target);
+        String type =com.es.plus.adapter.util.ClassUtils.getParamValue(TYPE, method, args,target);
         String methodName = method.getName();
         try {
             if (isHashCodeMethod(method) && !hashCodeDefined) {
@@ -89,14 +106,14 @@ public class EsPlusClientProxy implements InvocationHandler {
             
             //前置处理
             for (EsInterceptor esInterceptor : esInterceptors) {
-                esInterceptor.before(index, type, method, args);
+                esInterceptor.before(index, type, method, args,(EsPlusClient)target);
             }
             
             result = method.invoke(target, args);
             
             //后置过程
             for (EsInterceptor esInterceptor : esInterceptors) {
-                esInterceptor.after(index, type, method, args, result);
+                esInterceptor.after(index, type, method, args, result,(EsPlusClient)target);
             }
         } catch (InvocationTargetException e) {
             throw e.getCause();
@@ -120,6 +137,13 @@ public class EsPlusClientProxy implements InvocationHandler {
             for (InterceptorElement element : elements) {
                 String[] indexs = element.index();
                 String[] methodNames = element.methodName();
+                //如果方法是空取方法枚举
+                if (ArrayUtils.isEmpty(methodNames)){
+                    if (!ArrayUtils.isEmpty(element.methods())){
+                        methodNames= Arrays.stream(element.methods()).map(MethodEnum::getMethods)
+                                .flatMap(Arrays::stream).toArray(String[]::new);
+                    }
+                }
                 
                 Class<?> aClass = com.es.plus.adapter.util.ClassUtils.getClass(target.getClass());
                 if (!element.type().isAssignableFrom(aClass)) {
@@ -146,33 +170,7 @@ public class EsPlusClientProxy implements InvocationHandler {
         return canInterceptors;
     }
     
-    @SneakyThrows
-    private String getParamValue(String name, Method method, Object[] args) {
-        String param = null;
-        
-        String[] parameterNames;
-        boolean match = Arrays.stream(method.getParameters()).anyMatch(Parameter::isNamePresent);
-        if (match) {
-            parameterNames = Arrays.stream(method.getParameters()).map(Parameter::getName).toArray(String[]::new);
-        } else {
-            Method method1 = target.getClass().getMethod(method.getName(), method.getParameterTypes());
-            parameterNames = discoverer.getParameterNames(method1);
-        }
-        if (parameterNames != null) {
-            for (int i = 0; i < parameterNames.length; i++) {
-                String parameterName = parameterNames[i];
-                if (parameterName != null) {
-                    if (parameterName.equals(name)) {
-                        param = args[i].toString();
-                        break;
-                    }
-                }
-            }
-        } else {
-            log.warn("EsInterceptor index is null");
-        }
-        return param;
-    }
+  
     
     
     //查询是否有自定义的方法。是否重写tostring和
@@ -227,4 +225,5 @@ public class EsPlusClientProxy implements InvocationHandler {
         return method.getParameterTypes()[0] == Object.class;
     }
     
+ 
 }

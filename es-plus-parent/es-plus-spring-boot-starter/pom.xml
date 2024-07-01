@@ -8,7 +8,7 @@
         <version>${rversion}</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-
+    <version>${rversion}</version>
     <artifactId>es-plus-spring-boot-starter</artifactId>
 
     <properties>
@@ -19,6 +19,12 @@
     <description>es-plus启动类</description>
 
     <dependencies>
+        <dependency>
+            <groupId>com.alibaba.cloud</groupId>
+            <artifactId>spring-cloud-starter-alibaba-nacos-config</artifactId>
+            <version>2.2.6.RELEASE</version>
+            <optional>true</optional>
+        </dependency>
         <dependency>
             <groupId>io.github.zhaohaoh</groupId>
             <artifactId>es-plus-core</artifactId>

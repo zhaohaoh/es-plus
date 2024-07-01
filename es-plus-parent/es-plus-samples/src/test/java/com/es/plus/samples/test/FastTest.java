@@ -47,12 +47,12 @@ public class FastTest {
     @org.junit.jupiter.api.Test
     public void fastSave() {
         List<FastTestDTO> fastTestDTOs=new ArrayList<>();
-        for (int i = 101; i < 5000; i++) {
+        for (int i = 20000; i < 20001; i++) {
             FastTestDTO fastTestDTO = new FastTestDTO();
-            fastTestDTO.setId((long)i);
+            fastTestDTO.setId((long) i);
             fastTestDTO.setText("1");
             fastTestDTO.setAge(1L);
-            fastTestDTO.setUsername("酷酷的"+i);
+            fastTestDTO.setUsername("新来的朋友们"+i);
             fastTestDTO.setUsernameTest("ggg");
             fastTestDTO.setCreateTime(new Date());
             fastTestDTOs.add(fastTestDTO);

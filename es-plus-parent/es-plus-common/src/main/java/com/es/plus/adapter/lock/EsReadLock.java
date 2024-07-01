@@ -48,7 +48,12 @@ public class EsReadLock extends ELock {
         }
 
     }
-
+    
+    @Override
+    public boolean tryLock0(String value) {
+        return true;
+    }
+    
     @Override
     public void unlock0() {
         Map<String, Object> params = new HashMap<>();

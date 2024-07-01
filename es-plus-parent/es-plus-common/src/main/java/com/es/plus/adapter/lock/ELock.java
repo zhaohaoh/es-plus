@@ -49,6 +49,18 @@ public abstract class ELock implements Lock {
             }
         }
     }
+    
+    
+    public Object getLockValue() {
+        SearchResponse response = esPlusLockClient.search(lockIndexName(), ID_FIELD,key);
+        SearchHits searchHits = response.getHits();
+        if (searchHits != null && searchHits.getHits() != null && searchHits.getHits().length > 0) {
+            for (SearchHit hit : response.getHits().getHits()) {
+               return hit.getSourceAsMap().get("value");
+            }
+        }
+        return null;
+    }
 
     @Override
     public void lockInterruptibly() throws InterruptedException {
@@ -79,7 +91,16 @@ public abstract class ELock implements Lock {
         LockLogUtils.info("tryLock lockIndex:{} key:{} success:{}", lockIndexName(), key, success);
         return success;
     }
-
+    
+    public boolean tryLock(String value) {
+        boolean success = tryLock0(value);
+        if (success) {
+            lockWatchDog(key);
+        }
+        LockLogUtils.info("tryLock lockIndex:{} key:{} success:{}", lockIndexName(), key, success);
+        return success;
+    }
+    
     @Override
     public void unlock() {
         removeWatchDog(key);
@@ -121,7 +142,9 @@ public abstract class ELock implements Lock {
     public abstract String lockIndexName();
 
     public abstract boolean tryLock0();
-
+    
+    public abstract boolean tryLock0(String value);
+    
     public abstract void unlock0();
 
     @Override

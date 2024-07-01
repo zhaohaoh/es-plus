@@ -19,4 +19,9 @@ public @interface InterceptorElement {
      * 拦截的方法名 不填默认所有
      */
     String[] methodName() default {};
+    
+    /**
+     * 拦截的请求方式枚举
+     */
+    MethodEnum[] methods() default {};
 }

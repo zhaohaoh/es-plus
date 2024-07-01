@@ -269,7 +269,7 @@ public class EsPlusIndexRestClient implements EsPlusIndexClient {
             esAliasResponse.setIndexs(indexs);
             return esAliasResponse;
         } catch (IOException e) {
-            throw new EsException("getIndex IOException", e);
+            throw new EsException("getIndex :", e);
         }
     }
     

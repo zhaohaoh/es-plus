@@ -97,10 +97,10 @@ public class EsReindexProcess {
                 getIndexResponse = esPlusClientFacade.getIndex(esIndexParam.getIndex());
                 String index = getIndexResponse.getIndices()[0];
                 String oldAlias = esPlusClientFacade.getAliasByIndex(index);
-                if (oldAlias==null){
+                if (oldAlias == null) {
                     esPlusClientFacade.createAlias(index, esIndexParam.getAlias());
-                }else{
-                    esPlusClientFacade.replaceAlias(index,oldAlias, esIndexParam.getAlias());
+                } else {
+                    esPlusClientFacade.replaceAlias(index, oldAlias, esIndexParam.getAlias());
                 }
             }
         }
@@ -146,7 +146,7 @@ public class EsReindexProcess {
                 return true;
             }
         }
-          return false;
+        return false;
     }
     
     //有事临时编写的代码
@@ -235,35 +235,28 @@ public class EsReindexProcess {
      */
     private static void tryLockReindex(EsPlusClientFacade esPlusClientFacade, Class<?> clazz, EsIndexParam esIndexParam,
             String currentIndex) {
+        //获取新索引
+        String reindexName = getReindexName(currentIndex);
         ELock eLock = esPlusClientFacade.getLock(esIndexParam.getIndex() + EsConstant.REINDEX_LOCK_SUFFIX);
-        boolean lock = eLock.tryLock();
-        try {
-            if (lock) {
-                //如果能找到当前索引才需要执行reindex，否则已经执行过
-                if (esPlusClientFacade.getIndex(currentIndex) != null) {
-                    doReindex(esPlusClientFacade, clazz, esIndexParam, currentIndex);
-                }
-            }
-        } finally {
-            //上面是否已经释放。如果上面的方法释放了这里不释放
-            if (lock) {
-                eLock.unlock();
+        boolean lock = eLock.tryLock(reindexName);
+        if (lock) {
+            //如果能找到当前索引才需要执行reindex，否则已经执行过
+            if (esPlusClientFacade.getIndex(currentIndex) != null) {
+                doReindex(esPlusClientFacade, clazz, esIndexParam, currentIndex, reindexName);
             }
         }
+        
     }
     
     private static void doReindex(EsPlusClientFacade esPlusClientFacade, Class<?> clazz, EsIndexParam esIndexParam,
-            String currentIndex) {
-        
-        //获取新索引
-        String reindexName = getReindexName(currentIndex);
+            String currentIndex, String reindexName) {
         
         //获取重建索引的字段的值
         Object reindexFieldValue = getReindexValue(clazz, esIndexParam, currentIndex);
         if (reindexFieldValue == null) {
             return;
         }
-    
+        
         //创建没有别名的新索引
         esPlusClientFacade.createIndexWithoutAlias(reindexName, clazz);
         
@@ -286,10 +279,10 @@ public class EsReindexProcess {
                 stopWatch.getTotalTimeSeconds());
         
         //切换索引名
-        esPlusClientFacade.replaceAlias(currentIndex, reindexName, esIndexParam.getAlias());
+        esPlusClientFacade.swapAlias(currentIndex, reindexName, esIndexParam.getAlias());
         
         //切换当前索引名
-        esIndexParam.setIndex(reindexName);
+//        esIndexParam.setIndex(reindexName);
         
         // 不删除老索引 备份历史数据 用户手动删除
         //        esPlusClientFacade.deleteIndex(currentIndex);
@@ -309,7 +302,7 @@ public class EsReindexProcess {
             log.error("reindex getReindexField error:", e);
         }
         
-        if (reindexFieldValue == null){
+        if (reindexFieldValue == null) {
             log.error("reindex getReindexField fieldValue cannot be null so not reindex currentIndex:{}", currentIndex);
             return null;
         }

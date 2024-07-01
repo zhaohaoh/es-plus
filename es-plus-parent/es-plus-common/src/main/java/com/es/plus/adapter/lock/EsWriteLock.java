@@ -44,7 +44,12 @@ public class EsWriteLock extends ELock {
             return true;
         }
     }
-
+    
+    @Override
+    public boolean tryLock0(String value) {
+        return true;
+    }
+    
     @Override
     public void unlock0() {
         Map<String, Object> params = new HashMap<>();

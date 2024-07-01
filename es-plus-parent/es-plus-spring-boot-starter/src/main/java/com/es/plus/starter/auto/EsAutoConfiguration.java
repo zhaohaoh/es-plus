@@ -4,10 +4,13 @@ import com.es.plus.adapter.EsPlusClientFacade;
 import com.es.plus.adapter.interceptor.EsInterceptor;
 import com.es.plus.adapter.lock.ELockClient;
 import com.es.plus.adapter.lock.EsLockFactory;
+import com.es.plus.autoconfigure.config.FileConfigMonitor;
+import com.es.plus.autoconfigure.config.NacosConfigMointor;
 import com.es.plus.core.ClientContext;
 import com.es.plus.lock.EsLockClient;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.springframework.boot.autoconfigure.AutoConfigureOrder;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
@@ -63,5 +66,16 @@ public class EsAutoConfiguration {
     public ELockClient esPlusLockClient(RestHighLevelClient restHighLevelClient) {
         return new EsLockClient(restHighLevelClient);
     }
- 
+    
+    @Bean
+    @ConditionalOnProperty(value = "es-plus.global-config.config-type",havingValue = "file",matchIfMissing = false)
+    public FileConfigMonitor configMonitor() {
+        return new FileConfigMonitor();
+    }
+    
+    @Bean
+    @ConditionalOnProperty(value = "es-plus.global-config.config-type",havingValue = "nacos",matchIfMissing = false)
+    public NacosConfigMointor nacosConfig() {
+        return new NacosConfigMointor();
+    }
 }

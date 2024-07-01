@@ -1,13 +1,21 @@
-package com.es.plus.starter.properties;
+package com.es.plus.autoconfigure.properties;
 
+import com.es.plus.adapter.constants.GlobalConfig;
 import lombok.Data;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.context.properties.NestedConfigurationProperty;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @Author: hzh
- * @Date: 2023/2/1 16:54
+ * @Date: 2023/2/1 16:52
  */
 @Data
-public class ClientProperties {
+@ConfigurationProperties("es-plus")
+public class EsProperties {
+
     /**
      * 集群地址，多个用,隔开
      */
@@ -32,7 +40,6 @@ public class ClientProperties {
     /**
      * 密码
      */
-
     private String password;
     /**
      * maxConnectTotal 最大连接数
@@ -47,6 +54,8 @@ public class ClientProperties {
      */
 
     private Integer connectTimeOut = 60;
+
+
     /**
      * 连接超时时间
      */
@@ -66,4 +75,23 @@ public class ClientProperties {
      * 最大路由连接数
      */
     private Integer maxConnectPerRoute;
+
+    /**
+     * 多数据源客户端配置  默认上面的是master
+     */
+    private Map<String, ClientProperties> clientProperties;
+    /**
+     * 全局配置
+     */
+    @NestedConfigurationProperty
+    private GlobalConfig globalConfig = new GlobalConfig();
+
+    /**
+     * 分词处理器
+     */
+    private Map<String, AnalysisProperties> analysis = new HashMap<>();
+    /**
+     * keyword处理器
+     */
+    private Map<String, AnalysisProperties> normalizers = new HashMap<>();
 }

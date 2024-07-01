@@ -14,6 +14,7 @@ import com.es.plus.es7.client.EsPlusRestClient;
 import com.es.plus.lock.EsLockClient;
 import org.elasticsearch.client.RestHighLevelClient;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -44,6 +45,9 @@ public class ClientContext {
     public static EsPlusClientFacade getClient(String name) {
         return CLIENT_MAP.get(name);
     }
+    public static Collection<EsPlusClientFacade> getClients() {
+        return CLIENT_MAP.values();
+    }
 
     /**
      * 构建es端外观
@@ -63,10 +67,8 @@ public class ClientContext {
 
         EsPlusClientProxy esPlusClientProxy = new EsPlusClientProxy(esPlusClient,esInterceptors);
 
-        EsPlusClient proxy = (EsPlusClient) esPlusClientProxy.getProxy();
-
-
-        EsPlusClientFacade esPlusClientFacade = new EsPlusClientFacade(proxy, esPlusIndexRestClient, esLockFactory);
+       
+        EsPlusClientFacade esPlusClientFacade = new EsPlusClientFacade(esPlusClientProxy, esPlusIndexRestClient, esLockFactory);
 
         return esPlusClientFacade;
     }
@@ -88,8 +90,7 @@ public class ClientContext {
         
         EsPlusClient proxy = (EsPlusClient) esPlusClientProxy.getProxy();
         
-        
-        EsPlusClientFacade esPlusClientFacade = new EsPlusClientFacade(proxy, esPlusIndexRestClient, esLockFactory);
+        EsPlusClientFacade esPlusClientFacade = new EsPlusClientFacade(esPlusClientProxy, esPlusIndexRestClient, esLockFactory);
         
         return esPlusClientFacade;
     }

@@ -30,6 +30,10 @@ public class GlobalConfig {
      * 自动开启索引迁移
      */
     private boolean autoReindex = false;
+    /**
+     * 自动开启索引迁移
+     */
+    private boolean reindexIntercptor = false;
 
     /**
      * 自动开启索引迁移是否异步
@@ -97,4 +101,16 @@ public class GlobalConfig {
      * 是否开启日志
      */
     private boolean enableSearchLog = true;
+    /**
+     * 配置刷新的文件名
+     */
+    private String refreshDataId;
+    /**
+     * 配置刷新的文件分组
+     */
+    private String refreshGroup;
+    /**
+     * 使用的配置类型 nacos，file
+     */
+    private String  configType;
 }
