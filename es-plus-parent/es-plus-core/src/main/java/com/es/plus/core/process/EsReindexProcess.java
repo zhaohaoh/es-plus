@@ -271,7 +271,7 @@ public class EsReindexProcess {
             log.error("es-plus reindex Fail");
         }
         
-        log.info("es-plus first reindex End currentIndex:{} newIndex:{} totalTimeSeconds:{}", currentIndex, reindexName,
+        log.info("es-plus firstReindex End currentIndex:{} newIndex:{} totalTimeSeconds:{}", currentIndex, reindexName,
                 stopWatch.getTotalTimeSeconds());
         
         boolean reindex2 = esPlusClientFacade.reindex(currentIndex, reindexName);
@@ -279,7 +279,7 @@ public class EsReindexProcess {
             log.error("es-plus reindex Fail");
         }
         
-        log.info("es-plus second reindex End currentIndex:{} newIndex:{} totalTimeSeconds:{}", currentIndex, reindexName,
+        log.info("es-plus secondReindex End currentIndex:{} newIndex:{} totalTimeSeconds:{}", currentIndex, reindexName,
                 stopWatch.getTotalTimeSeconds());
         
         //增量数据用户自己保障
