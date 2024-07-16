@@ -275,7 +275,7 @@ public class EsPlus6RestClient implements EsPlusClient {
             //找不到
             if (e.status() == RestStatus.NOT_FOUND) {
                 printErrorLog(" {} update data={}  error reason:  not found doc", index, JsonUtils.toJsonStr(esData));
-                throw new ElasticsearchException(e);
+//                throw new ElasticsearchException(e);
             }
             throw e;
         } catch (Exception e) {

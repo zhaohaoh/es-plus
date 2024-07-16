@@ -276,9 +276,8 @@ public class EsPlusRestClient implements EsPlusClient {
             //找不到
             if (e.status() == RestStatus.NOT_FOUND) {
                 printErrorLog(" {} update data={}  error reason:  not found doc", index, JsonUtils.toJsonStr(esData));
-                throw new ElasticsearchException(e);
+//                throw new ElasticsearchException(e);
             }
-            throw e;
         } catch (Exception e) {
             throw new EsException("update error", e);
         }
@@ -388,7 +387,7 @@ public class EsPlusRestClient implements EsPlusClient {
             request.setIndicesOptions(IndicesOptions.LENIENT_EXPAND_OPEN);
             Script painless = new Script(ScriptType.INLINE, PAINLESS, scipt, params);
             request.setScript(painless);
-            printInfoLog("updateByWrapper index:{} requst: script:{},params={}", index, scipt, params);
+            printInfoLog("updateByWrapper index:{} requst: script:{},params={}  query:{}", index, scipt, params,esQueryParamWrapper.getQueryBuilder().toString());
             BulkByScrollResponse bulkResponse = restHighLevelClient.updateByQuery(request, RequestOptions.DEFAULT);
             printInfoLog("updateByWrapper index:{} response:{} update count={}", index, bulkResponse,
                     bulkResponse.getUpdated());

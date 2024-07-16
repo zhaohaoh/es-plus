@@ -31,7 +31,7 @@ public class FastTestDTO {
     @EsField(type = EsFieldType.DATE, esFormat = "yyyy-MM-dd HH:mm:ss||strict_date_optional_time||epoch_millis",dateFormat = "yyyy-MM-dd HH:mm:ss",timeZone = "+0")
     private Date createTime;
 
-    @EsField(type = EsFieldType.TEXT ,name = "username_test")
+    @EsField(type = EsFieldType.KEYWORD ,name = "username_test")
     private String usernameTest;
     @EsField(type = EsFieldType.KEYWORD,name = "usernameTest1")
     private String username_test1;

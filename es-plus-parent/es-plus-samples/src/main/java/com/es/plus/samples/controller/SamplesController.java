@@ -37,4 +37,13 @@ public class SamplesController {
     public void delete() {
         fastTestService.delete();
     }
+    @PostMapping("update")
+    public void update() {
+        fastTestService.update();
+    }
+    
+    @PostMapping("updateBy")
+    public void updateBy() {
+        fastTestService.updateBy();
+    }
 }

@@ -7,6 +7,7 @@ import com.es.plus.core.statics.Es;
 import com.es.plus.core.wrapper.aggregation.EsAggWrapper;
 import com.es.plus.core.wrapper.chain.EsChainLambdaQueryWrapper;
 import com.es.plus.samples.dto.FastTestDTO;
+import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -48,5 +49,20 @@ public class FastTestService extends EsServiceImpl<FastTestDTO> {
     
     public void delete() {
         Es.chainUpdate(FastTestDTO.class).removeByIds(Collections.singletonList("800000006"));
+    }
+    
+    public void update() {
+        FastTestDTO fastTestDTO = new FastTestDTO();
+        fastTestDTO.setId(800000005L);
+        fastTestDTO.setText("我该成果了2222");
+        Es.chainUpdate(FastTestDTO.class).update(fastTestDTO);
+    }
+    
+    public void updateBy() {
+        
+        BulkByScrollResponse bulkByScrollResponse = Es.chainUpdate(FastTestDTO.class)
+                .terms("id", "800000005", "800000004").set("text", "新结果哦").updateByQuery();
+   
+        
     }
 }

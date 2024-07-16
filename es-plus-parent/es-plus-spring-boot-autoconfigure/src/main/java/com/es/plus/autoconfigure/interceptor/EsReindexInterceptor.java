@@ -17,6 +17,10 @@ import java.util.List;
 
 /**
  *  期望实现reindex的时候双写索引。
+ *   对于删除的数据，如果not_found reindex结束的时候es会进行补偿。
+ *   对于更新的数据，如果not_found es不会进行补偿。所以要处理删除的事件。思考下在处理
+ *   1.reindex两次
+ *   2.更新前一定要创建文档
  */
 @Slf4j
 @EsInterceptors(value = {
@@ -66,7 +70,7 @@ public class EsReindexInterceptor implements EsInterceptor {
                 log.info("执行reindex拦截器，修改index为：{}",newArr);
                 method.invoke(esPlusClient,newArr);
             } catch (IllegalAccessException | InvocationTargetException e) {
-                e.printStackTrace();
+                log.error("EsReindexInterceptor error : ",e.getCause());
             }
         }
     }
