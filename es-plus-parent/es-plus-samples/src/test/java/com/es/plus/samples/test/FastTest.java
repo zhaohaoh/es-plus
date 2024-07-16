@@ -200,4 +200,10 @@ public class FastTest {
 
         Es.chainIndex(local).index("distribution_chain_info").createIndex().putMapping(mappings);
     }
+    
+    @org.junit.jupiter.api.Test
+    public void sql() {
+        EsResponse<Map> esResponse = Es.chainQuery(Map.class).executeSQL("select * from  fast_test_alias");
+        System.out.println(esResponse);
+    }
 }

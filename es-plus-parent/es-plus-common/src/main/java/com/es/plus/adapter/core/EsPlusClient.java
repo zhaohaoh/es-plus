@@ -142,4 +142,17 @@ public interface EsPlusClient {
      * @return {@link String}
      */
     String executeDSL(String dsl, String index);
+    
+    /**
+     * 翻译sql
+     *
+     * @return {@link String}
+     */
+    String translateSql(String sql);
+    /**
+     * 执行sql
+     *
+     * @return {@link String}
+     */
+    <T> EsResponse<T> executeSQL(String sql,Class<T> tClass);
 }

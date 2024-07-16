@@ -48,6 +48,11 @@ import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.client.core.CountRequest;
 import org.elasticsearch.client.core.CountResponse;
 import org.elasticsearch.common.unit.TimeValue;
+import org.elasticsearch.common.xcontent.LoggingDeprecationHandler;
+import org.elasticsearch.common.xcontent.NamedXContentRegistry;
+import org.elasticsearch.common.xcontent.XContent;
+import org.elasticsearch.common.xcontent.XContentFactory;
+import org.elasticsearch.common.xcontent.XContentParser;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.MatchAllQueryBuilder;
@@ -89,6 +94,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static com.es.plus.constant.EsConstant.PAINLESS;
 
@@ -574,7 +581,7 @@ public class EsPlusRestClient implements EsPlusClient {
         if (searchResponse.status().getStatus() != 200) {
             throw new EsException("es-plus search error:" + searchResponse.status().getStatus());
         }
-        EsResponse<T> esResponse = getEsResponse(esParamWrapper.getTClass(), esQueryParamWrapper, searchResponse);
+        EsResponse<T> esResponse = getEsResponse(esParamWrapper.getTClass(), searchResponse);
         return esResponse;
     }
     
@@ -612,7 +619,7 @@ public class EsPlusRestClient implements EsPlusClient {
                 scrollId = searchResponse.getScrollId();
                 searchHits = searchResponse.getHits().getHits();
             }
-            EsResponse<T> esResponse = getEsResponse(esParamWrapper.getTClass(), esQueryParamWrapper, searchResponse);
+            EsResponse<T> esResponse = getEsResponse(esParamWrapper.getTClass(), searchResponse);
             if (searchHits == null || searchHits.length <= 0) {
                 ClearScrollRequest clearScrollRequest = new ClearScrollRequest();
                 clearScrollRequest.addScrollId(scrollId);
@@ -690,7 +697,7 @@ public class EsPlusRestClient implements EsPlusClient {
     
     @Override
     public String executeDSL(String dsl, String index) {
-        Request request = new Request("get", index + "_search");
+        Request request = new Request("post", "/"+index +"/"+ "_search");
         request.setJsonEntity(dsl);
         Response response = null;
         try {
@@ -702,8 +709,52 @@ public class EsPlusRestClient implements EsPlusClient {
         return null;
     }
     
+    @Override
+    public String translateSql(String sql) {
+        Map<String, Object> jsonRequest = new HashMap<>();
+        jsonRequest.put("query",sql);
+        // "_xpack/sql/translate"
+        Request request = new Request("post", "/_sql/translate");
+        request.setJsonEntity(JsonUtils.toJsonStr(jsonRequest));
+        Response response = null;
+        try {
+            response = restHighLevelClient.getLowLevelClient().performRequest(request);
+            String dsl = EntityUtils.toString(response.getEntity());
+            return dsl;
+        } catch (IOException e) {
+            log.error("executeSql", e);
+        }
+        return null;
+    }
     
-    private <T> EsResponse<T> getEsResponse(Class<T> tClass, EsQueryParamWrapper esQueryParamWrapper,
+    @Override
+    public <T> EsResponse<T> executeSQL(String sql,Class<T> tClass) {
+        String dsl = translateSql(sql);
+        // 匹配 SQL 语句中的表名
+        Pattern pattern = Pattern.compile("(?i)FROM\\s+([\\w.]+)");
+        Matcher matcher = pattern.matcher(sql);
+        String tableName = null;
+        // 提取表名
+        if (matcher.find()) {
+            tableName = matcher.group(1);
+        }
+        if (StringUtils.isBlank(tableName)){
+            throw new EsException("sql语句中未找到表名");
+        }
+        String rs = executeDSL(dsl, tableName);
+        XContent xContent = XContentFactory.xContent(XContentType.JSON);
+        XContentParser parser = null;
+        try {
+            parser = xContent.createParser(NamedXContentRegistry.EMPTY, LoggingDeprecationHandler.INSTANCE, rs);
+            SearchResponse searchResponse = SearchResponse.fromXContent(parser);
+            return getEsResponse(tClass,searchResponse);
+        } catch (IOException e) {
+            throw new EsException("result parse error",e);
+        }
+    }
+    
+    
+    private <T> EsResponse<T> getEsResponse(Class<T> tClass,
             SearchResponse searchResponse) {
         //获取结果集
         SearchHits hits = searchResponse.getHits();
@@ -732,7 +783,7 @@ public class EsPlusRestClient implements EsPlusClient {
         }
         
         //profile是性能分析类似mysql的explain
-        if (esQueryParamWrapper.isProfile()) {
+        if (searchResponse.getProfileResults()!=null) {
             Map<String, ProfileShardResult> profileResults = searchResponse.getProfileResults();
             esResponse.setProfileResults(profileResults);
         }

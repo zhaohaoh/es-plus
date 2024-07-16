@@ -68,4 +68,17 @@ interface ChainQueryWrapper<T> {
      * @return {@link String}
      */
     String executeDSL(String dsl);
+    /**
+     *  翻译sql
+     *
+     * @return {@link String}
+     */
+    String translateSQL(String sql);
+    
+    /**
+     * 执行sql
+     *
+     * @return {@link String}
+     */
+    EsResponse<T> executeSQL(String sql);
 }

@@ -9,7 +9,6 @@ import com.es.plus.adapter.properties.GlobalParamHolder;
 import com.es.plus.core.ClientContext;
 import com.es.plus.core.wrapper.core.EsQueryWrapper;
 import org.apache.commons.lang3.StringUtils;
-import org.elasticsearch.client.Request;
 
 import java.time.Duration;
 
@@ -144,8 +143,15 @@ public class EsChainQueryWrapper<T> extends AbstractEsChainWrapper<T, String, Es
      */
     @Override
     public String executeDSL(String dsl) {
-        Request request = new Request("get", index + "_search");
-        request.setJsonEntity(dsl);
         return esPlusClientFacade.executeDSL(dsl, index);
+    }
+    @Override
+    public String translateSQL(String sql) {
+        return esPlusClientFacade.translateSQL(sql);
+    }
+    
+    @Override
+    public EsResponse<T> executeSQL(String sql) {
+        return esPlusClientFacade.executeSQL(sql,tClass);
     }
 }

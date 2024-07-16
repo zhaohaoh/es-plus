@@ -10,7 +10,6 @@ import com.es.plus.adapter.tools.SFunction;
 import com.es.plus.core.ClientContext;
 import com.es.plus.core.wrapper.core.EsLambdaQueryWrapper;
 import org.apache.commons.lang3.StringUtils;
-import org.elasticsearch.client.Request;
 
 import java.time.Duration;
 
@@ -144,9 +143,17 @@ public class EsChainLambdaQueryWrapper<T> extends AbstractEsChainWrapper<T, SFun
      */
     @Override
     public String executeDSL(String dsl) {
-        Request request = new Request("get", index + "_search");
-        request.setJsonEntity(dsl);
         return esPlusClientFacade.executeDSL(dsl, index);
     }
-
+    
+    @Override
+    public String translateSQL(String sql) {
+        return esPlusClientFacade.translateSQL(sql);
+    }
+    
+    @Override
+    public EsResponse<T> executeSQL(String sql) {
+        return esPlusClientFacade.executeSQL(sql,tClass);
+    }
+    
 }

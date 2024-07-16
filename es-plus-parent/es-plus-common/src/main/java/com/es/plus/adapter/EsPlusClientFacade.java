@@ -541,7 +541,12 @@ public class EsPlusClientFacade   {
     public String executeDSL(String dsl, String index) {
         return esPlusClient.executeDSL(dsl,index);
     }
-    
+    public String translateSQL(String sql) {
+        return esPlusClient.translateSql(sql);
+    }
+    public <T> EsResponse<T> executeSQL(String sql,Class<T> tClass) {
+        return esPlusClient.executeSQL(sql,tClass);
+    }
     
     public String getAliasByIndex(String index) {
      return    esPlusIndexClient.getAliasByIndex(index);
@@ -551,4 +556,6 @@ public class EsPlusClientFacade   {
         esPlusClientProxy.removeInterceptor(clazz);
         System.out.println(esPlusClientProxy.getEsInterceptors());
     }
+    
+ 
 }
