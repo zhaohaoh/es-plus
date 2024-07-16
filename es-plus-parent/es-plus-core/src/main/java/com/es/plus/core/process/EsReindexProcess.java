@@ -243,6 +243,11 @@ public class EsReindexProcess {
         if (lock) {
             //如果能找到当前索引才需要执行reindex，否则已经执行过
             if (esPlusClientFacade.getIndex(currentIndex) != null) {
+                //最终状态：当重建索引完成后，
+                // 新索引中的数据将反映你执行的所有操作（包括在重建过程中可能发生的任何删除操作，
+                // 尽管这些删除操作实际上并没有改变任何状态，因为它们针对的是不存在的文档）。
+                // 因此，如果旧索引中存在某个 ID 的文档，但在重建过程中你尝试删除了该 ID（尽管它在新索引中不存在），
+                // 那么当重建完成后，这个 ID 的文档将不会出现在新索引中，因为它从未被复制到新索引中。
                 doReindex(esPlusClientFacade, clazz, esIndexParam, currentIndex, reindexName);
             }
         }

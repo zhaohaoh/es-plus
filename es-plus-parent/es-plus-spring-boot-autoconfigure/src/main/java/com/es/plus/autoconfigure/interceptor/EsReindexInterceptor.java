@@ -16,7 +16,7 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- *  期望实现reindex的时候双写索引。具体怎么做还没想好，因为拦截器只能提前注入。
+ *  期望实现reindex的时候双写索引。
  */
 @Slf4j
 @EsInterceptors(value = {
@@ -41,9 +41,10 @@ public class EsReindexInterceptor implements EsInterceptor {
     public void after(String index, String type, Method method, Object[] args, Object result,
             EsPlusClient esPlusClient) {
         
-        if (reindexList.contains(index)){
+        if (!reindexList.contains("all") && !reindexList.contains(index)){
             return;
         }
+       
         
         ELock eLock = esLockFactory.getLock(index + EsConstant.REINDEX_LOCK_SUFFIX);
         

@@ -3,10 +3,16 @@ package com.es.plus.samples.service;
 import com.es.plus.adapter.params.EsAggResponse;
 import com.es.plus.adapter.params.EsResponse;
 import com.es.plus.core.service.EsServiceImpl;
+import com.es.plus.core.statics.Es;
 import com.es.plus.core.wrapper.aggregation.EsAggWrapper;
 import com.es.plus.core.wrapper.chain.EsChainLambdaQueryWrapper;
 import com.es.plus.samples.dto.FastTestDTO;
 import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
 
 @Service
 public class FastTestService extends EsServiceImpl<FastTestDTO> {
@@ -15,6 +21,22 @@ public class FastTestService extends EsServiceImpl<FastTestDTO> {
         EsResponse<FastTestDTO> test = esChainQueryWrapper().match(FastTestDTO::getText, "苹果").search();
         System.out.println(test);
     }
+    
+    public void save() {
+        //
+        for (int i = 800000010; i <800000020; i++) {
+            List<FastTestDTO> fastTestDTOs=new ArrayList<>();
+            FastTestDTO fastTestDTO = new FastTestDTO();
+            fastTestDTO.setId((long) i);
+            fastTestDTO.setText("特殊的8");
+            fastTestDTO.setAge(18L);
+            fastTestDTO.setUsername("特殊的8");
+            fastTestDTO.setUsernameTest("特殊的8");
+            fastTestDTO.setCreateTime(new Date());
+            fastTestDTOs.add(fastTestDTO);
+            Es.chainUpdate(FastTestDTO.class).saveBatch(fastTestDTOs);
+        }
+    }
 
     public void agg() {
         EsChainLambdaQueryWrapper<FastTestDTO> fastTestDTOEsChainLambdaQueryWrapper = esChainQueryWrapper();
@@ -22,5 +44,9 @@ public class FastTestService extends EsServiceImpl<FastTestDTO> {
         EsAggWrapper<FastTestDTO> gsdgdsf = fastTestDTOEsAggWrapper.terms("gsdgdsf");
         EsAggResponse<FastTestDTO> aggregations = fastTestDTOEsChainLambdaQueryWrapper.aggregations();
         System.out.println(gsdgdsf);
+    }
+    
+    public void delete() {
+        Es.chainUpdate(FastTestDTO.class).removeByIds(Collections.singletonList("800000006"));
     }
 }

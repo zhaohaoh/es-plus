@@ -27,5 +27,14 @@ public class SamplesController {
     public void fastTestService() {
         fastTestService.test();
     }
-
+    
+    @PostMapping("save")
+    public void save() {
+        fastTestService.save();
+    }
+    
+    @PostMapping("delete")
+    public void delete() {
+        fastTestService.delete();
+    }
 }

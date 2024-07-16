@@ -523,7 +523,7 @@ public class EsPlusRestClient implements EsPlusClient {
             for (BulkItemResponse item : items) {
                 if (item.isFailed()) {
                     printErrorLog("deleteBatch index={} id={} FailureMessage=:{}", index, item.getId(),
-                            item.getFailureMessage());
+                          item.getFailureMessage());
                 }
             }
         } catch (IOException e) {

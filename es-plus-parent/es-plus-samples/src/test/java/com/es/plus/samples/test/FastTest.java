@@ -47,18 +47,20 @@ public class FastTest {
     @org.junit.jupiter.api.Test
     public void fastSave() {
         List<FastTestDTO> fastTestDTOs=new ArrayList<>();
-        for (int i = 20000; i < 20001; i++) {
+        for (int i = 300000; i < 800000; i++) {
             FastTestDTO fastTestDTO = new FastTestDTO();
             fastTestDTO.setId((long) i);
-            fastTestDTO.setText("1");
+            fastTestDTO.setText("1刚发的古古怪怪滚滚滚古古怪怪滚滚滚古古怪怪滚滚滚古古怪怪滚滚滚的反反复复方法反反复复方法反反复复方法的发发发发发发反反复复方法反反复复去呜呜呜呜呜呜呜呜呜呜呜呜呜呜呜呜呜呜呜呜呜呜呜呜呜呜呜呜呜呜呜呜呜呜我问问发生的发生的发");
             fastTestDTO.setAge(1L);
             fastTestDTO.setUsername("新来的朋友们"+i);
-            fastTestDTO.setUsernameTest("ggg");
+            fastTestDTO.setUsernameTest("干啥的复古风古大爱上大叔大叔三大四典风格电风扇广东分公司法刀发生的发生的发水电费都是发生的发生的刮大风反反复复方法反反复复发个电饭锅梵蒂冈地方古典风格电饭锅电饭锅电饭锅");
             fastTestDTO.setCreateTime(new Date());
             fastTestDTOs.add(fastTestDTO);
+            if (fastTestDTOs.size()>=3000){
+                Es.chainUpdate(FastTestDTO.class).saveBatch(fastTestDTOs);
+                fastTestDTOs.clear();
+            }
         }
-
-        Es.chainUpdate(FastTestDTO.class).saveBatch(fastTestDTOs);
     }
     @org.junit.jupiter.api.Test
     public void forceMerge() {

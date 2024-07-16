@@ -31,9 +31,8 @@ public class GlobalConfig {
      */
     private boolean autoReindex = false;
     /**
-     * 自动开启索引迁移的范围   1.all=所有 适用测试环境。
-     * 2输入index的名称。指定索引名。
-     * 3.不设置，空字符串不开启自动reindex索引。
+     * 自动开启索引迁移的范围   1.all=所有 适用测试环境。2输入index的名称。指定索引名。3不设置，空字符串不开启自动reindex索引。
+     *
      */
     private String reindexScope = "";
 
