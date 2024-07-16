@@ -253,7 +253,7 @@ public class EsReindexProcess {
         }
         
     }
-    
+    //需要执行两次，因为第一次执行的时候可能存在没有的id。那么增量的更新数据就更新不了
     private static void doReindex(EsPlusClientFacade esPlusClientFacade, Class<?> clazz, EsIndexParam esIndexParam,
             String currentIndex, String reindexName) {
          
@@ -271,12 +271,20 @@ public class EsReindexProcess {
             log.error("es-plus reindex Fail");
         }
         
-        //增量数据用户自己保障
-        
-        stopWatch.stop();
-        
         log.info("es-plus first reindex End currentIndex:{} newIndex:{} totalTimeSeconds:{}", currentIndex, reindexName,
                 stopWatch.getTotalTimeSeconds());
+        
+        boolean reindex2 = esPlusClientFacade.reindex(currentIndex, reindexName);
+        if (!reindex2) {
+            log.error("es-plus reindex Fail");
+        }
+        
+        log.info("es-plus second reindex End currentIndex:{} newIndex:{} totalTimeSeconds:{}", currentIndex, reindexName,
+                stopWatch.getTotalTimeSeconds());
+        
+        //增量数据用户自己保障
+        stopWatch.stop();
+        
         
         //切换索引名
         esPlusClientFacade.swapAlias(currentIndex, reindexName, esIndexParam.getAlias());
