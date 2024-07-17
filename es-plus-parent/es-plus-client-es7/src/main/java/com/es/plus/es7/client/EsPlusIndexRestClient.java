@@ -100,7 +100,7 @@ public class EsPlusIndexRestClient implements EsPlusIndexClient {
         try {
             indexResponse = restHighLevelClient.indices().create(indexRequest, RequestOptions.DEFAULT);
         } catch (IOException e) {
-            printErrorLog("createIndex:{}",e);
+            printErrorLog("createIndex:{}", e);
             return false;
         }
         return indexResponse.isAcknowledged();
@@ -128,7 +128,7 @@ public class EsPlusIndexRestClient implements EsPlusIndexClient {
             restHighLevelClient.indices().putMapping(putMappingRequest, RequestOptions.DEFAULT);
             return true;
         } catch (IOException e) {
-            printErrorLog("putMapping:{}",e);
+            printErrorLog("putMapping:{}", e);
             return false;
         }
     }
@@ -329,8 +329,7 @@ public class EsPlusIndexRestClient implements EsPlusIndexClient {
                     .updateAliases(indicesAliasesRequest, RequestOptions.DEFAULT);
             return acknowledgedResponse.isAcknowledged();
         } catch (IOException e) {
-            throw new EsException("replaceAlias exception index:" + index + ", oldAlias:  " + oldAlias,
-                    e);
+            throw new EsException("replaceAlias exception index:" + index + ", oldAlias:  " + oldAlias, e);
         }
     }
     
@@ -346,10 +345,16 @@ public class EsPlusIndexRestClient implements EsPlusIndexClient {
             e.printStackTrace();
         }
         
-        if (getAliasesResponse!=null && getAliasesResponse.getAliases() != null && !CollectionUtils
-                .isEmpty(getAliasesResponse.getAliases().values())) {
+        if (getAliasesResponse != null && getAliasesResponse.getAliases() != null && !CollectionUtils.isEmpty(
+                getAliasesResponse.getAliases().values())) {
             Collection<Set<AliasMetadata>> values = getAliasesResponse.getAliases().values();
-            AliasMetadata aliasMetaData = values.stream().findFirst().get().stream().findFirst().get();
+            if (CollectionUtils.isEmpty(values)) {
+                return null;
+            }
+            AliasMetadata aliasMetaData = values.stream().findFirst().get().stream().findFirst().orElse(null);
+            if (aliasMetaData == null) {
+                return null;
+            }
             return aliasMetaData.getAlias();
         }
         return null;
@@ -372,17 +377,18 @@ public class EsPlusIndexRestClient implements EsPlusIndexClient {
         reindexRequest.setDestVersionType(VersionType.valueOf(DEFAULT_REINDEX_VERSION_TYPE));
         reindexRequest.setRefresh(true);
         reindexRequest.getSearchRequest().source().fetchSource(null, EsConstant.REINDEX_TIME_FILED);
-//        if (currentTime != null) {
-//            reindexRequest.setSourceQuery(QueryBuilders.rangeQuery(EsConstant.REINDEX_TIME_FILED).gte(currentTime));
-//        }
+        //        if (currentTime != null) {
+        //            reindexRequest.setSourceQuery(QueryBuilders.rangeQuery(EsConstant.REINDEX_TIME_FILED).gte(currentTime));
+        //        }
         reindexRequest.setSourceQuery(queryBuilder);
         reindexRequest.setSourceBatchSize(GlobalConfigCache.GLOBAL_CONFIG.getBatchSize());
         reindexRequest.setTimeout(TimeValue.timeValueNanos(Long.MAX_VALUE));
         try {
-            if (queryBuilder!=null){
-                log.info("reindex oldIndexName:{},targetName:{} queryBuilder:{}",oldIndexName,reindexName, queryBuilder);
+            if (queryBuilder != null) {
+                log.info("reindex oldIndexName:{},targetName:{} queryBuilder:{}", oldIndexName, reindexName,
+                        queryBuilder);
             }
-          
+            
             BulkByScrollResponse response = restHighLevelClient.reindex(reindexRequest, RequestOptions.DEFAULT);
             List<BulkItemResponse.Failure> bulkFailures = response.getBulkFailures();
             if (CollectionUtils.isEmpty(bulkFailures)) {
@@ -629,7 +635,7 @@ public class EsPlusIndexRestClient implements EsPlusIndexClient {
      *
      * @param format 格式
      */
-    private void printErrorLog(String format,Exception e) {
+    private void printErrorLog(String format, Exception e) {
         log.error("es-plus " + format, e);
     }
     
