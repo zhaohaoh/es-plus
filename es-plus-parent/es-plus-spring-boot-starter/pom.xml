@@ -54,7 +54,6 @@
         <dependency>
             <groupId>io.github.zhaohaoh</groupId>
             <artifactId>es-plus-spring-boot-autoconfigure</artifactId>
-            <version>0.3.4</version>
             <scope>compile</scope>
         </dependency>
     </dependencies>
