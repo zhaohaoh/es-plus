@@ -63,13 +63,13 @@
             <url>https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/</url>
         </repository>
     </distributionManagement>
-
+ 
     <build>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.7.0</version>
+                <version>3.8.1</version>
                 <configuration>
                     <encoding>utf-8</encoding>
                     <source>8</source>
@@ -115,6 +115,7 @@
                     </execution>
                 </executions>
             </plugin>
+            
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
@@ -136,6 +137,7 @@
                         </goals>
                     </execution>
                 </executions>
+            
             </plugin>
             <!--全局管理manven版本号插件-->
             <plugin>
@@ -165,6 +167,7 @@
             </plugin>
         </plugins>
     </build>
+    
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>

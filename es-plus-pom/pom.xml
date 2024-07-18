@@ -3,7 +3,11 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-
+    <parent>
+        <artifactId>es-plus</artifactId>
+        <groupId>io.github.zhaohaoh</groupId>
+        <version>${rversion}</version>
+    </parent>
     <groupId>io.github.zhaohaoh</groupId>
     <artifactId>es-plus-pom</artifactId>
     <version>${rversion}</version>
@@ -17,16 +21,16 @@
         <elasticsearch.version>7.8.0</elasticsearch.version>
         <reflections.version>0.10.2</reflections.version>
     </properties>
-    <licenses>
-        <license>
-            <name>The Apache Software License, Version 2.0</name>
-            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-            <distribution>repo</distribution>
-        </license>
-    </licenses>
+<!--    <licenses>-->
+<!--        <license>-->
+<!--            <name>The Apache Software License, Version 2.0</name>-->
+<!--            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>-->
+<!--            <distribution>repo</distribution>-->
+<!--        </license>-->
+<!--    </licenses>-->
     <name>es-plus-pom</name>
     <description>es-plus包管理</description>
-    <url>https://github.com/zhaohaoh/es-plus</url>
+<!--    <url>https://github.com/zhaohaoh/es-plus</url>-->
 <!--    <scm>-->
 <!--        <connection>scm:git@github.com:zhaohaoh/es-plus.git</connection>-->
 <!--        <developerConnection>scm:git@github.com:zhaohaoh/es-plus.git</developerConnection>-->
