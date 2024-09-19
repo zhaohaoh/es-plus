@@ -56,7 +56,10 @@ public abstract class AbstractEsService<T> implements SmartInitializingSingleton
             Class<?> indexClass = clazz;
             //添加索引信息
             esIndexParam = GlobalParamHolder.getAndInitEsIndexParam(indexClass);
-            
+            if (esIndexParam==null){
+                logger.error("找不到索引:{}",indexClass);
+                return;
+            }
             this.esPlusClientFacade = ClientContext.getClient(esIndexParam.getClientInstance());
     
     }

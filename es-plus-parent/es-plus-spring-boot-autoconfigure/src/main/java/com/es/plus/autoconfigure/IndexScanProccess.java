@@ -104,17 +104,17 @@ public class IndexScanProccess implements InitializingBean, ApplicationListener<
             // 如果是子文档不执行创建索引的相关操作
             Class<?> parentClass = annotation.parentClass();
             if (parentClass != DefaultClass.class) {
-                return;
+                continue;
             }
             
             //启动时不初始化
             if (!GlobalConfigCache.GLOBAL_CONFIG.isStartInit()) {
-                return;
+                continue;
             }
             
             // 启动时不初始化
             if (!annotation.startInit()) {
-                return;
+                continue;
             }
     
           

@@ -154,7 +154,11 @@ public class ClassUtils {
                 String parameterName = parameterNames[i];
                 if (parameterName != null) {
                     if (parameterName.equals(name)) {
-                        param = args[i].toString();
+                        Object arg = args[i];
+                        if (arg==null){
+                           throw new EsException("index param is require");
+                        }
+                        param = arg.toString();
                         break;
                     }
                 }

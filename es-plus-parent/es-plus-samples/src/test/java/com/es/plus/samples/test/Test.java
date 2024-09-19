@@ -1,8 +1,11 @@
 package com.es.plus.samples.test;
 
+import com.es.plus.adapter.EsPlusClientFacade;
 import com.es.plus.adapter.params.EsResponse;
 import com.es.plus.constant.EsSettingsConstants;
+import com.es.plus.core.ClientContext;
 import com.es.plus.core.statics.Es;
+import com.es.plus.core.wrapper.chain.EsChainQueryWrapper;
 import com.es.plus.samples.SamplesApplication;
 import com.es.plus.samples.dto.FastTestDTO;
 import com.es.plus.samples.dto.SamplesEsDTO;
@@ -171,5 +174,16 @@ public class Test {
     public void delete() {
         samplesEsService.esChainUpdateWrapper().remove();
     }
+    
+    @org.junit.jupiter.api.Test
+    public void tttt() {
+        EsPlusClientFacade dz = ClientContext.getClient("dz");
+        EsChainQueryWrapper<Map> mapEsChainQueryWrapper = Es.chainQuery(dz, Map.class)
+                .nestedQuery("sourceGoodsInfo", a -> a.term("relatedStatus", 1))
+                .index("yph_product_dy");
+        EsResponse<Map> search = mapEsChainQueryWrapper.search();
+        System.out.println(search);
+    }
+ 
 
 }
