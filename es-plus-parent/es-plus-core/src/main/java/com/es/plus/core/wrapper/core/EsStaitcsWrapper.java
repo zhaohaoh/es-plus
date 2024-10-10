@@ -9,7 +9,7 @@ public interface EsStaitcsWrapper<Children> {
      * @param index 索引
      * @return {@link Children}
      */
-    Children index(String index);
+    Children index(String... index);
 
     /**
      * 类型

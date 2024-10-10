@@ -22,6 +22,8 @@ public class SearchHitsUtil {
         List<T> result = new ArrayList<>();
         if (hitArray != null && hitArray.length > 0) {
             Arrays.stream(hitArray).filter(hit -> StringUtils.isNotBlank(hit.getSourceAsString())).map(hit -> {
+            
+//                sourceAsMap.put("index", hit.getIndex());
                 T bean = JsonUtils.toBean(hit.getSourceAsString(), tClass);
                 if (tClass.equals(Map.class)) {
                     return bean;

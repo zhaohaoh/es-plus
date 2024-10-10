@@ -42,7 +42,7 @@ public abstract class AbstractEsChainWrapper<T, R, Children extends AbstractEsCh
     protected Children children = (Children) this;
     protected Class<T> tClass;
     //链式静态编程用来指定index
-    protected String index;
+    protected String[] indexs;
     protected String type = GlobalConfigCache.GLOBAL_CONFIG.getType();
 
     public QUERY getWrapper() {
@@ -71,9 +71,12 @@ public abstract class AbstractEsChainWrapper<T, R, Children extends AbstractEsCh
 
 
     @Override
-    public Children index(String index) {
+    public Children index(String... indexs) {
         //手动传入的索引名需要加上后缀
-        this.index = index + GlobalConfigCache.GLOBAL_CONFIG.getGlobalSuffix();
+        for (int i = 0; i < indexs.length; i++) {
+            indexs[i]=indexs[i]+GlobalConfigCache.GLOBAL_CONFIG.getGlobalSuffix();
+        }
+        this.indexs = indexs;
         return this.children;
     }
 
@@ -85,10 +88,10 @@ public abstract class AbstractEsChainWrapper<T, R, Children extends AbstractEsCh
 
     @Override
     public Children _id(String _id) {
-        if (index == null) {
+        if (indexs == null) {
             throw new EsException("index is null");
         }
-        GlobalParamHolder.set_id(index,_id);
+        GlobalParamHolder.set_id(indexs,_id);
         return this.children;
     }
 

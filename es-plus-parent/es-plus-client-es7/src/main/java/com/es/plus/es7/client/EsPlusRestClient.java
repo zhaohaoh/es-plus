@@ -131,43 +131,46 @@ public class EsPlusRestClient implements EsPlusClient {
      * @return {@link List}<{@link BulkItemResponse}>
      */
     @Override
-    public List<BulkItemResponse> saveOrUpdateBatch(String index, String type, Collection<?> esDataList) {
+    public List<BulkItemResponse> saveOrUpdateBatch(String type, Collection<?> esDataList, String... indexs) {
         List<BulkItemResponse> responses = new ArrayList<>();
         if (CollectionUtils.isEmpty(esDataList)) {
             return responses;
         }
-        boolean childIndex = isChildIndex(esDataList.stream().findFirst().get());
-        
-        boolean lock = false;
-        try {
-            BulkRequest bulkRequest = new BulkRequest();
-            for (Object esData : esDataList) {
-                UpdateRequest updateRequest = new UpdateRequest(index, type, GlobalParamHolder.getDocId(index, esData))
-                        .doc(JsonUtils.toJsonStr(esData), XContentType.JSON);
-                updateRequest.retryOnConflict(GlobalConfigCache.GLOBAL_CONFIG.getMaxRetries());
-                updateRequest.setRefreshPolicy(GlobalConfigCache.GLOBAL_CONFIG.getRefreshPolicy());
-                // 如果没有文档则新增
-                updateRequest.upsert(JsonUtils.toJsonStr(esData), XContentType.JSON);
-                if (childIndex) {
-                    updateRequest.routing(FieldUtils.getStrFieldValue(esData, "joinField", "parent"));
+        for (String index : indexs) {
+            boolean childIndex = isChildIndex(esDataList.stream().findFirst().get());
+            
+            boolean lock = false;
+            try {
+                BulkRequest bulkRequest = new BulkRequest();
+                for (Object esData : esDataList) {
+                    UpdateRequest updateRequest = new UpdateRequest(index, type,
+                            GlobalParamHolder.getDocId(index, esData)).doc(JsonUtils.toJsonStr(esData),
+                            XContentType.JSON);
+                    updateRequest.retryOnConflict(GlobalConfigCache.GLOBAL_CONFIG.getMaxRetries());
+                    updateRequest.setRefreshPolicy(GlobalConfigCache.GLOBAL_CONFIG.getRefreshPolicy());
+                    // 如果没有文档则新增
+                    updateRequest.upsert(JsonUtils.toJsonStr(esData), XContentType.JSON);
+                    if (childIndex) {
+                        updateRequest.routing(FieldUtils.getStrFieldValue(esData, "joinField", "parent"));
+                    }
+                    bulkRequest.add(updateRequest);
                 }
-                bulkRequest.add(updateRequest);
-            }
-            bulkRequest.setRefreshPolicy(GlobalConfigCache.GLOBAL_CONFIG.getRefreshPolicy());
-            BulkResponse res = null;
-            printInfoLog(" {} saveOrUpdateBatch data:{} hasFailures={}", index, JsonUtils.toJsonStr(esDataList));
-            res = restHighLevelClient.bulk(bulkRequest, RequestOptions.DEFAULT);
-            for (BulkItemResponse bulkItemResponse : res.getItems()) {
-                if (bulkItemResponse.isFailed()) {
-                    responses.add(bulkItemResponse);
-                    printErrorLog(
-                            " {} saveOrUpdateBatch error" + bulkItemResponse.getId() + " message:" + bulkItemResponse
-                                    .getFailureMessage(), index);
+                bulkRequest.setRefreshPolicy(GlobalConfigCache.GLOBAL_CONFIG.getRefreshPolicy());
+                BulkResponse res = null;
+                printInfoLog(" {} saveOrUpdateBatch data:{} hasFailures={}", index, JsonUtils.toJsonStr(esDataList));
+                res = restHighLevelClient.bulk(bulkRequest, RequestOptions.DEFAULT);
+                for (BulkItemResponse bulkItemResponse : res.getItems()) {
+                    if (bulkItemResponse.isFailed()) {
+                        responses.add(bulkItemResponse);
+                        printErrorLog(" {} saveOrUpdateBatch error" + bulkItemResponse.getId() + " message:"
+                                + bulkItemResponse.getFailureMessage(), index);
+                    }
                 }
+            } catch (IOException e) {
+                throw new EsException("saveOrUpdateBatch IOException", e);
             }
-        } catch (IOException e) {
-            throw new EsException("saveOrUpdateBatch IOException", e);
         }
+        
         return responses;
     }
     
@@ -186,42 +189,44 @@ public class EsPlusRestClient implements EsPlusClient {
      * 保存批量
      */
     @Override
-    public List<BulkItemResponse> saveBatch(String index, String type, Collection<?> esDataList) {
+    public List<BulkItemResponse> saveBatch(String type, Collection<?> esDataList, String... indexs) {
         List<BulkItemResponse> failBulkItemResponses = new ArrayList<>();
         if (CollectionUtils.isEmpty(esDataList)) {
             return failBulkItemResponses;
         }
-        
-        boolean lock = false;
-        
-        boolean childIndex = isChildIndex(esDataList.stream().findFirst().get());
-        try {
-            BulkRequest bulkRequest = new BulkRequest();
+        for (String index : indexs) {
+            boolean lock = false;
             
-            for (Object esData : esDataList) {
-                IndexRequest indexRequest = new IndexRequest(index);
-                String source = JsonUtils.toJsonStr(esData);
-                indexRequest.id(GlobalParamHolder.getDocId(index, esData)).source(source, XContentType.JSON);
-                if (childIndex) {
-                    indexRequest.routing(FieldUtils.getStrFieldValue(esData, "joinField", "parent"));
+            boolean childIndex = isChildIndex(esDataList.stream().findFirst().get());
+            try {
+                BulkRequest bulkRequest = new BulkRequest();
+                
+                for (Object esData : esDataList) {
+                    IndexRequest indexRequest = new IndexRequest(index);
+                    String source = JsonUtils.toJsonStr(esData);
+                    indexRequest.id(GlobalParamHolder.getDocId(index, esData)).source(source, XContentType.JSON);
+                    if (childIndex) {
+                        indexRequest.routing(FieldUtils.getStrFieldValue(esData, "joinField", "parent"));
+                    }
+                    bulkRequest.add(indexRequest);
                 }
-                bulkRequest.add(indexRequest);
-            }
-            bulkRequest.setRefreshPolicy(GlobalConfigCache.GLOBAL_CONFIG.getRefreshPolicy());
-            BulkResponse res;
-            
-            printInfoLog("saveBatch {}", index);
-            res = restHighLevelClient.bulk(bulkRequest, RequestOptions.DEFAULT);
-            for (BulkItemResponse bulkItemResponse : res.getItems()) {
-                if (bulkItemResponse.isFailed()) {
-                    printErrorLog(" {} save error " + bulkItemResponse.getId() + " message:" + bulkItemResponse
-                            .getFailureMessage(), index);
-                    failBulkItemResponses.add(bulkItemResponse);
+                bulkRequest.setRefreshPolicy(GlobalConfigCache.GLOBAL_CONFIG.getRefreshPolicy());
+                BulkResponse res;
+                
+                printInfoLog("saveBatch {}", index);
+                res = restHighLevelClient.bulk(bulkRequest, RequestOptions.DEFAULT);
+                for (BulkItemResponse bulkItemResponse : res.getItems()) {
+                    if (bulkItemResponse.isFailed()) {
+                        printErrorLog(" {} save error " + bulkItemResponse.getId() + " message:"
+                                + bulkItemResponse.getFailureMessage(), index);
+                        failBulkItemResponses.add(bulkItemResponse);
+                    }
                 }
+            } catch (IOException e) {
+                throw new EsException("SaveBatch IOException", e);
             }
-        } catch (IOException e) {
-            throw new EsException("SaveBatch IOException", e);
         }
+        
         return failBulkItemResponses;
     }
     
@@ -229,11 +234,13 @@ public class EsPlusRestClient implements EsPlusClient {
      * 保存
      */
     @Override
-    public boolean save(String index, String type, Object esData) {
-        List<BulkItemResponse> bulkItemResponses = saveBatch(index, type, Collections.singletonList(esData));
+    public boolean save(String type, Object esData, String... indexs) {
+        
+        List<BulkItemResponse> bulkItemResponses = saveBatch(type, Collections.singletonList(esData), indexs);
         if (CollectionUtils.isEmpty(bulkItemResponses)) {
             return true;
         }
+        
         return false;
     }
     
@@ -245,42 +252,45 @@ public class EsPlusRestClient implements EsPlusClient {
      * @throws Exception
      */
     @Override
-    public boolean update(String index, String type, Object esData) {
+    public boolean update(String type, Object esData,String... indexs) {
         boolean childIndex = isChildIndex(esData);
-        try {
-            UpdateRequest updateRequest = new UpdateRequest(index, type, GlobalParamHolder.getDocId(index, esData))
-                    .doc(JsonUtils.toJsonStr(esData), XContentType.JSON);
-            //乐观锁重试次数
-            updateRequest.retryOnConflict(GlobalConfigCache.GLOBAL_CONFIG.getMaxRetries());
-            updateRequest.setRefreshPolicy(GlobalConfigCache.GLOBAL_CONFIG.getRefreshPolicy());
-            if (childIndex) {
-                updateRequest.routing(FieldUtils.getStrFieldValue(esData, "joinField", "parent"));
+        for (String index : indexs) {
+            try {
+                UpdateRequest updateRequest = new UpdateRequest(index, type, GlobalParamHolder.getDocId(index, esData)).doc(
+                        JsonUtils.toJsonStr(esData), XContentType.JSON);
+                //乐观锁重试次数
+                updateRequest.retryOnConflict(GlobalConfigCache.GLOBAL_CONFIG.getMaxRetries());
+                updateRequest.setRefreshPolicy(GlobalConfigCache.GLOBAL_CONFIG.getRefreshPolicy());
+                if (childIndex) {
+                    updateRequest.routing(FieldUtils.getStrFieldValue(esData, "joinField", "parent"));
+                }
+                UpdateResponse updateResponse = restHighLevelClient.update(updateRequest, RequestOptions.DEFAULT);
+                if (updateResponse.getResult() == DocWriteResponse.Result.DELETED) {
+                    printErrorLog(" {} update data={}  error reason: doc  deleted", index, JsonUtils.toJsonStr(esData));
+                    return false;
+                } else if (updateResponse.getResult() == DocWriteResponse.Result.NOOP) {
+                    //noop标识没有数据改变。前后的值相同
+                    return false;
+                } else {
+                    printInfoLog(" {} update success data={}", index, JsonUtils.toJsonStr(esData));
+                }
+            } catch (IOException e) {
+                throw new EsException("elasticsearch update io error", e);
+            } catch (ElasticsearchException e) {
+                //版本冲突
+                if (e.status() == RestStatus.CONFLICT) {
+                    throw new EsException("elasticsearch update error  version conflict");
+                }
+                //找不到
+                if (e.status() == RestStatus.NOT_FOUND) {
+                    printErrorLog(" {} update data={}  error reason:  not found doc", index, JsonUtils.toJsonStr(esData));
+                    //                throw new ElasticsearchException(e);
+                }
+            } catch (Exception e) {
+                throw new EsException("update error", e);
             }
-            UpdateResponse updateResponse = restHighLevelClient.update(updateRequest, RequestOptions.DEFAULT);
-            if (updateResponse.getResult() == DocWriteResponse.Result.DELETED) {
-                printErrorLog(" {} update data={}  error reason: doc  deleted", index, JsonUtils.toJsonStr(esData));
-                return false;
-            } else if (updateResponse.getResult() == DocWriteResponse.Result.NOOP) {
-                //noop标识没有数据改变。前后的值相同
-                return false;
-            } else {
-                printInfoLog(" {} update success data={}", index, JsonUtils.toJsonStr(esData));
-            }
-        } catch (IOException e) {
-            throw new EsException("elasticsearch update io error", e);
-        } catch (ElasticsearchException e) {
-            //版本冲突
-            if (e.status() == RestStatus.CONFLICT) {
-                throw new EsException("elasticsearch update error  version conflict");
-            }
-            //找不到
-            if (e.status() == RestStatus.NOT_FOUND) {
-                printErrorLog(" {} update data={}  error reason:  not found doc", index, JsonUtils.toJsonStr(esData));
-//                throw new ElasticsearchException(e);
-            }
-        } catch (Exception e) {
-            throw new EsException("update error", e);
         }
+       
         return true;
     }
     
@@ -292,38 +302,41 @@ public class EsPlusRestClient implements EsPlusClient {
      * @return {@link List}<{@link BulkItemResponse}>
      */
     @Override
-    public List<BulkItemResponse> updateBatch(String index, String type, Collection<?> esDataList) {
+    public List<BulkItemResponse> updateBatch(String type, Collection<?> esDataList,String... indexs) {
         List<BulkItemResponse> responses = new ArrayList<>();
         if (CollectionUtils.isEmpty(esDataList)) {
             return responses;
         }
-        
-        boolean childIndex = isChildIndex(esDataList.stream().findFirst().get());
-        try {
-            BulkRequest bulkRequest = new BulkRequest();
-            for (Object esData : esDataList) {
-                UpdateRequest updateRequest = new UpdateRequest(index, type, GlobalParamHolder.getDocId(index, esData))
-                        .doc(JsonUtils.toJsonStr(esData), XContentType.JSON);
-                updateRequest.retryOnConflict(GlobalConfigCache.GLOBAL_CONFIG.getMaxRetries());
-                if (childIndex) {
-                    updateRequest.routing(FieldUtils.getStrFieldValue(esData, "joinField", "parent"));
+        for (String index : indexs) {
+            boolean childIndex = isChildIndex(esDataList.stream().findFirst().get());
+            try {
+                BulkRequest bulkRequest = new BulkRequest();
+                for (Object esData : esDataList) {
+                    UpdateRequest updateRequest = new UpdateRequest(index, type,
+                            GlobalParamHolder.getDocId(index, esData)).doc(JsonUtils.toJsonStr(esData), XContentType.JSON);
+                    updateRequest.retryOnConflict(GlobalConfigCache.GLOBAL_CONFIG.getMaxRetries());
+                    if (childIndex) {
+                        updateRequest.routing(FieldUtils.getStrFieldValue(esData, "joinField", "parent"));
+                    }
+                    bulkRequest.add(updateRequest);
                 }
-                bulkRequest.add(updateRequest);
-            }
-            bulkRequest.setRefreshPolicy(GlobalConfigCache.GLOBAL_CONFIG.getRefreshPolicy());
-            BulkResponse res = null;
-            printInfoLog("updateBatch index={} data:{} hasFailures={}", index, JsonUtils.toJsonStr(esDataList));
-            res = restHighLevelClient.bulk(bulkRequest, RequestOptions.DEFAULT);
-            for (BulkItemResponse bulkItemResponse : res.getItems()) {
-                if (bulkItemResponse.isFailed()) {
-                    responses.add(bulkItemResponse);
-                    printErrorLog("updateBatch {} error" + bulkItemResponse.getId() + " message:" + bulkItemResponse
-                            .getFailureMessage(), index);
+                bulkRequest.setRefreshPolicy(GlobalConfigCache.GLOBAL_CONFIG.getRefreshPolicy());
+                BulkResponse res = null;
+                printInfoLog("updateBatch index={} data:{} hasFailures={}", index, JsonUtils.toJsonStr(esDataList));
+                res = restHighLevelClient.bulk(bulkRequest, RequestOptions.DEFAULT);
+                for (BulkItemResponse bulkItemResponse : res.getItems()) {
+                    if (bulkItemResponse.isFailed()) {
+                        responses.add(bulkItemResponse);
+                        printErrorLog("updateBatch {} error" + bulkItemResponse.getId() + " message:"
+                                + bulkItemResponse.getFailureMessage(), index);
+                    }
                 }
+            } catch (IOException e) {
+                throw new EsException("updateBatch IOException", e);
             }
-        } catch (IOException e) {
-            throw new EsException("updateBatch IOException", e);
         }
+        
+        
         return responses;
     }
     
@@ -332,7 +345,7 @@ public class EsPlusRestClient implements EsPlusClient {
      * 更新包装
      */
     @Override
-    public <T> BulkByScrollResponse updateByWrapper(String index, String type, EsParamWrapper<T> esParamWrapper) {
+    public <T> BulkByScrollResponse updateByWrapper(String type, EsParamWrapper<T> esParamWrapper,String... index) {
         EsQueryParamWrapper esQueryParamWrapper = esParamWrapper.getEsQueryParamWrapper();
         EsUpdateField esUpdateField = esParamWrapper.getEsUpdateField();
         List<EsUpdateField.Field> fields = esUpdateField.getFields();
@@ -355,8 +368,8 @@ public class EsPlusRestClient implements EsPlusClient {
                 } else if (value instanceof LocalDate) {
                     value = ((LocalDate) value).format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
                 } else if (value instanceof List) {
-                } else if (!ResolveUtils.isCommonDataType(value.getClass()) && !ResolveUtils
-                        .isWrapClass(value.getClass())) {
+                } else if (!ResolveUtils.isCommonDataType(value.getClass()) && !ResolveUtils.isWrapClass(
+                        value.getClass())) {
                     value = BeanUtils.beanToMap(value);
                 }
                 //list直接覆盖 丢进去 无需再特殊处理
@@ -387,7 +400,8 @@ public class EsPlusRestClient implements EsPlusClient {
             request.setIndicesOptions(IndicesOptions.LENIENT_EXPAND_OPEN);
             Script painless = new Script(ScriptType.INLINE, PAINLESS, scipt, params);
             request.setScript(painless);
-            printInfoLog("updateByWrapper index:{} requst: script:{},params={}  query:{}", index, scipt, params,esQueryParamWrapper.getQueryBuilder().toString());
+            printInfoLog("updateByWrapper index:{} requst: script:{},params={}  query:{}", index, scipt, params,
+                    esQueryParamWrapper.getQueryBuilder().toString());
             BulkByScrollResponse bulkResponse = restHighLevelClient.updateByQuery(request, RequestOptions.DEFAULT);
             printInfoLog("updateByWrapper index:{} response:{} update count={}", index, bulkResponse,
                     bulkResponse.getUpdated());
@@ -398,7 +412,7 @@ public class EsPlusRestClient implements EsPlusClient {
     }
     
     @Override
-    public <T> BulkByScrollResponse increment(String index, String type, EsParamWrapper<T> esParamWrapper) {
+    public <T> BulkByScrollResponse increment(String type, EsParamWrapper<T> esParamWrapper,String... index) {
         EsQueryParamWrapper esQueryParamWrapper = esParamWrapper.getEsQueryParamWrapper();
         List<EsUpdateField.Field> fields = esParamWrapper.getEsUpdateField().getIncrementFields();
         Map<String, Object> params = new HashMap<>();
@@ -440,20 +454,23 @@ public class EsPlusRestClient implements EsPlusClient {
     }
     
     @Override
-    public boolean delete(String index, String type, String id) {
-        DeleteRequest deleteRequest = new DeleteRequest(index, type, id);
-        try {
-            deleteRequest.setRefreshPolicy(GlobalConfigCache.GLOBAL_CONFIG.getRefreshPolicy());
-            restHighLevelClient.delete(deleteRequest, RequestOptions.DEFAULT);
-            printInfoLog("delete index={}", index);
-        } catch (IOException e) {
-            throw new EsException("delete error", e);
+    public boolean delete( String type, String id,String... indexs) {
+        for (String index : indexs) {
+            DeleteRequest deleteRequest = new DeleteRequest(index, type, id);
+            try {
+                deleteRequest.setRefreshPolicy(GlobalConfigCache.GLOBAL_CONFIG.getRefreshPolicy());
+                restHighLevelClient.delete(deleteRequest, RequestOptions.DEFAULT);
+                printInfoLog("delete index={}", index);
+            } catch (IOException e) {
+                throw new EsException("delete error", e);
+            }
         }
+      
         return true;
     }
     
     @Override
-    public <T> BulkByScrollResponse deleteByQuery(String index, String type, EsParamWrapper<T> esParamWrapper) {
+    public <T> BulkByScrollResponse deleteByQuery(String type, EsParamWrapper<T> esParamWrapper, String... index) {
         EsQueryParamWrapper esQueryParamWrapper = esParamWrapper.getEsQueryParamWrapper();
         DeleteByQueryRequest request = new DeleteByQueryRequest(index);
         request.setQuery(esQueryParamWrapper.getQueryBuilder());
@@ -477,8 +494,8 @@ public class EsPlusRestClient implements EsPlusClient {
         try {
             SearchSourceBuilder source = request.getSearchRequest().source();
             printInfoLog(" {} delete body:" + source.toString(), index);
-            BulkByScrollResponse bulkByScrollResponse = restHighLevelClient
-                    .deleteByQuery(request, RequestOptions.DEFAULT);
+            BulkByScrollResponse bulkByScrollResponse = restHighLevelClient.deleteByQuery(request,
+                    RequestOptions.DEFAULT);
             return bulkByScrollResponse;
         } catch (Exception e) {
             throw new EsException("es-plus delete error", e);
@@ -504,36 +521,38 @@ public class EsPlusRestClient implements EsPlusClient {
     }
     
     @Override
-    public boolean deleteBatch(String index, String type, Collection<String> esDataList) {
+    public boolean deleteBatch( String type, Collection<String> esDataList,String... indexs) {
         if (CollectionUtils.isEmpty(esDataList)) {
             return false;
         }
-        log.info("Es deleteBatch index={} ids={}", index, esDataList);
-        BulkRequest bulkRequest = new BulkRequest();
-        esDataList.forEach(id -> {
-            DeleteRequest deleteRequest = new DeleteRequest(index, type, id);
-            bulkRequest.add(deleteRequest);
-        });
-        
-        bulkRequest.setRefreshPolicy(GlobalConfigCache.GLOBAL_CONFIG.getRefreshPolicy());
-        try {
-            BulkResponse bulkResponse = restHighLevelClient.bulk(bulkRequest, RequestOptions.DEFAULT);
-            BulkItemResponse[] items = bulkResponse.getItems();
-            for (BulkItemResponse item : items) {
-                if (item.isFailed()) {
-                    printErrorLog("deleteBatch index={} id={} FailureMessage=:{}", index, item.getId(),
-                          item.getFailureMessage());
+        for (String index : indexs) {
+            log.info("Es deleteBatch index={} ids={}", index, esDataList);
+            BulkRequest bulkRequest = new BulkRequest();
+            esDataList.forEach(id -> {
+                DeleteRequest deleteRequest = new DeleteRequest(index, type, id);
+                bulkRequest.add(deleteRequest);
+            });
+            
+            bulkRequest.setRefreshPolicy(GlobalConfigCache.GLOBAL_CONFIG.getRefreshPolicy());
+            try {
+                BulkResponse bulkResponse = restHighLevelClient.bulk(bulkRequest, RequestOptions.DEFAULT);
+                BulkItemResponse[] items = bulkResponse.getItems();
+                for (BulkItemResponse item : items) {
+                    if (item.isFailed()) {
+                        printErrorLog("deleteBatch index={} id={} FailureMessage=:{}", index, item.getId(),
+                                item.getFailureMessage());
+                    }
                 }
+            } catch (IOException e) {
+                throw new EsException("es delete error", e);
             }
-        } catch (IOException e) {
-            throw new EsException("es delete error", e);
         }
         return true;
     }
     
     //统计
     @Override
-    public <T> long count(String index, String type, EsParamWrapper<T> esParamWrapper) {
+    public <T> long count(String type, EsParamWrapper<T> esParamWrapper, String... index) {
         EsQueryParamWrapper esQueryParamWrapper = esParamWrapper.getEsQueryParamWrapper();
         CountRequest countRequest = new CountRequest();
         SearchSourceBuilder query = SearchSourceBuilder.searchSource().query(esQueryParamWrapper.getQueryBuilder());
@@ -554,7 +573,7 @@ public class EsPlusRestClient implements EsPlusClient {
     }
     
     @Override
-    public <T> EsResponse<T> search(String index, String type, EsParamWrapper<T> esParamWrapper) {
+    public <T> EsResponse<T> search(String type, EsParamWrapper<T> esParamWrapper, String... index) {
         SearchRequest searchRequest = new SearchRequest();
         
         EsQueryParamWrapper esQueryParamWrapper = esParamWrapper.getEsQueryParamWrapper();
@@ -562,7 +581,7 @@ public class EsPlusRestClient implements EsPlusClient {
         //获取查询语句源数据
         SearchSourceBuilder sourceBuilder = getSearchSourceBuilder(esParamWrapper);
         
-        populateSearchRequest(index, type, searchRequest, esQueryParamWrapper, sourceBuilder);
+        populateSearchRequest(type, searchRequest, esQueryParamWrapper, sourceBuilder, index);
         
         if (esQueryParamWrapper.getSearchType() != null) {
             searchRequest.searchType();
@@ -594,8 +613,8 @@ public class EsPlusRestClient implements EsPlusClient {
      * @return {@link EsResponse}<{@link T}>
      */
     @Override
-    public <T> EsResponse<T> scroll(String index, String type, EsParamWrapper<T> esParamWrapper, Duration keepTime,
-            String scrollId) {
+    public <T> EsResponse<T> scroll(String type, EsParamWrapper<T> esParamWrapper, Duration keepTime, String scrollId,
+            String... index) {
         SearchResponse searchResponse;
         SearchHit[] searchHits = null;
         List<T> result = new ArrayList<>();
@@ -612,7 +631,7 @@ public class EsPlusRestClient implements EsPlusClient {
                 SearchRequest searchRequest = new SearchRequest(index);
                 searchRequest.scroll(scroll);
                 SearchSourceBuilder searchSourceBuilder = getSearchSourceBuilder(esParamWrapper);
-                populateSearchRequest(index, type, searchRequest, esQueryParamWrapper, searchSourceBuilder);
+                populateSearchRequest(type, searchRequest, esQueryParamWrapper, searchSourceBuilder, index);
                 //调用scroll处理
                 searchResponse = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
                 scrollId = searchResponse.getScrollId();
@@ -622,8 +641,8 @@ public class EsPlusRestClient implements EsPlusClient {
             if (searchHits == null || searchHits.length <= 0) {
                 ClearScrollRequest clearScrollRequest = new ClearScrollRequest();
                 clearScrollRequest.addScrollId(scrollId);
-                ClearScrollResponse clearScrollResponse = restHighLevelClient
-                        .clearScroll(clearScrollRequest, RequestOptions.DEFAULT);
+                ClearScrollResponse clearScrollResponse = restHighLevelClient.clearScroll(clearScrollRequest,
+                        RequestOptions.DEFAULT);
                 boolean succeeded = clearScrollResponse.isSucceeded();
             }
             return esResponse;
@@ -636,7 +655,7 @@ public class EsPlusRestClient implements EsPlusClient {
      * 聚合
      */
     @Override
-    public <T> EsAggResponse<T> aggregations(String index, String type, EsParamWrapper<T> esParamWrapper) {
+    public <T> EsAggResponse<T> aggregations(String type, EsParamWrapper<T> esParamWrapper, String... index) {
         EsQueryParamWrapper esQueryParamWrapper = esParamWrapper.getEsQueryParamWrapper();
         SearchRequest searchRequest = new SearchRequest();
         //查询条件组合
@@ -677,8 +696,8 @@ public class EsPlusRestClient implements EsPlusClient {
      * @param esQueryParamWrapper es查询参数包装器
      * @param sourceBuilder       源构建器
      */
-    private void populateSearchRequest(String index, String type, SearchRequest searchRequest,
-            EsQueryParamWrapper esQueryParamWrapper, SearchSourceBuilder sourceBuilder) {
+    private void populateSearchRequest(String type, SearchRequest searchRequest,
+            EsQueryParamWrapper esQueryParamWrapper, SearchSourceBuilder sourceBuilder, String... index) {
         //设置查询语句源数据
         searchRequest.source(sourceBuilder);
         
@@ -695,8 +714,9 @@ public class EsPlusRestClient implements EsPlusClient {
     }
     
     @Override
-    public String executeDSL(String dsl, String index) {
-        Request request = new Request("post", "/"+index +"/"+ "_search");
+    public String executeDSL(String dsl, String... index) {
+        String indexs = String.join(",", index);
+        Request request = new Request("post", "/" + indexs + "/" + "_search");
         request.setJsonEntity(dsl);
         Response response = null;
         try {
@@ -711,7 +731,7 @@ public class EsPlusRestClient implements EsPlusClient {
     @Override
     public String translateSql(String sql) {
         Map<String, Object> jsonRequest = new HashMap<>();
-        jsonRequest.put("query",sql);
+        jsonRequest.put("query", sql);
         // "_xpack/sql/translate"
         Request request = new Request("post", "/_sql/translate");
         request.setJsonEntity(JsonUtils.toJsonStr(jsonRequest));
@@ -727,7 +747,7 @@ public class EsPlusRestClient implements EsPlusClient {
     }
     
     @Override
-    public <T> EsResponse<T> executeSQL(String sql,Class<T> tClass) {
+    public <T> EsResponse<T> executeSQL(String sql, Class<T> tClass) {
         String dsl = translateSql(sql);
         // 匹配 SQL 语句中的表名
         Pattern pattern = Pattern.compile("(?i)FROM\\s+([\\w.]+)");
@@ -737,7 +757,7 @@ public class EsPlusRestClient implements EsPlusClient {
         if (matcher.find()) {
             tableName = matcher.group(1);
         }
-        if (StringUtils.isBlank(tableName)){
+        if (StringUtils.isBlank(tableName)) {
             throw new EsException("sql语句中未找到表名");
         }
         String rs = executeDSL(dsl, tableName);
@@ -746,15 +766,14 @@ public class EsPlusRestClient implements EsPlusClient {
         try {
             parser = xContent.createParser(NamedXContentRegistry.EMPTY, LoggingDeprecationHandler.INSTANCE, rs);
             SearchResponse searchResponse = SearchResponse.fromXContent(parser);
-            return getEsResponse(tClass,searchResponse);
+            return getEsResponse(tClass, searchResponse);
         } catch (IOException e) {
-            throw new EsException("result parse error",e);
+            throw new EsException("result parse error", e);
         }
     }
     
     
-    private <T> EsResponse<T> getEsResponse(Class<T> tClass,
-            SearchResponse searchResponse) {
+    private <T> EsResponse<T> getEsResponse(Class<T> tClass, SearchResponse searchResponse) {
         //获取结果集
         SearchHits hits = searchResponse.getHits();
         SearchHit[] hitArray = hits.getHits();
@@ -782,7 +801,7 @@ public class EsPlusRestClient implements EsPlusClient {
         }
         
         //profile是性能分析类似mysql的explain
-        if (searchResponse.getProfileResults()!=null) {
+        if (searchResponse.getProfileResults() != null) {
             Map<String, ProfileShardResult> profileResults = searchResponse.getProfileResults();
             esResponse.setProfileResults(profileResults);
         }
@@ -905,9 +924,8 @@ public class EsPlusRestClient implements EsPlusClient {
             List<EsOrder> orderFields = esQueryParamWrapper.getEsOrderList();
             orderFields.forEach(order -> {
                 NestedSortBuilder nestedSortBuilder = order.getNestedSortBuilder();
-                sourceBuilder.sort(new FieldSortBuilder(order.getName())
-                        .order(SortOrder.valueOf(order.getSort().toUpperCase(Locale.ROOT)))
-                        .setNestedSort(nestedSortBuilder));
+                sourceBuilder.sort(new FieldSortBuilder(order.getName()).order(
+                        SortOrder.valueOf(order.getSort().toUpperCase(Locale.ROOT))).setNestedSort(nestedSortBuilder));
             });
         }
         populateGroupField(esParamWrapper, sourceBuilder);

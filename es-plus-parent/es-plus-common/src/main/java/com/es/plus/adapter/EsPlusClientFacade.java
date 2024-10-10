@@ -289,8 +289,8 @@ public class EsPlusClientFacade   {
      * @param esSettings es设置
      * @return boolean
      */
-    public boolean updateSettings(String index, EsSettings esSettings) {
-        return esPlusIndexClient.updateSettings(index, esSettings);
+    public boolean updateSettings( EsSettings esSettings,String... index) {
+        return esPlusIndexClient.updateSettings( esSettings,index);
     }
 
     /**
@@ -300,8 +300,8 @@ public class EsPlusClientFacade   {
      * @param esSettings es设置
      * @return boolean
      */
-    public boolean updateSettings(String index, Map<String, Object> esSettings) {
-        return esPlusIndexClient.updateSettings(index, esSettings);
+    public boolean updateSettings( Map<String, Object> esSettings,String... index) {
+        return esPlusIndexClient.updateSettings( esSettings,index);
     }
 
     public boolean ping() {
@@ -312,7 +312,7 @@ public class EsPlusClientFacade   {
      * ----------------------------------------------------------------------------------------------------------
      * 数据操作
      */
-    public List<BulkItemResponse> saveOrUpdateBatch(String index, String type, Collection<?> esDataList) {
+    public List<BulkItemResponse> saveOrUpdateBatch(String type, Collection<?> esDataList,String... index) {
         List<BulkItemResponse> failBulkItemResponses = new ArrayList<>();
         if (CollectionUtils.isEmpty(esDataList)) {
             return failBulkItemResponses;
@@ -321,12 +321,12 @@ public class EsPlusClientFacade   {
         if (esDataList.size() > batchSize) {
             List<? extends Collection<?>> collections = CollectionUtil.splitList(esDataList, batchSize);
             collections.forEach(list -> {
-                        List<BulkItemResponse> bulkItemResponses = esPlusClient.saveOrUpdateBatch(index, type, list);
+                        List<BulkItemResponse> bulkItemResponses = esPlusClient.saveOrUpdateBatch( type, list,index);
                         failBulkItemResponses.addAll(bulkItemResponses);
                     }
             );
         } else {
-            List<BulkItemResponse> bulkItemResponses = esPlusClient.saveOrUpdateBatch(index, type, esDataList);
+            List<BulkItemResponse> bulkItemResponses = esPlusClient.saveOrUpdateBatch( type, esDataList,index);
             failBulkItemResponses.addAll(bulkItemResponses);
         }
         return failBulkItemResponses;
@@ -339,7 +339,7 @@ public class EsPlusClientFacade   {
      * @param esDataList 西文数据列表
      * @return {@link List}<{@link BulkItemResponse}>
      */
-    public List<BulkItemResponse> saveBatch(String index, String type, Collection<?> esDataList) {
+    public List<BulkItemResponse> saveBatch(String type, Collection<?> esDataList,String... index) {
         List<BulkItemResponse> failBulkItemResponses = new ArrayList<>();
         if (CollectionUtils.isEmpty(esDataList)) {
             return failBulkItemResponses;
@@ -348,12 +348,12 @@ public class EsPlusClientFacade   {
         if (esDataList.size() > batchSize) {
             List<? extends Collection<?>> collections = CollectionUtil.splitList(esDataList, batchSize);
             collections.forEach(list -> {
-                        List<BulkItemResponse> bulkItemResponses = esPlusClient.saveBatch(index, type, list);
+                        List<BulkItemResponse> bulkItemResponses = esPlusClient.saveBatch( type, list,index);
                         failBulkItemResponses.addAll(bulkItemResponses);
                     }
             );
         } else {
-            List<BulkItemResponse> bulkItemResponses = esPlusClient.saveBatch(index, type, esDataList);
+            List<BulkItemResponse> bulkItemResponses = esPlusClient.saveBatch( type, esDataList,index);
             failBulkItemResponses.addAll(bulkItemResponses);
         }
         return failBulkItemResponses;
@@ -362,8 +362,8 @@ public class EsPlusClientFacade   {
     /**
      * 保存
      */
-    public boolean save(String index, String type, Object esData) {
-        return esPlusClient.save(index, type, esData);
+    public boolean save(String type, Object esData,String... index) {
+        return esPlusClient.save(type, esData, index);
     }
 
     /**
@@ -373,8 +373,8 @@ public class EsPlusClientFacade   {
      * @return
      * @throws Exception
      */
-    public boolean update(String index, String type, Object esData) {
-        return esPlusClient.update(index, type, esData);
+    public boolean update( String type, Object esData,String... index) {
+        return esPlusClient.update(type, esData,index);
     }
 
     /**
@@ -383,7 +383,7 @@ public class EsPlusClientFacade   {
      * @param index 索引
      * @return {@link List}<{@link BulkItemResponse}>
      */
-    public List<BulkItemResponse> updateBatch(String index, String type, Collection<?> entityList) {
+    public List<BulkItemResponse> updateBatch(String type, Collection<?> entityList,String... index) {
         List<BulkItemResponse> failBulkItemResponses = new ArrayList<>();
         if (CollectionUtils.isEmpty(entityList)) {
             return failBulkItemResponses;
@@ -392,12 +392,12 @@ public class EsPlusClientFacade   {
         if (entityList.size() > batchSize) {
             List<? extends Collection<?>> collections = CollectionUtil.splitList(entityList, batchSize);
             collections.forEach(list -> {
-                        List<BulkItemResponse> bulkItemResponses = esPlusClient.updateBatch(index, type, list);
+                        List<BulkItemResponse> bulkItemResponses = esPlusClient.updateBatch( type, list,index);
                         failBulkItemResponses.addAll(bulkItemResponses);
                     }
             );
         } else {
-            List<BulkItemResponse> bulkItemResponses = esPlusClient.updateBatch(index, type, entityList);
+            List<BulkItemResponse> bulkItemResponses = esPlusClient.updateBatch( type, entityList,index);
             failBulkItemResponses.addAll(bulkItemResponses);
         }
 
@@ -407,8 +407,8 @@ public class EsPlusClientFacade   {
     /**
      * 更新包装
      */
-    public <T> BulkByScrollResponse updateByWrapper(String index, String type, EsParamWrapper<T> esUpdateWrapper) {
-        return esPlusClient.updateByWrapper(index, type, esUpdateWrapper);
+    public <T> BulkByScrollResponse updateByWrapper(String type, EsParamWrapper<T> esUpdateWrapper,String... index) {
+        return esPlusClient.updateByWrapper( type, esUpdateWrapper,index);
     }
 
 
@@ -419,8 +419,8 @@ public class EsPlusClientFacade   {
      * @param esUpdateWrapper es更新包装
      * @return {@link BulkByScrollResponse}
      */
-    public <T> BulkByScrollResponse increment(String index, String type, EsParamWrapper<T> esUpdateWrapper) {
-        return esPlusClient.increment(index, type, esUpdateWrapper);
+    public <T> BulkByScrollResponse increment(String type, EsParamWrapper<T> esUpdateWrapper,String... index) {
+        return esPlusClient.increment( type, esUpdateWrapper,index);
     }
 
     /**
@@ -430,8 +430,8 @@ public class EsPlusClientFacade   {
      * @param id    id
      * @return boolean
      */
-    public boolean delete(String index, String type, String id) {
-        return esPlusClient.delete(index, type, id);
+    public boolean delete( String type, String id,String... index) {
+        return esPlusClient.delete( type, id,index);
     }
 
 
@@ -442,8 +442,8 @@ public class EsPlusClientFacade   {
      * @param esUpdateWrapper es更新包装
      * @return {@link BulkByScrollResponse}
      */
-    public <T> BulkByScrollResponse deleteByQuery(String index, String type, EsParamWrapper<T> esUpdateWrapper) {
-        return esPlusClient.deleteByQuery(index, type, esUpdateWrapper);
+    public <T> BulkByScrollResponse deleteByQuery( String type, EsParamWrapper<T> esUpdateWrapper,String... index) {
+        return esPlusClient.deleteByQuery(type, esUpdateWrapper,index);
     }
 
 
@@ -454,8 +454,8 @@ public class EsPlusClientFacade   {
      * @param esDataList 数据列表
      * @return boolean
      */
-    public boolean deleteBatchByIds(String index, String type, Collection<String> esDataList) {
-        return esPlusClient.deleteBatch(index, type, esDataList);
+    public boolean deleteBatchByIds(String type, Collection<String> esDataList,String... index) {
+        return esPlusClient.deleteBatch(type, esDataList,index);
     }
 
 
@@ -466,8 +466,8 @@ public class EsPlusClientFacade   {
      * @param index          索引
      * @return long
      */
-    public <T> long count(String index, String type, EsParamWrapper<T> esParamWrapper) {
-        return esPlusClient.count(index, type, esParamWrapper);
+    public <T> long count(String type, EsParamWrapper<T> esParamWrapper,String... index) {
+        return esPlusClient.count(type, esParamWrapper,index);
     }
 
 
@@ -478,8 +478,8 @@ public class EsPlusClientFacade   {
      * @param index          索引
      * @return {@link EsResponse}<{@link T}>
      */
-    public <T> EsResponse<T> search(String index, String type, EsParamWrapper<T> esParamWrapper) {
-        return esPlusClient.search(index, type, esParamWrapper);
+    public <T> EsResponse<T> search(String type, EsParamWrapper<T> esParamWrapper,String... index) {
+        return esPlusClient.search(type, esParamWrapper,index);
     }
 
 
@@ -491,8 +491,8 @@ public class EsPlusClientFacade   {
      * @param keepTime       保持时间
      * @param scollId        滚动处理Id
      */
-    public <T> EsResponse<T> scroll(String index, String type, EsParamWrapper<T> esParamWrapper, Duration keepTime, String scollId) {
-        return esPlusClient.scroll(index, type, esParamWrapper, keepTime, scollId);
+    public <T> EsResponse<T> scroll( String type, EsParamWrapper<T> esParamWrapper, Duration keepTime, String scollId,String... index) {
+        return esPlusClient.scroll(type, esParamWrapper, keepTime, scollId,index);
     }
 
 
@@ -502,8 +502,8 @@ public class EsPlusClientFacade   {
      * @param index          指数
      * @param esParamWrapper es param包装
      */
-    public <T> EsAggResponse<T> aggregations(String index, String type, EsParamWrapper<T> esParamWrapper) {
-        return esPlusClient.aggregations(index, type, esParamWrapper);
+    public <T> EsAggResponse<T> aggregations( String type, EsParamWrapper<T> esParamWrapper,String... index) {
+        return esPlusClient.aggregations( type, esParamWrapper,index);
     }
 
     /**
@@ -538,7 +538,7 @@ public class EsPlusClientFacade   {
         return esPlusIndexClient.refresh(index);
     }
 
-    public String executeDSL(String dsl, String index) {
+    public String executeDSL(String dsl, String... index) {
         return esPlusClient.executeDSL(dsl,index);
     }
     public String translateSQL(String sql) {

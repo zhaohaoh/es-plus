@@ -131,7 +131,7 @@ public interface EsPlusIndexClient {
      * @param esSettings es设置
      * @return boolean
      */
-    boolean updateSettings(String index, EsSettings esSettings);
+    boolean updateSettings(EsSettings esSettings,String... index);
 
     /**
      * 更新设置
@@ -140,7 +140,7 @@ public interface EsPlusIndexClient {
      * @param esSettings es设置
      * @return boolean
      */
-    boolean updateSettings(String index, Map<String, Object> esSettings);
+    boolean updateSettings(Map<String, Object> esSettings,String... index);
 
     /**
      * 连接

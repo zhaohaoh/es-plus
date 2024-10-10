@@ -92,9 +92,11 @@ public class GlobalParamHolder {
         return _id;
     }
 
-    public static void set_id(String index,String _id) {
-    
-        _ID.put(index,_id);
+    public static void set_id(String[] indexs,String _id) {
+        for (String index : indexs) {
+            _ID.put(index,_id);
+        }
+       
     }
 
 

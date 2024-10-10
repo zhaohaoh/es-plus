@@ -108,13 +108,13 @@ public class EsIndexWrapper implements IEsIndexWrapper {
 
     @Override
     public boolean updateSettings(EsSettings esSettings) {
-        esPlusClientFacade.updateSettings(index, esSettings);
+        esPlusClientFacade.updateSettings( esSettings,index);
         return true;
     }
 
     @Override
     public boolean updateSettings(Map<String, Object> esSettings) {
-        esPlusClientFacade.updateSettings(index, esSettings);
+        esPlusClientFacade.updateSettings( esSettings,index);
         return true;
     }
 

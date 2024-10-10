@@ -23,7 +23,7 @@ public interface EsPlusClient {
      * @param esDataList 西文数据列表
      * @return {@link List}<{@link BulkItemResponse}>
      */
-    List<BulkItemResponse> saveOrUpdateBatch(String index, String type, Collection<?> esDataList);
+    List<BulkItemResponse> saveOrUpdateBatch(String type, Collection<?> esDataList,String... index);
 
     /**
      * 保存批
@@ -32,12 +32,12 @@ public interface EsPlusClient {
      * @param esDataList 西文数据列表
      * @return {@link List}<{@link BulkItemResponse}>
      */
-    List<BulkItemResponse> saveBatch(String index, String type, Collection<?> esDataList);
+    List<BulkItemResponse> saveBatch(String type, Collection<?> esDataList,String... index);
 
     /**
      * 保存
      */
-    boolean save(String index, String type, Object esData);
+    boolean save(String type, Object esData,String... index);
 
     /**
      * 更新Es数据
@@ -46,7 +46,7 @@ public interface EsPlusClient {
      * @return
      * @throws Exception
      */
-    boolean update(String index, String type, Object esData);
+    boolean update(String type, Object esData,String... index);
 
     /**
      * 批处理更新 返回失败数据
@@ -54,12 +54,12 @@ public interface EsPlusClient {
      * @param index 索引
      * @return {@link List}<{@link BulkItemResponse}>
      */
-    List<BulkItemResponse> updateBatch(String index, String type, Collection<?> esDataList);
+    List<BulkItemResponse> updateBatch(String type, Collection<?> esDataList,String... index);
 
     /**
      * 更新包装
      */
-    <T> BulkByScrollResponse updateByWrapper(String index, String type, EsParamWrapper<T> esUpdateWrapper);
+    <T> BulkByScrollResponse updateByWrapper( String type, EsParamWrapper<T> esUpdateWrapper,String... index);
 
     /**
      * 增量
@@ -68,7 +68,7 @@ public interface EsPlusClient {
      * @param esUpdateWrapper es更新包装
      * @return {@link BulkByScrollResponse}
      */
-    <T> BulkByScrollResponse increment(String index, String type, EsParamWrapper<T> esUpdateWrapper);
+    <T> BulkByScrollResponse increment(String type, EsParamWrapper<T> esUpdateWrapper,String... index);
 
     /**
      * 删除
@@ -77,7 +77,7 @@ public interface EsPlusClient {
      * @param id    id
      * @return boolean
      */
-    boolean delete(String index, String type, String id);
+    boolean delete(String type, String id,String... index);
 
     /**
      * 删除,查询
@@ -86,7 +86,7 @@ public interface EsPlusClient {
      * @param esUpdateWrapper es更新包装
      * @return {@link BulkByScrollResponse}
      */
-    <T> BulkByScrollResponse deleteByQuery(String index, String type, EsParamWrapper<T> esUpdateWrapper);
+    <T> BulkByScrollResponse deleteByQuery(String type, EsParamWrapper<T> esUpdateWrapper,String... index);
 
     /**
      * 删除批处理
@@ -95,7 +95,7 @@ public interface EsPlusClient {
      * @param esDataList 西文数据列表
      * @return boolean
      */
-    boolean deleteBatch(String index, String type, Collection<String> esDataList);
+    boolean deleteBatch(String type, Collection<String> esDataList,String... index);
 
     /**
      * 统计数
@@ -104,7 +104,7 @@ public interface EsPlusClient {
      * @param index          指数
      * @return long
      */
-    <T> long count(String index, String type, EsParamWrapper<T> esParamWrapper);
+    <T> long count(String type, EsParamWrapper<T> esParamWrapper,String... index);
 
     /**
      * 搜索包装
@@ -113,7 +113,7 @@ public interface EsPlusClient {
      * @param index          指数
      * @return {@link EsResponse}<{@link T}>
      */
-    <T> EsResponse<T> search(String index, String type, EsParamWrapper<T> esParamWrapper);
+    <T> EsResponse<T> search(String type, EsParamWrapper<T> esParamWrapper,String... index);
 
     /**
      * 滚动查询包装
@@ -123,7 +123,7 @@ public interface EsPlusClient {
      * @param keepTime       保持时间
      * @return
      */
-    <T> EsResponse<T> scroll(String index, String type, EsParamWrapper<T> esParamWrapper, Duration keepTime, String scrollId);
+    <T> EsResponse<T> scroll(String type, EsParamWrapper<T> esParamWrapper, Duration keepTime, String scrollId,String... index);
 
     /**
      * 聚合
@@ -131,7 +131,7 @@ public interface EsPlusClient {
      * @param index          指数
      * @param esParamWrapper es查询包装
      */
-    <T> EsAggResponse<T> aggregations(String index, String type, EsParamWrapper<T> esParamWrapper);
+    <T> EsAggResponse<T> aggregations(String type, EsParamWrapper<T> esParamWrapper,String... index);
 
 
     /**
@@ -141,7 +141,7 @@ public interface EsPlusClient {
      * @param index 索引名字
      * @return {@link String}
      */
-    String executeDSL(String dsl, String index);
+    String executeDSL(String dsl, String... index);
     
     /**
      * 翻译sql

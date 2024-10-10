@@ -450,7 +450,7 @@ public class EsPlus6IndexRestClient implements EsPlusIndexClient {
      * @return boolean
      */
     @Override
-    public boolean updateSettings(String index, EsSettings esSettings) {
+    public boolean updateSettings(EsSettings esSettings,String... index) {
         String json = JsonUtils.toJsonStr(esSettings);
         Settings settings = Settings.builder().loadFromSource(json, XContentType.JSON).build();
         //创建索引的settings
@@ -469,7 +469,7 @@ public class EsPlus6IndexRestClient implements EsPlusIndexClient {
     }
     
     @Override
-    public boolean updateSettings(String index, Map<String, Object> esSettings) {
+    public boolean updateSettings(Map<String, Object> esSettings,String... index) {
         String json = JsonUtils.toJsonStr(esSettings);
         Settings settings = Settings.builder().loadFromSource(json, XContentType.JSON).build();
         //创建索引的settings

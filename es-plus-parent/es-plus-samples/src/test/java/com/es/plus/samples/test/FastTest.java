@@ -208,4 +208,11 @@ public class FastTest {
         EsResponse<Map> esResponse = Es.chainQuery(Map.class).executeSQL("select * from  fast_test_alias");
         System.out.println(esResponse);
     }
+    
+    
+    @org.junit.jupiter.api.Test
+    public void indexs() {
+        EsResponse<Map> esResponse = Es.chainQuery(Map.class).index("fast_test_new_v116", "fast_test_new_v115").sortByDesc("id").search(10);
+        System.out.println(esResponse);
+    }
 }

@@ -28,7 +28,7 @@ public class EsChainLambdaQueryWrapper<T> extends AbstractEsChainWrapper<T, SFun
         super.esWrapper = new EsLambdaQueryWrapper<>(tClass);
         EsIndexParam esIndexParam = GlobalParamHolder.getAndInitEsIndexParam(super.tClass);
         if (esIndexParam != null) {
-            index = StringUtils.isBlank(esIndexParam.getAlias()) ? esIndexParam.getIndex() : esIndexParam.getAlias();
+            index(StringUtils.isBlank(esIndexParam.getAlias()) ? esIndexParam.getIndex() : esIndexParam.getAlias());
         }
     }
 
@@ -37,7 +37,7 @@ public class EsChainLambdaQueryWrapper<T> extends AbstractEsChainWrapper<T, SFun
         super.esWrapper = new EsLambdaQueryWrapper<>(tClass);
         EsIndexParam esIndexParam = GlobalParamHolder.getAndInitEsIndexParam(super.tClass);
         if (esIndexParam != null) {
-            index = StringUtils.isBlank(esIndexParam.getAlias()) ? esIndexParam.getIndex() : esIndexParam.getAlias();
+            index(StringUtils.isBlank(esIndexParam.getAlias()) ? esIndexParam.getIndex() : esIndexParam.getAlias());
         }
         if (esPlusClientFacade != null) {
             this.esPlusClientFacade = esPlusClientFacade;
@@ -51,7 +51,7 @@ public class EsChainLambdaQueryWrapper<T> extends AbstractEsChainWrapper<T, SFun
      */
     @Override
     public EsResponse<T> search() {
-        return esPlusClientFacade.search(index, type, esWrapper.esParamWrapper());
+        return esPlusClientFacade.search( type, esWrapper.esParamWrapper(),indexs);
     }
 
     /**
@@ -63,7 +63,7 @@ public class EsChainLambdaQueryWrapper<T> extends AbstractEsChainWrapper<T, SFun
     public EsResponse<T> search(int size) {
         EsQueryParamWrapper esQueryParamWrapper = esWrapper.esParamWrapper().getEsQueryParamWrapper();
         esQueryParamWrapper.setSize(size);
-        return esPlusClientFacade.search(index, type, esWrapper.esParamWrapper());
+        return esPlusClientFacade.search( type, esWrapper.esParamWrapper(),indexs);
     }
 
     /**
@@ -78,7 +78,7 @@ public class EsChainLambdaQueryWrapper<T> extends AbstractEsChainWrapper<T, SFun
         EsQueryParamWrapper esQueryParamWrapper = esWrapper.esParamWrapper().getEsQueryParamWrapper();
         esQueryParamWrapper.setPage(page);
         esQueryParamWrapper.setSize(size);
-        return esPlusClientFacade.search(index, type, esWrapper.esParamWrapper());
+        return esPlusClientFacade.search( type, esWrapper.esParamWrapper(),indexs);
     }
 
     /**
@@ -86,7 +86,7 @@ public class EsChainLambdaQueryWrapper<T> extends AbstractEsChainWrapper<T, SFun
      */
     @Override
     public EsAggResponse<T> aggregations() {
-        return esPlusClientFacade.aggregations(index, type, esWrapper.esParamWrapper());
+        return esPlusClientFacade.aggregations( type, esWrapper.esParamWrapper(),indexs);
     }
 
     /**
@@ -96,7 +96,7 @@ public class EsChainLambdaQueryWrapper<T> extends AbstractEsChainWrapper<T, SFun
      */
     @Override
     public long count() {
-        return esPlusClientFacade.count(index, type, esWrapper.esParamWrapper());
+        return esPlusClientFacade.count( type, esWrapper.esParamWrapper(),indexs);
     }
 
     /**
@@ -109,7 +109,7 @@ public class EsChainLambdaQueryWrapper<T> extends AbstractEsChainWrapper<T, SFun
     @Override
     public EsResponse<T> scroll(int size, String scollId) {
         esWrapper.esParamWrapper().getEsQueryParamWrapper().setSize(size);
-        return esPlusClientFacade.scroll(index, type, esWrapper.esParamWrapper(), SCROLL_KEEP_TIME, scollId);
+        return esPlusClientFacade.scroll(type, esWrapper.esParamWrapper(), SCROLL_KEEP_TIME, scollId,indexs);
     }
 
     /**
@@ -123,7 +123,7 @@ public class EsChainLambdaQueryWrapper<T> extends AbstractEsChainWrapper<T, SFun
     @Override
     public EsResponse<T> scroll(int size, Duration keepTime, String scollId) {
         esWrapper.esParamWrapper().getEsQueryParamWrapper().setSize(size);
-        return esPlusClientFacade.scroll(index, type, esWrapper.esParamWrapper(), keepTime, scollId);
+        return esPlusClientFacade.scroll(type, esWrapper.esParamWrapper(), keepTime, scollId,indexs);
     }
 
     /**
@@ -132,7 +132,7 @@ public class EsChainLambdaQueryWrapper<T> extends AbstractEsChainWrapper<T, SFun
     @Override
     public EsResponse<T> profile() {
         esWrapper.esParamWrapper().getEsQueryParamWrapper().setProfile(true);
-        return esPlusClientFacade.search(index, type, esWrapper.esParamWrapper());
+        return esPlusClientFacade.search( type, esWrapper.esParamWrapper(),indexs);
     }
 
     /**
@@ -143,7 +143,7 @@ public class EsChainLambdaQueryWrapper<T> extends AbstractEsChainWrapper<T, SFun
      */
     @Override
     public String executeDSL(String dsl) {
-        return esPlusClientFacade.executeDSL(dsl, index);
+        return esPlusClientFacade.executeDSL(dsl, indexs);
     }
     
     @Override

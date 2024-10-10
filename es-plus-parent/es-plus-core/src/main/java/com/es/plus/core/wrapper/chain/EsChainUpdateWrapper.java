@@ -31,7 +31,7 @@ public class EsChainUpdateWrapper<T> extends AbstractEsChainWrapper<T, String, E
         super.esWrapper = new EsUpdateWrapper<>(tClass);
         EsIndexParam esIndexParam = GlobalParamHolder.getAndInitEsIndexParam(super.tClass);
         if (esIndexParam != null) {
-            index = esIndexParam.getIndex() ;
+            index(esIndexParam.getIndex());
             type = esIndexParam.getType();
         }
     }
@@ -41,7 +41,7 @@ public class EsChainUpdateWrapper<T> extends AbstractEsChainWrapper<T, String, E
         super.esWrapper = new EsUpdateWrapper<>(tClass);
         EsIndexParam esIndexParam = GlobalParamHolder.getAndInitEsIndexParam(super.tClass);
         if (esIndexParam != null) {
-            index = esIndexParam.getIndex();
+            index(esIndexParam.getIndex());
             type = esIndexParam.getType();
         }
         if (esPlusClientFacade != null) {
@@ -51,18 +51,17 @@ public class EsChainUpdateWrapper<T> extends AbstractEsChainWrapper<T, String, E
 
     @Override
     public boolean save(T t) {
-        return esPlusClientFacade.save(index, type, t);
+        return esPlusClientFacade.save(type, t,indexs);
     }
 
     /**
      * 保存批处理
      *
-     * @param t t
      * @return {@link List}<{@link BulkItemResponse}>
      */
     @Override
     public List<BulkItemResponse> saveBatch(Collection<T> entityList) {
-        return esPlusClientFacade.saveBatch(index, type, entityList);
+        return esPlusClientFacade.saveBatch( type, entityList,indexs);
     }
 
     /**
@@ -72,24 +71,23 @@ public class EsChainUpdateWrapper<T> extends AbstractEsChainWrapper<T, String, E
      */
     @Override
     public List<BulkItemResponse> saveOrUpdateBatch(Collection<T> entityList) {
-        return esPlusClientFacade.saveOrUpdateBatch(index, type, entityList);
+        return esPlusClientFacade.saveOrUpdateBatch( type, entityList,indexs);
     }
 
 
     @Override
     public boolean update(T t) {
-        return esPlusClientFacade.update(index, type, t);
+        return esPlusClientFacade.update( type, t,indexs);
     }
 
     /**
      * 批处理更新
      *
-     * @param t t
      * @return {@link List}<{@link BulkItemResponse}>
      */
     @Override
     public List<BulkItemResponse> updateBatch(Collection<T> entityList) {
-        return esPlusClientFacade.updateBatch(index, type, entityList);
+        return esPlusClientFacade.updateBatch(type, entityList,indexs);
     }
 
 
@@ -100,7 +98,7 @@ public class EsChainUpdateWrapper<T> extends AbstractEsChainWrapper<T, String, E
      */
     @Override
     public BulkByScrollResponse updateByQuery() {
-        return esPlusClientFacade.updateByWrapper(index, type, esWrapper.esParamWrapper());
+        return esPlusClientFacade.updateByWrapper(type, esWrapper.esParamWrapper(),indexs);
     }
 
 
@@ -111,13 +109,13 @@ public class EsChainUpdateWrapper<T> extends AbstractEsChainWrapper<T, String, E
      */
     @Override
     public BulkByScrollResponse incrementByWapper() {
-        return esPlusClientFacade.increment(index, type, esWrapper.esParamWrapper());
+        return esPlusClientFacade.increment( type, esWrapper.esParamWrapper(),indexs);
     }
 
 
     @Override
     public boolean removeByIds(Collection<String> ids) {
-        return esPlusClientFacade.deleteBatchByIds(index, type, ids);
+        return esPlusClientFacade.deleteBatchByIds(type, ids,indexs);
     }
 
 
@@ -128,7 +126,7 @@ public class EsChainUpdateWrapper<T> extends AbstractEsChainWrapper<T, String, E
      */
     @Override
     public BulkByScrollResponse remove() {
-        return esPlusClientFacade.deleteByQuery(index, type, esWrapper.esParamWrapper());
+        return esPlusClientFacade.deleteByQuery(type, esWrapper.esParamWrapper(),indexs);
     }
 
     /**

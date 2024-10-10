@@ -186,7 +186,7 @@ public class EsReindexProcess {
             newEsSettings.setRefreshInterval((String) localSettings.get("refresh_interval"));
         }
         if (newEsSettings != null) {
-            esPlusClientFacade.updateSettings(currentIndex, newEsSettings);
+            esPlusClientFacade.updateSettings( newEsSettings,currentIndex);
         }
         return false;
     }
