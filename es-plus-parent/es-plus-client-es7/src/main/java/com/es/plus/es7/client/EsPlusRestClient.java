@@ -590,9 +590,11 @@ public class EsPlusRestClient implements EsPlusClient {
         //查询
         SearchResponse searchResponse = null;
         try {
+            long start = System.currentTimeMillis();
             searchResponse = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
-            long millis = searchResponse.getTook().getMillis();
-            printSearchInfoLog("search index={} body:{} tookMills={}", index, sourceBuilder, millis);
+            long end = System.currentTimeMillis();
+            long mills = end - start;
+            printSearchInfoLog("search index={} body:{} tookMills={}", index, sourceBuilder, mills);
         } catch (Exception e) {
             throw new EsException("es-plus search body=" + sourceBuilder, e);
         }
@@ -670,10 +672,12 @@ public class EsPlusRestClient implements EsPlusClient {
         //查询
         SearchResponse searchResponse = null;
         try {
+            long start = System.currentTimeMillis();
             printSearchInfoLog("aggregations index={} body:{}", index, sourceBuilder);
             searchResponse = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
-            long millis = searchResponse.getTook().getMillis();
-            printSearchInfoLog("{} aggregations tookMills={}", index, millis);
+            long end = System.currentTimeMillis();
+            long mills = end - start;
+            printSearchInfoLog("{} aggregations tookMills={}", index, mills);
         } catch (Exception e) {
             throw new EsException("aggregations error", e);
         }
@@ -789,7 +793,7 @@ public class EsPlusRestClient implements EsPlusClient {
         EsResponse<T> esResponse = new EsResponse<>(result, hits.getTotalHits().value, esAggsResponse);
         esResponse.setShardFailures(searchResponse.getShardFailures());
         esResponse.setSkippedShards(searchResponse.getSkippedShards());
-        esResponse.setTookInMillis(searchResponse.getTook().getMillis());
+//        esResponse.setTookInMillis(searchResponse.getTook().getMillis());
         esResponse.setSuccessfulShards(searchResponse.getSuccessfulShards());
         esResponse.setTotalShards(searchResponse.getTotalShards());
         esResponse.setScrollId(searchResponse.getScrollId());

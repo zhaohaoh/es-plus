@@ -19,7 +19,7 @@ public class EsResponse<T> {
     private long total;
     
     /**
-     * 耗时
+     * 耗时  注意，不是es返回的，而是系统统计的
      */
     private long tookInMillis;
     

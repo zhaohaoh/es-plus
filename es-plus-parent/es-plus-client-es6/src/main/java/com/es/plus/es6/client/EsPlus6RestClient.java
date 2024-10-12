@@ -590,8 +590,10 @@ public class EsPlus6RestClient implements EsPlusClient {
         //查询
         SearchResponse searchResponse = null;
         try {
+            long start = System.currentTimeMillis();
             searchResponse = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
-            long millis = searchResponse.getTook().getMillis();
+            long end = System.currentTimeMillis();
+            long millis = end - start;
             printSearchInfoLog("search index={} body:{} tookMills={}", index, sourceBuilder, millis);
         } catch (Exception e) {
             throw new EsException("es-plus search body=" + sourceBuilder, e);
@@ -673,8 +675,10 @@ public class EsPlus6RestClient implements EsPlusClient {
         SearchResponse searchResponse = null;
         try {
             printSearchInfoLog("aggregations index={} body:{}", index, sourceBuilder);
+            long start = System.currentTimeMillis();
             searchResponse = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
-            long millis = searchResponse.getTook().getMillis();
+            long end = System.currentTimeMillis();
+            long millis = end - start;
             printSearchInfoLog("{} aggregations tookMills={}", index, millis);
         } catch (Exception e) {
             throw new EsException("aggregations error", e);
@@ -789,7 +793,7 @@ public class EsPlus6RestClient implements EsPlusClient {
         EsResponse<T> esResponse = new EsResponse<>(result, hits.getTotalHits(), esAggsResponse);
         esResponse.setShardFailures(searchResponse.getShardFailures());
         esResponse.setSkippedShards(searchResponse.getSkippedShards());
-        esResponse.setTookInMillis(searchResponse.getTook().getMillis());
+//        esResponse.setTookInMillis(searchResponse.getTook().getMillis());
         esResponse.setSuccessfulShards(searchResponse.getSuccessfulShards());
         esResponse.setTotalShards(searchResponse.getTotalShards());
         esResponse.setScrollId(searchResponse.getScrollId());
