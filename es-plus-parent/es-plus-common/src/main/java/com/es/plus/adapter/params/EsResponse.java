@@ -2,6 +2,7 @@ package com.es.plus.adapter.params;
 
 
 import lombok.Data;
+import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.ShardSearchFailure;
 import org.elasticsearch.search.profile.ProfileShardResult;
 import org.springframework.util.CollectionUtils;
@@ -77,6 +78,12 @@ public class EsResponse<T> {
      * 分片失败的信息
      */
     private ShardSearchFailure[] shardFailures;
+    
+    /**
+     *  原始的返回信息
+     */
+    private SearchResponse sourceResponse;
+ 
     
     
     public EsResponse(List<T> list, long count, EsAggResponse<T> esAggregationReponse) {

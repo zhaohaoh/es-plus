@@ -688,6 +688,7 @@ public class EsPlusRestClient implements EsPlusClient {
         EsPlusAggregations<T> esAggregationReponse = new EsPlusAggregations<>();
         esAggregationReponse.setAggregations(aggregations);
         esAggregationReponse.settClass(esParamWrapper.getTClass());
+        
         return esAggregationReponse;
     }
     
@@ -798,6 +799,7 @@ public class EsPlusRestClient implements EsPlusClient {
         esResponse.setTotalShards(searchResponse.getTotalShards());
         esResponse.setScrollId(searchResponse.getScrollId());
         esResponse.setInnerHits(esHits);
+        esResponse.setSourceResponse(searchResponse);
         // 设置最小和最大的排序字段值
         if (ArrayUtils.isNotEmpty(hitArray)) {
             esResponse.setFirstSortValues(hitArray[0].getSortValues());

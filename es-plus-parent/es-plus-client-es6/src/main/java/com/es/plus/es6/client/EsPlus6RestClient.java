@@ -798,6 +798,7 @@ public class EsPlus6RestClient implements EsPlusClient {
         esResponse.setTotalShards(searchResponse.getTotalShards());
         esResponse.setScrollId(searchResponse.getScrollId());
         esResponse.setInnerHits(esHits);
+        esResponse.setSourceResponse(searchResponse);
         // 设置最小和最大的排序字段值
         if (ArrayUtils.isNotEmpty(hitArray)) {
             esResponse.setFirstSortValues(hitArray[0].getSortValues());
