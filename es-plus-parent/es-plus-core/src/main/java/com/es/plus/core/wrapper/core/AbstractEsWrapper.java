@@ -175,6 +175,11 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
         final Children children = instance();
         children.parentFieldName = super.parentFieldName;
         consumer.accept(children);
+        BoolQueryBuilder queryBuilder = children.getQueryBuilder();
+        if (CollectionUtils.isEmpty(queryBuilder.must())  &&CollectionUtils.isEmpty(queryBuilder.mustNot()) &&
+                CollectionUtils.isEmpty(queryBuilder.filter()) &&CollectionUtils.isEmpty(queryBuilder.should())){
+            return this.children;
+        }
         this.children.getQueryBuilder().must(children.getQueryBuilder());
         return this.children;
     }
@@ -187,6 +192,11 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
         final Children children = instance();
         children.parentFieldName = super.parentFieldName;
         consumer.accept(children);
+        BoolQueryBuilder queryBuilder = children.getQueryBuilder();
+        if (CollectionUtils.isEmpty(queryBuilder.must())  &&CollectionUtils.isEmpty(queryBuilder.mustNot()) &&
+                CollectionUtils.isEmpty(queryBuilder.filter()) &&CollectionUtils.isEmpty(queryBuilder.should())){
+            return this.children;
+        }
         this.children.getQueryBuilder().should(children.getQueryBuilder());
         return this.children;
     }
@@ -199,6 +209,11 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
         final Children children = instance();
         children.parentFieldName = super.parentFieldName;
         consumer.accept(children);
+        BoolQueryBuilder queryBuilder = children.getQueryBuilder();
+        if (CollectionUtils.isEmpty(queryBuilder.must())  &&CollectionUtils.isEmpty(queryBuilder.mustNot()) &&
+                CollectionUtils.isEmpty(queryBuilder.filter()) &&CollectionUtils.isEmpty(queryBuilder.should())){
+            return this.children;
+        }
         this.children.getQueryBuilder().mustNot(children.getQueryBuilder());
         return this.children;
     }
@@ -211,6 +226,11 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
         final Children children = instance();
         children.parentFieldName = super.parentFieldName;
         consumer.accept(children);
+        BoolQueryBuilder queryBuilder = children.getQueryBuilder();
+        if (CollectionUtils.isEmpty(queryBuilder.must())  &&CollectionUtils.isEmpty(queryBuilder.mustNot()) &&
+                CollectionUtils.isEmpty(queryBuilder.filter()) &&CollectionUtils.isEmpty(queryBuilder.should())){
+            return this.children;
+        }
         this.children.getQueryBuilder().filter(children.getQueryBuilder());
         return this.children;
     }

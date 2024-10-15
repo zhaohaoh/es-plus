@@ -594,7 +594,7 @@ public class EsPlus6RestClient implements EsPlusClient {
             searchResponse = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
             long end = System.currentTimeMillis();
             long millis = end - start;
-            printSearchInfoLog("search index={} body:{} tookMills={}", index, sourceBuilder, millis);
+            printSearchInfoLog("search index={} body:{} tookMills={}", index,  millis,sourceBuilder);
         } catch (Exception e) {
             throw new EsException("es-plus search body=" + sourceBuilder, e);
         }
