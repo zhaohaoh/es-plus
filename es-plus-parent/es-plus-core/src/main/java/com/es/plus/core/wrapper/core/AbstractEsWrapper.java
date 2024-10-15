@@ -44,6 +44,7 @@ import org.elasticsearch.join.query.ParentIdQueryBuilder;
 import org.elasticsearch.script.Script;
 import org.elasticsearch.search.sort.NestedSortBuilder;
 import org.elasticsearch.search.sort.SortOrder;
+import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -496,6 +497,11 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
             //嵌套对象增加父字段名
             esQueryWrapper.parentFieldName = name;
             consumer.accept(esQueryWrapper);
+            BoolQueryBuilder queryBuilder = esQueryWrapper.getQueryBuilder();
+            if (CollectionUtils.isEmpty(queryBuilder.must()) ||CollectionUtils.isEmpty(queryBuilder.mustNot())||
+                CollectionUtils.isEmpty(queryBuilder.filter())||CollectionUtils.isEmpty(queryBuilder.should())){
+                return this.children;
+            }
             NestedQueryBuilder nestedQueryBuilder = QueryBuilders.nestedQuery(name, esQueryWrapper.getQueryBuilder(), ScoreMode.None);
             currentBuilder = nestedQueryBuilder;
             this.queryBuilders.add(nestedQueryBuilder);
@@ -511,6 +517,11 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
             //嵌套对象增加父字段名
             esQueryWrapper.parentFieldName = name;
             consumer.accept(esQueryWrapper);
+            BoolQueryBuilder queryBuilder = esQueryWrapper.getQueryBuilder();
+            if (CollectionUtils.isEmpty(queryBuilder.must()) ||CollectionUtils.isEmpty(queryBuilder.mustNot())||
+                    CollectionUtils.isEmpty(queryBuilder.filter())||CollectionUtils.isEmpty(queryBuilder.should())){
+                return this.children;
+            }
             NestedQueryBuilder nestedQueryBuilder = QueryBuilders.nestedQuery(name, esQueryWrapper.getQueryBuilder(), ScoreMode.None);
             currentBuilder = nestedQueryBuilder;
             this.queryBuilders.add(nestedQueryBuilder);
@@ -527,6 +538,11 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
             //嵌套对象增加父字段名
             esQueryWrapper.parentFieldName = name;
             consumer.accept(esQueryWrapper);
+            BoolQueryBuilder queryBuilder = esQueryWrapper.getQueryBuilder();
+            if (CollectionUtils.isEmpty(queryBuilder.must()) ||CollectionUtils.isEmpty(queryBuilder.mustNot())||
+                    CollectionUtils.isEmpty(queryBuilder.filter())||CollectionUtils.isEmpty(queryBuilder.should())){
+                return this.children;
+            }
             NestedQueryBuilder nestedQueryBuilder = QueryBuilders.nestedQuery(name, esQueryWrapper.getQueryBuilder(), mode);
             currentBuilder = nestedQueryBuilder;
             nestedQueryBuilder.innerHit(innerHitBuilder);
@@ -543,6 +559,11 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
             //嵌套对象增加父字段名
             esQueryWrapper.parentFieldName = name;
             consumer.accept(esQueryWrapper);
+            BoolQueryBuilder queryBuilder = esQueryWrapper.getQueryBuilder();
+            if (CollectionUtils.isEmpty(queryBuilder.must()) ||CollectionUtils.isEmpty(queryBuilder.mustNot())||
+                    CollectionUtils.isEmpty(queryBuilder.filter())||CollectionUtils.isEmpty(queryBuilder.should())){
+                return this.children;
+            }
             NestedQueryBuilder nestedQueryBuilder = QueryBuilders.nestedQuery(name, esQueryWrapper.getQueryBuilder(), mode);
             currentBuilder = nestedQueryBuilder;
             nestedQueryBuilder.innerHit(innerHitBuilder);
