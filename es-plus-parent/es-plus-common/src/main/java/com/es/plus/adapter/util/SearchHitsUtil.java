@@ -74,6 +74,9 @@ public class SearchHitsUtil {
         if (!Float.isNaN(score)) {
             EsIndexParam esIndexParam = GlobalParamHolder.getAndInitEsIndexParam(bean.getClass());
             try {
+                if (esIndexParam==null){
+                    return;
+                }
                 if (StringUtils.isNotBlank(esIndexParam.getScoreField())) {
                     Field field = bean.getClass().getDeclaredField(esIndexParam.getScoreField());
                     field.setAccessible(true);
