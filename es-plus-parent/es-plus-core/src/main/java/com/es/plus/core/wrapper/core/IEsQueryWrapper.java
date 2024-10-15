@@ -267,7 +267,7 @@ public interface IEsQueryWrapper<Children, QUERY, R> {
      * @return {@link Children}
      */
     <S> Children nestedQuery(boolean condition, R path, Consumer<EsQueryWrapper<S>> consumer, ScoreMode mode, InnerHitBuilder innerHitBuilder);
-
+   
     default Children gt(R name, Object from) {
         return gt(true, name, from);
     }
@@ -328,5 +328,6 @@ public interface IEsQueryWrapper<Children, QUERY, R> {
     }
 
     Children geoPolygon(boolean condition, R name, List<GeoPoint> geoPoints);
+    
 
 }

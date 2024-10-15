@@ -114,4 +114,8 @@ public class GlobalConfig {
      * 使用的配置类型 nacos，file
      */
     private String  configType;
+    /**
+     * wildcard字段查询长度限制 能够有效减少es查询的压力，减少cpu压力。因为wildcard会构建一个词树，根据词的数量笛卡尔积
+     */
+    private Integer wildcardQueryLimit;
 }

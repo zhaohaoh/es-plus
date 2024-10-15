@@ -1,19 +1,43 @@
 package com.es.plus.core.wrapper.core;
 
 
-import com.es.plus.adapter.params.*;
+import com.es.plus.adapter.config.GlobalConfigCache;
+import com.es.plus.adapter.interceptor.EsUpdateField;
+import com.es.plus.adapter.params.EsHighLight;
+import com.es.plus.adapter.params.EsOrder;
+import com.es.plus.adapter.params.EsParamWrapper;
+import com.es.plus.adapter.params.EsQueryParamWrapper;
+import com.es.plus.adapter.params.EsSelect;
 import com.es.plus.adapter.properties.EsFieldInfo;
 import com.es.plus.adapter.properties.GlobalParamHolder;
-import com.es.plus.adapter.interceptor.EsUpdateField;
 import com.es.plus.adapter.util.DateUtil;
 import com.es.plus.core.wrapper.aggregation.EsAggWrapper;
 import com.es.plus.core.wrapper.aggregation.EsLambdaAggWrapper;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.common.geo.GeoPoint;
 import org.elasticsearch.common.unit.DistanceUnit;
 import org.elasticsearch.common.unit.Fuzziness;
-import org.elasticsearch.index.query.*;
+import org.elasticsearch.index.query.BoolQueryBuilder;
+import org.elasticsearch.index.query.ExistsQueryBuilder;
+import org.elasticsearch.index.query.FuzzyQueryBuilder;
+import org.elasticsearch.index.query.GeoBoundingBoxQueryBuilder;
+import org.elasticsearch.index.query.GeoDistanceQueryBuilder;
+import org.elasticsearch.index.query.GeoPolygonQueryBuilder;
+import org.elasticsearch.index.query.IdsQueryBuilder;
+import org.elasticsearch.index.query.InnerHitBuilder;
+import org.elasticsearch.index.query.MatchPhrasePrefixQueryBuilder;
+import org.elasticsearch.index.query.MatchPhraseQueryBuilder;
+import org.elasticsearch.index.query.MatchQueryBuilder;
+import org.elasticsearch.index.query.MultiMatchQueryBuilder;
+import org.elasticsearch.index.query.NestedQueryBuilder;
+import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.query.ScriptQueryBuilder;
+import org.elasticsearch.index.query.TermQueryBuilder;
+import org.elasticsearch.index.query.TermsQueryBuilder;
+import org.elasticsearch.index.query.WildcardQueryBuilder;
 import org.elasticsearch.join.query.HasChildQueryBuilder;
 import org.elasticsearch.join.query.HasParentQueryBuilder;
 import org.elasticsearch.join.query.ParentIdQueryBuilder;
@@ -115,7 +139,6 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
         return super.nameToString(function);
     }
 
-
     public BoolQueryBuilder getQueryBuilder() {
         return esParamWrapper().getEsQueryParamWrapper().getQueryBuilder();
     }
@@ -149,6 +172,7 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
             return this.children;
         }
         final Children children = instance();
+        children.parentFieldName = super.parentFieldName;
         consumer.accept(children);
         this.children.getQueryBuilder().must(children.getQueryBuilder());
         return this.children;
@@ -160,6 +184,7 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
             return this.children;
         }
         final Children children = instance();
+        children.parentFieldName = super.parentFieldName;
         consumer.accept(children);
         this.children.getQueryBuilder().should(children.getQueryBuilder());
         return this.children;
@@ -171,6 +196,7 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
             return this.children;
         }
         final Children children = instance();
+        children.parentFieldName = super.parentFieldName;
         consumer.accept(children);
         this.children.getQueryBuilder().mustNot(children.getQueryBuilder());
         return this.children;
@@ -182,6 +208,7 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
             return this.children;
         }
         final Children children = instance();
+        children.parentFieldName = super.parentFieldName;
         consumer.accept(children);
         this.children.getQueryBuilder().filter(children.getQueryBuilder());
         return this.children;
@@ -193,6 +220,7 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
     @Override
     public Children hasChild(boolean condition, String childType, ScoreMode scoreMode, Consumer<Children> consumer) {
         final Children children = instance();
+        children.parentFieldName = super.parentFieldName;
         consumer.accept(children);
         HasChildQueryBuilder hasParentQueryBuilder = new HasChildQueryBuilder(childType, children.getQueryBuilder(), scoreMode);
         queryBuilders.add(hasParentQueryBuilder);
@@ -206,6 +234,7 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
     @Override
     public Children hasParent(boolean condition, String parentType, Boolean scoreMode, Consumer<Children> consumer) {
         final Children children = instance();
+        children.parentFieldName = super.parentFieldName;
         consumer.accept(children);
         HasParentQueryBuilder hasParentQueryBuilder = new HasParentQueryBuilder(parentType, children.getQueryBuilder(), scoreMode);
         queryBuilders.add(hasParentQueryBuilder);
@@ -408,7 +437,12 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
     @Override
     public Children wildcard(boolean condition, R name, String value) {
         if (condition) {
-            WildcardQueryBuilder wildcardQueryBuilder = QueryBuilders.wildcardQuery(nameToString(name), value);
+            String wildcardName = nameToString(name);
+            Integer queryLimit = GlobalConfigCache.GLOBAL_CONFIG.getWildcardQueryLimit();
+            if (queryLimit!=null && queryLimit >=0){
+                wildcardName = StringUtils.substring(wildcardName,0,queryLimit);
+            }
+            WildcardQueryBuilder wildcardQueryBuilder = QueryBuilders.wildcardQuery("*"+ wildcardName +"*", value);
             currentBuilder = wildcardQueryBuilder;
             queryBuilders.add(wildcardQueryBuilder);
         }
@@ -488,7 +522,6 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
     public <S> Children nestedQuery(boolean condition, R path, Class<S> sClass, Consumer<EsLambdaQueryWrapper<S>> consumer, ScoreMode mode, InnerHitBuilder innerHitBuilder) {
         if (condition) {
             String name = nameToString(path);
-
             Function<Class<S>, EsLambdaQueryWrapper<S>> sp = a -> new EsLambdaQueryWrapper<>(sClass);
             EsLambdaQueryWrapper<S> esQueryWrapper = sp.apply(sClass);
             //嵌套对象增加父字段名

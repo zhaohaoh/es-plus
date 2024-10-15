@@ -7,6 +7,7 @@ import com.es.plus.core.ClientContext;
 import com.es.plus.core.statics.Es;
 import com.es.plus.core.wrapper.aggregation.EsAggWrapper;
 import com.es.plus.core.wrapper.chain.EsChainLambdaQueryWrapper;
+import com.es.plus.core.wrapper.chain.EsChainQueryWrapper;
 import com.es.plus.es6.client.EsPlus6Aggregations;
 import com.es.plus.samples.SamplesApplication;
 import com.es.plus.samples.dto.FastTestDTO;
@@ -165,12 +166,13 @@ public class FastTest {
                 .trackScores(true)
                 .minScope(0)
                 .searchAfterValues(test.getTailSortValues()).search(10000);
-
-
-        EsResponse<FastTestDTO> test3 = Es.chainLambdaQuery(FastTestDTO.class).sortByAsc("id").sortByAsc("username")  .includes(FastTestDTO::getId)
+        
+        EsChainLambdaQueryWrapper<FastTestDTO> wrapper = Es.chainLambdaQuery(
+                FastTestDTO.class);
+        EsResponse<FastTestDTO> test3 = wrapper.sortByAsc("id").sortByAsc("username")  .includes(FastTestDTO::getId)
                 .fetch(false)
                 .searchAfterValues(test.getTailSortValues()).search(11);
-
+ 
         System.out.println(test);
     }
 
@@ -212,7 +214,15 @@ public class FastTest {
     
     @org.junit.jupiter.api.Test
     public void indexs() {
-        EsResponse<Map> esResponse = Es.chainQuery(Map.class).index("fast_test_new_v116", "fast_test_new_v115").sortByDesc("id").search(10);
+        EsResponse<Map> esResponse = Es.chainQuery(Map.class).index("fast_test_new_v116", "fast_test_new_v115")
+                .sortByDesc("id").search(10);
         System.out.println(esResponse);
+    }
+    
+    @org.junit.jupiter.api.Test
+    public void sss() {
+        EsChainQueryWrapper<Map> index = Es.chainQuery(Map.class).index("fast_test_new_v116", "fast_test_new_v115");
+        
+      
     }
 }
