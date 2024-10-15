@@ -498,8 +498,8 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
             esQueryWrapper.parentFieldName = name;
             consumer.accept(esQueryWrapper);
             BoolQueryBuilder queryBuilder = esQueryWrapper.getQueryBuilder();
-            if (CollectionUtils.isEmpty(queryBuilder.must()) ||CollectionUtils.isEmpty(queryBuilder.mustNot())||
-                CollectionUtils.isEmpty(queryBuilder.filter())||CollectionUtils.isEmpty(queryBuilder.should())){
+            if (CollectionUtils.isEmpty(queryBuilder.must())  &&CollectionUtils.isEmpty(queryBuilder.mustNot()) &&
+                CollectionUtils.isEmpty(queryBuilder.filter()) &&CollectionUtils.isEmpty(queryBuilder.should())){
                 return this.children;
             }
             NestedQueryBuilder nestedQueryBuilder = QueryBuilders.nestedQuery(name, esQueryWrapper.getQueryBuilder(), ScoreMode.None);
@@ -518,8 +518,8 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
             esQueryWrapper.parentFieldName = name;
             consumer.accept(esQueryWrapper);
             BoolQueryBuilder queryBuilder = esQueryWrapper.getQueryBuilder();
-            if (CollectionUtils.isEmpty(queryBuilder.must()) ||CollectionUtils.isEmpty(queryBuilder.mustNot())||
-                    CollectionUtils.isEmpty(queryBuilder.filter())||CollectionUtils.isEmpty(queryBuilder.should())){
+            if (CollectionUtils.isEmpty(queryBuilder.must())  &&CollectionUtils.isEmpty(queryBuilder.mustNot()) &&
+                    CollectionUtils.isEmpty(queryBuilder.filter()) &&CollectionUtils.isEmpty(queryBuilder.should())){
                 return this.children;
             }
             NestedQueryBuilder nestedQueryBuilder = QueryBuilders.nestedQuery(name, esQueryWrapper.getQueryBuilder(), ScoreMode.None);
@@ -539,8 +539,8 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
             esQueryWrapper.parentFieldName = name;
             consumer.accept(esQueryWrapper);
             BoolQueryBuilder queryBuilder = esQueryWrapper.getQueryBuilder();
-            if (CollectionUtils.isEmpty(queryBuilder.must()) ||CollectionUtils.isEmpty(queryBuilder.mustNot())||
-                    CollectionUtils.isEmpty(queryBuilder.filter())||CollectionUtils.isEmpty(queryBuilder.should())){
+            if (CollectionUtils.isEmpty(queryBuilder.must())  &&CollectionUtils.isEmpty(queryBuilder.mustNot()) &&
+                    CollectionUtils.isEmpty(queryBuilder.filter()) &&CollectionUtils.isEmpty(queryBuilder.should())){
                 return this.children;
             }
             NestedQueryBuilder nestedQueryBuilder = QueryBuilders.nestedQuery(name, esQueryWrapper.getQueryBuilder(), mode);
