@@ -13,34 +13,89 @@ import org.elasticsearch.search.aggregations.AggregationBuilder;
 import org.elasticsearch.search.aggregations.AggregatorFactories;
 import org.elasticsearch.search.aggregations.BaseAggregationBuilder;
 import org.elasticsearch.search.aggregations.PipelineAggregationBuilder;
+import org.elasticsearch.search.aggregations.bucket.adjacency.AdjacencyMatrix;
 import org.elasticsearch.search.aggregations.bucket.adjacency.AdjacencyMatrixAggregationBuilder;
 import org.elasticsearch.search.aggregations.bucket.composite.CompositeAggregationBuilder;
 import org.elasticsearch.search.aggregations.bucket.composite.CompositeValuesSourceBuilder;
 import org.elasticsearch.search.aggregations.bucket.filter.FilterAggregationBuilder;
+import org.elasticsearch.search.aggregations.bucket.filter.Filters;
 import org.elasticsearch.search.aggregations.bucket.filter.FiltersAggregationBuilder;
 import org.elasticsearch.search.aggregations.bucket.filter.FiltersAggregator;
+import org.elasticsearch.search.aggregations.bucket.geogrid.InternalGeoHashGrid;
+import org.elasticsearch.search.aggregations.bucket.geogrid.InternalGeoTileGrid;
 import org.elasticsearch.search.aggregations.bucket.global.GlobalAggregationBuilder;
 import org.elasticsearch.search.aggregations.bucket.histogram.DateHistogramAggregationBuilder;
 import org.elasticsearch.search.aggregations.bucket.histogram.HistogramAggregationBuilder;
+import org.elasticsearch.search.aggregations.bucket.missing.Missing;
 import org.elasticsearch.search.aggregations.bucket.missing.MissingAggregationBuilder;
 import org.elasticsearch.search.aggregations.bucket.nested.NestedAggregationBuilder;
+import org.elasticsearch.search.aggregations.bucket.nested.ReverseNested;
 import org.elasticsearch.search.aggregations.bucket.nested.ReverseNestedAggregationBuilder;
 import org.elasticsearch.search.aggregations.bucket.range.DateRangeAggregationBuilder;
 import org.elasticsearch.search.aggregations.bucket.range.GeoDistanceAggregationBuilder;
 import org.elasticsearch.search.aggregations.bucket.range.IpRangeAggregationBuilder;
 import org.elasticsearch.search.aggregations.bucket.range.RangeAggregationBuilder;
 import org.elasticsearch.search.aggregations.bucket.sampler.DiversifiedAggregationBuilder;
+import org.elasticsearch.search.aggregations.bucket.sampler.Sampler;
 import org.elasticsearch.search.aggregations.bucket.sampler.SamplerAggregationBuilder;
+import org.elasticsearch.search.aggregations.bucket.significant.SignificantTerms;
 import org.elasticsearch.search.aggregations.bucket.significant.SignificantTermsAggregationBuilder;
 import org.elasticsearch.search.aggregations.bucket.significant.SignificantTextAggregationBuilder;
 import org.elasticsearch.search.aggregations.bucket.terms.TermsAggregationBuilder;
-import org.elasticsearch.search.aggregations.metrics.*;
-import org.elasticsearch.search.aggregations.pipeline.*;
+import org.elasticsearch.search.aggregations.metrics.Avg;
+import org.elasticsearch.search.aggregations.metrics.AvgAggregationBuilder;
+import org.elasticsearch.search.aggregations.metrics.Cardinality;
+import org.elasticsearch.search.aggregations.metrics.CardinalityAggregationBuilder;
+import org.elasticsearch.search.aggregations.metrics.ExtendedStats;
+import org.elasticsearch.search.aggregations.metrics.ExtendedStatsAggregationBuilder;
+import org.elasticsearch.search.aggregations.metrics.GeoBounds;
+import org.elasticsearch.search.aggregations.metrics.GeoBoundsAggregationBuilder;
+import org.elasticsearch.search.aggregations.metrics.GeoCentroid;
+import org.elasticsearch.search.aggregations.metrics.GeoCentroidAggregationBuilder;
+import org.elasticsearch.search.aggregations.metrics.Max;
+import org.elasticsearch.search.aggregations.metrics.MaxAggregationBuilder;
+import org.elasticsearch.search.aggregations.metrics.MedianAbsoluteDeviation;
+import org.elasticsearch.search.aggregations.metrics.MedianAbsoluteDeviationAggregationBuilder;
+import org.elasticsearch.search.aggregations.metrics.Min;
+import org.elasticsearch.search.aggregations.metrics.MinAggregationBuilder;
+import org.elasticsearch.search.aggregations.metrics.PercentileRanks;
+import org.elasticsearch.search.aggregations.metrics.PercentileRanksAggregationBuilder;
+import org.elasticsearch.search.aggregations.metrics.Percentiles;
+import org.elasticsearch.search.aggregations.metrics.PercentilesAggregationBuilder;
+import org.elasticsearch.search.aggregations.metrics.ScriptedMetric;
+import org.elasticsearch.search.aggregations.metrics.ScriptedMetricAggregationBuilder;
+import org.elasticsearch.search.aggregations.metrics.Stats;
+import org.elasticsearch.search.aggregations.metrics.StatsAggregationBuilder;
+import org.elasticsearch.search.aggregations.metrics.Sum;
+import org.elasticsearch.search.aggregations.metrics.SumAggregationBuilder;
+import org.elasticsearch.search.aggregations.metrics.TopHits;
+import org.elasticsearch.search.aggregations.metrics.TopHitsAggregationBuilder;
+import org.elasticsearch.search.aggregations.metrics.ValueCountAggregationBuilder;
+import org.elasticsearch.search.aggregations.metrics.WeightedAvgAggregationBuilder;
+import org.elasticsearch.search.aggregations.pipeline.AvgBucketPipelineAggregationBuilder;
+import org.elasticsearch.search.aggregations.pipeline.BucketScriptPipelineAggregationBuilder;
+import org.elasticsearch.search.aggregations.pipeline.BucketSelectorPipelineAggregationBuilder;
+import org.elasticsearch.search.aggregations.pipeline.BucketSortPipelineAggregationBuilder;
+import org.elasticsearch.search.aggregations.pipeline.CumulativeSumPipelineAggregationBuilder;
+import org.elasticsearch.search.aggregations.pipeline.DerivativePipelineAggregationBuilder;
+import org.elasticsearch.search.aggregations.pipeline.ExtendedStatsBucketPipelineAggregationBuilder;
+import org.elasticsearch.search.aggregations.pipeline.MaxBucketPipelineAggregationBuilder;
+import org.elasticsearch.search.aggregations.pipeline.MinBucketPipelineAggregationBuilder;
+import org.elasticsearch.search.aggregations.pipeline.MovFnPipelineAggregationBuilder;
+import org.elasticsearch.search.aggregations.pipeline.PercentilesBucketPipelineAggregationBuilder;
+import org.elasticsearch.search.aggregations.pipeline.SerialDiffPipelineAggregationBuilder;
+import org.elasticsearch.search.aggregations.pipeline.StatsBucketPipelineAggregationBuilder;
+import org.elasticsearch.search.aggregations.pipeline.SumBucketPipelineAggregationBuilder;
 import org.elasticsearch.search.sort.FieldSortBuilder;
 import org.elasticsearch.search.sort.SortOrder;
 import org.springframework.util.CollectionUtils;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -115,10 +170,13 @@ public abstract class AbstractEsAggWrapper<T, R, Children extends AbstractEsAggW
     }
 
     @Override
-    public Children count(R name) {
-        String field = getAggregationField(name);
-        BaseAggregationBuilder baseAggregationBuilder = esAggClient.count(field);
+    public Children count(String name,R field,Consumer<Children> subAgg) {
+        String fieldName = getAggregationField(field);
+        BaseAggregationBuilder baseAggregationBuilder = esAggClient.count(name,fieldName);
         currentBuilder = baseAggregationBuilder;
+        if (subAgg!=null){
+            subAggregation(subAgg);
+        }
         aggregationBuilder.add(currentBuilder);
         return this.children;
     }
@@ -127,10 +185,13 @@ public abstract class AbstractEsAggWrapper<T, R, Children extends AbstractEsAggW
      * Create a new {@link Avg} aggregation with the given name.
      */
     @Override
-    public Children avg(R name) {
-        String field = getAggregationField(name);
-        BaseAggregationBuilder baseAggregationBuilder = esAggClient.avg(field);
+    public Children avg(String name,R field,Consumer<Children> subAgg) {
+        String fieldName = getAggregationField(field);
+        BaseAggregationBuilder baseAggregationBuilder = esAggClient.avg(name,fieldName);
         currentBuilder = baseAggregationBuilder;
+        if (subAgg!=null){
+            subAggregation(subAgg);
+        }
         aggregationBuilder.add(currentBuilder);
         return this.children;
     }
@@ -139,10 +200,13 @@ public abstract class AbstractEsAggWrapper<T, R, Children extends AbstractEsAggW
      * Create a new {@link Avg} aggregation with the given name.
      */
     @Override
-    public Children weightedAvg(R name) {
-        String field = getAggregationField(name);
-        BaseAggregationBuilder baseAggregationBuilder = esAggClient.weightedAvg(field);
+    public Children weightedAvg(String name,R field,Consumer<Children> subAgg) {
+        String fieldName = getAggregationField(field);
+        BaseAggregationBuilder baseAggregationBuilder = esAggClient.weightedAvg(name,fieldName);
         currentBuilder = baseAggregationBuilder;
+        if (subAgg!=null){
+            subAggregation(subAgg);
+        }
         aggregationBuilder.add(currentBuilder);
         return this.children;
     }
@@ -151,10 +215,13 @@ public abstract class AbstractEsAggWrapper<T, R, Children extends AbstractEsAggW
      * Create a new {@link Max} aggregation with the given name.
      */
     @Override
-    public Children max(R name) {
-        String field = getAggregationField(name);
-        BaseAggregationBuilder baseAggregationBuilder = esAggClient.max(field);
+    public Children max(String name,R field,Consumer<Children> subAgg) {
+        String fieldName = getAggregationField(field);
+        BaseAggregationBuilder baseAggregationBuilder = esAggClient.max(name,fieldName);
         currentBuilder = baseAggregationBuilder;
+        if (subAgg!=null){
+            subAggregation(subAgg);
+        }
         aggregationBuilder.add(currentBuilder);
         return this.children;
     }
@@ -163,10 +230,13 @@ public abstract class AbstractEsAggWrapper<T, R, Children extends AbstractEsAggW
      * Create a new {@link Min} aggregation with the given name.
      */
     @Override
-    public Children min(R name) {
-        String field = getAggregationField(name);
-        BaseAggregationBuilder baseAggregationBuilder = esAggClient.min(field);
+    public Children min(String name,R field,Consumer<Children> subAgg) {
+        String fieldName = getAggregationField(field);
+        BaseAggregationBuilder baseAggregationBuilder = esAggClient.min(name,fieldName);
         currentBuilder = baseAggregationBuilder;
+        if (subAgg!=null){
+            subAggregation(subAgg);
+        }
         aggregationBuilder.add(currentBuilder);
         return this.children;
     }
@@ -175,10 +245,13 @@ public abstract class AbstractEsAggWrapper<T, R, Children extends AbstractEsAggW
      * Create a new {@link Sum} aggregation with the given name.
      */
     @Override
-    public Children sum(R name) {
-        String field = getAggregationField(name);
-        BaseAggregationBuilder baseAggregationBuilder = esAggClient.sum(field);
+    public Children sum(String name,R field,Consumer<Children> subAgg) {
+        String fieldName = getAggregationField(field);
+        BaseAggregationBuilder baseAggregationBuilder = esAggClient.sum(name,fieldName);
         currentBuilder = baseAggregationBuilder;
+        if (subAgg!=null){
+            subAggregation(subAgg);
+        }
         aggregationBuilder.add(currentBuilder);
         return this.children;
     }
@@ -187,10 +260,13 @@ public abstract class AbstractEsAggWrapper<T, R, Children extends AbstractEsAggW
      * Create a new {@link Stats} aggregation with the given name.
      */
     @Override
-    public Children stats(R name) {
-        String field = getAggregationField(name);
-        BaseAggregationBuilder baseAggregationBuilder = esAggClient.stats(field);
+    public Children stats(String name,R field,Consumer<Children> subAgg) {
+        String fieldName = getAggregationField(field);
+        BaseAggregationBuilder baseAggregationBuilder = esAggClient.stats(name,fieldName);
         currentBuilder = baseAggregationBuilder;
+        if (subAgg!=null){
+            subAggregation(subAgg);
+        }
         aggregationBuilder.add(currentBuilder);
         return this.children;
     }
@@ -199,10 +275,13 @@ public abstract class AbstractEsAggWrapper<T, R, Children extends AbstractEsAggW
      * Create a new {@link ExtendedStats} aggregation with the given name.
      */
     @Override
-    public Children extendedStats(R name) {
-        String field = getAggregationField(name);
-        BaseAggregationBuilder baseAggregationBuilder = esAggClient.extendedStats(field);
+    public Children extendedStats(String name,R field,Consumer<Children> subAgg) {
+        String fieldName = getAggregationField(field);
+        BaseAggregationBuilder baseAggregationBuilder = esAggClient.extendedStats(name,fieldName);
         currentBuilder = baseAggregationBuilder;
+        if (subAgg!=null){
+            subAggregation(subAgg);
+        }
         aggregationBuilder.add(currentBuilder);
         return this.children;
     }
@@ -211,10 +290,13 @@ public abstract class AbstractEsAggWrapper<T, R, Children extends AbstractEsAggW
      * Create a new {@link Filter} aggregation with the given name.
      */
     @Override
-    public Children filter(R name, Supplier<EsWrapper<T>> supplier) {
-        String field = getAggregationField(name);
-        BaseAggregationBuilder filter = esAggClient.filter(field, supplier.get().esParamWrapper());
+    public Children filter(String name,R field,Consumer<Children> subAgg, Supplier<EsWrapper<T>> supplier) {
+        String fieldName = getAggregationField(field);
+        BaseAggregationBuilder filter = esAggClient.filter(name,fieldName, supplier.get().esParamWrapper());
         currentBuilder = filter;
+        if (subAgg!=null){
+            subAggregation(subAgg);
+        }
         aggregationBuilder.add(currentBuilder);
         return this.children;
     }
@@ -223,11 +305,14 @@ public abstract class AbstractEsAggWrapper<T, R, Children extends AbstractEsAggW
      * Create a new {@link Filters} aggregation with the given name.
      */
     @Override
-    public Children filters(R name, FiltersAggregator.KeyedFilter... filters) {
-        String field = getAggregationField(name);
-        String aggName = field + AGG_DELIMITER + FiltersAggregationBuilder.NAME;
+    public Children filters(String name,R field,Consumer<Children> subAgg, FiltersAggregator.KeyedFilter... filters) {
+        String fieldName = getAggregationField(field);
+        String aggName = name!=null?name:field + AGG_DELIMITER + FiltersAggregationBuilder.NAME;
         FiltersAggregationBuilder filtersAggregationBuilder = new FiltersAggregationBuilder(aggName, filters);
         currentBuilder = filtersAggregationBuilder;
+        if (subAgg!=null){
+            subAggregation(subAgg);
+        }
         aggregationBuilder.add(currentBuilder);
         return this.children;
     }
@@ -236,10 +321,13 @@ public abstract class AbstractEsAggWrapper<T, R, Children extends AbstractEsAggW
      * Create a new {@link Filters} aggregation with the given name.
      */
     @Override
-    public Children filters(R name, Supplier<EsWrapper<T>>... supplier) {
-        String field = getAggregationField(name);
+    public Children filters(String name,R field,Consumer<Children> subAgg, Supplier<EsWrapper<T>>... supplier) {
+        String fieldName = getAggregationField(field);
         EsParamWrapper<T>[] esParamWrappers = Arrays.stream(supplier).map(a -> a.get().esParamWrapper()).toArray(EsParamWrapper[]::new);
-        currentBuilder = esAggClient.filters(field, esParamWrappers);
+        currentBuilder = esAggClient.filters(name,fieldName, esParamWrappers);
+        if (subAgg!=null){
+            subAggregation(subAgg);
+        }
         aggregationBuilder.add(currentBuilder);
         return this.children;
     }
@@ -248,12 +336,15 @@ public abstract class AbstractEsAggWrapper<T, R, Children extends AbstractEsAggW
      * Create a new {@link AdjacencyMatrix} aggregation with the given name.
      */
     @Override
-    public Children adjacencyMatrix(R name, Map<String, Supplier<EsWrapper<T>>> adjacencyMatrixMap) {
-        String field = getAggregationField(name);
+    public Children adjacencyMatrix(String name,R field,Consumer<Children> subAgg, Map<String, Supplier<EsWrapper<T>>> adjacencyMatrixMap) {
+        String fieldName = getAggregationField(field);
         Map<String, EsParamWrapper<?>> esParamWrapperMap = new HashMap<>();
         adjacencyMatrixMap.forEach((k, v) -> esParamWrapperMap.put(k, v.get().esParamWrapper()));
-        BaseAggregationBuilder adjacencyMatrix = esAggClient.adjacencyMatrix(field, esParamWrapperMap);
-        currentBuilder = adjacencyMatrix;
+        BaseAggregationBuilder baseAggregationBuilder = esAggClient.adjacencyMatrix(name,fieldName, esParamWrapperMap);
+        currentBuilder = baseAggregationBuilder;
+        if (subAgg!=null){
+            subAggregation(subAgg);
+        }
         aggregationBuilder.add(currentBuilder);
         return this.children;
     }
@@ -262,12 +353,15 @@ public abstract class AbstractEsAggWrapper<T, R, Children extends AbstractEsAggW
      * Create a new {@link AdjacencyMatrix} aggregation with the given name and separator
      */
     @Override
-    public Children adjacencyMatrix(R name, String separator, Map<String, Supplier<EsWrapper<T>>> adjacencyMatrixMap) {
-        String field = getAggregationField(name);
+    public Children adjacencyMatrix(String name,R field,Consumer<Children> subAgg, String separator, Map<String, Supplier<EsWrapper<T>>> adjacencyMatrixMap) {
+        String fieldName = getAggregationField(field);
         Map<String, EsParamWrapper<?>> esParamWrapperMap = new HashMap<>();
         adjacencyMatrixMap.forEach((k, v) -> esParamWrapperMap.put(k, v.get().esParamWrapper()));
-        BaseAggregationBuilder adjacencyMatrix = esAggClient.adjacencyMatrix(field, separator, esParamWrapperMap);
-        currentBuilder = adjacencyMatrix;
+        BaseAggregationBuilder baseAggregationBuilder = esAggClient.adjacencyMatrix(name,fieldName, separator, esParamWrapperMap);
+        currentBuilder = baseAggregationBuilder;
+        if (subAgg!=null){
+            subAggregation(subAgg);
+        }
         aggregationBuilder.add(currentBuilder);
         return this.children;
     }
@@ -276,10 +370,13 @@ public abstract class AbstractEsAggWrapper<T, R, Children extends AbstractEsAggW
      * Create a new {@link Sampler} aggregation with the given name.
      */
     @Override
-    public Children sampler(R name) {
-        String field = getAggregationField(name);
-        BaseAggregationBuilder baseAggregationBuilder = esAggClient.sampler(field);
+    public Children sampler(String name,R field,Consumer<Children> subAgg) {
+        String fieldName = getAggregationField(field);
+        BaseAggregationBuilder baseAggregationBuilder = esAggClient.sampler(name,fieldName);
         currentBuilder = baseAggregationBuilder;
+        if (subAgg!=null){
+            subAggregation(subAgg);
+        }
         aggregationBuilder.add(currentBuilder);
         return this.children;
     }
@@ -288,10 +385,13 @@ public abstract class AbstractEsAggWrapper<T, R, Children extends AbstractEsAggW
      * Create a new {@link Sampler} aggregation with the given name.
      */
     @Override
-    public Children diversifiedSampler(R name) {
-        String field = getAggregationField(name);
-        BaseAggregationBuilder baseAggregationBuilder = esAggClient.diversifiedSampler(field);
+    public Children diversifiedSampler(String name,R field,Consumer<Children> subAgg) {
+        String fieldName = getAggregationField(field);
+        BaseAggregationBuilder baseAggregationBuilder = esAggClient.diversifiedSampler(name,fieldName);
         currentBuilder = baseAggregationBuilder;
+        if (subAgg!=null){
+            subAggregation(subAgg);
+        }
         aggregationBuilder.add(currentBuilder);
         return this.children;
     }
@@ -300,10 +400,13 @@ public abstract class AbstractEsAggWrapper<T, R, Children extends AbstractEsAggW
      * Create a new {@link Global} aggregation with the given name.
      */
     @Override
-    public Children global(R name) {
-        String field = getAggregationField(name);
-        BaseAggregationBuilder baseAggregationBuilder = esAggClient.global(field);
+    public Children global(String name,R field,Consumer<Children> subAgg) {
+        String fieldName = getAggregationField(field);
+        BaseAggregationBuilder baseAggregationBuilder = esAggClient.global(name,fieldName);
         currentBuilder = baseAggregationBuilder;
+        if (subAgg!=null){
+            subAggregation(subAgg);
+        }
         aggregationBuilder.add(currentBuilder);
         return this.children;
     }
@@ -312,10 +415,13 @@ public abstract class AbstractEsAggWrapper<T, R, Children extends AbstractEsAggW
      * Create a new {@link Missing} aggregation with the given name.
      */
     @Override
-    public Children missing(R name) {
-        String field = getAggregationField(name);
-        BaseAggregationBuilder baseAggregationBuilder = esAggClient.missing(field);
+    public Children missing(String name,R field,Consumer<Children> subAgg) {
+        String fieldName = getAggregationField(field);
+        BaseAggregationBuilder baseAggregationBuilder = esAggClient.missing(name,fieldName);
         currentBuilder = baseAggregationBuilder;
+        if (subAgg!=null){
+            subAggregation(subAgg);
+        }
         aggregationBuilder.add(currentBuilder);
         return this.children;
     }
@@ -324,23 +430,32 @@ public abstract class AbstractEsAggWrapper<T, R, Children extends AbstractEsAggW
      * Create a new {@link Nested} aggregation with the given name.
      */
     @Override
-    public Children nested(R name, String path) {
-        String field = getAggregationField(name);
-        BaseAggregationBuilder baseAggregationBuilder = esAggClient.nested(field, path);
+    public Children nested(String name,R field, String path,Consumer<Children> subAgg) {
+        String fieldName = getAggregationField(field);
+        BaseAggregationBuilder baseAggregationBuilder = esAggClient.nested(name,fieldName, path);
         currentBuilder = baseAggregationBuilder;
+        if (subAgg!=null){
+            subAggregation(subAgg);
+        }
         aggregationBuilder.add(currentBuilder);
         return this.children;
     }
 
     /**
      * Create a new {@link ReverseNested} aggregation with the given name.
+     * 这个方法只能在嵌套聚合的的子聚合中使用。能根据子类聚合分组后，获取分组内外层数据聚合的信息
+     * A嵌套B    A有一条数据B有两条数据，B的字段1=a
+     * 查询B字段1的a分组后会统计出B的数量是2。 使用reverseNested聚合可以到外层A的count。也就是1
      */
     @SneakyThrows
     @Override
-    public Children reverseNested(R name) {
-        String field = getAggregationField(name);
-        BaseAggregationBuilder baseAggregationBuilder = esAggClient.reverseNested(field);
+    public Children reverseNested(String name,R field,Consumer<Children> subAgg) {
+        String fieldName = getAggregationField(field);
+        BaseAggregationBuilder baseAggregationBuilder = esAggClient.reverseNested(name,fieldName);
         currentBuilder = baseAggregationBuilder;
+        if (subAgg!=null){
+            subAggregation(subAgg);
+        }
         aggregationBuilder.add(currentBuilder);
         return this.children;
     }
@@ -349,12 +464,15 @@ public abstract class AbstractEsAggWrapper<T, R, Children extends AbstractEsAggW
      * Create a new {@link GeoDistance} aggregation with the given name.
      */
     @Override
-    public Children geoDistance(R name, GeoPoint origin) {
-        String field = getAggregationField(name);
-        String aggName = field + AGG_DELIMITER + GeoDistanceAggregationBuilder.NAME;
+    public Children geoDistance(String name,R field, GeoPoint origin,Consumer<Children> subAgg) {
+        String fieldName = getAggregationField(field);
+        String aggName =name!=null?name: field + AGG_DELIMITER + GeoDistanceAggregationBuilder.NAME;
         GeoDistanceAggregationBuilder geoDistanceAggregationBuilder = new GeoDistanceAggregationBuilder(aggName, origin);
-        geoDistanceAggregationBuilder.field(field);
+        geoDistanceAggregationBuilder.field(fieldName);
         currentBuilder = geoDistanceAggregationBuilder;
+        if (subAgg!=null){
+            subAggregation(subAgg);
+        }
         aggregationBuilder.add(currentBuilder);
         return this.children;
     }
@@ -363,10 +481,13 @@ public abstract class AbstractEsAggWrapper<T, R, Children extends AbstractEsAggW
      * Create a new {@link Histogram} aggregation with the given name.
      */
     @Override
-    public Children histogram(R name) {
-        String field = getAggregationField(name);
-        BaseAggregationBuilder baseAggregationBuilder = esAggClient.histogram(field);
+    public Children histogram(String name,R field,Consumer<Children> subAgg) {
+        String fieldName = getAggregationField(field);
+        BaseAggregationBuilder baseAggregationBuilder = esAggClient.histogram(name,fieldName);
         currentBuilder = baseAggregationBuilder;
+        if (subAgg!=null){
+            subAggregation(subAgg);
+        }
         aggregationBuilder.add(currentBuilder);
         return this.children;
     }
@@ -376,10 +497,13 @@ public abstract class AbstractEsAggWrapper<T, R, Children extends AbstractEsAggW
      */
     @SneakyThrows
     @Override
-    public Children geohashGrid(R name) {
-        String field = getAggregationField(name);
-        BaseAggregationBuilder baseAggregationBuilder = esAggClient.geohashGrid(field);
+    public Children geohashGrid(String name,R field,Consumer<Children> subAgg) {
+        String fieldName = getAggregationField(field);
+        BaseAggregationBuilder baseAggregationBuilder = esAggClient.geohashGrid(name,fieldName);
         currentBuilder = baseAggregationBuilder;
+        if (subAgg!=null){
+            subAggregation(subAgg);
+        }
         aggregationBuilder.add(currentBuilder);
         return this.children;
     }
@@ -389,10 +513,13 @@ public abstract class AbstractEsAggWrapper<T, R, Children extends AbstractEsAggW
      */
     @Override
     @SneakyThrows
-    public Children geotileGrid(R name) {
-        String field = getAggregationField(name);
-        BaseAggregationBuilder baseAggregationBuilder = esAggClient.geohashGrid(field);
+    public Children geotileGrid(String name,R field,Consumer<Children> subAgg) {
+        String fieldName = getAggregationField(field);
+        BaseAggregationBuilder baseAggregationBuilder = esAggClient.geohashGrid(name,fieldName);
         currentBuilder = baseAggregationBuilder;
+        if (subAgg!=null){
+            subAggregation(subAgg);
+        }
         aggregationBuilder.add(currentBuilder);
         return this.children;
     }
@@ -401,10 +528,13 @@ public abstract class AbstractEsAggWrapper<T, R, Children extends AbstractEsAggW
      * Create a new {@link SignificantTerms} aggregation with the given name.
      */
     @Override
-    public Children significantTerms(R name) {
-        String field = getAggregationField(name);
-        BaseAggregationBuilder baseAggregationBuilder = esAggClient.significantTerms(field);
+    public Children significantTerms(String name,R field,Consumer<Children> subAgg) {
+        String fieldName = getAggregationField(field);
+        BaseAggregationBuilder baseAggregationBuilder = esAggClient.significantTerms(name,fieldName);
         currentBuilder = baseAggregationBuilder;
+        if (subAgg!=null){
+            subAggregation(subAgg);
+        }
         aggregationBuilder.add(currentBuilder);
         return this.children;
     }
@@ -414,10 +544,13 @@ public abstract class AbstractEsAggWrapper<T, R, Children extends AbstractEsAggW
      * Create a new {@link SignificantTextAggregationBuilder} aggregation with the given name and text field name
      */
     @Override
-    public Children significantText(R name, String fieldName) {
-        String field = getAggregationField(name);
-        BaseAggregationBuilder baseAggregationBuilder = esAggClient.significantText(field, fieldName);
+    public Children significantText(String name,R field,Consumer<Children> subAgg ) {
+        String fieldName = getAggregationField(field);
+        BaseAggregationBuilder baseAggregationBuilder = esAggClient.significantText(name,fieldName);
         currentBuilder = baseAggregationBuilder;
+        if (subAgg!=null){
+            subAggregation(subAgg);
+        }
         aggregationBuilder.add(currentBuilder);
         return this.children;
     }
@@ -428,10 +561,13 @@ public abstract class AbstractEsAggWrapper<T, R, Children extends AbstractEsAggW
      * name.
      */
     @Override
-    public Children dateHistogram(R name) {
-        String field = getAggregationField(name);
-        BaseAggregationBuilder baseAggregationBuilder = esAggClient.dateHistogram(field);
+    public Children dateHistogram(String name,R field,Consumer<Children> subAgg) {
+        String fieldName = getAggregationField(field);
+        BaseAggregationBuilder baseAggregationBuilder = esAggClient.dateHistogram(name,fieldName);
         currentBuilder = baseAggregationBuilder;
+        if (subAgg!=null){
+            subAggregation(subAgg);
+        }
         aggregationBuilder.add(currentBuilder);
         return this.children;
     }
@@ -440,10 +576,13 @@ public abstract class AbstractEsAggWrapper<T, R, Children extends AbstractEsAggW
      * Create a new {@link Range} aggregation with the given name.
      */
     @Override
-    public Children range(R name) {
-        String field = getAggregationField(name);
-        BaseAggregationBuilder baseAggregationBuilder = esAggClient.range(field);
+    public Children range(String name,R field,Consumer<Children> subAgg) {
+        String fieldName = getAggregationField(field);
+        BaseAggregationBuilder baseAggregationBuilder = esAggClient.range(name,fieldName);
         currentBuilder = baseAggregationBuilder;
+        if (subAgg!=null){
+            subAggregation(subAgg);
+        }
         aggregationBuilder.add(currentBuilder);
         return this.children;
     }
@@ -453,10 +592,13 @@ public abstract class AbstractEsAggWrapper<T, R, Children extends AbstractEsAggW
      * given name.
      */
     @Override
-    public Children dateRange(R name) {
-        String field = getAggregationField(name);
-        BaseAggregationBuilder baseAggregationBuilder = esAggClient.range(field);
+    public Children dateRange(String name,R field,Consumer<Children> subAgg) {
+        String fieldName = getAggregationField(field);
+        BaseAggregationBuilder baseAggregationBuilder = esAggClient.range(name,fieldName);
         currentBuilder = baseAggregationBuilder;
+        if (subAgg!=null){
+            subAggregation(subAgg);
+        }
         aggregationBuilder.add(currentBuilder);
         return this.children;
     }
@@ -466,12 +608,15 @@ public abstract class AbstractEsAggWrapper<T, R, Children extends AbstractEsAggW
      * given name.
      */
     @Override
-    public Children ipRange(R name) {
-        String field = getAggregationField(name);
-        String aggName = field + AGG_DELIMITER + IpRangeAggregationBuilder.NAME;
+    public Children ipRange(String name,R field,Consumer<Children> subAgg) {
+        String fieldName = getAggregationField(field);
+        String aggName = name!=null?name:field + AGG_DELIMITER + IpRangeAggregationBuilder.NAME;
         IpRangeAggregationBuilder ipRangeAggregationBuilder = new IpRangeAggregationBuilder(aggName);
-        ipRangeAggregationBuilder.field(field);
+        ipRangeAggregationBuilder.field(fieldName);
         currentBuilder = ipRangeAggregationBuilder;
+        if (subAgg!=null){
+            subAggregation(subAgg);
+        }
         aggregationBuilder.add(currentBuilder);
         return this.children;
     }
@@ -480,10 +625,13 @@ public abstract class AbstractEsAggWrapper<T, R, Children extends AbstractEsAggW
      * Create a new {@link Terms} aggregation with the given name.
      */
     @Override
-    public Children terms(R name) {
-        String field = getAggregationField(name);
-        BaseAggregationBuilder baseAggregationBuilder = esAggClient.terms(field);
+    public Children terms(String name,R field,Consumer<Children> subAgg) {
+        String fieldName = getAggregationField(field);
+        BaseAggregationBuilder baseAggregationBuilder = esAggClient.terms(name,fieldName);
         currentBuilder = baseAggregationBuilder;
+        if (subAgg!=null){
+            subAggregation(subAgg);
+        }
         aggregationBuilder.add(currentBuilder);
         return this.children;
     }
@@ -492,10 +640,13 @@ public abstract class AbstractEsAggWrapper<T, R, Children extends AbstractEsAggW
      * Create a new {@link Percentiles} aggregation with the given name.
      */
     @Override
-    public Children percentiles(R name) {
-        String field = getAggregationField(name);
-        BaseAggregationBuilder baseAggregationBuilder = esAggClient.percentiles(field);
+    public Children percentiles(String name,R field,Consumer<Children> subAgg) {
+        String fieldName = getAggregationField(field);
+        BaseAggregationBuilder baseAggregationBuilder = esAggClient.percentiles(name,fieldName);
         currentBuilder = baseAggregationBuilder;
+        if (subAgg!=null){
+            subAggregation(subAgg);
+        }
         aggregationBuilder.add(currentBuilder);
         return this.children;
     }
@@ -504,10 +655,13 @@ public abstract class AbstractEsAggWrapper<T, R, Children extends AbstractEsAggW
      * Create a new {@link PercentileRanks} aggregation with the given name.
      */
     @Override
-    public Children percentileRanks(R name, double[] values) {
-        String field = getAggregationField(name);
-        BaseAggregationBuilder baseAggregationBuilder = esAggClient.percentiles(field);
+    public Children percentileRanks(String name,R field,Consumer<Children> subAgg, double[] values) {
+        String fieldName = getAggregationField(field);
+        BaseAggregationBuilder baseAggregationBuilder = esAggClient.percentiles(name,fieldName);
         currentBuilder = baseAggregationBuilder;
+        if (subAgg!=null){
+            subAggregation(subAgg);
+        }
         aggregationBuilder.add(currentBuilder);
         return this.children;
     }
@@ -516,10 +670,13 @@ public abstract class AbstractEsAggWrapper<T, R, Children extends AbstractEsAggW
      * Create a new {@link MedianAbsoluteDeviation} aggregation with the given name
      */
     @Override
-    public Children medianAbsoluteDeviation(R name) {
-        String field = getAggregationField(name);
-        BaseAggregationBuilder baseAggregationBuilder = esAggClient.medianAbsoluteDeviation(field);
+    public Children medianAbsoluteDeviation(String name,R field,Consumer<Children> subAgg) {
+        String fieldName = getAggregationField(field);
+        BaseAggregationBuilder baseAggregationBuilder = esAggClient.medianAbsoluteDeviation(name,fieldName);
         currentBuilder = baseAggregationBuilder;
+        if (subAgg!=null){
+            subAggregation(subAgg);
+        }
         aggregationBuilder.add(currentBuilder);
         return this.children;
     }
@@ -528,10 +685,13 @@ public abstract class AbstractEsAggWrapper<T, R, Children extends AbstractEsAggW
      * Create a new {@link Cardinality} aggregation with the given name.
      */
     @Override
-    public Children cardinality(R name) {
-        String field = getAggregationField(name);
-        BaseAggregationBuilder baseAggregationBuilder = esAggClient.cardinality(field);
+    public Children cardinality(String name,R field,Consumer<Children> subAgg) {
+        String fieldName = getAggregationField(field);
+        BaseAggregationBuilder baseAggregationBuilder = esAggClient.cardinality(name,fieldName);
         currentBuilder = baseAggregationBuilder;
+        if (subAgg!=null){
+            subAggregation(subAgg);
+        }
         aggregationBuilder.add(currentBuilder);
         return this.children;
     }
@@ -540,10 +700,13 @@ public abstract class AbstractEsAggWrapper<T, R, Children extends AbstractEsAggW
      * Create a new {@link TopHits} aggregation with the given name.
      */
     @Override
-    public Children topHits(R name) {
-        String field = getAggregationField(name);
-        BaseAggregationBuilder baseAggregationBuilder = esAggClient.topHits(field);
+    public Children topHits(String name,R field,Consumer<Children> subAgg) {
+        String fieldName = getAggregationField(field);
+        BaseAggregationBuilder baseAggregationBuilder = esAggClient.topHits(name,fieldName);
         currentBuilder = baseAggregationBuilder;
+        if (subAgg!=null){
+            subAggregation(subAgg);
+        }
         aggregationBuilder.add(currentBuilder);
         return this.children;
     }
@@ -552,10 +715,13 @@ public abstract class AbstractEsAggWrapper<T, R, Children extends AbstractEsAggW
      * Create a new {@link GeoBounds} aggregation with the given name.
      */
     @Override
-    public Children geoBounds(R name) {
-        String field = getAggregationField(name);
-        BaseAggregationBuilder baseAggregationBuilder = esAggClient.geoBounds(field);
+    public Children geoBounds(String name,R field,Consumer<Children> subAgg) {
+        String fieldName = getAggregationField(field);
+        BaseAggregationBuilder baseAggregationBuilder = esAggClient.geoBounds(name,fieldName);
         currentBuilder = baseAggregationBuilder;
+        if (subAgg!=null){
+            subAggregation(subAgg);
+        }
         aggregationBuilder.add(currentBuilder);
         return this.children;
     }
@@ -564,10 +730,13 @@ public abstract class AbstractEsAggWrapper<T, R, Children extends AbstractEsAggW
      * Create a new {@link GeoCentroid} aggregation with the given name.
      */
     @Override
-    public Children geoCentroid(R name) {
-        String field = getAggregationField(name);
-        BaseAggregationBuilder baseAggregationBuilder = esAggClient.geoCentroid(field);
+    public Children geoCentroid(String name,R field,Consumer<Children> subAgg) {
+        String fieldName = getAggregationField(field);
+        BaseAggregationBuilder baseAggregationBuilder = esAggClient.geoCentroid(name,fieldName);
         currentBuilder = baseAggregationBuilder;
+        if (subAgg!=null){
+            subAggregation(subAgg);
+        }
         aggregationBuilder.add(currentBuilder);
         return this.children;
     }
@@ -576,10 +745,13 @@ public abstract class AbstractEsAggWrapper<T, R, Children extends AbstractEsAggW
      * Create a new {@link ScriptedMetric} aggregation with the given name.
      */
     @Override
-    public Children scriptedMetric(R name) {
-        String field = getAggregationField(name);
-        BaseAggregationBuilder baseAggregationBuilder = esAggClient.scriptedMetric(field);
+    public Children scriptedMetric(String name,R field,Consumer<Children> subAgg) {
+        String fieldName = getAggregationField(field);
+        BaseAggregationBuilder baseAggregationBuilder = esAggClient.scriptedMetric(name,fieldName);
         currentBuilder = baseAggregationBuilder;
+        if (subAgg!=null){
+            subAggregation(subAgg);
+        }
         aggregationBuilder.add(currentBuilder);
         return this.children;
     }
@@ -588,11 +760,14 @@ public abstract class AbstractEsAggWrapper<T, R, Children extends AbstractEsAggW
      * Create a new {@link CompositeAggregationBuilder} aggregation with the given name.
      */
     @Override
-    public Children composite(R name, List<CompositeValuesSourceBuilder<?>> sources) {
-        String field = getAggregationField(name);
-        String aggName = field + AGG_DELIMITER + CompositeAggregationBuilder.NAME;
+    public Children composite(String name,R field,Consumer<Children> subAgg, List<CompositeValuesSourceBuilder<?>> sources) {
+        String fieldName = getAggregationField(field);
+        String aggName = name!=null?name:field + AGG_DELIMITER + CompositeAggregationBuilder.NAME;
         CompositeAggregationBuilder compositeAggregationBuilder = new CompositeAggregationBuilder(aggName, sources);
         currentBuilder = compositeAggregationBuilder;
+        if (subAgg!=null){
+            subAggregation(subAgg);
+        }
         aggregationBuilder.add(currentBuilder);
         return this.children;
     }
@@ -601,131 +776,170 @@ public abstract class AbstractEsAggWrapper<T, R, Children extends AbstractEsAggW
      * piple
      */
     @Override
-    public Children derivative(R name, String bucketsPath) {
-        String field = getAggregationField(name);
-        BaseAggregationBuilder baseAggregationBuilder = esAggClient.derivative(field, bucketsPath);
+    public Children derivative(String name,R field,Consumer<Children> subAgg, String bucketsPath) {
+        String fieldName = getAggregationField(field);
+        BaseAggregationBuilder baseAggregationBuilder = esAggClient.derivative(name,fieldName, bucketsPath);
         currentBuilder = baseAggregationBuilder;
+        if (subAgg!=null){
+            subAggregation(subAgg);
+        }
         aggregationBuilder.add(baseAggregationBuilder);
         return this.children;
     }
 
     @Override
-    public Children maxBucket(R name, String bucketsPath) {
-        String field = getAggregationField(name);
-        BaseAggregationBuilder baseAggregationBuilder = esAggClient.maxBucket(field, bucketsPath);
+    public Children maxBucket(String name,R field,Consumer<Children> subAgg, String bucketsPath) {
+        String fieldName = getAggregationField(field);
+        BaseAggregationBuilder baseAggregationBuilder = esAggClient.maxBucket(name,fieldName, bucketsPath);
         currentBuilder = baseAggregationBuilder;
+        if (subAgg!=null){
+            subAggregation(subAgg);
+        }
         aggregationBuilder.add(currentBuilder);
         return this.children;
     }
 
     @Override
-    public Children minBucket(R name, String bucketsPath) {
-        String field = getAggregationField(name);
-        BaseAggregationBuilder baseAggregationBuilder = esAggClient.minBucket(field, bucketsPath);
+    public Children minBucket(String name,R field,Consumer<Children> subAgg, String bucketsPath) {
+        String fieldName = getAggregationField(field);
+        BaseAggregationBuilder baseAggregationBuilder = esAggClient.minBucket(name,fieldName, bucketsPath);
         currentBuilder = baseAggregationBuilder;
+        if (subAgg!=null){
+            subAggregation(subAgg);
+        }
         aggregationBuilder.add(currentBuilder);
         return this.children;
     }
 
     @Override
-    public final Children avgBucket(R name, String bucketsPath) {
-        String field = getAggregationField(name);
-        BaseAggregationBuilder baseAggregationBuilder = esAggClient.avgBucket(field, bucketsPath);
+    public final Children avgBucket(String name,R field,Consumer<Children> subAgg, String bucketsPath) {
+        String fieldName = getAggregationField(field);
+        BaseAggregationBuilder baseAggregationBuilder = esAggClient.avgBucket(name,fieldName, bucketsPath);
         currentBuilder = baseAggregationBuilder;
+        if (subAgg!=null){
+            subAggregation(subAgg);
+        }
         aggregationBuilder.add(currentBuilder);
         return this.children;
     }
 
     @Override
-    public Children sumBucket(R name, String bucketsPath) {
-        String field = getAggregationField(name);
-        BaseAggregationBuilder baseAggregationBuilder = esAggClient.sumBucket(field, bucketsPath);
+    public Children sumBucket(String name,R field,Consumer<Children> subAgg, String bucketsPath) {
+        String fieldName = getAggregationField(field);
+        BaseAggregationBuilder baseAggregationBuilder = esAggClient.sumBucket(name,fieldName, bucketsPath);
         currentBuilder = baseAggregationBuilder;
+        if (subAgg!=null){
+            subAggregation(subAgg);
+        }
         aggregationBuilder.add(currentBuilder);
         return this.children;
     }
 
     @Override
-    public Children statsBucket(R name, String bucketsPath) {
-        String field = getAggregationField(name);
-        BaseAggregationBuilder baseAggregationBuilder = esAggClient.statsBucket(field, bucketsPath);
+    public Children statsBucket(String name,R field,Consumer<Children> subAgg, String bucketsPath) {
+        String fieldName = getAggregationField(field);
+        BaseAggregationBuilder baseAggregationBuilder = esAggClient.statsBucket(name,fieldName, bucketsPath);
         currentBuilder = baseAggregationBuilder;
+        if (subAgg!=null){
+            subAggregation(subAgg);
+        }
         aggregationBuilder.add(currentBuilder);
         return this.children;
     }
 
     @Override
-    public Children extendedStatsBucket(R name, String bucketsPath) {
-        String field = getAggregationField(name);
-        BaseAggregationBuilder baseAggregationBuilder = esAggClient.extendedStatsBucket(field, bucketsPath);
+    public Children extendedStatsBucket(String name,R field,Consumer<Children> subAgg, String bucketsPath) {
+        String fieldName = getAggregationField(field);
+        BaseAggregationBuilder baseAggregationBuilder = esAggClient.extendedStatsBucket(name,fieldName, bucketsPath);
         currentBuilder = baseAggregationBuilder;
+        if (subAgg!=null){
+            subAggregation(subAgg);
+        }
         aggregationBuilder.add(currentBuilder);
         return this.children;
     }
 
     @Override
-    public Children percentilesBucket(R name, String bucketsPath) {
-        String field = getAggregationField(name);
-        BaseAggregationBuilder baseAggregationBuilder = esAggClient.percentilesBucket(field, bucketsPath);
+    public Children percentilesBucket(String name,R field,Consumer<Children> subAgg, String bucketsPath) {
+        String fieldName = getAggregationField(field);
+        BaseAggregationBuilder baseAggregationBuilder = esAggClient.percentilesBucket(name,fieldName, bucketsPath);
         currentBuilder = baseAggregationBuilder;
+        if (subAgg!=null){
+            subAggregation(subAgg);
+        }
         aggregationBuilder.add(currentBuilder);
         return this.children;
     }
 
     @Override
-    public Children bucketScript(R name, Map<String, String> bucketsPathsMap, Script script) {
-        String field = getAggregationField(name);
-        String aggName = field + AGG_DELIMITER + BucketScriptPipelineAggregationBuilder.NAME;
+    public Children bucketScript(String name,R field,Consumer<Children> subAgg, Map<String, String> bucketsPathsMap, Script script) {
+        String fieldName = getAggregationField(field);
+        String aggName =  name!=null?name:field + AGG_DELIMITER + BucketScriptPipelineAggregationBuilder.NAME;
         BucketScriptPipelineAggregationBuilder bucketScriptPipelineAggregationBuilder = new BucketScriptPipelineAggregationBuilder(aggName, bucketsPathsMap, script);
         currentBuilder = bucketScriptPipelineAggregationBuilder;
+        if (subAgg!=null){
+            subAggregation(subAgg);
+        }
         aggregationBuilder.add(currentBuilder);
         return this.children;
     }
 
     @Override
-    public Children bucketScript(R name, Script script, String... bucketsPaths) {
-        String field = getAggregationField(name);
-        String aggName = field + AGG_DELIMITER + BucketScriptPipelineAggregationBuilder.NAME;
+    public Children bucketScript(String name,R field,Consumer<Children> subAgg, Script script, String... bucketsPaths) {
+        String fieldName = getAggregationField(field);
+        String aggName =  name!=null?name:field + AGG_DELIMITER + BucketScriptPipelineAggregationBuilder.NAME;
         BucketScriptPipelineAggregationBuilder bucketScriptPipelineAggregationBuilder = new BucketScriptPipelineAggregationBuilder(aggName, script, bucketsPaths);
         currentBuilder = bucketScriptPipelineAggregationBuilder;
+        if (subAgg!=null){
+            subAggregation(subAgg);
+        }
         aggregationBuilder.add(currentBuilder);
         return this.children;
     }
 
     @Override
-    public Children bucketSelector(R name, Map<String, String> bucketsPathsMap, Script script) {
-        String field = getAggregationField(name);
-        String aggName = field + AGG_DELIMITER + BucketSelectorPipelineAggregationBuilder.NAME;
+    public Children bucketSelector(String name,R field,Consumer<Children> subAgg, Map<String, String> bucketsPathsMap, Script script) {
+        String fieldName = getAggregationField(field);
+        String aggName =  name!=null?name:field + AGG_DELIMITER + BucketSelectorPipelineAggregationBuilder.NAME;
         BucketSelectorPipelineAggregationBuilder bucketSelectorPipelineAggregationBuilder = new BucketSelectorPipelineAggregationBuilder(aggName, bucketsPathsMap, script);
         currentBuilder = bucketSelectorPipelineAggregationBuilder;
+        if (subAgg!=null){
+            subAggregation(subAgg);
+        }
         aggregationBuilder.add(currentBuilder);
         return this.children;
     }
 
     @Override
-    public Children bucketSelector(R name, Script script, String... bucketsPaths) {
-        String field = getAggregationField(name);
-        String aggName = field + AGG_DELIMITER + BucketSelectorPipelineAggregationBuilder.NAME;
+    public Children bucketSelector(String name,R field,Consumer<Children> subAgg, Script script, String... bucketsPaths) {
+        String fieldName = getAggregationField(field);
+        String aggName = name!=null?name: field + AGG_DELIMITER + BucketSelectorPipelineAggregationBuilder.NAME;
         BucketSelectorPipelineAggregationBuilder bucketSelectorPipelineAggregationBuilder = new BucketSelectorPipelineAggregationBuilder(aggName, script, bucketsPaths);
         currentBuilder = bucketSelectorPipelineAggregationBuilder;
+        if (subAgg!=null){
+            subAggregation(subAgg);
+        }
         aggregationBuilder.add(currentBuilder);
         return this.children;
     }
 
     @Override
-    public Children bucketSort(R name, List<FieldSortBuilder> sorts) {
-        String field = getAggregationField(name);
-        String aggName = field + AGG_DELIMITER + BucketSortPipelineAggregationBuilder.NAME;
+    public Children bucketSort(String name,R field,Consumer<Children> subAgg, List<FieldSortBuilder> sorts) {
+        String fieldName = getAggregationField(field);
+        String aggName = name!=null?name:field + AGG_DELIMITER + BucketSortPipelineAggregationBuilder.NAME;
         BucketSortPipelineAggregationBuilder bucketSortPipelineAggregationBuilder = new BucketSortPipelineAggregationBuilder(aggName, sorts);
         currentBuilder = bucketSortPipelineAggregationBuilder;
+        if (subAgg!=null){
+            subAggregation(subAgg);
+        }
         aggregationBuilder.add(currentBuilder);
         return this.children;
     }
 
     @Override
-    public Children bucketSort(R name, int from, int size, boolean asc, String... orderColumns) {
-        String field = getAggregationField(name);
-        String aggName = field + AGG_DELIMITER + BucketSortPipelineAggregationBuilder.NAME;
+    public Children bucketSort(String name,R field,Consumer<Children> subAgg, int from, int size, boolean asc, String... orderColumns) {
+        String fieldName = getAggregationField(field);
+        String aggName = name!=null?name:field + AGG_DELIMITER + BucketSortPipelineAggregationBuilder.NAME;
         List<FieldSortBuilder> sorts = Arrays.stream(orderColumns).map(o -> {
             FieldSortBuilder sortBuilder = new FieldSortBuilder(o);
             sortBuilder.order(asc ? SortOrder.ASC : SortOrder.DESC);
@@ -736,41 +950,53 @@ public abstract class AbstractEsAggWrapper<T, R, Children extends AbstractEsAggW
         bucketSortPipelineAggregationBuilder.from(from);
         bucketSortPipelineAggregationBuilder.size(size);
         currentBuilder = bucketSortPipelineAggregationBuilder;
+        if (subAgg!=null){
+            subAggregation(subAgg);
+        }
         aggregationBuilder.add(currentBuilder);
         return this.children;
     }
 
     @Override
-    public Children cumulativeSum(R name, String bucketsPath) {
-        String field = getAggregationField(name);
-        BaseAggregationBuilder baseAggregationBuilder = esAggClient.cumulativeSum(field, bucketsPath);
+    public Children cumulativeSum(String name,R field,Consumer<Children> subAgg, String bucketsPath) {
+        String fieldName = getAggregationField(field);
+        BaseAggregationBuilder baseAggregationBuilder = esAggClient.cumulativeSum(name,fieldName, bucketsPath);
         currentBuilder = baseAggregationBuilder;
+        if (subAgg!=null){
+            subAggregation(subAgg);
+        }
         aggregationBuilder.add(currentBuilder);
         return this.children;
     }
 
     @Override
-    public Children diff(R name, String bucketsPath) {
-        String field = getAggregationField(name);
-        BaseAggregationBuilder baseAggregationBuilder = esAggClient.diff(field, bucketsPath);
+    public Children diff(String name,R field,Consumer<Children> subAgg, String bucketsPath) {
+        String fieldName = getAggregationField(field);
+        BaseAggregationBuilder baseAggregationBuilder = esAggClient.diff(name,fieldName, bucketsPath);
         currentBuilder = baseAggregationBuilder;
+        if (subAgg!=null){
+            subAggregation(subAgg);
+        }
         aggregationBuilder.add(currentBuilder);
         return this.children;
     }
 
     @Override
-    public Children movingFunction(R name, Script script, String bucketsPaths, int window) {
-        String field = getAggregationField(name);
-        String aggName = field + AGG_DELIMITER + MovFnPipelineAggregationBuilder.NAME;
+    public Children movingFunction(String name,R field,Consumer<Children> subAgg, Script script, String bucketsPaths, int window) {
+        String fieldName = getAggregationField(field);
+        String aggName = name!=null?name:field + AGG_DELIMITER + MovFnPipelineAggregationBuilder.NAME;
         MovFnPipelineAggregationBuilder movFnPipelineAggregationBuilder = new MovFnPipelineAggregationBuilder(aggName, bucketsPaths, script, window);
         currentBuilder = movFnPipelineAggregationBuilder;
+        if (subAgg!=null){
+            subAggregation(subAgg);
+        }
         aggregationBuilder.add(currentBuilder);
         return this.children;
     }
-
-//    ------------------------------------------------------Function  es版本6不支持
-
-
+    
+    //    ------------------------------------------------------ Function参数的方法  es版本6不支持。
+    //    因为需要类名class。如果版本不匹配可能会出现找不到类的情况
+    
     @Override
     public Children count(R name, Function<ValueCountAggregationBuilder, ValueCountAggregationBuilder> fn) {
         count(name);
@@ -914,7 +1140,7 @@ public abstract class AbstractEsAggWrapper<T, R, Children extends AbstractEsAggW
 
     @Override
     public Children significantText(R name, String fieldName, Function<SignificantTextAggregationBuilder, SignificantTextAggregationBuilder> fn) {
-        significantText(name, fieldName);
+        significantText(name, fieldName,fn);
         fn.apply((SignificantTextAggregationBuilder) currentBuilder);
         return children;
     }

@@ -16,4 +16,9 @@ public class EsAggWrapper<T> extends AbstractEsAggWrapper<T, String, EsAggWrappe
     protected EsAggWrapper<T> instance() {
         return new EsAggWrapper<>(super.tClass);
     }
+    
+    
+ 
+ 
+    
 }

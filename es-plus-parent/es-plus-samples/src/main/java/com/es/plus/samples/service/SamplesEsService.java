@@ -145,7 +145,7 @@ public class SamplesEsService extends EsServiceImpl<SamplesEsDTO> {
                       EsWrapper<SamplesEsDTO> esWrapper = esChainQueryWrapper();
                       return esWrapper;
                 })
-                .terms(SamplesEsDTO::getUsername, a -> a.size(1000))
+                .terms(SamplesEsDTO::getUsername, e -> { return e.size(100);})
                 // 在terms聚合的基础上统计lock数量
                 .subAggregation(t -> t.sum(SamplesEsDTO::getId));
         EsResponse<SamplesEsDTO> esResponse = esChainQueryWrapper
