@@ -335,19 +335,19 @@ public abstract class AbstractEsAggWrapper<T, R, Children extends AbstractEsAggW
     /**
      * Create a new {@link AdjacencyMatrix} aggregation with the given name.
      */
-    @Override
-    public Children adjacencyMatrix(String name,R field,Consumer<Children> subAgg, Map<String, Supplier<EsWrapper<T>>> adjacencyMatrixMap) {
-        String fieldName = getAggregationField(field);
-        Map<String, EsParamWrapper<?>> esParamWrapperMap = new HashMap<>();
-        adjacencyMatrixMap.forEach((k, v) -> esParamWrapperMap.put(k, v.get().esParamWrapper()));
-        BaseAggregationBuilder baseAggregationBuilder = esAggClient.adjacencyMatrix(name,fieldName, esParamWrapperMap);
-        currentBuilder = baseAggregationBuilder;
-        if (subAgg!=null){
-            subAggregation(subAgg);
-        }
-        aggregationBuilder.add(currentBuilder);
-        return this.children;
-    }
+//    @Override
+//    public Children adjacencyMatrix(String name,R field,Consumer<Children> subAgg, Map<String, Supplier<EsWrapper<T>>> adjacencyMatrixMap) {
+//        String fieldName = getAggregationField(field);
+//        Map<String, EsParamWrapper<?>> esParamWrapperMap = new HashMap<>();
+//        adjacencyMatrixMap.forEach((k, v) -> esParamWrapperMap.put(k, v.get().esParamWrapper()));
+//        BaseAggregationBuilder baseAggregationBuilder = esAggClient.adjacencyMatrix(name,fieldName, esParamWrapperMap);
+//        currentBuilder = baseAggregationBuilder;
+//        if (subAgg!=null){
+//            subAggregation(subAgg);
+//        }
+//        aggregationBuilder.add(currentBuilder);
+//        return this.children;
+//    }
 
     /**
      * Create a new {@link AdjacencyMatrix} aggregation with the given name and separator
@@ -1062,14 +1062,14 @@ public abstract class AbstractEsAggWrapper<T, R, Children extends AbstractEsAggW
 
     @Override
     public Children adjacencyMatrix(R name, Map<String, Supplier<EsWrapper<T>>> filters, Function<AdjacencyMatrixAggregationBuilder, AdjacencyMatrixAggregationBuilder> fn) {
-        adjacencyMatrix(name, filters);
+        adjacencyMatrix(null,name, null, filters);
         fn.apply((AdjacencyMatrixAggregationBuilder) currentBuilder);
         return children;
     }
 
     @Override
     public Children adjacencyMatrix(R name, String separator, Map<String, Supplier<EsWrapper<T>>> filters, Function<AdjacencyMatrixAggregationBuilder, AdjacencyMatrixAggregationBuilder> fn) {
-        adjacencyMatrix(name, separator, filters);
+        adjacencyMatrix(null,name, separator, filters);
         fn.apply((AdjacencyMatrixAggregationBuilder) currentBuilder);
         return children;
     }
