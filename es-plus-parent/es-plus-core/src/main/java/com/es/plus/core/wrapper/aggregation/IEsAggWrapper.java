@@ -43,6 +43,7 @@ import org.elasticsearch.search.sort.FieldSortBuilder;
 
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 /**
@@ -400,7 +401,7 @@ public interface IEsAggWrapper<Children, R,T> extends  IEsBaseAggWrapper<Childre
     
     
     
-//    ==================================================
+//    ==============================================================
     /**
      * 统计
      *
@@ -755,4 +756,353 @@ public interface IEsAggWrapper<Children, R,T> extends  IEsBaseAggWrapper<Childre
     };
     
 
+    
+    
+//============================================================================= field和consumer
+    /**
+     * 统计
+     *
+     * @param field 名字
+     * @return {@link Children}
+     */
+    default Children count(R field, Consumer<Children> subAgg){
+        return   count(null,field,subAgg);
+    };
+    
+    /**
+     * Create a new {@link Avg} aggregation with the given field.
+     */
+    default Children avg(R field,Consumer<Children> subAgg){
+        return   avg(null,field,subAgg);
+    };
+    
+    /**
+     * Create a new {@link Avg} aggregation with the given field.
+     */
+    default Children weightedAvg(R field,Consumer<Children> subAgg){
+        return   weightedAvg(null,field,subAgg);
+    };
+    
+    /**
+     * Create a new {@link Max} aggregation with the given field.
+     */
+    default Children max(R field,Consumer<Children> subAgg){
+        return   max(null,field,subAgg);
+    };
+    
+    /**
+     * Create a new {@link Min} aggregation with the given field.
+     */
+    default Children min(R field,Consumer<Children> subAgg){
+        return   min(null,field,subAgg);
+    };
+    
+    /**
+     * Create a new {@link Sum} aggregation with the given field.
+     */
+    default Children sum(R field,Consumer<Children> subAgg){
+        return   sum(null,field,subAgg);
+    };
+    
+    /**
+     * Create a new {@link Stats} aggregation with the given field.
+     */
+    default Children stats(R field,Consumer<Children> subAgg){
+        return   stats(null,field,subAgg);
+    };
+    
+    /**
+     * Create a new {@link ExtendedStats} aggregation with the given field.
+     */
+    default Children extendedStats(R field,Consumer<Children> subAgg){
+        return   extendedStats(null,field,subAgg);
+    };
+    
+    /**
+     * Create a new {@link Filter} aggregation with the given field.
+     */
+    default Children filter(R field,Consumer<Children> subAgg, Supplier<EsWrapper<T>> filterQuery){
+        return   filter(null,field,subAgg,filterQuery);
+    };
+    
+    /**
+     * Create a new {@link Filters} aggregation with the given field.
+     */
+    default Children filters(R field,Consumer<Children> subAgg, FiltersAggregator.KeyedFilter... filters){
+        return   filters(null,field,subAgg,filters);
+    };
+    
+    /**
+     * Create a new {@link Filters} aggregation with the given field.
+     */
+    default Children filters(R field,Consumer<Children> subAgg, Supplier<EsWrapper<T>>... filterQuery){
+        return   filters(null,field,subAgg,filterQuery);
+    };
+    
+    
+    /**
+     * Create a new {@link AdjacencyMatrix} aggregation with the given field and separator
+     */
+    //    default Children adjacencyMatrix(R field,Consumer<Children> subAgg, String separator, Map<String, Supplier<EsWrapper<T>>> adjacencyMatrixMap){
+    //       return   adjacencyMatrix(null,field,subAgg,separator,adjacencyMatrixMap);
+    //     };
+    
+    /**
+     * Create a new {@link Sampler} aggregation with the given field.
+     */
+    default Children sampler(R field,Consumer<Children> subAgg){
+        return   sampler(null,field,subAgg);
+    };
+    
+    /**
+     * Create a new {@link Sampler} aggregation with the given field.
+     */
+    default Children diversifiedSampler(R field,Consumer<Children> subAgg){
+        return   diversifiedSampler(null,field,subAgg);
+    };
+    
+    /**
+     * Create a new {@link Global} aggregation with the given field.
+     */
+    default Children global(R field,Consumer<Children> subAgg){
+        return   global(null,field,subAgg);
+    };
+    
+    /**
+     * Create a new {@link Missing} aggregation with the given field.
+     */
+    default Children missing(R field,Consumer<Children> subAgg){
+        return   missing(null,field,subAgg);
+    };
+    
+    /**
+     * Create a new {@link Nested} aggregation with the given field.
+     */
+    default Children nested(R field, String path,Consumer<Children> subAgg){
+        return   nested(null,field,path,null);
+    };
+    
+    /**
+     * Create a new {@link ReverseNested} aggregation with the given field.
+     */
+    default Children reverseNested(R field,Consumer<Children> subAgg){
+        return   reverseNested(null,field,subAgg);
+    };
+    
+    /**
+     * Create a new {@link GeoDistance} aggregation with the given field.
+     */
+    default Children geoDistance(R field, GeoPoint origin,Consumer<Children> subAgg){
+        return   geoDistance(null,field,origin,null);
+    };
+    
+    /**
+     * Create a new {@link Histogram} aggregation with the given field.
+     */
+    default Children histogram(R field,Consumer<Children> subAgg){
+        return   histogram(null,field,subAgg);
+    };
+    
+    /**
+     * Create a new {@link InternalGeoHashGrid} aggregation with the given field.
+     */
+    default Children geohashGrid(R field,Consumer<Children> subAgg){
+        return   geohashGrid(null,field,subAgg);
+    };
+    
+    /**
+     * Create a new {@link InternalGeoTileGrid} aggregation with the given field.
+     */
+    default Children geotileGrid(R field,Consumer<Children> subAgg){
+        return   geotileGrid(null,field,subAgg);
+    };
+    
+    /**
+     * Create a new {@link SignificantTerms} aggregation with the given field.
+     */
+    default Children significantTerms(R field,Consumer<Children> subAgg){
+        return   significantTerms(null,field,subAgg);
+    };
+    
+    
+    /**
+     * Create a new {@link SignificantTextAggregationBuilder} aggregation with the given field and text field field
+     */
+    default Children significantText(R field,Consumer<Children> subAgg){
+        return   significantText(null,field,subAgg);
+    };
+    
+    
+    /**
+     * Create a new {@link DateHistogramAggregationBuilder} aggregation with the given
+     * field.
+     */
+    default Children dateHistogram(R field,Consumer<Children> subAgg){
+        return   dateHistogram(null,field,subAgg);
+    };
+    
+    /**
+     * Create a new {@link Range} aggregation with the given field.
+     */
+    default Children range(R field,Consumer<Children> subAgg){
+        return   range(null,field,subAgg);
+    };
+    
+    /**
+     * Create a new {@link DateRangeAggregationBuilder} aggregation with the
+     * given field.
+     */
+    default Children dateRange(R field,Consumer<Children> subAgg){
+        return   dateRange(null,field,subAgg);
+    };
+    
+    /**
+     * Create a new {@link IpRangeAggregationBuilder} aggregation with the
+     * given field.
+     */
+    default Children ipRange(R field,Consumer<Children> subAgg){
+        return   ipRange(null,field,subAgg);
+    };
+    
+    /**
+     * Create a new {@link Terms} aggregation with the given field.
+     */
+    default Children terms(R field,Consumer<Children> subAgg){
+        return   terms(null,field,subAgg);
+    };
+    
+    /**
+     * Create a new {@link Percentiles} aggregation with the given field.
+     */
+    default Children percentiles(R field,Consumer<Children> subAgg){
+        return   percentiles(null,field,subAgg);
+    };
+    
+    /**
+     * Create a new {@link PercentileRanks} aggregation with the given field.
+     */
+    default Children percentileRanks(R field,Consumer<Children> subAgg, double[] values){
+        return   percentileRanks(null,field,subAgg,values);
+    };
+    
+    /**
+     * Create a new {@link MedianAbsoluteDeviation} aggregation with the given field
+     */
+    default Children medianAbsoluteDeviation(R field,Consumer<Children> subAgg){
+        return   medianAbsoluteDeviation(null,field,subAgg);
+    };
+    
+    /**
+     * Create a new {@link Cardinality} aggregation with the given field.
+     */
+    default Children cardinality(R field,Consumer<Children> subAgg){
+        return   cardinality(null,field,subAgg);
+    };
+    
+    /**
+     * Create a new {@link TopHits} aggregation with the given field.
+     */
+    default Children topHits(R field,Consumer<Children> subAgg){
+        return   topHits(null,field,subAgg);
+    };
+    
+    /**
+     * Create a new {@link GeoBounds} aggregation with the given field.
+     */
+    default Children geoBounds(R field,Consumer<Children> subAgg){
+        return   geoBounds(null,field,subAgg);
+    };
+    
+    /**
+     * Create a new {@link GeoCentroid} aggregation with the given field.
+     */
+    default Children geoCentroid(R field,Consumer<Children> subAgg){
+        return   geoCentroid(null,field,subAgg);
+    };
+    
+    /**
+     * Create a new {@link ScriptedMetric} aggregation with the given field.
+     */
+    default Children scriptedMetric(R field,Consumer<Children> subAgg){
+        return   scriptedMetric(null,field,subAgg);
+    };
+    
+    /**
+     * Create a new {@link CompositeAggregationBuilder} aggregation with the given field.
+     */
+    default Children composite(R field,Consumer<Children> subAgg, List<CompositeValuesSourceBuilder<?>> sources){
+        return   composite(null,field,subAgg,sources);
+    };
+    
+    
+    /**
+     * piple的方法
+     */
+    default Children derivative(R field,Consumer<Children> subAgg,String bucketsPath){
+        return   derivative(null,field,subAgg,bucketsPath);
+    };
+    
+    default Children maxBucket(R field,Consumer<Children> subAgg,String bucketsPath){
+        return   maxBucket(null,field,subAgg,bucketsPath);
+    };
+    
+    default Children minBucket(R field,Consumer<Children> subAgg,String bucketsPath){
+        return   minBucket(null,field,subAgg,bucketsPath);
+    };
+    
+    default Children avgBucket(R field,Consumer<Children> subAgg,String bucketsPath){
+        return   avgBucket(null,field,subAgg,bucketsPath);
+    };
+    
+    default Children sumBucket(R field,Consumer<Children> subAgg,String bucketsPath){
+        return   sumBucket(null,field,subAgg,bucketsPath);
+    };
+    
+    default Children statsBucket(R field,Consumer<Children> subAgg,String bucketsPath){
+        return   statsBucket(null,field,subAgg,bucketsPath);
+    };
+    
+    default Children extendedStatsBucket(R field,Consumer<Children> subAgg,String bucketsPath){
+        return   extendedStatsBucket(null,field,subAgg,bucketsPath);
+    };
+    
+    default Children percentilesBucket(R field,Consumer<Children> subAgg,String bucketsPath){
+        return   percentilesBucket(null,field,subAgg,bucketsPath);
+    };
+    
+    default Children bucketScript(R field,Consumer<Children> subAgg,Map<String, String> bucketsPathsMap, Script script){
+        return   bucketScript(null,field,subAgg,bucketsPathsMap,script);
+    };
+    
+    default Children bucketScript(R field,Consumer<Children> subAgg, Script script, String... bucketsPaths){
+        return   bucketScript(null,field,subAgg,script,bucketsPaths);
+    };
+    
+    default Children bucketSelector(R field,Consumer<Children> subAgg,Map<String, String> bucketsPathsMap, Script script){
+        return   bucketSelector(null,field,subAgg,bucketsPathsMap,script);
+    };
+    
+    default Children bucketSelector(R field,Consumer<Children> subAgg, Script script, String... bucketsPaths){
+        return   bucketSelector(null,field,subAgg,script,bucketsPaths);
+    };
+    
+    default Children bucketSort(R field,Consumer<Children> subAgg,List<FieldSortBuilder> sorts){
+        return   bucketSort(null,field,subAgg,sorts);
+    };
+    
+    default Children bucketSort(R field,Consumer<Children> subAgg,int from, int size, boolean asc, String... orderColumns){
+        return   bucketSort(null,field,subAgg,from,size,asc,orderColumns);
+    };
+    
+    default Children cumulativeSum(R field,Consumer<Children> subAgg,String bucketsPath){
+        return   cumulativeSum(null,field,subAgg,bucketsPath);
+    };
+    
+    default Children diff(R field,Consumer<Children> subAgg,String bucketsPath){
+        return   diff(null,field,subAgg,bucketsPath);
+    };
+    
+    default Children movingFunction(R field,Consumer<Children> subAgg,Script script, String bucketsPaths, int window){
+        return   movingFunction(null,field,subAgg,script,bucketsPaths,window);
+    };
 }
