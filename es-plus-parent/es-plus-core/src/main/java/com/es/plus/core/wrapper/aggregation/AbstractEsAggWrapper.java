@@ -998,133 +998,133 @@ public abstract class AbstractEsAggWrapper<T, R, Children extends AbstractEsAggW
     //    因为需要类名class。如果版本不匹配可能会出现找不到类的情况
     
     @Override
-    public Children count(R name, Function<ValueCountAggregationBuilder, ValueCountAggregationBuilder> fn) {
+    public Children countFn(R name, Function<ValueCountAggregationBuilder, ValueCountAggregationBuilder> fn) {
         count(name);
         fn.apply((ValueCountAggregationBuilder) currentBuilder);
         return children;
     }
 
     @Override
-    public Children avg(R name, Function<AvgAggregationBuilder, AvgAggregationBuilder> fn) {
+    public Children avgFn(R name, Function<AvgAggregationBuilder, AvgAggregationBuilder> fn) {
         avg(name);
         fn.apply((AvgAggregationBuilder) currentBuilder);
         return children;
     }
 
     @Override
-    public Children weightedAvg(R name, Function<WeightedAvgAggregationBuilder, WeightedAvgAggregationBuilder> fn) {
+    public Children weightedAvgFn(R name, Function<WeightedAvgAggregationBuilder, WeightedAvgAggregationBuilder> fn) {
         weightedAvg(name);
         fn.apply((WeightedAvgAggregationBuilder) currentBuilder);
         return children;
     }
 
     @Override
-    public Children max(R name, Function<MaxAggregationBuilder, MaxAggregationBuilder> fn) {
+    public Children maxFn(R name, Function<MaxAggregationBuilder, MaxAggregationBuilder> fn) {
         max(name);
         fn.apply((MaxAggregationBuilder) currentBuilder);
         return children;
     }
 
     @Override
-    public Children min(R name, Function<MinAggregationBuilder, MinAggregationBuilder> fn) {
+    public Children minFn(R name, Function<MinAggregationBuilder, MinAggregationBuilder> fn) {
         min(name);
         fn.apply((MinAggregationBuilder) currentBuilder);
         return children;
     }
 
     @Override
-    public Children sum(R name, Function<SumAggregationBuilder, SumAggregationBuilder> fn) {
+    public Children sumFn(R name, Function<SumAggregationBuilder, SumAggregationBuilder> fn) {
         sum(name);
         fn.apply((SumAggregationBuilder) currentBuilder);
         return children;
     }
 
     @Override
-    public Children stats(R name, Function<StatsAggregationBuilder, StatsAggregationBuilder> fn) {
+    public Children statsFn(R name, Function<StatsAggregationBuilder, StatsAggregationBuilder> fn) {
         stats(name);
         fn.apply((StatsAggregationBuilder) currentBuilder);
         return children;
     }
 
     @Override
-    public Children extendedStats(R name, Function<ExtendedStatsAggregationBuilder, ExtendedStatsAggregationBuilder> fn) {
+    public Children extendedStatsFn(R name, Function<ExtendedStatsAggregationBuilder, ExtendedStatsAggregationBuilder> fn) {
         extendedStats(name);
         fn.apply((ExtendedStatsAggregationBuilder) currentBuilder);
         return children;
     }
 
     @Override
-    public Children filter(R name, Supplier<EsWrapper<T>> filter, Function<FilterAggregationBuilder, FilterAggregationBuilder> fn) {
+    public Children filterFn(R name, Supplier<EsWrapper<T>> filter, Function<FilterAggregationBuilder, FilterAggregationBuilder> fn) {
         filter(name, filter);
         fn.apply((FilterAggregationBuilder) currentBuilder);
         return children;
     }
 
     @Override
-    public Children adjacencyMatrix(R name, Map<String, Supplier<EsWrapper<T>>> filters, Function<AdjacencyMatrixAggregationBuilder, AdjacencyMatrixAggregationBuilder> fn) {
+    public Children adjacencyMatrixFn(R name, Map<String, Supplier<EsWrapper<T>>> filters, Function<AdjacencyMatrixAggregationBuilder, AdjacencyMatrixAggregationBuilder> fn) {
         adjacencyMatrix(null,name, null, filters);
         fn.apply((AdjacencyMatrixAggregationBuilder) currentBuilder);
         return children;
     }
 
     @Override
-    public Children adjacencyMatrix(R name, String separator, Map<String, Supplier<EsWrapper<T>>> filters, Function<AdjacencyMatrixAggregationBuilder, AdjacencyMatrixAggregationBuilder> fn) {
+    public Children adjacencyMatrixFn(R name, String separator, Map<String, Supplier<EsWrapper<T>>> filters, Function<AdjacencyMatrixAggregationBuilder, AdjacencyMatrixAggregationBuilder> fn) {
         adjacencyMatrix(null,name, separator, filters);
         fn.apply((AdjacencyMatrixAggregationBuilder) currentBuilder);
         return children;
     }
 
     @Override
-    public Children sampler(R name, Function<SamplerAggregationBuilder, SamplerAggregationBuilder> fn) {
+    public Children samplerFn(R name, Function<SamplerAggregationBuilder, SamplerAggregationBuilder> fn) {
         sampler(name);
         fn.apply((SamplerAggregationBuilder) currentBuilder);
         return children;
     }
 
     @Override
-    public Children diversifiedSampler(R name, Function<DiversifiedAggregationBuilder, DiversifiedAggregationBuilder> fn) {
+    public Children diversifiedSamplerFn(R name, Function<DiversifiedAggregationBuilder, DiversifiedAggregationBuilder> fn) {
         diversifiedSampler(name);
         fn.apply((DiversifiedAggregationBuilder) currentBuilder);
         return children;
     }
 
     @Override
-    public Children global(R name, Function<GlobalAggregationBuilder, GlobalAggregationBuilder> fn) {
+    public Children globalFn(R name, Function<GlobalAggregationBuilder, GlobalAggregationBuilder> fn) {
         global(name);
         fn.apply((GlobalAggregationBuilder) currentBuilder);
         return children;
     }
 
     @Override
-    public Children missing(R name, Function<MissingAggregationBuilder, MissingAggregationBuilder> fn) {
+    public Children missingFn(R name, Function<MissingAggregationBuilder, MissingAggregationBuilder> fn) {
         missing(name);
         fn.apply((MissingAggregationBuilder) currentBuilder);
         return children;
     }
 
     @Override
-    public Children nested(R name, String path, Function<NestedAggregationBuilder, NestedAggregationBuilder> fn) {
+    public Children nestedFn(R name, String path, Function<NestedAggregationBuilder, NestedAggregationBuilder> fn) {
         nested(name, path);
         fn.apply((NestedAggregationBuilder) currentBuilder);
         return children;
     }
 
     @Override
-    public Children reverseNested(R name, Function<ReverseNestedAggregationBuilder, ReverseNestedAggregationBuilder> fn) {
+    public Children reverseNestedFn(R name, Function<ReverseNestedAggregationBuilder, ReverseNestedAggregationBuilder> fn) {
         reverseNested(name);
         fn.apply((ReverseNestedAggregationBuilder) currentBuilder);
         return children;
     }
 
     @Override
-    public Children geoDistance(R name, GeoPoint origin, Function<GeoDistanceAggregationBuilder, GeoDistanceAggregationBuilder> fn) {
+    public Children geoDistanceFn(R name, GeoPoint origin, Function<GeoDistanceAggregationBuilder, GeoDistanceAggregationBuilder> fn) {
         geoDistance(name, origin);
         fn.apply((GeoDistanceAggregationBuilder) currentBuilder);
         return children;
     }
 
     @Override
-    public Children histogram(R name, Function<HistogramAggregationBuilder, HistogramAggregationBuilder> fn) {
+    public Children histogramFn(R name, Function<HistogramAggregationBuilder, HistogramAggregationBuilder> fn) {
         histogram(name);
         fn.apply((HistogramAggregationBuilder) currentBuilder);
         return children;
@@ -1132,224 +1132,224 @@ public abstract class AbstractEsAggWrapper<T, R, Children extends AbstractEsAggW
 
 
     @Override
-    public Children significantTerms(R name, Function<SignificantTermsAggregationBuilder, SignificantTermsAggregationBuilder> fn) {
+    public Children significantTermsFn(R name, Function<SignificantTermsAggregationBuilder, SignificantTermsAggregationBuilder> fn) {
         significantTerms(name);
         fn.apply((SignificantTermsAggregationBuilder) currentBuilder);
         return children;
     }
 
     @Override
-    public Children significantText(R name, String fieldName, Function<SignificantTextAggregationBuilder, SignificantTextAggregationBuilder> fn) {
-        significantText(name, fieldName,fn);
+    public Children significantTextFn(R field, String name, Function<SignificantTextAggregationBuilder, SignificantTextAggregationBuilder> fn) {
+        significantText(name ,field);
         fn.apply((SignificantTextAggregationBuilder) currentBuilder);
         return children;
     }
 
     @Override
-    public Children dateHistogram(R name, Function<DateHistogramAggregationBuilder, DateHistogramAggregationBuilder> fn) {
+    public Children dateHistogramFn(R name, Function<DateHistogramAggregationBuilder, DateHistogramAggregationBuilder> fn) {
         dateHistogram(name);
         fn.apply((DateHistogramAggregationBuilder) currentBuilder);
         return children;
     }
 
     @Override
-    public Children range(R name, Function<RangeAggregationBuilder, RangeAggregationBuilder> fn) {
+    public Children rangeFn(R name, Function<RangeAggregationBuilder, RangeAggregationBuilder> fn) {
         range(name);
         fn.apply((RangeAggregationBuilder) currentBuilder);
         return children;
     }
 
     @Override
-    public Children dateRange(R name, Function<DateRangeAggregationBuilder, DateRangeAggregationBuilder> fn) {
+    public Children dateRangeFn(R name, Function<DateRangeAggregationBuilder, DateRangeAggregationBuilder> fn) {
         dateRange(name);
         fn.apply((DateRangeAggregationBuilder) currentBuilder);
         return children;
     }
 
     @Override
-    public Children ipRange(R name, Function<IpRangeAggregationBuilder, IpRangeAggregationBuilder> fn) {
+    public Children ipRangeFn(R name, Function<IpRangeAggregationBuilder, IpRangeAggregationBuilder> fn) {
         ipRange(name);
         fn.apply((IpRangeAggregationBuilder) currentBuilder);
         return children;
     }
 
     @Override
-    public Children terms(R name, Function<TermsAggregationBuilder, TermsAggregationBuilder> fn) {
+    public Children termsFn(R name, Function<TermsAggregationBuilder, TermsAggregationBuilder> fn) {
         terms(name);
         fn.apply((TermsAggregationBuilder) currentBuilder);
         return children;
     }
 
     @Override
-    public Children percentiles(R name, Function<PercentilesAggregationBuilder, PercentilesAggregationBuilder> fn) {
+    public Children percentilesFn(R name, Function<PercentilesAggregationBuilder, PercentilesAggregationBuilder> fn) {
         percentiles(name);
         fn.apply((PercentilesAggregationBuilder) currentBuilder);
         return children;
     }
 
     @Override
-    public Children percentileRanks(R name, double[] values, Function<PercentileRanksAggregationBuilder, PercentileRanksAggregationBuilder> fn) {
+    public Children percentileRanksFn(R name, double[] values, Function<PercentileRanksAggregationBuilder, PercentileRanksAggregationBuilder> fn) {
         percentileRanks(name, values);
         fn.apply((PercentileRanksAggregationBuilder) currentBuilder);
         return children;
     }
 
     @Override
-    public Children medianAbsoluteDeviation(R name, Function<MedianAbsoluteDeviationAggregationBuilder, MedianAbsoluteDeviationAggregationBuilder> fn) {
+    public Children medianAbsoluteDeviationFn(R name, Function<MedianAbsoluteDeviationAggregationBuilder, MedianAbsoluteDeviationAggregationBuilder> fn) {
         medianAbsoluteDeviation(name);
         fn.apply((MedianAbsoluteDeviationAggregationBuilder) currentBuilder);
         return children;
     }
 
     @Override
-    public Children cardinality(R name, Function<CardinalityAggregationBuilder, CardinalityAggregationBuilder> fn) {
+    public Children cardinalityFn(R name, Function<CardinalityAggregationBuilder, CardinalityAggregationBuilder> fn) {
         cardinality(name);
         fn.apply((CardinalityAggregationBuilder) currentBuilder);
         return children;
     }
 
     @Override
-    public Children topHits(R name, Function<TopHitsAggregationBuilder, TopHitsAggregationBuilder> fn) {
+    public Children topHitsFn(R name, Function<TopHitsAggregationBuilder, TopHitsAggregationBuilder> fn) {
         topHits(name);
         fn.apply((TopHitsAggregationBuilder) currentBuilder);
         return children;
     }
 
     @Override
-    public Children geoBounds(R name, Function<GeoBoundsAggregationBuilder, GeoBoundsAggregationBuilder> fn) {
+    public Children geoBoundsFn(R name, Function<GeoBoundsAggregationBuilder, GeoBoundsAggregationBuilder> fn) {
         geoBounds(name);
         fn.apply((GeoBoundsAggregationBuilder) currentBuilder);
         return children;
     }
 
     @Override
-    public Children geoCentroid(R name, Function<GeoCentroidAggregationBuilder, GeoCentroidAggregationBuilder> fn) {
+    public Children geoCentroidFn(R name, Function<GeoCentroidAggregationBuilder, GeoCentroidAggregationBuilder> fn) {
         geoCentroid(name);
         fn.apply((GeoCentroidAggregationBuilder) currentBuilder);
         return children;
     }
 
     @Override
-    public Children scriptedMetric(R name, Function<ScriptedMetricAggregationBuilder, ScriptedMetricAggregationBuilder> fn) {
+    public Children scriptedMetricFn(R name, Function<ScriptedMetricAggregationBuilder, ScriptedMetricAggregationBuilder> fn) {
         scriptedMetric(name);
         fn.apply((ScriptedMetricAggregationBuilder) currentBuilder);
         return children;
     }
 
     @Override
-    public Children composite(R name, List<CompositeValuesSourceBuilder<?>> sources, Function<CompositeAggregationBuilder, CompositeAggregationBuilder> fn) {
+    public Children compositeFn(R name, List<CompositeValuesSourceBuilder<?>> sources, Function<CompositeAggregationBuilder, CompositeAggregationBuilder> fn) {
         composite(name, sources);
         fn.apply((CompositeAggregationBuilder) currentBuilder);
         return children;
     }
 
     @Override
-    public Children derivative(R name, Function<DerivativePipelineAggregationBuilder, DerivativePipelineAggregationBuilder> fn, String bucketsPath) {
+    public Children derivativeFn(R name, Function<DerivativePipelineAggregationBuilder, DerivativePipelineAggregationBuilder> fn, String bucketsPath) {
         derivative(name, bucketsPath);
         fn.apply((DerivativePipelineAggregationBuilder) currentBuilder);
         return children;
     }
 
     @Override
-    public Children maxBucket(R name, Function<MaxBucketPipelineAggregationBuilder, MaxBucketPipelineAggregationBuilder> fn, String bucketsPath) {
+    public Children maxBucketFn(R name, Function<MaxBucketPipelineAggregationBuilder, MaxBucketPipelineAggregationBuilder> fn, String bucketsPath) {
         maxBucket(name, bucketsPath);
         fn.apply((MaxBucketPipelineAggregationBuilder) currentBuilder);
         return children;
     }
 
     @Override
-    public Children minBucket(R name, Function<MinBucketPipelineAggregationBuilder, MinBucketPipelineAggregationBuilder> fn, String bucketsPath) {
+    public Children minBucketFn(R name, Function<MinBucketPipelineAggregationBuilder, MinBucketPipelineAggregationBuilder> fn, String bucketsPath) {
         minBucket(name, bucketsPath);
         fn.apply((MinBucketPipelineAggregationBuilder) currentBuilder);
         return children;
     }
 
     @Override
-    public Children avgBucket(R name, Function<AvgBucketPipelineAggregationBuilder, AvgBucketPipelineAggregationBuilder> fn, String bucketsPath) {
+    public Children avgBucketFn(R name, Function<AvgBucketPipelineAggregationBuilder, AvgBucketPipelineAggregationBuilder> fn, String bucketsPath) {
         avgBucket(name, bucketsPath);
         fn.apply((AvgBucketPipelineAggregationBuilder) currentBuilder);
         return children;
     }
 
     @Override
-    public Children sumBucket(R name, Function<SumBucketPipelineAggregationBuilder, SumBucketPipelineAggregationBuilder> fn, String bucketsPath) {
+    public Children sumBucketFn(R name, Function<SumBucketPipelineAggregationBuilder, SumBucketPipelineAggregationBuilder> fn, String bucketsPath) {
         sumBucket(name, bucketsPath);
         fn.apply((SumBucketPipelineAggregationBuilder) currentBuilder);
         return children;
     }
 
     @Override
-    public Children statsBucket(R name, Function<StatsBucketPipelineAggregationBuilder, StatsBucketPipelineAggregationBuilder> fn, String bucketsPath) {
+    public Children statsBucketFn(R name, Function<StatsBucketPipelineAggregationBuilder, StatsBucketPipelineAggregationBuilder> fn, String bucketsPath) {
         statsBucket(name, bucketsPath);
         fn.apply((StatsBucketPipelineAggregationBuilder) currentBuilder);
         return children;
     }
 
     @Override
-    public Children extendedStatsBucket(R name, Function<ExtendedStatsBucketPipelineAggregationBuilder, ExtendedStatsBucketPipelineAggregationBuilder> fn, String bucketsPath) {
+    public Children extendedStatsBucketFn(R name, Function<ExtendedStatsBucketPipelineAggregationBuilder, ExtendedStatsBucketPipelineAggregationBuilder> fn, String bucketsPath) {
         extendedStatsBucket(name, bucketsPath);
         fn.apply((ExtendedStatsBucketPipelineAggregationBuilder) currentBuilder);
         return children;
     }
 
     @Override
-    public Children percentilesBucket(R name, Function<PercentilesBucketPipelineAggregationBuilder, PercentilesBucketPipelineAggregationBuilder> fn, String bucketsPath) {
+    public Children percentilesBucketFn(R name, Function<PercentilesBucketPipelineAggregationBuilder, PercentilesBucketPipelineAggregationBuilder> fn, String bucketsPath) {
         percentilesBucket(name, bucketsPath);
         fn.apply((PercentilesBucketPipelineAggregationBuilder) currentBuilder);
         return children;
     }
 
     @Override
-    public Children bucketScript(R name, Function<BucketScriptPipelineAggregationBuilder, BucketScriptPipelineAggregationBuilder> fn, Map<String, String> bucketsPathsMap, Script script) {
+    public Children bucketScriptFn(R name, Function<BucketScriptPipelineAggregationBuilder, BucketScriptPipelineAggregationBuilder> fn, Map<String, String> bucketsPathsMap, Script script) {
         bucketScript(name, bucketsPathsMap, script);
         fn.apply((BucketScriptPipelineAggregationBuilder) currentBuilder);
         return children;
     }
 
     @Override
-    public Children bucketScript(R name, Function<BucketScriptPipelineAggregationBuilder, BucketScriptPipelineAggregationBuilder> fn, Script script, String... bucketsPaths) {
+    public Children bucketScriptFn(R name, Function<BucketScriptPipelineAggregationBuilder, BucketScriptPipelineAggregationBuilder> fn, Script script, String... bucketsPaths) {
         bucketScript(name, script, bucketsPaths);
         fn.apply((BucketScriptPipelineAggregationBuilder) currentBuilder);
         return children;
     }
 
     @Override
-    public Children bucketSelector(R name, Function<BucketSelectorPipelineAggregationBuilder, BucketSelectorPipelineAggregationBuilder> fn, Map<String, String> bucketsPathsMap, Script script) {
+    public Children bucketSelectorFn(R name, Function<BucketSelectorPipelineAggregationBuilder, BucketSelectorPipelineAggregationBuilder> fn, Map<String, String> bucketsPathsMap, Script script) {
         bucketSelector(name, bucketsPathsMap, script);
         fn.apply((BucketSelectorPipelineAggregationBuilder) currentBuilder);
         return children;
     }
 
     @Override
-    public Children bucketSelector(R name, Function<BucketSelectorPipelineAggregationBuilder, BucketSelectorPipelineAggregationBuilder> fn, Script script, String... bucketsPaths) {
+    public Children bucketSelectorFn(R name, Function<BucketSelectorPipelineAggregationBuilder, BucketSelectorPipelineAggregationBuilder> fn, Script script, String... bucketsPaths) {
         bucketSelector(name, script, bucketsPaths);
         fn.apply((BucketSelectorPipelineAggregationBuilder) currentBuilder);
         return children;
     }
 
     @Override
-    public Children bucketSort(R name, Function<BucketSortPipelineAggregationBuilder, BucketSortPipelineAggregationBuilder> fn, List<FieldSortBuilder> sorts) {
+    public Children bucketSortFn(R name, Function<BucketSortPipelineAggregationBuilder, BucketSortPipelineAggregationBuilder> fn, List<FieldSortBuilder> sorts) {
         bucketSort(name, sorts);
         fn.apply((BucketSortPipelineAggregationBuilder) currentBuilder);
         return children;
     }
 
     @Override
-    public Children cumulativeSum(R name, Function<CumulativeSumPipelineAggregationBuilder, CumulativeSumPipelineAggregationBuilder> fn, String bucketsPath) {
+    public Children cumulativeSumFn(R name, Function<CumulativeSumPipelineAggregationBuilder, CumulativeSumPipelineAggregationBuilder> fn, String bucketsPath) {
         cumulativeSum(name, bucketsPath);
         fn.apply((CumulativeSumPipelineAggregationBuilder) currentBuilder);
         return children;
     }
 
     @Override
-    public Children diff(R name, Function<SerialDiffPipelineAggregationBuilder, SerialDiffPipelineAggregationBuilder> fn, String bucketsPath) {
+    public Children diffFn(R name, Function<SerialDiffPipelineAggregationBuilder, SerialDiffPipelineAggregationBuilder> fn, String bucketsPath) {
         diff(name, bucketsPath);
         fn.apply((SerialDiffPipelineAggregationBuilder) currentBuilder);
         return children;
     }
 
     @Override
-    public Children movingFunction(R name, Function<MovFnPipelineAggregationBuilder, MovFnPipelineAggregationBuilder> fn, Script script, String bucketsPaths, int window) {
+    public Children movingFunctionFn(R name, Function<MovFnPipelineAggregationBuilder, MovFnPipelineAggregationBuilder> fn, Script script, String bucketsPaths, int window) {
         movingFunction(name, script, bucketsPaths, window);
         fn.apply((MovFnPipelineAggregationBuilder) currentBuilder);
         return children;
