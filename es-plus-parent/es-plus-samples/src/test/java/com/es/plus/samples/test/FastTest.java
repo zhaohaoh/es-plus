@@ -74,7 +74,10 @@ public class FastTest {
     public void aaa() {
         EsChainLambdaQueryWrapper<FastTestDTO> fastTestDTOEsChainLambdaQueryWrapper = Es.chainLambdaQuery(FastTestDTO.class);
         EsAggWrapper<FastTestDTO> aggWrapper = fastTestDTOEsChainLambdaQueryWrapper.esAggWrapper();
-        aggWrapper.terms("username",a-> a.size(10000).order(BucketOrder.aggregation("id_max",true)))
+        aggWrapper.terms("username",a-> {
+                  return   a.size(10000).order(BucketOrder.aggregation("id_max",true));
+                        }
+                )
        .subAggregation(es->es.max("id"));
     //例子
 //        aggWrapper.filter("a",()-> this.fastTestService.esQueryWrapper().term("",""));
