@@ -879,7 +879,7 @@ public interface IEsAggWrapper<Children, R,T> extends  IEsBaseAggWrapper<Childre
      * Create a new {@link Nested} aggregation with the given field.
      */
     default Children nested(R field, String path,Consumer<Children> subAgg){
-        return   nested(null,field,path,null);
+        return   nested(null,field,path,subAgg);
     };
     
     /**
@@ -893,7 +893,7 @@ public interface IEsAggWrapper<Children, R,T> extends  IEsBaseAggWrapper<Childre
      * Create a new {@link GeoDistance} aggregation with the given field.
      */
     default Children geoDistance(R field, GeoPoint origin,Consumer<Children> subAgg){
-        return   geoDistance(null,field,origin,null);
+        return   geoDistance(null,field,origin,subAgg);
     };
     
     /**
