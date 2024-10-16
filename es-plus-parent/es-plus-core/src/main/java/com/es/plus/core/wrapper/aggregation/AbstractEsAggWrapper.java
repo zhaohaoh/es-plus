@@ -92,7 +92,6 @@ import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -137,18 +136,19 @@ public abstract class AbstractEsAggWrapper<T, R, Children extends AbstractEsAggW
         consumer.accept(children);
         List<BaseAggregationBuilder> aggregationBuilder = children.getAggregationBuilder();
         if (!CollectionUtils.isEmpty(aggregationBuilder)) {
-            if (subAggregations == null){
-                subAggregations = new AggregatorFactories.Builder();
-                //当前的聚合数据加入
-                if (currentBuilder instanceof AggregationBuilder){
-                    AggregationBuilder aggregations =   (AggregationBuilder) currentBuilder;
-                    Collection<AggregationBuilder> subAggregations = aggregations.getSubAggregations();
-                    for (AggregationBuilder subAggregation : subAggregations) {
-                        this.subAggregations.addAggregator(subAggregation);
-                    }
-                }
-            }
-            
+//            if (subAggregations == null){
+//                subAggregations = new AggregatorFactories.Builder();
+//                //当前的聚合数据加入
+//                if (currentBuilder instanceof AggregationBuilder){
+//                    AggregationBuilder aggregations =   (AggregationBuilder) currentBuilder;
+//                    Collection<AggregationBuilder> subAggregations = aggregations.getSubAggregations();
+//                    for (AggregationBuilder subAggregation : subAggregations) {
+//                        this.subAggregations.addAggregator(subAggregation);
+//                    }
+//                }
+//            }
+//
+            AggregatorFactories.Builder subAggregations = new AggregatorFactories.Builder();
             for (BaseAggregationBuilder baseAggregationBuilder : aggregationBuilder) {
                 if (baseAggregationBuilder instanceof AggregationBuilder) {
                     subAggregations.addAggregator((AggregationBuilder) baseAggregationBuilder);
