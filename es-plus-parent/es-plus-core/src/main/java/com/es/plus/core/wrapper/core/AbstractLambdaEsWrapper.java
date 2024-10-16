@@ -42,11 +42,15 @@ public abstract class AbstractLambdaEsWrapper<T, R> {
         if (function instanceof String) {
             //手动传入的字符串是es的名字
             String esName = (String) function;
+            if (tClass==null){
+                return esName;
+            }
             //如果包含.说明是多级字段
             boolean contains = StringUtils.contains(esName, ".");
             if (contains) {
                 //获取最后的字段  user.account.money  取money来获取实体类字段
                 String last = StringUtils.substringAfterLast(esName, ".");
+              
                 EsEntityInfo esEntityInfo = GlobalParamHolder.getEsEntityInfo(tClass);
                 if (esEntityInfo != null) {
                     Map<String, String> mappingFieldMap = esEntityInfo.getMappingFieldMap();

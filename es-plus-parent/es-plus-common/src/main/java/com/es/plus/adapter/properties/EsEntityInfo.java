@@ -16,7 +16,7 @@ public class EsEntityInfo {
     /**
      * id名称
      */
-    private String idName;
+    private  String idName;
     /**
      * es索引参数
      */
@@ -25,13 +25,13 @@ public class EsEntityInfo {
     /**
      * 转换关键字映射
      */
-    private   Map<String, String>  convertKeywordMap = new ConcurrentHashMap<>();
+    private  Map<String, String>  convertKeywordMap = new ConcurrentHashMap<>();
 
     // 字段属性存储
     private  Map<String, EsFieldInfo> fieldsInfoMap = new ConcurrentHashMap<>();
 
     // es映射字段->实体类字段的映射关系
-    private   Map<String, String> mappingFieldMap = new ConcurrentHashMap<>();
+    private  Map<String, String> mappingFieldMap = new ConcurrentHashMap<>();
 
 }
 
