@@ -4,6 +4,7 @@ import lombok.Getter;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 /**
  * es聚合查询获取结果封装
@@ -67,11 +68,14 @@ public class EsAggResultQuery {
         this.sum.add(sum);
         return this;
     }
-    
-    public EsAggResultQuery subQuery() {
+    public EsAggResultQuery filter(String filter,Consumer<EsAggResultQuery> consumer) {
         this.subQuery = new EsAggResultQuery();
-        return this.subQuery;
+        consumer.accept(subQuery);
+        this.filters.add(filter);
+        return this;
     }
+    
+ 
     
     public static EsAggResultQuery build() {
         return new EsAggResultQuery();

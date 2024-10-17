@@ -2,20 +2,24 @@ package com.es.plus.es6.client;
 
 import com.es.plus.adapter.params.EsAggResponse;
 import com.es.plus.adapter.params.EsAggResult;
-import com.es.plus.adapter.params.EsAggResultQuery;
+import com.es.plus.adapter.params.EsAggStats;
+import com.es.plus.adapter.params.Tuple;
 import com.es.plus.adapter.properties.EsFieldInfo;
 import com.es.plus.adapter.properties.GlobalParamHolder;
 import com.es.plus.adapter.tools.LambdaUtils;
 import com.es.plus.adapter.tools.SFunction;
+import com.es.plus.adapter.util.SearchHitsUtil;
 import com.es.plus.constant.EsConstant;
 import org.apache.commons.lang3.StringUtils;
+import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.aggregations.Aggregations;
+import org.elasticsearch.search.aggregations.bucket.MultiBucketsAggregation;
+import org.elasticsearch.search.aggregations.bucket.SingleBucketAggregation;
 import org.elasticsearch.search.aggregations.bucket.adjacency.AdjacencyMatrix;
 import org.elasticsearch.search.aggregations.bucket.adjacency.AdjacencyMatrixAggregationBuilder;
 import org.elasticsearch.search.aggregations.bucket.filter.Filters;
 import org.elasticsearch.search.aggregations.bucket.filter.FiltersAggregationBuilder;
-import org.elasticsearch.search.aggregations.bucket.filter.ParsedFilter;
 import org.elasticsearch.search.aggregations.bucket.histogram.Histogram;
 import org.elasticsearch.search.aggregations.bucket.histogram.HistogramAggregationBuilder;
 import org.elasticsearch.search.aggregations.bucket.significant.SignificantTerms;
@@ -26,8 +30,11 @@ import org.elasticsearch.search.aggregations.metrics.avg.Avg;
 import org.elasticsearch.search.aggregations.metrics.avg.AvgAggregationBuilder;
 import org.elasticsearch.search.aggregations.metrics.max.Max;
 import org.elasticsearch.search.aggregations.metrics.max.MaxAggregationBuilder;
+import org.elasticsearch.search.aggregations.metrics.min.Min;
+import org.elasticsearch.search.aggregations.metrics.stats.ParsedStats;
 import org.elasticsearch.search.aggregations.metrics.sum.Sum;
 import org.elasticsearch.search.aggregations.metrics.sum.SumAggregationBuilder;
+import org.elasticsearch.search.aggregations.metrics.tophits.TopHits;
 import org.elasticsearch.search.aggregations.metrics.valuecount.ValueCount;
 import org.elasticsearch.search.aggregations.metrics.weighted_avg.WeightedAvg;
 import org.springframework.util.CollectionUtils;
@@ -35,7 +42,6 @@ import org.springframework.util.CollectionUtils;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 
 /**
@@ -76,90 +82,158 @@ public class EsPlus6Aggregations<T> implements EsAggResponse<T> {
      * 得到esplus封装的map
      */
     @Override
-    public EsAggResult<T> getEsAggResult(EsAggResultQuery esAggResultQuery) {
-        return getResult(esAggResultQuery, aggregations);
+    public EsAggResult<T> getEsAggResult() {
+        return getResult(aggregations);
     }
     
-    private EsAggResult<T> getResult(EsAggResultQuery esAggResultQuery, Aggregations aggregations) {
-        if (esAggResultQuery == null) {
-            return new EsAggResult<>();
-        }
+    private EsAggResult<T> getResult(Aggregations aggregations) {
+        
+        
         if (aggregations == null) {
             return new EsAggResult<>();
         }
-       
+        
         EsAggResult<T> esAgg = new EsAggResult<>();
-        List<String> counts = esAggResultQuery.getCount();
-        if (!CollectionUtils.isEmpty(counts)) {
-            Map<String, Long> map = counts.stream().collect(Collectors.toMap(a -> a, aggregations::get));
-            esAgg.setCount(map);
-        }
-        List<String> avg = esAggResultQuery.getAvg();
-        if (!CollectionUtils.isEmpty(avg)) {
-            Map<String, Double> map = avg.stream().collect(Collectors.toMap(a -> a, aggregations::get));
-            esAgg.setAvg(map);
-        }
-        List<String> max = esAggResultQuery.getMax();
-        if (!CollectionUtils.isEmpty(max)) {
-            Map<String, Double> map = max.stream().collect(Collectors.toMap(a -> a, aggregations::get));
-            esAgg.setMax(map);
-        }
-        List<String> sum = esAggResultQuery.getSum();
-        if (!CollectionUtils.isEmpty(sum)) {
-            Map<String, Double> map = sum.stream().collect(Collectors.toMap(a -> a, aggregations::get));
-            esAgg.setSum(map);
-        }
-        List<String> min = esAggResultQuery.getMin();
-        if (!CollectionUtils.isEmpty(min)) {
-            Map<String, Double> map = min.stream().collect(Collectors.toMap(a -> a, aggregations::get));
-            esAgg.setMin(map);
-        }
-        List<String> topHits = esAggResultQuery.getTopHits();
-        if (!CollectionUtils.isEmpty(topHits)) {
-            Map<String, List<T>> map = topHits.stream().collect(Collectors.toMap(a -> a, aggregations::get));
-            esAgg.setTopHits(map);
+        
+        //多桶多层聚合
+        Map<String,Map<String, EsAggResult<T>>> multiBucketMap= null;
+        //单桶多层聚合
+        //单桶多层聚合
+        Map<String, Tuple<Long,EsAggResult<T>>> singleBucketMap = null;
+        //单文档doc的设置
+        Map<String,Long> docMap = null;
+        
+        Map<String, Double> sumMap = null;
+        
+        Map<String, Double> avgMap = null;
+        
+        Map<String, Long> countMap = null;
+        
+        Map<String, Double> maxMap= null;
+        
+        Map<String, Double> minMap= null;
+        
+        Map<String, List<T>> topHitsMap= null;
+        
+        Map<String, Aggregation> aggMap = null;
+        
+        Map<String, EsAggStats> statsMap = null;
+        
+        Map<String, Aggregation> aggregationsMap = aggregations.asMap();
+        
+        if (CollectionUtils.isEmpty(aggregationsMap)){
+            return new EsAggResult<>();
         }
         
-        List<String> filters = esAggResultQuery.getFilters();
-        if (!CollectionUtils.isEmpty(filters)) {
-            Map<String,EsAggResult<T>> esAggResultMap = new HashMap<>();
-            for (String filter : filters) {
-                ParsedFilter parsedFilter = aggregations.get(filter);
-                if (parsedFilter==null){
-                    continue;
+        for (Map.Entry<String, Aggregation> entry : aggregationsMap.entrySet()) {
+            String aggName = entry.getKey();
+            Aggregation agg = entry.getValue();
+            
+            //单桶聚合
+            if (agg instanceof SingleBucketAggregation){
+                if (singleBucketMap==null){
+                    singleBucketMap=new HashMap<>();
                 }
-                long docCount = parsedFilter.getDocCount();
-                Aggregations parsedFilterAggregations = parsedFilter.getAggregations();
-                esAgg.setDocCount(docCount);
-                EsAggResult<T> agg = getResult(esAggResultQuery.getSubQuery(), parsedFilterAggregations);
-                esAggResultMap.put(filter,agg);
-                agg.setEsAggFiltersMap(esAggResultMap);
+                SingleBucketAggregation aggregation = (SingleBucketAggregation) agg;
+                long docCount = aggregation.getDocCount();
+                EsAggResult<T> subAgg = getResult(aggregation.getAggregations());
+                singleBucketMap.put(aggName,Tuple.tuple(docCount,subAgg));
             }
-        }
-        
-        List<String> term = esAggResultQuery.getTerm();
-        if (!CollectionUtils.isEmpty(term)) {
-            for (String t : term) {
-                Terms value = aggregations.get(t);
-                if (value==null){
-                    continue;
+            
+            //多个桶聚合
+            else if (agg instanceof MultiBucketsAggregation){
+                if (multiBucketMap==null){
+                    multiBucketMap=new HashMap<>();
                 }
-                Map<String,Map<String, EsAggResult<T>>> map = new HashMap<>();
+                MultiBucketsAggregation aggregation = (MultiBucketsAggregation) agg;
                 Map<String, EsAggResult<T>> data = new HashMap<>();
-                map.put(t,data);
-                esAgg.setEsAggTermsMap(map);
-                List<? extends Terms.Bucket> buckets = value.getBuckets();
-                for (Terms.Bucket bucket : buckets) {
+                multiBucketMap.put(aggName,data);
+                List<? extends MultiBucketsAggregation.Bucket> buckets = aggregation.getBuckets();
+                for (MultiBucketsAggregation.Bucket bucket : buckets) {
                     Aggregations bucketAggregations = bucket.getAggregations();
-                    EsAggResult<T> agg = getResult(esAggResultQuery.getSubQuery(), bucketAggregations);
+                    EsAggResult<T> subAgg = getResult( bucketAggregations);
                     long docCount = bucket.getDocCount();
-                    agg.setDocCount(docCount);
+                    subAgg.setDocCount(docCount);
                     String keyAsString = bucket.getKeyAsString();
-                    data.put(keyAsString, agg);
+                    data.put(keyAsString, subAgg);
                 }
             }
-           
+            else if (agg instanceof Sum){
+                if (sumMap==null){
+                    sumMap=new HashMap<>();
+                }
+                sumMap.put(aggName,((Sum) agg).value());
+            }
+            else if (agg instanceof Avg){
+                if (avgMap==null){
+                    avgMap=new HashMap<>();
+                }
+                avgMap.put(aggName,((Avg) agg).value());
+            }
+            else if (agg instanceof ValueCount){
+                if (countMap==null){
+                    countMap=new HashMap<>();
+                }
+                countMap.put(aggName,((ValueCount) agg).getValue());
+            }
+            else  if (agg instanceof Max){
+                if (maxMap==null){
+                    maxMap=new HashMap<>();
+                }
+                maxMap.put(aggName,((Max) agg).value());
+            }
+            else  if (agg instanceof Min){
+                if (minMap==null){
+                    minMap=new HashMap<>();
+                }
+                minMap.put(aggName,((Min) agg).value());
+            }
+            else if (agg instanceof TopHits){
+                if (topHitsMap==null){
+                    topHitsMap=new HashMap<>();
+                }
+                SearchHits hits = ((TopHits) agg).getHits();
+                List<T> result = SearchHitsUtil.parseList(tClass, hits.getHits());
+                topHitsMap.put(aggName, result);
+            }
+            else if (agg instanceof ParsedStats){
+                if (statsMap==null){
+                    statsMap=new HashMap<>();
+                }
+                double avg = ((ParsedStats) agg).getAvg();
+                long count = ((ParsedStats) agg).getCount();
+                double max = ((ParsedStats) agg).getMax();
+                double sum = ((ParsedStats) agg).getSum();
+                double min = ((ParsedStats) agg).getMin();
+                EsAggStats esAggStats = new EsAggStats();
+                esAggStats.setAvg(avg);
+                esAggStats.setCount(count);
+                esAggStats.setMax(max);
+                esAggStats.setSum(sum);
+                esAggStats.setMin(min);
+                statsMap.put(aggName,esAggStats);
+            }
+            
+            //框架暂未解析的agg
+            else {
+                if (aggMap==null){
+                    aggMap=new HashMap<>();
+                }
+                aggMap.put(aggName,agg);
+            }
         }
+        
+        esAgg.setSingleBucketsMap(singleBucketMap);
+        esAgg.setMultiBucketsMap(multiBucketMap);
+        esAgg.setDocCountMap(docMap);
+        esAgg.setSumMap(sumMap);
+        esAgg.setMinMap(minMap);
+        esAgg.setMaxMap(maxMap);
+        esAgg.setCountMap(countMap);
+        esAgg.setAvgMap(avgMap);
+        esAgg.setTopHitsMap(topHitsMap);
+        esAgg.setAggMap(aggMap);
+        esAgg.setStatsMap(statsMap);
         
         return esAgg;
     }

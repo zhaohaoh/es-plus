@@ -16,7 +16,7 @@ public interface EsAggResponse<T> {
      *
      * @return {@link Aggregations}
      */
-    EsAggResult<T> getEsAggResult(EsAggResultQuery esAggResultQuery);
+    EsAggResult<T> getEsAggResult();
 
     /**
      * 设置聚合
