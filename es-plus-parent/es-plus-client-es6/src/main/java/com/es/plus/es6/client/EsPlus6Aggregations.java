@@ -7,10 +7,8 @@ import com.es.plus.adapter.properties.EsFieldInfo;
 import com.es.plus.adapter.properties.GlobalParamHolder;
 import com.es.plus.adapter.tools.LambdaUtils;
 import com.es.plus.adapter.tools.SFunction;
-import com.es.plus.adapter.util.SearchHitsUtil;
 import com.es.plus.constant.EsConstant;
 import org.apache.commons.lang3.StringUtils;
-import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.aggregations.Aggregations;
 import org.elasticsearch.search.aggregations.bucket.adjacency.AdjacencyMatrix;
@@ -27,16 +25,16 @@ import org.elasticsearch.search.aggregations.metrics.avg.Avg;
 import org.elasticsearch.search.aggregations.metrics.avg.AvgAggregationBuilder;
 import org.elasticsearch.search.aggregations.metrics.max.Max;
 import org.elasticsearch.search.aggregations.metrics.max.MaxAggregationBuilder;
-import org.elasticsearch.search.aggregations.metrics.min.Min;
 import org.elasticsearch.search.aggregations.metrics.sum.Sum;
 import org.elasticsearch.search.aggregations.metrics.sum.SumAggregationBuilder;
-import org.elasticsearch.search.aggregations.metrics.tophits.TopHits;
 import org.elasticsearch.search.aggregations.metrics.valuecount.ValueCount;
 import org.elasticsearch.search.aggregations.metrics.weighted_avg.WeightedAvg;
+import org.springframework.util.CollectionUtils;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 
 /**
@@ -88,53 +86,60 @@ public class EsPlus6Aggregations<T> implements EsAggResponse<T> {
         if (aggregations == null) {
             return new EsAggResult<>();
         }
+       
         EsAggResult<T> esAgg = new EsAggResult<>();
-        String count = esAggResultQuery.getCount();
-        if (StringUtils.isNotBlank(count)) {
-            ValueCount value = aggregations.get(count);
-            esAgg.setCount(value.getValue());
+        List<String> counts = esAggResultQuery.getCount();
+        if (!CollectionUtils.isEmpty(counts)) {
+            Map<String, Long> map = counts.stream().collect(Collectors.toMap(a -> a, aggregations::get));
+            esAgg.setCount(map);
         }
-        String avg = esAggResultQuery.getAvg();
-        if (StringUtils.isNotBlank(avg)) {
-            Avg value = aggregations.get(avg);
-            esAgg.setAvg(value.getValue());
+        List<String> avg = esAggResultQuery.getAvg();
+        if (!CollectionUtils.isEmpty(avg)) {
+            Map<String, Double> map = avg.stream().collect(Collectors.toMap(a -> a, aggregations::get));
+            esAgg.setAvg(map);
         }
-        String max = esAggResultQuery.getMax();
-        if (StringUtils.isNotBlank(max)) {
-            Max value = aggregations.get(max);
-            esAgg.setMax(value.getValue());
+        List<String> max = esAggResultQuery.getMax();
+        if (!CollectionUtils.isEmpty(max)) {
+            Map<String, Double> map = max.stream().collect(Collectors.toMap(a -> a, aggregations::get));
+            esAgg.setMax(map);
         }
-        String sum = esAggResultQuery.getSum();
-        if (StringUtils.isNotBlank(sum)) {
-            Sum value = aggregations.get(sum);
-            esAgg.setSum(value.getValue());
+        List<String> sum = esAggResultQuery.getSum();
+        if (!CollectionUtils.isEmpty(sum)) {
+            Map<String, Double> map = sum.stream().collect(Collectors.toMap(a -> a, aggregations::get));
+            esAgg.setSum(map);
         }
-        String min = esAggResultQuery.getMin();
-        if (StringUtils.isNotBlank(min)) {
-            Min value = aggregations.get(min);
-            esAgg.setMin(value.getValue());
+        List<String> min = esAggResultQuery.getMin();
+        if (!CollectionUtils.isEmpty(min)) {
+            Map<String, Double> map = min.stream().collect(Collectors.toMap(a -> a, aggregations::get));
+            esAgg.setMin(map);
         }
-        String topHits = esAggResultQuery.getTopHits();
-        if (StringUtils.isNotBlank(topHits)) {
-            TopHits value = aggregations.get(topHits);
-            SearchHits hits = value.getHits();
-            List<T> result = SearchHitsUtil.parseList(tClass, hits.getHits());
-            esAgg.setTopHits(result);
+        List<String> topHits = esAggResultQuery.getTopHits();
+        if (!CollectionUtils.isEmpty(topHits)) {
+            Map<String, List<T>> map = topHits.stream().collect(Collectors.toMap(a -> a, aggregations::get));
+            esAgg.setTopHits(map);
         }
-        String term = esAggResultQuery.getTerm();
-        if (StringUtils.isNotBlank(term)) {
-            Terms value = aggregations.get(term);
-            Map<String, EsAggResult<T>> data = new HashMap<>();
-            esAgg.setEsAggTermsMap(data);
-            List<? extends Terms.Bucket> buckets = value.getBuckets();
-            for (Terms.Bucket bucket : buckets) {
-                Aggregations bucketAggregations = bucket.getAggregations();
-                EsAggResult<T> agg = getResult(esAggResultQuery.getSubQuery(), bucketAggregations);
-                long docCount = bucket.getDocCount();
-                agg.setTermDocCount(docCount);
-                String keyAsString = bucket.getKeyAsString();
-                data.put(keyAsString, agg);
+        List<String> term = esAggResultQuery.getTerm();
+        if (!CollectionUtils.isEmpty(term)) {
+            for (String t : term) {
+                Terms value = aggregations.get(t);
+                if (value==null){
+                    continue;
+                }
+                Map<String,Map<String, EsAggResult<T>>> map = new HashMap<>();
+                Map<String, EsAggResult<T>> data = new HashMap<>();
+                map.put(t,data);
+                esAgg.setEsAggTermsMap(map);
+                List<? extends Terms.Bucket> buckets = value.getBuckets();
+                for (Terms.Bucket bucket : buckets) {
+                    Aggregations bucketAggregations = bucket.getAggregations();
+                    EsAggResult<T> agg = getResult(esAggResultQuery.getSubQuery(), bucketAggregations);
+                    long docCount = bucket.getDocCount();
+                    agg.setTermDocCount(docCount);
+                    String keyAsString = bucket.getKeyAsString();
+                    data.put(keyAsString, agg);
+                }
             }
+           
         }
         
         return esAgg;

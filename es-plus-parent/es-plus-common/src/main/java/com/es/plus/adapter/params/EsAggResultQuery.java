@@ -2,6 +2,9 @@ package com.es.plus.adapter.params;
 
 import lombok.Getter;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * es聚合查询获取结果封装
  *
@@ -11,54 +14,57 @@ import lombok.Getter;
 @Getter
 public class EsAggResultQuery {
     
-    private String term;
+    private List<String> term = new ArrayList<>();
     
-    private String count;
+    private List<String> count = new ArrayList<>();
     
-    private String topHits;
+    private List<String> topHits = new ArrayList<>();
     
-    private String max;
+    private List<String> max = new ArrayList<>();
     
-    private String min;
+    private List<String> min = new ArrayList<>();
     
-    private String avg;
+    private List<String> avg = new ArrayList<>();
     
-    private String sum;
+    private List<String> sum = new ArrayList<>();
+    
+    private List<String> filters = new ArrayList<>();
     
     private EsAggResultQuery subQuery;
     
     
     public EsAggResultQuery term(String term) {
-        this.term = term;
+        this.term.add(term);
         return this;
     }
     
     public EsAggResultQuery count(String count) {
-        this.count = count;
+        this.count.add(count);
         return this;
     }
     
     public EsAggResultQuery topHits(String topHits) {
-        this.topHits = topHits;
+        this.topHits.add(topHits);
         return this;
     }
+    
     public EsAggResultQuery max(String max) {
-        this.max = max;
+        this.max.add(max);
         return this;
     }
     
     public EsAggResultQuery min(String min) {
-        this.min = min;
+        this.min.add(min);
         return this;
     }
     
     public EsAggResultQuery avg(String avg) {
-        this.avg = avg;
+        this.avg.add(avg);
         return this;
     }
     
     public EsAggResultQuery sum(String sum) {
-        this.sum = sum;
+        this.sum.add(sum);
         return this;
     }
     
@@ -67,7 +73,7 @@ public class EsAggResultQuery {
         return this.subQuery;
     }
     
-    public static EsAggResultQuery  build() {
+    public static EsAggResultQuery build() {
         return new EsAggResultQuery();
     }
     
