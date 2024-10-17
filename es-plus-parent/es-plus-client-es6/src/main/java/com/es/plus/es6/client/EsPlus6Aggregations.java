@@ -15,6 +15,7 @@ import org.elasticsearch.search.aggregations.bucket.adjacency.AdjacencyMatrix;
 import org.elasticsearch.search.aggregations.bucket.adjacency.AdjacencyMatrixAggregationBuilder;
 import org.elasticsearch.search.aggregations.bucket.filter.Filters;
 import org.elasticsearch.search.aggregations.bucket.filter.FiltersAggregationBuilder;
+import org.elasticsearch.search.aggregations.bucket.filter.ParsedFilter;
 import org.elasticsearch.search.aggregations.bucket.histogram.Histogram;
 import org.elasticsearch.search.aggregations.bucket.histogram.HistogramAggregationBuilder;
 import org.elasticsearch.search.aggregations.bucket.significant.SignificantTerms;
@@ -118,6 +119,24 @@ public class EsPlus6Aggregations<T> implements EsAggResponse<T> {
             Map<String, List<T>> map = topHits.stream().collect(Collectors.toMap(a -> a, aggregations::get));
             esAgg.setTopHits(map);
         }
+        
+        List<String> filters = esAggResultQuery.getFilters();
+        if (!CollectionUtils.isEmpty(filters)) {
+            Map<String,EsAggResult<T>> esAggResultMap = new HashMap<>();
+            for (String filter : filters) {
+                ParsedFilter parsedFilter = aggregations.get(filter);
+                if (parsedFilter==null){
+                    continue;
+                }
+                long docCount = parsedFilter.getDocCount();
+                Aggregations parsedFilterAggregations = parsedFilter.getAggregations();
+                esAgg.setDocCount(docCount);
+                EsAggResult<T> agg = getResult(esAggResultQuery.getSubQuery(), parsedFilterAggregations);
+                esAggResultMap.put(filter,agg);
+                agg.setEsAggFiltersMap(esAggResultMap);
+            }
+        }
+        
         List<String> term = esAggResultQuery.getTerm();
         if (!CollectionUtils.isEmpty(term)) {
             for (String t : term) {
@@ -134,7 +153,7 @@ public class EsPlus6Aggregations<T> implements EsAggResponse<T> {
                     Aggregations bucketAggregations = bucket.getAggregations();
                     EsAggResult<T> agg = getResult(esAggResultQuery.getSubQuery(), bucketAggregations);
                     long docCount = bucket.getDocCount();
-                    agg.setTermDocCount(docCount);
+                    agg.setDocCount(docCount);
                     String keyAsString = bucket.getKeyAsString();
                     data.put(keyAsString, agg);
                 }
