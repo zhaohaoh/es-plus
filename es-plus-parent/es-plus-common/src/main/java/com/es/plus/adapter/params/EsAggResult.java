@@ -150,11 +150,11 @@ public class EsAggResult<T> {
      */
     public Long getSingleBucketDocCount(String aggName) {
         if (CollectionUtils.isEmpty(singleBucketsMap)) {
-            return 0L;
+            return null;
         }
         Tuple<Long, EsAggResult<T>> aggResultTuple = singleBucketsMap.get(aggName);
         if (aggResultTuple==null){
-            return 0L;
+            return null;
         }
         return  aggResultTuple.v1();
     }
@@ -165,9 +165,9 @@ public class EsAggResult<T> {
      */
     public Long getFirstCount() {
          if (CollectionUtils.isEmpty(countMap)){
-           return 0L;
+           return null;
           }
-        Long result = countMap.values().stream().findFirst().orElse(0L);
+        Long result = countMap.values().stream().findFirst().orElse(null);
         return result;
     }
     
@@ -176,9 +176,9 @@ public class EsAggResult<T> {
      */
     public Double getFirstSum() {
         if (CollectionUtils.isEmpty(sumMap)){
-            return 0D;
+            return null;
         }
-        Double result = sumMap.values().stream().findFirst().orElse(0D);
+        Double result = sumMap.values().stream().findFirst().orElse(null);
         return result;
     }
     
@@ -187,9 +187,9 @@ public class EsAggResult<T> {
      */
     public Double getFirstMax() {
         if (CollectionUtils.isEmpty(maxMap)){
-            return 0D;
+            return null;
         }
-        Double result = maxMap.values().stream().findFirst().orElse(0D);
+        Double result = maxMap.values().stream().findFirst().orElse(null);
         return result;
     }
     
@@ -198,9 +198,9 @@ public class EsAggResult<T> {
      */
     public Double getFirstMin() {
         if (CollectionUtils.isEmpty(minMap)){
-            return 0D;
+            return null;
         }
-        Double result = minMap.values().stream().findFirst().orElse(0D);
+        Double result = minMap.values().stream().findFirst().orElse(null);
         return result;
     }
     
@@ -209,9 +209,9 @@ public class EsAggResult<T> {
      */
     public Double getFirstAvg() {
         if (CollectionUtils.isEmpty(avgMap)){
-            return 0D;
+            return null;
         }
-        Double result = avgMap.values().stream().findFirst().orElse(0D);
+        Double result = avgMap.values().stream().findFirst().orElse(null);
         return result;
     }
     
@@ -221,9 +221,9 @@ public class EsAggResult<T> {
      */
     public Long getCount(String aggName) {
         if (CollectionUtils.isEmpty(countMap)){
-            return 0L;
+            return null;
         }
-        Long result = countMap.getOrDefault(aggName,0L);
+        Long result = countMap.get(aggName);
         return result;
     }
     
@@ -232,9 +232,9 @@ public class EsAggResult<T> {
      */
     public Double getSum(String aggName) {
         if (CollectionUtils.isEmpty(sumMap)){
-            return 0D;
+            return null;
         }
-        Double result = sumMap.getOrDefault(aggName,0D);
+        Double result = sumMap.get(aggName);
         return result;
     }
     
@@ -243,9 +243,9 @@ public class EsAggResult<T> {
      */
     public Double getMax(String aggName) {
         if (CollectionUtils.isEmpty(maxMap)){
-            return 0D;
+            return null;
         }
-        Double result = maxMap.getOrDefault(aggName,0D);
+        Double result = maxMap.get(aggName);
         return result;
     }
     
@@ -254,9 +254,9 @@ public class EsAggResult<T> {
      */
     public Double getMin(String aggName) {
         if (CollectionUtils.isEmpty(minMap)){
-            return 0D;
+            return null;
         }
-        Double result = minMap.getOrDefault(aggName,0D);
+        Double result = minMap.get(aggName);
         return result;
     }
     
@@ -265,9 +265,9 @@ public class EsAggResult<T> {
      */
     public Double getAvg(String aggName) {
         if (CollectionUtils.isEmpty(avgMap)){
-            return 0D;
+            return null;
         }
-        Double result = avgMap.getOrDefault(aggName,0D);
+        Double result = avgMap.get(aggName);
         return result;
     }
     

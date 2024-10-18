@@ -31,8 +31,6 @@ public class FastTest {
     @Autowired
     private FastTestService fastTestService;
 
-
-
     @org.junit.jupiter.api.Test
     public void fast() {
         EsResponse<Map> list = Es.chainQuery(Map.class).index("fast_test").term("username","酷酷的").search();
@@ -63,10 +61,9 @@ public class FastTest {
             }
         }
     }
+    
     @org.junit.jupiter.api.Test
     public void forceMerge() {
-      
-        
         Es.chainIndex().index("fast_test_new").forceMerge(1000,true,true,"fast_test_new");
     }
 
@@ -226,6 +223,14 @@ public class FastTest {
     public void sss() {
         EsChainQueryWrapper<Map> index = Es.chainQuery(Map.class).index("fast_test_new_v116", "fast_test_new_v115");
         
-      
+        EsAggWrapper<Map> mapEsAggWrapper = index.esAggWrapper();
+        EsAggWrapper<Map> username = mapEsAggWrapper.percentiles("username_test1");
+        EsResponse<Map> search = index.search();
+        System.out.println();
     }
+    
+    
+  
+    
+    
 }

@@ -266,6 +266,7 @@ public interface IEsAggWrapper<Children, R,T> extends  IEsBaseAggWrapper<Childre
 
     /**
      * Create a new {@link Percentiles} aggregation with the given field.
+     * 百分比聚合
      */
     default Children percentiles(R field){
        return   percentiles(null,field,null);
@@ -287,6 +288,7 @@ public interface IEsAggWrapper<Children, R,T> extends  IEsBaseAggWrapper<Childre
 
     /**
      * Create a new {@link Cardinality} aggregation with the given field.
+     * 统计去重后的数量
      */
     default Children cardinality(R field){
        return   cardinality(null,field,null);
