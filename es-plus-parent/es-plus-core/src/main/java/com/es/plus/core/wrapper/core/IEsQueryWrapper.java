@@ -102,19 +102,19 @@ public interface IEsQueryWrapper<Children, QUERY, R> {
 
     //
     default Children termKeyword(R name, Object value) {
-        return term(true, name, value);
+        return termKeyword(true, name, value);
     }
 
     Children termKeyword(boolean condition, R name, Object value);
 
     default Children termsKeyword(R name, Object... value) {
-        return terms(true, name, value);
+        return termsKeyword(true, name, value);
     }
 
     Children termsKeyword(boolean condition, R name, Object... value);
 
     default Children termsKeyword(R name, Collection<?> values) {
-        return terms(true, name, values);
+        return termsKeyword(true, name, values);
     }
 
     Children termsKeyword(boolean condition, R name, Collection<?> values);
