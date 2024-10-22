@@ -802,17 +802,53 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
         return children;
     }
 
+  
+    
     @Override
-    public Children sortBy(String order, R column, NestedSortBuilder nestedSortBuilder){
+    public Children sortBy(String order, NestedSortBuilder nestedSortBuilder,String... name){
         if (getEsQueryParamWrapper().getEsOrderList() == null) {
             getEsQueryParamWrapper().setEsOrderList(new ArrayList<>());
         }
-        String name = nameToString(column);
-        EsOrder esOrder = new EsOrder();
-        esOrder.setName(name);
-        esOrder.setSort(order);
-        esOrder.setNestedSortBuilder(nestedSortBuilder);
-        getEsQueryParamWrapper().getEsOrderList().add(esOrder);
+        for (String s : name) {
+            EsOrder esOrder = new EsOrder();
+            esOrder.setName(s);
+            esOrder.setSort(order);
+            esOrder.setNestedSortBuilder(nestedSortBuilder);
+            getEsQueryParamWrapper().getEsOrderList().add(esOrder);
+        }
+        
+        return children;
+    }
+    
+    @Override
+    public Children sortByAsc(String path,String[] columns) {
+        if (getEsQueryParamWrapper().getEsOrderList() == null) {
+            getEsQueryParamWrapper().setEsOrderList(new ArrayList<>());
+        }
+        NestedSortBuilder nestedSortBuilder = new NestedSortBuilder(path);
+        for (String name : columns) {
+            EsOrder esOrder = new EsOrder();
+            esOrder.setName(name);
+            esOrder.setSort(SortOrder.ASC.name());
+            esOrder.setNestedSortBuilder(nestedSortBuilder);
+            getEsQueryParamWrapper().getEsOrderList().add(esOrder);
+        }
+        return children;
+    }
+    
+    @Override
+    public Children sortByDesc(String path,String[] columns) {
+        if (getEsQueryParamWrapper().getEsOrderList() == null) {
+            getEsQueryParamWrapper().setEsOrderList(new ArrayList<>());
+        }
+        NestedSortBuilder nestedSortBuilder = new NestedSortBuilder(path);
+        for (String name : columns) {
+            EsOrder esOrder = new EsOrder();
+            esOrder.setName(name);
+            esOrder.setSort(SortOrder.DESC.name());
+            esOrder.setNestedSortBuilder(nestedSortBuilder);
+            getEsQueryParamWrapper().getEsOrderList().add(esOrder);
+        }
         return children;
     }
 
