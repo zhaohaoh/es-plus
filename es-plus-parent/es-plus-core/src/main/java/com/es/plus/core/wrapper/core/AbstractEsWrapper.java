@@ -462,8 +462,9 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
             Integer queryLimit = GlobalConfigCache.GLOBAL_CONFIG.getWildcardQueryLimit();
             String queryValue = value;
             if (queryLimit!=null && queryLimit >=0){
-                queryValue = "*"+StringUtils.substring(value,0,queryLimit)+"*";
+                queryValue = StringUtils.substring(value,0,queryLimit);
             }
+            queryValue = "*"+queryValue+"*";
             WildcardQueryBuilder wildcardQueryBuilder = QueryBuilders.wildcardQuery(wildcardName , queryValue);
             currentBuilder = wildcardQueryBuilder;
             queryBuilders.add(wildcardQueryBuilder);
