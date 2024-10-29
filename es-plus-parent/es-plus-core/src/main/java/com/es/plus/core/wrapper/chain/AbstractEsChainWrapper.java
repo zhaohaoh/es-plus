@@ -343,7 +343,12 @@ public abstract class AbstractEsChainWrapper<T, R, Children extends AbstractEsCh
         getWrapper().wildcard(condition, name, value);
         return children;
     }
-
+    
+    @Override
+    public Children wildcardKeyword(boolean condition, R name, String value) {
+        getWrapper().wildcardKeyword(condition, name, value);
+        return children;
+    }
     //有纠错能力的模糊查询。
     @Override
     public Children fuzzy(boolean condition, R name, String value, Fuzziness fuzziness) {
