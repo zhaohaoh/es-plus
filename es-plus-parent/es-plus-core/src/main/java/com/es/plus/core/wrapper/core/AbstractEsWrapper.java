@@ -74,7 +74,9 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
     protected Children children = (Children) this;
 
     protected QueryBuilder currentBuilder;
+    
 
+    
     /*
      *实例
      */
@@ -459,6 +461,23 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
     public Children wildcard(boolean condition, R name, String value) {
         if (condition) {
             String wildcardName = nameToString(name);
+            Integer queryLimit = GlobalConfigCache.GLOBAL_CONFIG.getWildcardQueryLimit();
+            String queryValue = value;
+            if (queryLimit!=null && queryLimit >=0){
+                queryValue = StringUtils.substring(value,0,queryLimit);
+            }
+            queryValue = "*"+queryValue+"*";
+            WildcardQueryBuilder wildcardQueryBuilder = QueryBuilders.wildcardQuery(wildcardName , queryValue);
+            currentBuilder = wildcardQueryBuilder;
+            queryBuilders.add(wildcardQueryBuilder);
+        }
+        return children;
+    }
+    
+    @Override
+    public Children wildcardKeyword(boolean condition, R name, String value) {
+        if (condition) {
+            String wildcardName = nameToString(name) +".keyword";
             Integer queryLimit = GlobalConfigCache.GLOBAL_CONFIG.getWildcardQueryLimit();
             String queryValue = value;
             if (queryLimit!=null && queryLimit >=0){

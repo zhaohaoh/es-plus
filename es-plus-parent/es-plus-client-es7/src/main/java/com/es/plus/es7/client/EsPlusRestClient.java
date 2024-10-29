@@ -560,7 +560,7 @@ public class EsPlusRestClient implements EsPlusClient {
         countRequest.indices(index);
         CountResponse count = null;
         try {
-            printSearchInfoLog("count index=:{} body:{}", index,
+            printSearchInfoLog("count index=:{} \nDSL:{}", index,
                     JsonUtils.toJsonStr(esQueryParamWrapper.getQueryBuilder()));
             count = restHighLevelClient.count(countRequest, RequestOptions.DEFAULT);
         } catch (IOException e) {
@@ -594,7 +594,7 @@ public class EsPlusRestClient implements EsPlusClient {
             searchResponse = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
             long end = System.currentTimeMillis();
             long mills = end - start;
-            printSearchInfoLog("search index={} tookMills={} body:{} ", index,  mills,sourceBuilder);
+            printSearchInfoLog("search index={} tookMills={} \nDSL:{} ", index,  mills,sourceBuilder);
         } catch (Exception e) {
             throw new EsException("es-plus search body=" + sourceBuilder, e);
         }
@@ -673,7 +673,7 @@ public class EsPlusRestClient implements EsPlusClient {
         SearchResponse searchResponse = null;
         try {
             long start = System.currentTimeMillis();
-            printSearchInfoLog("aggregations index={} body:{}", index, sourceBuilder);
+            printSearchInfoLog("aggregations index={} \nDSL:{}", index, sourceBuilder);
             searchResponse = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
             long end = System.currentTimeMillis();
             long mills = end - start;

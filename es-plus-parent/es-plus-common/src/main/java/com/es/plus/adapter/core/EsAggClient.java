@@ -4,6 +4,7 @@ package com.es.plus.adapter.core;
 import com.es.plus.adapter.params.EsParamWrapper;
 import org.elasticsearch.search.aggregations.BaseAggregationBuilder;
 import org.elasticsearch.search.aggregations.bucket.adjacency.AdjacencyMatrix;
+import org.elasticsearch.search.aggregations.bucket.composite.CompositeAggregationBuilder;
 import org.elasticsearch.search.aggregations.bucket.filter.Filters;
 import org.elasticsearch.search.aggregations.bucket.geogrid.InternalGeoHashGrid;
 import org.elasticsearch.search.aggregations.bucket.geogrid.InternalGeoTileGrid;
@@ -206,7 +207,7 @@ public interface EsAggClient {
      */
 
     BaseAggregationBuilder terms(String name,String field);
-
+    
     /**
      * Create a new {@link Percentiles} aggregation with the given name.
      */

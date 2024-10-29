@@ -106,6 +106,7 @@ public class EsPlusAggsClient implements EsAggClient {
     public BaseAggregationBuilder weightedAvg(String name,String field) {
         String aggName = name!=null?name : field + AGG_DELIMITER + WeightedAvgAggregationBuilder.NAME;
         WeightedAvgAggregationBuilder weightedAvgAggregationBuilder = new WeightedAvgAggregationBuilder(aggName);
+        
         return weightedAvgAggregationBuilder;
     }
 
@@ -360,7 +361,9 @@ public class EsPlusAggsClient implements EsAggClient {
         termsAggregationBuilder.size(GlobalConfigCache.GLOBAL_CONFIG.getSearchSize());
         return termsAggregationBuilder;
     }
-
+    
+   
+    
     /**
      * Create a new {@link Percentiles} aggregation with the given aggName.
      */
