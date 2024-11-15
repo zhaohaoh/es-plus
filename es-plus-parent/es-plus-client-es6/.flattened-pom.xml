@@ -5,11 +5,11 @@
   <parent>
     <groupId>io.github.zhaohaoh</groupId>
     <artifactId>es-plus-parent</artifactId>
-    <version>0.3.92</version>
+    <version>0.3.93</version>
   </parent>
   <groupId>io.github.zhaohaoh</groupId>
   <artifactId>es-plus-client-es6</artifactId>
-  <version>0.3.92</version>
+  <version>0.3.93</version>
   <description>es客户端适配6.7.0</description>
   <licenses>
     <license>

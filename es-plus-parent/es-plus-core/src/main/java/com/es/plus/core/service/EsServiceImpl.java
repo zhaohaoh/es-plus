@@ -110,10 +110,7 @@ public class EsServiceImpl<T> extends AbstractEsService<T> implements EsService<
      */
     @Override
     public boolean saveOrUpdate(T entity) {
-        if (!updateById(entity)) {
-            return getEsPlusClientFacade().save( getType(), entity,getIndex());
-        }
-        return true;
+        return getEsPlusClientFacade().saveOrUpdate( getType(), entity,getIndex());
     }
 
     /**

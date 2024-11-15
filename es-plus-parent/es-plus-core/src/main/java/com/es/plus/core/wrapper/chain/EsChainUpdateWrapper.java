@@ -63,7 +63,12 @@ public class EsChainUpdateWrapper<T> extends AbstractEsChainWrapper<T, String, E
     public List<BulkItemResponse> saveBatch(Collection<T> entityList) {
         return esPlusClientFacade.saveBatch( type, entityList,indexs);
     }
-
+    
+    @Override
+    public boolean saveOrUpdate(T entity) {
+        return esPlusClientFacade.saveOrUpdate( type, entity,indexs);
+    }
+    
     /**
      * 批处理更新
      *
@@ -209,5 +214,6 @@ public class EsChainUpdateWrapper<T> extends AbstractEsChainWrapper<T, String, E
         esWrapper.increment(condition, column, val);
         return this;
     }
-
+    
+  
 }

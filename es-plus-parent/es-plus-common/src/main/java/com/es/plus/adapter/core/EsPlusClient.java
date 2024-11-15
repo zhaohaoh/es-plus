@@ -38,6 +38,11 @@ public interface EsPlusClient {
      * 保存
      */
     boolean save(String type, Object esData,String... index);
+    
+    /**
+     * 保存或者更新
+     */
+    <T> boolean saveOrUpdate(String type, T entity, String... index);
 
     /**
      * 更新Es数据
@@ -155,4 +160,5 @@ public interface EsPlusClient {
      * @return {@link String}
      */
     <T> EsResponse<T> executeSQL(String sql,Class<T> tClass);
+ 
 }

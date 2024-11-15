@@ -557,5 +557,10 @@ public class EsPlusClientFacade   {
         System.out.println(esPlusClientProxy.getEsInterceptors());
     }
     
- 
+    /**
+     *  saveOrUpdate
+     */
+    public <T> boolean saveOrUpdate(String type, T entity, String... index) {
+        return esPlusClient.saveOrUpdate(type,entity,index);
+    }
 }

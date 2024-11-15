@@ -4,7 +4,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>io.github.zhaohaoh</groupId>
   <artifactId>es-plus</artifactId>
-  <version>0.3.92</version>
+  <version>0.3.93</version>
   <packaging>pom</packaging>
   <name>es-plus</name>
   <description>es-plus</description>
@@ -51,7 +51,7 @@
   </distributionManagement>
   <properties>
     <spring-boot.version>2.6.3</spring-boot.version>
-    <rversion>0.3.92</rversion>
+    <rversion>0.3.93</rversion>
     <skipTests>true</skipTests>
     <elasticsearch.version>7.8.0</elasticsearch.version>
     <maven.compiler.source>8</maven.compiler.source>

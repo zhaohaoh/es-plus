@@ -5,11 +5,11 @@
   <parent>
     <groupId>io.github.zhaohaoh</groupId>
     <artifactId>es-plus</artifactId>
-    <version>0.3.92</version>
+    <version>0.3.93</version>
   </parent>
   <groupId>io.github.zhaohaoh</groupId>
   <artifactId>es-plus-pom</artifactId>
-  <version>0.3.92</version>
+  <version>0.3.93</version>
   <packaging>pom</packaging>
   <name>es-plus-pom</name>
   <description>es-plus包管理</description>
@@ -22,7 +22,7 @@
   </licenses>
   <properties>
     <spring-boot.version>2.6.3</spring-boot.version>
-    <rversion>0.3.92</rversion>
+    <rversion>0.3.93</rversion>
     <elasticsearch.version>7.8.0</elasticsearch.version>
     <reflections.version>0.10.2</reflections.version>
     <lang3.version>3.9</lang3.version>

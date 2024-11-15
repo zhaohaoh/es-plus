@@ -15,7 +15,14 @@ public interface UpdateOperation<T> {
      * @return boolean
      */
     boolean save(T t);
-
+    
+    /**
+     *  更新
+     *
+     * @param t t
+     * @return {@link List}<{@link BulkItemResponse}>
+     */
+    boolean saveOrUpdate(T t);
 
     /**
      * 保存批处理

@@ -80,10 +80,10 @@ public class Test {
         FastTestDTO fastTestDTO = new FastTestDTO();
         fastTestDTO.setId(1L);
         fastTestDTO.setText("1");
-        fastTestDTO.setAge(15L);
-        fastTestDTO.setUsername("酷酷的");
+        fastTestDTO.setAge(133L);
+        fastTestDTO.setUsername("酷酷的11111");
         fastTestDTO.setCreateTime(new Date());
-        Es.chainUpdate(FastTestDTO.class).save(fastTestDTO);
+        Es.chainUpdate(FastTestDTO.class).saveOrUpdate(fastTestDTO);
     }
 
     @org.junit.jupiter.api.Test

@@ -176,7 +176,7 @@ public class IndexScanProccess implements InitializingBean, ApplicationListener<
                     exists = true;
                 }
                 esIndexParam.setExists(exists);
-                log.info("init es-plus indexResponse={} exists={}",index, exists);
+                log.info("init es-plus index={}",index);
             } else {
                 //异步更新reindex后的index的任务
                 reindexTask(esPlusClientFacade,esIndexParam);

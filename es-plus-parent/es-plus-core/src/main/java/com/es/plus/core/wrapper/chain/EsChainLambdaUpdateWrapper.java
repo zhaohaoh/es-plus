@@ -61,8 +61,13 @@ public class EsChainLambdaUpdateWrapper<T> extends AbstractEsChainWrapper<T, SFu
     public boolean save(T t) {
         return esPlusClientFacade.save( type, t,indexs);
     }
-
-
+    
+    @Override
+    public boolean saveOrUpdate(T t) {
+        return esPlusClientFacade.save( type, t,indexs);
+    }
+    
+    
     /**
      * 增量根据
      *

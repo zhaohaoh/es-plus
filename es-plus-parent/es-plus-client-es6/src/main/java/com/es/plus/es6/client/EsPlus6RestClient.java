@@ -147,7 +147,6 @@ public class EsPlus6RestClient implements EsPlusClient {
                             GlobalParamHolder.getDocId(index, esData)).doc(JsonUtils.toJsonStr(esData),
                             XContentType.JSON);
                     updateRequest.retryOnConflict(GlobalConfigCache.GLOBAL_CONFIG.getMaxRetries());
-                    updateRequest.setRefreshPolicy(GlobalConfigCache.GLOBAL_CONFIG.getRefreshPolicy());
                     // 如果没有文档则新增
                     updateRequest.upsert(JsonUtils.toJsonStr(esData), XContentType.JSON);
                     if (childIndex) {
@@ -242,6 +241,40 @@ public class EsPlus6RestClient implements EsPlusClient {
         }
         
         return false;
+    }
+    
+    @Override
+    public <T> boolean saveOrUpdate(String type, T esData, String... indexs) {
+        boolean childIndex = isChildIndex(esData);
+        try {
+            for (String index : indexs) {
+                BulkRequest bulkRequest = new BulkRequest();
+                
+                UpdateRequest updateRequest = new UpdateRequest(index, type, GlobalParamHolder.getDocId(index, esData)).doc(
+                        JsonUtils.toJsonStr(esData), XContentType.JSON);
+                updateRequest.retryOnConflict(GlobalConfigCache.GLOBAL_CONFIG.getMaxRetries());
+                // 如果没有文档则新增
+                updateRequest.upsert(JsonUtils.toJsonStr(esData), XContentType.JSON);
+                if (childIndex) {
+                    updateRequest.routing(FieldUtils.getStrFieldValue(esData, "joinField", "parent"));
+                }
+                bulkRequest.add(updateRequest);
+                bulkRequest.setRefreshPolicy(GlobalConfigCache.GLOBAL_CONFIG.getRefreshPolicy());
+                BulkResponse res = null;
+                printInfoLog(" {} saveOrUpdate data:{} hasFailures={}", index, JsonUtils.toJsonStr(esData));
+                res = restHighLevelClient.bulk(bulkRequest, RequestOptions.DEFAULT);
+                for (BulkItemResponse bulkItemResponse : res.getItems()) {
+                    if (bulkItemResponse.isFailed()) {
+                        printErrorLog(" {} saveOrUpdate error" + bulkItemResponse.getId() + " message:"
+                                + bulkItemResponse.getFailureMessage(), index);
+                        return false;
+                    }
+                }
+            }
+        } catch (IOException e) {
+            throw new EsException("saveOrUpdate IOException", e);
+        }
+        return true;
     }
     
     /**
