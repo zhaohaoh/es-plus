@@ -50,6 +50,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
+import static com.es.plus.constant.EsConstant.KEYWORDS_MAP;
+
 @Slf4j
 public class IndexScanProccess implements InitializingBean, ApplicationListener<ApplicationEnvironmentPreparedEvent> {
     
@@ -416,9 +418,13 @@ public class IndexScanProccess implements InitializingBean, ApplicationListener<
                     // 字符串类型映射
                     if ((EsFieldType.STRING.name().toLowerCase().equals(fieldType))) {
                         properties.put(EsConstant.TYPE, EsConstant.TEXT);
-                        properties.put(EsConstant.FIELDS, EsConstant.KEYWORDS_MAP);
+                        properties.put(EsConstant.FIELDS, KEYWORDS_MAP);
                         //双类型字符串的映射转换
                         convertKeywordMap.put(esMappingName, esMappingName + ".keyword");
+                    }else if (EsFieldType.KEYWORD.name().toLowerCase().equals(fieldType)){
+                        //很关键
+                        properties.put(EsConstant.TYPE, "keyword");
+                        properties.put("ignore_above", 256);
                     } else {
                         properties.put(EsConstant.TYPE, fieldType);
                     }
