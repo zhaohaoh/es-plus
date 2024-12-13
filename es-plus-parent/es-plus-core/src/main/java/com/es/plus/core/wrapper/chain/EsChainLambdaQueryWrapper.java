@@ -29,6 +29,10 @@ public class EsChainLambdaQueryWrapper<T> extends AbstractEsChainWrapper<T, SFun
         EsIndexParam esIndexParam = GlobalParamHolder.getAndInitEsIndexParam(super.tClass);
         if (esIndexParam != null) {
             index(StringUtils.isBlank(esIndexParam.getAlias()) ? esIndexParam.getIndex() : esIndexParam.getAlias());
+            EsPlusClientFacade client = ClientContext.getClient(esIndexParam.getClientInstance());
+            if (client!=null){
+                esPlusClientFacade = client;
+            }
         }
     }
 

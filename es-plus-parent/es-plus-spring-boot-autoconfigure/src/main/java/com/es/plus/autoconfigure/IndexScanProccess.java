@@ -1,10 +1,11 @@
 package com.es.plus.autoconfigure;
 
 import com.es.plus.adapter.EsPlusClientFacade;
+import com.es.plus.adapter.config.BulkProcessorConfig;
 import com.es.plus.adapter.config.ConnectFailHandleEnum;
-import com.es.plus.adapter.config.GlobalConfigCache;
 import com.es.plus.adapter.exception.EsException;
 import com.es.plus.adapter.lock.ELock;
+import com.es.plus.adapter.params.BulkProcessorParam;
 import com.es.plus.adapter.params.EsAliasResponse;
 import com.es.plus.adapter.params.EsSettings;
 import com.es.plus.adapter.properties.EsEntityInfo;
@@ -13,6 +14,7 @@ import com.es.plus.adapter.properties.EsIndexParam;
 import com.es.plus.adapter.properties.GlobalParamHolder;
 import com.es.plus.adapter.util.AnnotationResolveUtil;
 import com.es.plus.adapter.util.ClassUtils;
+import com.es.plus.annotation.BulkProcessor;
 import com.es.plus.annotation.EsField;
 import com.es.plus.annotation.EsId;
 import com.es.plus.annotation.EsIndex;
@@ -28,6 +30,9 @@ import com.es.plus.core.process.EsReindexProcess;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.elasticsearch.common.unit.ByteSizeUnit;
+import org.elasticsearch.common.unit.ByteSizeValue;
+import org.elasticsearch.common.unit.TimeValue;
 import org.reflections.Reflections;
 import org.reflections.scanners.Scanners;
 import org.reflections.util.ConfigurationBuilder;
@@ -50,6 +55,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
+import static com.es.plus.adapter.config.GlobalConfigCache.GLOBAL_CONFIG;
+import static com.es.plus.constant.EsConstant.IGNORE_ABOVE;
 import static com.es.plus.constant.EsConstant.KEYWORDS_MAP;
 
 @Slf4j
@@ -92,13 +99,30 @@ public class IndexScanProccess implements InitializingBean, ApplicationListener<
             
             // 获取索引信息
             EsIndexParam esIndexParam = buildEsIndexParam(indexClass,
-                    GlobalConfigCache.GLOBAL_CONFIG.getGlobalSuffix());
+                    GLOBAL_CONFIG.getGlobalSuffix());
             
             // 获取映射
             Map<String, Object> mapping = getMappings(indexClass, esIndexParam);
             
             EsIndex annotation = indexClass.getAnnotation(EsIndex.class);
             
+            EsPlusClientFacade esPlusClientFacade = ClientContext.getClient(esIndexParam.getClientInstance());
+            
+            BulkProcessor bulkProcessor = indexClass.getAnnotation(BulkProcessor.class);
+            //设置批量异常处理的参数
+            if (bulkProcessor!=null){
+                BulkProcessorParam bulkProcessorParam = new BulkProcessorParam();
+                bulkProcessorParam.setBulkActions(bulkProcessor.bulkActions());
+                bulkProcessorParam.setBulkSize(new ByteSizeValue(bulkProcessor.bulkSize(), ByteSizeUnit.MB));
+                bulkProcessorParam.setConcurrent(bulkProcessor.concurrent());
+                bulkProcessorParam.setFlushInterval(TimeValue.timeValueSeconds(bulkProcessor.flushInterval()));
+                bulkProcessorParam.setBackoffPolicyTime(bulkProcessor.BackoffPolicyTime());
+                bulkProcessorParam.setBackoffPolicyRetryMax(bulkProcessor.BackoffPolicyRetryMax());
+                BulkProcessorConfig.getBulkProcessor(esPlusClientFacade.getEsPlusClient().getRestHighLevelClient(),
+                        esIndexParam.getIndex());
+            }
+         
+                    
             // 参数设置
             esIndexParam.setMappings(mapping);
             esEntityInfo.setEsIndexParam(esIndexParam);
@@ -110,7 +134,7 @@ public class IndexScanProccess implements InitializingBean, ApplicationListener<
             }
             
             //启动时不初始化
-            if (!GlobalConfigCache.GLOBAL_CONFIG.isStartInit()) {
+            if (!GLOBAL_CONFIG.isStartInit()) {
                 continue;
             }
             
@@ -118,9 +142,6 @@ public class IndexScanProccess implements InitializingBean, ApplicationListener<
             if (!annotation.startInit()) {
                 continue;
             }
-    
-          
-            EsPlusClientFacade esPlusClientFacade = ClientContext.getClient(esIndexParam.getClientInstance());
             
             try {
                 //尝试创建或重建索引
@@ -128,11 +149,11 @@ public class IndexScanProccess implements InitializingBean, ApplicationListener<
             } catch (Exception e) {
                 if (StringUtils.isNotBlank(e.getLocalizedMessage()) && e.getLocalizedMessage()
                         .contains("ConnectException")) {
-                    if (GlobalConfigCache.GLOBAL_CONFIG.getConnectFailHandle()
+                    if (GLOBAL_CONFIG.getConnectFailHandle()
                             .equals(ConnectFailHandleEnum.THROW_EXCEPTION)) {
                         throw new EsException(e);
                     } else {
-                        GlobalConfigCache.GLOBAL_CONFIG.setStartInit(false);
+                        GLOBAL_CONFIG.setStartInit(false);
                     }
                 } else {
                     log.error("es-plus tryLock Or createIndex OR tryReindex Exception:", e);
@@ -141,9 +162,8 @@ public class IndexScanProccess implements InitializingBean, ApplicationListener<
         }
         
         
-        
         //1.全部索引都reindex    2.当前索引在重建索引的名单中
-        String reindexScope = GlobalConfigCache.GLOBAL_CONFIG.getReindexScope();
+        String reindexScope = GLOBAL_CONFIG.getReindexScope();
         if (StringUtils.isNotBlank(reindexScope)){
             Collection<EsPlusClientFacade> clients = ClientContext.getClients();
             for (EsPlusClientFacade esPlusClientFacade : clients) {
@@ -153,7 +173,9 @@ public class IndexScanProccess implements InitializingBean, ApplicationListener<
                 esInterceptor.setReindexList(indexList);
                 esPlusClientFacade.addInterceptor(esInterceptor);
             
-                log.info("reindexScope :{} esPlusClientFacade host:{} addInterceptor",reindexScope,esPlusClientFacade.getHost());
+                log.info("reindexEnable:{} reindexScope :{} esPlusClientFacade host:{} addInterceptor",
+                        GLOBAL_CONFIG.isAutoReindex()
+                        ,reindexScope,esPlusClientFacade.getHost());
             }
         }
     }
@@ -292,7 +314,7 @@ public class IndexScanProccess implements InitializingBean, ApplicationListener<
         esSettings.setNumberOfReplicas(esIndex.replices());
         esSettings.setRefreshInterval(esIndex.initRefreshInterval());
         esSettings.setMaxResultWindow(
-                esIndex.initMaxResultWindow() <= 0 ? GlobalConfigCache.GLOBAL_CONFIG.getSearchSize()
+                esIndex.initMaxResultWindow() <= 0 ? GLOBAL_CONFIG.getSearchSize()
                         : esIndex.initMaxResultWindow());
         if (StringUtils.isNotBlank(esIndex.defaultAnalyzer())) {
             esSettings.setDefaultAnalyzer(esIndex.defaultAnalyzer());
@@ -333,7 +355,7 @@ public class IndexScanProccess implements InitializingBean, ApplicationListener<
                 }
             }
         } else {
-            String defaultAnalyzer = GlobalConfigCache.GLOBAL_CONFIG.getDefaultAnalyzer();
+            String defaultAnalyzer = GLOBAL_CONFIG.getDefaultAnalyzer();
             if (StringUtils.isNotBlank(defaultAnalyzer)) {
                 Map map = GlobalParamHolder.getAnalysis(defaultAnalyzer);
                 if (map != null) {
@@ -344,7 +366,7 @@ public class IndexScanProccess implements InitializingBean, ApplicationListener<
     }
     
     private void putNormalizer(Map<String, Object> analysis) {
-        String defaultNormalizer = GlobalConfigCache.GLOBAL_CONFIG.getDefaultNormalizer();
+        String defaultNormalizer = GLOBAL_CONFIG.getDefaultNormalizer();
         Map epNormalizer = GlobalParamHolder.getAnalysis(defaultNormalizer);
         if (!CollectionUtils.isEmpty(epNormalizer)) {
             Map<String, Object> child = new HashMap<>();
@@ -424,7 +446,7 @@ public class IndexScanProccess implements InitializingBean, ApplicationListener<
                     }else if (EsFieldType.KEYWORD.name().toLowerCase().equals(fieldType)){
                         //很关键
                         properties.put(EsConstant.TYPE, "keyword");
-                        properties.put("ignore_above", 256);
+                        properties.put(IGNORE_ABOVE, esFieldInfo.getIgnoreAbove()== null || esFieldInfo.getIgnoreAbove()==0? 256 :esFieldInfo.getIgnoreAbove());
                     } else {
                         properties.put(EsConstant.TYPE, fieldType);
                     }

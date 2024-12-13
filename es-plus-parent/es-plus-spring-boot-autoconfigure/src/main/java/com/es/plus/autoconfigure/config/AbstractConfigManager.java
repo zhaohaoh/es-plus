@@ -57,8 +57,10 @@ public abstract class AbstractConfigManager {
                 }
             }else{
                 for (EsPlusClientFacade esPlusClientFacade : clients) {
-                    esPlusClientFacade.remoteInterceptor(EsReindexInterceptor.class);
-                    log.info("reindexScope :{} esPlusClientFacade host:{} remoteInterceptor",reindexScope,esPlusClientFacade.getHost());
+                    esPlusClientFacade.removeInterceptor(EsReindexInterceptor.class);
+                    log.info("listenerPropertiesChange reindexEnable :{}reindexScope :{} esPlusClientFacade host:{} remoteInterceptor",
+                            GlobalConfigCache.GLOBAL_CONFIG.isAutoReindex()
+                            ,reindexScope,esPlusClientFacade.getHost());
                 }
             }
         }

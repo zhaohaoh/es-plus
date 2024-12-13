@@ -1,6 +1,7 @@
 package com.es.plus.es6.client;
 
 
+import com.es.plus.adapter.config.BulkProcessorConfig;
 import com.es.plus.adapter.config.GlobalConfigCache;
 import com.es.plus.adapter.core.EsPlusClient;
 import com.es.plus.adapter.exception.EsException;
@@ -29,6 +30,7 @@ import org.apache.http.util.EntityUtils;
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.action.DocWriteResponse;
 import org.elasticsearch.action.bulk.BulkItemResponse;
+import org.elasticsearch.action.bulk.BulkProcessor;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.delete.DeleteRequest;
@@ -116,6 +118,94 @@ public class EsPlus6RestClient implements EsPlusClient {
         return restHighLevelClient;
     }
     
+    /**
+     * 异步定时批量保存接口
+     */
+    public void saveOrUpdateBatchAsyncProcessor(String type, Collection<?> esDataList, String... indexs){
+        
+        if (CollectionUtils.isEmpty(esDataList)) {
+            return ;
+        }
+        
+        for (String index : indexs) {
+            boolean childIndex = isChildIndex(esDataList.stream().findFirst().get());
+            for (Object esData : esDataList) {
+                UpdateRequest updateRequest = getUpsertRequest(type, index, esData, childIndex);
+                BulkProcessor bulkProcessor = BulkProcessorConfig.getBulkProcessor(restHighLevelClient,index);
+                bulkProcessor.add(updateRequest);
+            }
+        }
+    }
+    
+    /**
+     * 异步定时批量保存接口
+     */
+    public void saveBatchAsyncProcessor(String type, Collection<?> esDataList, String... indexs) {
+        
+        if (CollectionUtils.isEmpty(esDataList)) {
+            return ;
+        }
+        
+        for (String index : indexs) {
+            boolean childIndex = isChildIndex(esDataList.stream().findFirst().get());
+            for (Object esData : esDataList) {
+                IndexRequest indexRequest = getIndexRequest(index,type, esData, childIndex);
+                BulkProcessor bulkProcessor = BulkProcessorConfig.getBulkProcessor(restHighLevelClient,index);
+                bulkProcessor.add(indexRequest);
+            }
+        }
+    }
+    private   IndexRequest getIndexRequest(String index,String type, Object esData, boolean childIndex) {
+        IndexRequest indexRequest = new IndexRequest(index,type);
+        String source = JsonUtils.toJsonStr(esData);
+        indexRequest.id(GlobalParamHolder.getDocId(index, esData)).source(source, XContentType.JSON);
+        if (childIndex) {
+            indexRequest.routing(FieldUtils.getStrFieldValue(esData, "joinField", "parent"));
+        }
+        return indexRequest;
+    }
+    private  UpdateRequest getUpsertRequest(String type, String index, Object esData, boolean childIndex) {
+        UpdateRequest updateRequest = new UpdateRequest(index, type,
+                GlobalParamHolder.getDocId(index, esData)).doc(JsonUtils.toJsonStr(esData), XContentType.JSON);
+        updateRequest.retryOnConflict(GlobalConfigCache.GLOBAL_CONFIG.getMaxRetries());
+        // 如果没有文档则新增
+        updateRequest.docAsUpsert(true);
+        //下面这段是利用额外的json去进行upsert 场景不一样
+        //                    updateRequest.upsert(JsonUtils.toJsonStr(esData), XContentType.JSON);
+        if (childIndex) {
+            updateRequest.routing(FieldUtils.getStrFieldValue(esData, "joinField", "parent"));
+        }
+        return updateRequest;
+    }
+    
+    private   UpdateRequest getUpdateRequest(String type, String index, Object esData, boolean childIndex) {
+        UpdateRequest updateRequest = new UpdateRequest(index, type,
+                GlobalParamHolder.getDocId(index, esData)).doc(JsonUtils.toJsonStr(esData), XContentType.JSON);
+        updateRequest.retryOnConflict(GlobalConfigCache.GLOBAL_CONFIG.getMaxRetries());
+        if (childIndex) {
+            updateRequest.routing(FieldUtils.getStrFieldValue(esData, "joinField", "parent"));
+        }
+        return updateRequest;
+    }
+    
+    /**
+     * 异步定时批量保存接口
+     */
+    public void updateBatchAsyncProcessor(String type, Collection<?> esDataList, String... indexs){
+        if (CollectionUtils.isEmpty(esDataList)) {
+            return ;
+        }
+        
+        for (String index : indexs) {
+            boolean childIndex = isChildIndex(esDataList.stream().findFirst().get());
+            for (Object esData : esDataList) {
+                UpdateRequest updateRequest = getUpdateRequest(type, index, esData, childIndex);
+                BulkProcessor bulkProcessor = BulkProcessorConfig.getBulkProcessor(restHighLevelClient,index);
+                bulkProcessor.add(updateRequest);
+            }
+        }
+    }
+    
     
     public EsPlus6RestClient(RestHighLevelClient restHighLevelClient, EsLockFactory esLockFactory) {
         this.restHighLevelClient = restHighLevelClient;
@@ -143,15 +233,7 @@ public class EsPlus6RestClient implements EsPlusClient {
             try {
                 BulkRequest bulkRequest = new BulkRequest();
                 for (Object esData : esDataList) {
-                    UpdateRequest updateRequest = new UpdateRequest(index, type,
-                            GlobalParamHolder.getDocId(index, esData)).doc(JsonUtils.toJsonStr(esData),
-                            XContentType.JSON);
-                    updateRequest.retryOnConflict(GlobalConfigCache.GLOBAL_CONFIG.getMaxRetries());
-                    // 如果没有文档则新增
-                    updateRequest.upsert(JsonUtils.toJsonStr(esData), XContentType.JSON);
-                    if (childIndex) {
-                        updateRequest.routing(FieldUtils.getStrFieldValue(esData, "joinField", "parent"));
-                    }
+                    UpdateRequest updateRequest =getUpsertRequest(type,index,esData,childIndex);
                     bulkRequest.add(updateRequest);
                 }
                 bulkRequest.setRefreshPolicy(GlobalConfigCache.GLOBAL_CONFIG.getRefreshPolicy());
@@ -250,11 +332,7 @@ public class EsPlus6RestClient implements EsPlusClient {
             for (String index : indexs) {
                 BulkRequest bulkRequest = new BulkRequest();
                 
-                UpdateRequest updateRequest = new UpdateRequest(index, type, GlobalParamHolder.getDocId(index, esData)).doc(
-                        JsonUtils.toJsonStr(esData), XContentType.JSON);
-                updateRequest.retryOnConflict(GlobalConfigCache.GLOBAL_CONFIG.getMaxRetries());
-                // 如果没有文档则新增
-                updateRequest.upsert(JsonUtils.toJsonStr(esData), XContentType.JSON);
+                UpdateRequest updateRequest =getUpsertRequest(type,index,esData,childIndex);
                 if (childIndex) {
                     updateRequest.routing(FieldUtils.getStrFieldValue(esData, "joinField", "parent"));
                 }

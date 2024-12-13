@@ -131,7 +131,37 @@ public class EsServiceImpl<T> extends AbstractEsService<T> implements EsService<
     public List<BulkItemResponse> saveBatch(Collection<T> entityList) {
         return  getEsPlusClientFacade().saveBatch(getType(),entityList,getIndex());
     }
-
+    
+    /**
+     * 批量保存或更新
+     */
+    @Override
+    public void saveOrUpdateBatchAsyncProcessor(Collection<T> entityList) {
+          getEsPlusClientFacade().saveOrUpdateBatchAsyncProcessor( getType(), entityList,getIndex());
+    }
+    
+    /**
+     * 批量保存
+     *
+     * @param entityList 实体列表
+     * @return {@link List}<{@link BulkItemResponse}>
+     */
+    @Override
+    public void saveBatchAsyncProcessor(Collection<T> entityList) {
+           getEsPlusClientFacade().saveBatchAsyncProcessor(getType(),entityList,getIndex());
+    }
+    /**
+     * 批量保存
+     *
+     * @param entityList 实体列表
+     * @return {@link List}<{@link BulkItemResponse}>
+     */
+    @Override
+    public void updateBatchAsyncProcessor(Collection<T> entityList) {
+        getEsPlusClientFacade().updateBatchAsyncProcessor(getType(),entityList,getIndex());
+    }
+    
+    
 
     /**
      * 根据 ID 删除
@@ -275,7 +305,7 @@ public class EsServiceImpl<T> extends AbstractEsService<T> implements EsService<
      * @param idList 主键ID列表
      */
     @Override
-    public List<T> searchByIds(Collection<Serializable> idList) {
+    public List<T> searchByIds(Collection<? extends Serializable> idList) {
         EsQueryWrapper<T> esQueryWrapper = new EsQueryWrapper<>(clazz);
         esQueryWrapper.ids(idList.stream().map(Objects::toString).collect(Collectors.toList()));
         //查询

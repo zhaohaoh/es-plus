@@ -112,8 +112,29 @@ public interface EsService<T> {
      * @return {@link List}<{@link BulkItemResponse}>
      */
     List<BulkItemResponse> saveBatch(Collection<T> entityList);
+    
+    /**
+     * 批量保存或更新
+     */
 
+     void saveOrUpdateBatchAsyncProcessor(Collection<T> entityList);
+    
+    /**
+     * 批量保存
+     *
+     * @param entityList 实体列表
+     * @return {@link List}<{@link BulkItemResponse}>
+     */
 
+     void saveBatchAsyncProcessor(Collection<T> entityList);
+    /**
+     * 批量保存
+     *
+     * @param entityList 实体列表
+     * @return {@link List}<{@link BulkItemResponse}>
+     */
+
+     void updateBatchAsyncProcessor(Collection<T> entityList) ;
     /**
      * 删除根据id
      *
@@ -200,7 +221,7 @@ public interface EsService<T> {
      * @param idList id列表
      * @return {@link List}<{@link T}>
      */
-    List<T> searchByIds(Collection<Serializable> idList);
+    List<T> searchByIds(Collection<? extends Serializable> idList);
 
     /**
      * 列表

@@ -253,7 +253,16 @@ public class EsReindexProcess {
         }
         
     }
-    //需要执行两次，因为第一次执行的时候可能存在没有的id。那么增量的更新数据就更新不了
+    
+    /**
+     * 需要执行两次，因为第一次执行的时候可能存在没有的id。那么增量的更新数据就更新不了
+     * 废弃了reindexTime的策略，原因是使用了es的reindex时候的处理机制。如果版本号小于就不执行更新。
+     * 所以第二次的reindex会跳过第一次执行过的数据。只对增量的数据更新。
+     * 两次reindex时间较长。 需要人工确保reindex的可靠性。不能依赖自动reindex。
+     * 详见我的语雀https://www.yuque.com/huangdaxia-pqg6y/bzpu9c/pzt2ukt2za7yzk2z  其中有完善的索引0停机迁移方案
+     *
+     * 所以reindexTime字段已经废弃
+     */
     private static void doReindex(EsPlusClientFacade esPlusClientFacade, Class<?> clazz, EsIndexParam esIndexParam,
             String currentIndex, String reindexName) {
          
@@ -351,6 +360,10 @@ public class EsReindexProcess {
                     //如果返回reindex说明有嵌套对象的变更，否则嵌套对象也只是更新或者不处理
                     boolean reindex = cmd.equals(Commend.REINDEX);
                     return mappingChange && reindex;
+                }
+                //如果是本地的映射的数量大于远程的映射数量，可以进行添加 针对keyword的 ignore_above
+                if (localMapping.size()>esMapping.size()){
+                    return false;
                 }
                 return mappingChange;
             });

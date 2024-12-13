@@ -65,4 +65,24 @@ public class FastTestService extends EsServiceImpl<FastTestDTO> {
    
         
     }
+    
+    public void saveAsync() {
+        FastTestDTO fastTestDTO = new FastTestDTO();
+        fastTestDTO.setId(1L);
+        fastTestDTO.setText("asdasdasdsa");
+         Es.chainUpdate(FastTestDTO.class).saveBatchAsyncProcessor(Collections.singletonList(fastTestDTO));
+    }
+    
+    public void updateAsync() {
+        FastTestDTO fastTestDTO = new FastTestDTO();
+        fastTestDTO.setId(1L);
+        fastTestDTO.setText("ssssss");
+        Es.chainUpdate(FastTestDTO.class).updateBatchAsyncProcessor(Collections.singletonList(fastTestDTO));
+    }
+    public void saveOrUpdateAsync() {
+        FastTestDTO fastTestDTO = new FastTestDTO();
+        fastTestDTO.setId(1L);
+        fastTestDTO.setText("bvvbdfbfd");
+        Es.chainUpdate(FastTestDTO.class).saveOrUpdateBatchAsyncProcessor(Collections.singletonList(fastTestDTO));
+    }
 }

@@ -312,6 +312,29 @@ public class EsPlusClientFacade   {
      * ----------------------------------------------------------------------------------------------------------
      * 数据操作
      */
+    
+    
+    /**
+     * 异步定时批量保存接口
+     */
+    public void saveOrUpdateBatchAsyncProcessor(String type, Collection<?> esDataList, String... indexs){
+       esPlusClient.saveOrUpdateBatchAsyncProcessor(type, esDataList,indexs);
+    };
+    
+    /**
+     * 异步定时批量保存接口
+     */
+    public void saveBatchAsyncProcessor(String type, Collection<?> esDataList, String... indexs){
+        esPlusClient.saveBatchAsyncProcessor(type, esDataList,indexs);
+    };
+    
+    /**
+     * 异步定时批量保存接口
+     */
+    public void updateBatchAsyncProcessor(String type, Collection<?> esDataList, String... indexs){
+        esPlusClient.updateBatchAsyncProcessor(type, esDataList,indexs);
+    };
+    
     public List<BulkItemResponse> saveOrUpdateBatch(String type, Collection<?> esDataList,String... index) {
         List<BulkItemResponse> failBulkItemResponses = new ArrayList<>();
         if (CollectionUtils.isEmpty(esDataList)) {
@@ -552,9 +575,8 @@ public class EsPlusClientFacade   {
      return    esPlusIndexClient.getAliasByIndex(index);
     }
     
-    public void remoteInterceptor(Class<?> clazz) {
+    public void removeInterceptor(Class<?> clazz) {
         esPlusClientProxy.removeInterceptor(clazz);
-        System.out.println(esPlusClientProxy.getEsInterceptors());
     }
     
     /**

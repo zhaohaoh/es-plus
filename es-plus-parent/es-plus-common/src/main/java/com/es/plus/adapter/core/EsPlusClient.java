@@ -14,7 +14,22 @@ import java.util.List;
 public interface EsPlusClient {
 
     RestHighLevelClient getRestHighLevelClient();
-
+    
+    
+    /**
+     * 异步定时批量保存接口
+     */
+    void saveOrUpdateBatchAsyncProcessor(String type, Collection<?> esDataList, String... indexs);
+    
+    /**
+     * 异步定时批量保存接口
+     */
+    void saveBatchAsyncProcessor(String type, Collection<?> esDataList, String... indexs);
+    
+    /**
+     * 异步定时批量保存接口
+     */
+    void updateBatchAsyncProcessor(String type, Collection<?> esDataList, String... indexs);
    
     /**
      * 保存或更新批

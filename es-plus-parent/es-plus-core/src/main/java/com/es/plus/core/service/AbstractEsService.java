@@ -61,7 +61,6 @@ public abstract class AbstractEsService<T> implements SmartInitializingSingleton
                 return;
             }
             this.esPlusClientFacade = ClientContext.getClient(esIndexParam.getClientInstance());
-    
     }
     
     protected String getIndex() {

@@ -188,7 +188,7 @@ public interface EsConstant {
     Map<String, Object> KEYWORDS_MAP = new HashMap<String, Object>() {{
         Map<String, Object> keywordsMap = new HashMap<>();
         keywordsMap.put(EsConstant.TYPE, "keyword");
-        keywordsMap.put("ignore_above", 256);
+        keywordsMap.put(IGNORE_ABOVE, 256);
         put("keyword", keywordsMap);
     }};
 

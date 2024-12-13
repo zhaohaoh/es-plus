@@ -119,6 +119,12 @@ public @interface EsField {
      * @return boolean
      */
     boolean eagerGlobalOrdinals() default false;
+    
+    /**
+     *  keyword字段设置可以用来检索的长度，默认256 如果不设置，es对keyword字段的存储长度有限制 默认3XXXX
+     *  且默认字段全长都会用来检索
+     */
+    int ignoreAbove() default 256;
 
 
     /**

@@ -7,7 +7,6 @@ import com.es.plus.core.ClientContext;
 import com.es.plus.core.statics.Es;
 import com.es.plus.core.wrapper.aggregation.EsAggWrapper;
 import com.es.plus.core.wrapper.chain.EsChainLambdaQueryWrapper;
-import com.es.plus.core.wrapper.chain.EsChainQueryWrapper;
 import com.es.plus.es6.client.EsPlus6Aggregations;
 import com.es.plus.samples.SamplesApplication;
 import com.es.plus.samples.dto.FastTestDTO;
@@ -21,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -221,12 +221,16 @@ public class FastTest {
     
     @org.junit.jupiter.api.Test
     public void sss() {
-        EsChainQueryWrapper<Map> index = Es.chainQuery(Map.class).index("fast_test_new_v116", "fast_test_new_v115");
-        
-        EsAggWrapper<Map> mapEsAggWrapper = index.esAggWrapper();
-        EsAggWrapper<Map> username = mapEsAggWrapper.percentiles("username_test1");
-        EsResponse<Map> search = index.search();
-        System.out.println();
+//        EsChainQueryWrapper<Map> index = Es.chainQuery(Map.class).index("fast_test_new_v116", "fast_test_new_v115");
+//
+//        EsAggWrapper<Map> mapEsAggWrapper = index.esAggWrapper();
+//        EsAggWrapper<Map> username = mapEsAggWrapper.percentiles("username_test1");
+//        EsResponse<Map> search = index.search();
+//        System.out.println();
+        FastTestDTO fastTestDTO = new FastTestDTO();
+        fastTestDTO.setId(1L);
+        fastTestDTO.setText("asdasdasdsa");
+        fastTestService.saveBatchAsyncProcessor(Collections.singletonList(fastTestDTO));
     }
     
     

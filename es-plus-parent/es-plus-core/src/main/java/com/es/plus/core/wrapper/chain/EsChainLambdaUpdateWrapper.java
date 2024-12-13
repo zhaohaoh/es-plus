@@ -35,6 +35,10 @@ public class EsChainLambdaUpdateWrapper<T> extends AbstractEsChainWrapper<T, SFu
         if (esIndexParam != null) {
             index(esIndexParam.getIndex());
             type = esIndexParam.getType();
+            EsPlusClientFacade client = ClientContext.getClient(esIndexParam.getClientInstance());
+            if (client!=null){
+                esPlusClientFacade = client;
+            }
         }
     }
 
@@ -93,7 +97,36 @@ public class EsChainLambdaUpdateWrapper<T> extends AbstractEsChainWrapper<T, SFu
     public List<BulkItemResponse> saveOrUpdateBatch(Collection<T> entityList) {
         return esPlusClientFacade.saveBatch( type, entityList,indexs);
     }
-
+    
+    /**
+     * 保存批处理异步
+     *
+     * @return {@link List}<{@link BulkItemResponse}>
+     */
+    @Override
+    public void saveBatchAsyncProcessor(Collection<T> entityList) {
+          esPlusClientFacade.saveBatchAsyncProcessor( type, entityList,indexs);
+    }
+    /**
+     * 保存批处理异步
+     *
+     * @return {@link List}<{@link BulkItemResponse}>
+     */
+    @Override
+    public void saveOrUpdateBatchAsyncProcessor(Collection<T> entityList) {
+        esPlusClientFacade.saveOrUpdateBatchAsyncProcessor( type, entityList,indexs);
+    }
+    /**
+     * 保存批处理异步
+     *
+     * @return {@link List}<{@link BulkItemResponse}>
+     */
+    @Override
+    public void updateBatchAsyncProcessor(Collection<T> entityList) {
+        esPlusClientFacade.updateBatchAsyncProcessor( type, entityList,indexs);
+    }
+    
+  
     @Override
     public boolean update(T t) {
         return esPlusClientFacade.update( type, t,indexs);

@@ -36,6 +36,7 @@ public class AnnotationResolveUtil {
         esFieldInfo.setEsFormat(esField.esFormat());
         esFieldInfo.setSearchAnalyzer(esField.searchAnalyzer());
         esFieldInfo.setEagerGlobalOrdinals(esField.eagerGlobalOrdinals());
+        esFieldInfo.setIgnoreAbove(esField.ignoreAbove());
         return esFieldInfo;
     }
 

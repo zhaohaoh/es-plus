@@ -1,5 +1,6 @@
 package com.es.plus.samples.dto;
 
+import com.es.plus.annotation.BulkProcessor;
 import com.es.plus.annotation.EsField;
 import com.es.plus.annotation.EsId;
 import com.es.plus.annotation.EsIndex;
@@ -16,10 +17,11 @@ import java.util.List;
  */
 @Data
 @EsIndex(index = "fast_test_new_v6",alias = "fast_test_new_alias",tryReindex = true)
+@BulkProcessor
 public class FastTestDTO {
     @EsId
     private Long id;
-    @EsField(type = EsFieldType.KEYWORD)
+    @EsField(type = EsFieldType.KEYWORD,ignoreAbove= 512)
     private String username;
     @EsField(type = EsFieldType.TEXT)
     private String text;

@@ -7,7 +7,7 @@ import java.util.Collection;
 import java.util.List;
 
 public interface UpdateOperation<T> {
-
+    
     /**
      * 保存
      *
@@ -17,13 +17,13 @@ public interface UpdateOperation<T> {
     boolean save(T t);
     
     /**
-     *  更新
+     * 更新
      *
      * @param t t
      * @return {@link List}<{@link BulkItemResponse}>
      */
     boolean saveOrUpdate(T t);
-
+    
     /**
      * 保存批处理
      *
@@ -31,7 +31,7 @@ public interface UpdateOperation<T> {
      * @return {@link List}<{@link BulkItemResponse}>
      */
     List<BulkItemResponse> saveBatch(Collection<T> t);
-
+    
     /**
      * 保存或更新批处理
      *
@@ -39,15 +39,37 @@ public interface UpdateOperation<T> {
      * @return {@link List}<{@link BulkItemResponse}>
      */
     List<BulkItemResponse> saveOrUpdateBatch(Collection<T> entityList);
-
+    
     /**
-     *  更新
+     * 保存批处理异步
+     *
+     * @return {@link List}<{@link BulkItemResponse}>
+     */
+    void saveBatchAsyncProcessor(Collection<T> entityList);
+    
+    /**
+     * 保存批处理异步
+     *
+     * @return {@link List}<{@link BulkItemResponse}>
+     */
+    void saveOrUpdateBatchAsyncProcessor(Collection<T> entityList);
+    
+    /**
+     * 保存批处理异步
+     *
+     * @return {@link List}<{@link BulkItemResponse}>
+     */
+    
+    void updateBatchAsyncProcessor(Collection<T> entityList);
+    
+    /**
+     * 更新
      *
      * @param t t
      * @return {@link List}<{@link BulkItemResponse}>
      */
-     boolean update(T t);
-
+    boolean update(T t);
+    
     /**
      * 批处理更新
      *
@@ -55,36 +77,36 @@ public interface UpdateOperation<T> {
      * @return {@link List}<{@link BulkItemResponse}>
      */
     List<BulkItemResponse> updateBatch(Collection<T> t);
-
+    
     /**
      * 更新
      *
      * @return {@link BulkByScrollResponse}
      */
     BulkByScrollResponse updateByQuery();
-
-
+    
+    
     /**
      * 增量
      *
      * @return {@link BulkByScrollResponse}
      */
     BulkByScrollResponse incrementByWapper();
-
-
+    
+    
     /**
      * 删除
      *
      * @return {@link BulkByScrollResponse}
      */
     boolean removeByIds(Collection<String> ids);
-
+    
     /**
      * 删除
      *
      * @return {@link BulkByScrollResponse}
      */
     BulkByScrollResponse remove();
-
-
+    
+    
 }
