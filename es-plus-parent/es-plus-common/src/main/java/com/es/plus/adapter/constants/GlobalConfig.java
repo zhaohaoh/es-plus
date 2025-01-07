@@ -87,7 +87,11 @@ public class GlobalConfig {
      * 查询超时时间 最大努力，并不是所有地方都会检查超时。模糊查询肯定不会有效
      */
     private Integer searchTimeout = 30;
-
+    
+    /**
+     * 更新操作超时时间.这个操作先不加吧。有些更新动作时间比较久
+     */
+//    private Integer updateTimeout = 60;
     /**
      * 启动检查
      */
