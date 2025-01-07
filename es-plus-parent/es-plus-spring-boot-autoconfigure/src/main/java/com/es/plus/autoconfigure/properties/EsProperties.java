@@ -60,7 +60,7 @@ public class EsProperties {
      * 连接超时时间
      */
 
-    private Integer socketTimeOut = Integer.MIN_VALUE;
+    private Integer socketTimeOut = 300000;
     /**
      * 获取连接的超时时间
      */
