@@ -42,9 +42,9 @@ public class GlobalConfig {
     private boolean reindexAsync = false;
 
     /**
-     * 是否开启查询全部数据 默认开启
+     * 是否开启查询全部数据 默认关闭
      */
-    private boolean trackTotalHits = true;
+    private boolean trackTotalHits = false;
     /**
      * data refresh policy 数据刷新策略,默认为WAIT_UNTIL
      */

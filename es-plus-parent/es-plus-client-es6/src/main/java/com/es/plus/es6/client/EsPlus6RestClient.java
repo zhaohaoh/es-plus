@@ -121,6 +121,7 @@ public class EsPlus6RestClient implements EsPlusClient {
     /**
      * 异步定时批量保存接口
      */
+    @Override
     public void saveOrUpdateBatchAsyncProcessor(String type, Collection<?> esDataList, String... indexs){
         
         if (CollectionUtils.isEmpty(esDataList)) {
@@ -140,6 +141,7 @@ public class EsPlus6RestClient implements EsPlusClient {
     /**
      * 异步定时批量保存接口
      */
+    @Override
     public void saveBatchAsyncProcessor(String type, Collection<?> esDataList, String... indexs) {
         
         if (CollectionUtils.isEmpty(esDataList)) {
@@ -155,15 +157,7 @@ public class EsPlus6RestClient implements EsPlusClient {
             }
         }
     }
-    private   IndexRequest getIndexRequest(String index,String type, Object esData, boolean childIndex) {
-        IndexRequest indexRequest = new IndexRequest(index,type);
-        String source = JsonUtils.toJsonStr(esData);
-        indexRequest.id(GlobalParamHolder.getDocId(index, esData)).source(source, XContentType.JSON);
-        if (childIndex) {
-            indexRequest.routing(FieldUtils.getStrFieldValue(esData, "joinField", "parent"));
-        }
-        return indexRequest;
-    }
+  
     private  UpdateRequest getUpsertRequest(String type, String index, Object esData, boolean childIndex) {
         UpdateRequest updateRequest = new UpdateRequest(index, type,
                 GlobalParamHolder.getDocId(index, esData)).doc(JsonUtils.toJsonStr(esData), XContentType.JSON);
@@ -178,19 +172,12 @@ public class EsPlus6RestClient implements EsPlusClient {
         return updateRequest;
     }
     
-    private   UpdateRequest getUpdateRequest(String type, String index, Object esData, boolean childIndex) {
-        UpdateRequest updateRequest = new UpdateRequest(index, type,
-                GlobalParamHolder.getDocId(index, esData)).doc(JsonUtils.toJsonStr(esData), XContentType.JSON);
-        updateRequest.retryOnConflict(GlobalConfigCache.GLOBAL_CONFIG.getMaxRetries());
-        if (childIndex) {
-            updateRequest.routing(FieldUtils.getStrFieldValue(esData, "joinField", "parent"));
-        }
-        return updateRequest;
-    }
+ 
     
     /**
      * 异步定时批量保存接口
      */
+    @Override
     public void updateBatchAsyncProcessor(String type, Collection<?> esDataList, String... indexs){
         if (CollectionUtils.isEmpty(esDataList)) {
             return ;
@@ -233,13 +220,17 @@ public class EsPlus6RestClient implements EsPlusClient {
             try {
                 BulkRequest bulkRequest = new BulkRequest();
                 for (Object esData : esDataList) {
-                    UpdateRequest updateRequest =getUpsertRequest(type,index,esData,childIndex);
+                    UpdateRequest updateRequest = getUpsertRequest(type, index, esData, childIndex);
                     bulkRequest.add(updateRequest);
                 }
                 bulkRequest.setRefreshPolicy(GlobalConfigCache.GLOBAL_CONFIG.getRefreshPolicy());
                 BulkResponse res = null;
-                printInfoLog(" {} saveOrUpdateBatch data:{} hasFailures={}", index, JsonUtils.toJsonStr(esDataList));
+                long start = System.currentTimeMillis();
                 res = restHighLevelClient.bulk(bulkRequest, RequestOptions.DEFAULT);
+                long end = System.currentTimeMillis();
+                long timeCost = end-start;
+                printInfoLog(" {} saveOrUpdateBatch timeCost:{} data:{} \n hasFailures={}", index,timeCost,
+                        JsonUtils.toJsonStr(esDataList),res.hasFailures());
                 for (BulkItemResponse bulkItemResponse : res.getItems()) {
                     if (bulkItemResponse.isFailed()) {
                         responses.add(bulkItemResponse);
@@ -247,8 +238,8 @@ public class EsPlus6RestClient implements EsPlusClient {
                                 + bulkItemResponse.getFailureMessage(), index);
                     }
                 }
-            } catch (IOException e) {
-                throw new EsException("saveOrUpdateBatch IOException", e);
+            } catch (Exception e) {
+                throw new EsException("saveOrUpdateBatch Exception", e);
             }
         }
         
@@ -283,19 +274,18 @@ public class EsPlus6RestClient implements EsPlusClient {
                 BulkRequest bulkRequest = new BulkRequest();
                 
                 for (Object esData : esDataList) {
-                    IndexRequest indexRequest = new IndexRequest(index);
-                    String source = JsonUtils.toJsonStr(esData);
-                    indexRequest.id(GlobalParamHolder.getDocId(index, esData)).source(source, XContentType.JSON);
-                    if (childIndex) {
-                        indexRequest.routing(FieldUtils.getStrFieldValue(esData, "joinField", "parent"));
-                    }
+                    IndexRequest indexRequest = getIndexRequest(index,type, esData, childIndex);
                     bulkRequest.add(indexRequest);
                 }
                 bulkRequest.setRefreshPolicy(GlobalConfigCache.GLOBAL_CONFIG.getRefreshPolicy());
                 BulkResponse res;
                 
-                printInfoLog("saveBatch {}", index);
+                
+                long start = System.currentTimeMillis();
                 res = restHighLevelClient.bulk(bulkRequest, RequestOptions.DEFAULT);
+                long end = System.currentTimeMillis();
+                long timeCost = end-start;
+                printInfoLog("saveBatch {} timeCost:{}", index,timeCost);
                 for (BulkItemResponse bulkItemResponse : res.getItems()) {
                     if (bulkItemResponse.isFailed()) {
                         printErrorLog(" {} save error " + bulkItemResponse.getId() + " message:"
@@ -309,6 +299,16 @@ public class EsPlus6RestClient implements EsPlusClient {
         }
         
         return failBulkItemResponses;
+    }
+    
+    private   IndexRequest getIndexRequest(String index,String type, Object esData, boolean childIndex) {
+        IndexRequest indexRequest = new IndexRequest(index,type);
+        String source = JsonUtils.toJsonStr(esData);
+        indexRequest.id(GlobalParamHolder.getDocId(index, esData)).source(source, XContentType.JSON);
+        if (childIndex) {
+            indexRequest.routing(FieldUtils.getStrFieldValue(esData, "joinField", "parent"));
+        }
+        return indexRequest;
     }
     
     /**
@@ -332,15 +332,15 @@ public class EsPlus6RestClient implements EsPlusClient {
             for (String index : indexs) {
                 BulkRequest bulkRequest = new BulkRequest();
                 
-                UpdateRequest updateRequest =getUpsertRequest(type,index,esData,childIndex);
-                if (childIndex) {
-                    updateRequest.routing(FieldUtils.getStrFieldValue(esData, "joinField", "parent"));
-                }
+                UpdateRequest updateRequest = getUpsertRequest(type, index, esData, childIndex);
                 bulkRequest.add(updateRequest);
                 bulkRequest.setRefreshPolicy(GlobalConfigCache.GLOBAL_CONFIG.getRefreshPolicy());
                 BulkResponse res = null;
-                printInfoLog(" {} saveOrUpdate data:{} hasFailures={}", index, JsonUtils.toJsonStr(esData));
+                long start = System.currentTimeMillis();
                 res = restHighLevelClient.bulk(bulkRequest, RequestOptions.DEFAULT);
+                long end = System.currentTimeMillis();
+                long timeCost = end-start;
+                printInfoLog(" {} saveOrUpdate timeCost:{} data:{} \n hasFailures={}", index,timeCost, JsonUtils.toJsonStr(esData));
                 for (BulkItemResponse bulkItemResponse : res.getItems()) {
                     if (bulkItemResponse.isFailed()) {
                         printErrorLog(" {} saveOrUpdate error" + bulkItemResponse.getId() + " message:"
@@ -354,6 +354,7 @@ public class EsPlus6RestClient implements EsPlusClient {
         }
         return true;
     }
+    
     
     /**
      * 更新Es数据
@@ -375,7 +376,10 @@ public class EsPlus6RestClient implements EsPlusClient {
                 if (childIndex) {
                     updateRequest.routing(FieldUtils.getStrFieldValue(esData, "joinField", "parent"));
                 }
+                long start = System.currentTimeMillis();
                 UpdateResponse updateResponse = restHighLevelClient.update(updateRequest, RequestOptions.DEFAULT);
+                long end = System.currentTimeMillis();
+                long timeCost = end-start;
                 if (updateResponse.getResult() == DocWriteResponse.Result.DELETED) {
                     printErrorLog(" {} update data={}  error reason: doc  deleted", index, JsonUtils.toJsonStr(esData));
                     return false;
@@ -383,7 +387,7 @@ public class EsPlus6RestClient implements EsPlusClient {
                     //noop标识没有数据改变。前后的值相同
                     return false;
                 } else {
-                    printInfoLog(" {} update success data={}", index, JsonUtils.toJsonStr(esData));
+                    printInfoLog(" {} update success timeCost:{} data={}", index,timeCost, JsonUtils.toJsonStr(esData));
                 }
             } catch (IOException e) {
                 throw new EsException("elasticsearch update io error", e);
@@ -423,18 +427,16 @@ public class EsPlus6RestClient implements EsPlusClient {
             try {
                 BulkRequest bulkRequest = new BulkRequest();
                 for (Object esData : esDataList) {
-                    UpdateRequest updateRequest = new UpdateRequest(index, type,
-                            GlobalParamHolder.getDocId(index, esData)).doc(JsonUtils.toJsonStr(esData), XContentType.JSON);
-                    updateRequest.retryOnConflict(GlobalConfigCache.GLOBAL_CONFIG.getMaxRetries());
-                    if (childIndex) {
-                        updateRequest.routing(FieldUtils.getStrFieldValue(esData, "joinField", "parent"));
-                    }
+                    UpdateRequest updateRequest = getUpdateRequest(type, index, esData, childIndex);
                     bulkRequest.add(updateRequest);
                 }
                 bulkRequest.setRefreshPolicy(GlobalConfigCache.GLOBAL_CONFIG.getRefreshPolicy());
                 BulkResponse res = null;
-                printInfoLog("updateBatch index={} data:{} hasFailures={}", index, JsonUtils.toJsonStr(esDataList));
+                long start = System.currentTimeMillis();
                 res = restHighLevelClient.bulk(bulkRequest, RequestOptions.DEFAULT);
+                long end = System.currentTimeMillis();
+                long timeCost = end-start;
+                printInfoLog("updateBatch index={} timeCost:{} data:{} hasFailures={}", index,timeCost, JsonUtils.toJsonStr(esDataList));
                 for (BulkItemResponse bulkItemResponse : res.getItems()) {
                     if (bulkItemResponse.isFailed()) {
                         responses.add(bulkItemResponse);
@@ -449,6 +451,16 @@ public class EsPlus6RestClient implements EsPlusClient {
         
         
         return responses;
+    }
+    
+    private   UpdateRequest getUpdateRequest(String type, String index, Object esData, boolean childIndex) {
+        UpdateRequest updateRequest = new UpdateRequest(index, type,
+                GlobalParamHolder.getDocId(index, esData)).doc(JsonUtils.toJsonStr(esData), XContentType.JSON);
+        updateRequest.retryOnConflict(GlobalConfigCache.GLOBAL_CONFIG.getMaxRetries());
+        if (childIndex) {
+            updateRequest.routing(FieldUtils.getStrFieldValue(esData, "joinField", "parent"));
+        }
+        return updateRequest;
     }
     
     
@@ -511,10 +523,14 @@ public class EsPlus6RestClient implements EsPlusClient {
             request.setIndicesOptions(IndicesOptions.LENIENT_EXPAND_OPEN);
             Script painless = new Script(ScriptType.INLINE, PAINLESS, scipt, params);
             request.setScript(painless);
+            
+            long start = System.currentTimeMillis();
             printInfoLog("updateByWrapper index:{} requst: script:{},params={}  query:{}", index, scipt, params,
                     esQueryParamWrapper.getQueryBuilder().toString());
             BulkByScrollResponse bulkResponse = restHighLevelClient.updateByQuery(request, RequestOptions.DEFAULT);
-            printInfoLog("updateByWrapper index:{} response:{} update count={}", index, bulkResponse,
+            long end = System.currentTimeMillis();
+            long timeCost = end-start;
+            printInfoLog("updateByWrapper index:{} timeCost:{} response:{} update count={}", index,timeCost, bulkResponse,
                     bulkResponse.getUpdated());
             return bulkResponse;
         } catch (IOException e) {
@@ -554,10 +570,12 @@ public class EsPlus6RestClient implements EsPlusClient {
             
             Script painless = new Script(ScriptType.INLINE, PAINLESS, script.toString(), params);
             request.setScript(painless);
-            
+            long start = System.currentTimeMillis();
             printInfoLog(" {} updateByWrapper increment requst: script:{},params={}", index, script, params);
             BulkByScrollResponse bulkResponse = restHighLevelClient.updateByQuery(request, RequestOptions.DEFAULT);
-            printInfoLog(" {} updateByWrapper increment response:{} update count=", index, bulkResponse);
+            long end = System.currentTimeMillis();
+            long timeCost = end-start;
+            printInfoLog(" {} updateByWrapper timeCost:{}  increment response:{} update count=", index,timeCost, bulkResponse);
             return bulkResponse;
         } catch (IOException e) {
             throw new EsException("updateByWrapper increment IOException", e);
@@ -570,8 +588,11 @@ public class EsPlus6RestClient implements EsPlusClient {
             DeleteRequest deleteRequest = new DeleteRequest(index, type, id);
             try {
                 deleteRequest.setRefreshPolicy(GlobalConfigCache.GLOBAL_CONFIG.getRefreshPolicy());
+                long start = System.currentTimeMillis();
                 restHighLevelClient.delete(deleteRequest, RequestOptions.DEFAULT);
-                printInfoLog("delete index={}", index);
+                long end = System.currentTimeMillis();
+                long timeCost = end-start;
+                printInfoLog("delete index={} timeCost:{}", index,timeCost);
             } catch (IOException e) {
                 throw new EsException("delete error", e);
             }
@@ -604,9 +625,13 @@ public class EsPlus6RestClient implements EsPlusClient {
         
         try {
             SearchSourceBuilder source = request.getSearchRequest().source();
-            printInfoLog(" {} delete body:" + source.toString(), index);
+            
+            long start = System.currentTimeMillis();
             BulkByScrollResponse bulkByScrollResponse = restHighLevelClient.deleteByQuery(request,
                     RequestOptions.DEFAULT);
+            long end = System.currentTimeMillis();
+            long timeCost = end-start;
+            printInfoLog(" {} delete timeCost:{} body:" ,index,timeCost,source.toString());
             return bulkByScrollResponse;
         } catch (Exception e) {
             throw new EsException("es-plus delete error", e);
@@ -637,7 +662,7 @@ public class EsPlus6RestClient implements EsPlusClient {
             return false;
         }
         for (String index : indexs) {
-            log.info("Es deleteBatch index={} ids={}", index, esDataList);
+            
             BulkRequest bulkRequest = new BulkRequest();
             esDataList.forEach(id -> {
                 DeleteRequest deleteRequest = new DeleteRequest(index, type, id);
@@ -646,7 +671,11 @@ public class EsPlus6RestClient implements EsPlusClient {
             
             bulkRequest.setRefreshPolicy(GlobalConfigCache.GLOBAL_CONFIG.getRefreshPolicy());
             try {
+                long start = System.currentTimeMillis();
                 BulkResponse bulkResponse = restHighLevelClient.bulk(bulkRequest, RequestOptions.DEFAULT);
+                long end = System.currentTimeMillis();
+                long timeCost = end-start;
+                log.info("Es deleteBatch index={} timeCost:{} ids={} ", index,timeCost, esDataList);
                 BulkItemResponse[] items = bulkResponse.getItems();
                 for (BulkItemResponse item : items) {
                     if (item.isFailed()) {
@@ -663,7 +692,7 @@ public class EsPlus6RestClient implements EsPlusClient {
     
     //统计
     @Override
-    public <T> long count(String type, EsParamWrapper<T> esParamWrapper,String... index) {
+    public <T> long count(String type, EsParamWrapper<T> esParamWrapper, String... index) {
         EsQueryParamWrapper esQueryParamWrapper = esParamWrapper.getEsQueryParamWrapper();
         CountRequest countRequest = new CountRequest();
         SearchSourceBuilder query = SearchSourceBuilder.searchSource().query(esQueryParamWrapper.getQueryBuilder());
@@ -671,9 +700,13 @@ public class EsPlus6RestClient implements EsPlusClient {
         countRequest.indices(index);
         CountResponse count = null;
         try {
-            printSearchInfoLog("count index=:{} \nDSL:{}", index,
-                    JsonUtils.toJsonStr(esQueryParamWrapper.getQueryBuilder()));
+            
+            long start = System.currentTimeMillis();
             count = restHighLevelClient.count(countRequest, RequestOptions.DEFAULT);
+            long end = System.currentTimeMillis();
+            long timeCost = end-start;
+            printSearchInfoLog("count index=:{} timeCost:{}  \nDSL:{}", index,timeCost,
+                    JsonUtils.toJsonStr(esQueryParamWrapper.getQueryBuilder()));
         } catch (IOException e) {
             throw new EsException("es-plus count error ", e);
         }
@@ -684,7 +717,7 @@ public class EsPlus6RestClient implements EsPlusClient {
     }
     
     @Override
-    public <T> EsResponse<T> search(String type, EsParamWrapper<T> esParamWrapper,String... index) {
+    public <T> EsResponse<T> search(String type, EsParamWrapper<T> esParamWrapper, String... index) {
         SearchRequest searchRequest = new SearchRequest();
         
         EsQueryParamWrapper esQueryParamWrapper = esParamWrapper.getEsQueryParamWrapper();
@@ -692,7 +725,7 @@ public class EsPlus6RestClient implements EsPlusClient {
         //获取查询语句源数据
         SearchSourceBuilder sourceBuilder = getSearchSourceBuilder(esParamWrapper);
         
-        populateSearchRequest(type, searchRequest, esQueryParamWrapper, sourceBuilder,index);
+        populateSearchRequest(type, searchRequest, esQueryParamWrapper, sourceBuilder, index);
         
         if (esQueryParamWrapper.getSearchType() != null) {
             searchRequest.searchType();
@@ -704,8 +737,8 @@ public class EsPlus6RestClient implements EsPlusClient {
             long start = System.currentTimeMillis();
             searchResponse = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
             long end = System.currentTimeMillis();
-            long millis = end - start;
-            printSearchInfoLog("search index={} tookMills={} \nDSL:{} ", index,  millis,sourceBuilder);
+            long mills = end - start;
+            printSearchInfoLog("search index={} timeCost={} \nDSL:{} ", index,  mills,sourceBuilder);
         } catch (Exception e) {
             throw new EsException("es-plus search body=" + sourceBuilder, e);
         }
@@ -726,8 +759,8 @@ public class EsPlus6RestClient implements EsPlusClient {
      * @return {@link EsResponse}<{@link T}>
      */
     @Override
-    public <T> EsResponse<T> scroll(String type, EsParamWrapper<T> esParamWrapper, Duration keepTime,
-            String scrollId,String... index) {
+    public <T> EsResponse<T> scroll(String type, EsParamWrapper<T> esParamWrapper, Duration keepTime, String scrollId,
+            String... index) {
         SearchResponse searchResponse;
         SearchHit[] searchHits = null;
         List<T> result = new ArrayList<>();
@@ -744,7 +777,7 @@ public class EsPlus6RestClient implements EsPlusClient {
                 SearchRequest searchRequest = new SearchRequest(index);
                 searchRequest.scroll(scroll);
                 SearchSourceBuilder searchSourceBuilder = getSearchSourceBuilder(esParamWrapper);
-                populateSearchRequest( type, searchRequest, esQueryParamWrapper, searchSourceBuilder,index);
+                populateSearchRequest(type, searchRequest, esQueryParamWrapper, searchSourceBuilder, index);
                 //调用scroll处理
                 searchResponse = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
                 scrollId = searchResponse.getScrollId();
@@ -754,8 +787,8 @@ public class EsPlus6RestClient implements EsPlusClient {
             if (searchHits == null || searchHits.length <= 0) {
                 ClearScrollRequest clearScrollRequest = new ClearScrollRequest();
                 clearScrollRequest.addScrollId(scrollId);
-                ClearScrollResponse clearScrollResponse = restHighLevelClient
-                        .clearScroll(clearScrollRequest, RequestOptions.DEFAULT);
+                ClearScrollResponse clearScrollResponse = restHighLevelClient.clearScroll(clearScrollRequest,
+                        RequestOptions.DEFAULT);
                 boolean succeeded = clearScrollResponse.isSucceeded();
             }
             return esResponse;
@@ -768,8 +801,7 @@ public class EsPlus6RestClient implements EsPlusClient {
      * 聚合
      */
     @Override
-    public <T> EsAggResponse<T> aggregations( String type, EsParamWrapper<T> esParamWrapper,String... index) {
-        
+    public <T> EsAggResponse<T> aggregations(String type, EsParamWrapper<T> esParamWrapper, String... index) {
         EsQueryParamWrapper esQueryParamWrapper = esParamWrapper.getEsQueryParamWrapper();
         SearchRequest searchRequest = new SearchRequest();
         //查询条件组合
@@ -781,28 +813,31 @@ public class EsPlus6RestClient implements EsPlusClient {
         //设置索引
         searchRequest.source(sourceBuilder);
         searchRequest.indices(index);
-        searchRequest.types(type);
         //查询
         SearchResponse searchResponse = null;
+        String dsl = sourceBuilder.toString();
         try {
-            printSearchInfoLog("aggregations index={} \nDSL:{}", index, sourceBuilder);
             long start = System.currentTimeMillis();
             searchResponse = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
             long end = System.currentTimeMillis();
-            long millis = end - start;
-            printSearchInfoLog("{} aggregations tookMills={}", index, millis);
+            long mills = end - start;
+            printSearchInfoLog("{} aggregations tookMills={} \nDSL:{}", index, mills, dsl);
         } catch (Exception e) {
-            throw new EsException("aggregations error", e);
+            printErrorLog("aggregations  DSL:{} error",dsl,e);
+            throw new EsException("aggregations   error", e);
         }
         if (searchResponse.status().getStatus() != 200) {
+            printErrorLog("aggregations  DSL:{} status!=200 error:{}",dsl,searchResponse.toString());
             throw new EsException("elasticsearch aggregations error");
         }
         Aggregations aggregations = searchResponse.getAggregations();
         EsPlus6Aggregations<T> esAggregationReponse = new EsPlus6Aggregations<>();
         esAggregationReponse.setAggregations(aggregations);
         esAggregationReponse.settClass(esParamWrapper.getTClass());
+        
         return esAggregationReponse;
     }
+    
     
     
     /**

@@ -102,7 +102,9 @@ public class BulkProcessorConfig {
                     public void afterBulk(long executionId, BulkRequest request, BulkResponse response) {
                         // 写入之后执行
                         BulkItemResponse[] items = response.getItems();
-                        log.info("ES BulkProcessor Success executionId:{} response:{} ",executionId, JsonUtils.toJsonStr(items));
+                        long ingestTookInMillis = response.getTook().getMillis();
+                        log.info("ES BulkProcessor Success executionId:{} timeCost:{} response:{} ",executionId,ingestTookInMillis
+                                , JsonUtils.toJsonStr(items));
                     }
                     
                     @Override
