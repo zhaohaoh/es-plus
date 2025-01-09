@@ -11,7 +11,6 @@ import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
-import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.TermQueryBuilder;
@@ -34,7 +33,7 @@ public class EsLockClient implements ELockClient {
         UpdateRequest updateRequest = new UpdateRequest(index, GlobalConfigCache.GLOBAL_CONFIG.getType(),id);
         updateRequest.retryOnConflict(GlobalConfigCache.GLOBAL_CONFIG.getMaxRetries());
         updateRequest.script(painless);
-        updateRequest.timeout(TimeValue.timeValueSeconds(10));
+        updateRequest.timeout("10s");
         try {
             return restHighLevelClient.update(updateRequest, RequestOptions.DEFAULT);
         } catch (IOException e) {
@@ -48,7 +47,7 @@ public class EsLockClient implements ELockClient {
         updateRequest.retryOnConflict(GlobalConfigCache.GLOBAL_CONFIG.getMaxRetries());
         updateRequest.script(painless);
         updateRequest.upsert(insertBody);
-        updateRequest.timeout(TimeValue.timeValueSeconds(10));
+        updateRequest.timeout("10s");
         try {
             return restHighLevelClient.update(updateRequest, RequestOptions.DEFAULT);
         } catch (IOException e) {
@@ -62,7 +61,7 @@ public class EsLockClient implements ELockClient {
         //乐观锁重试次数
         updateRequest.retryOnConflict(GlobalConfigCache.GLOBAL_CONFIG.getMaxRetries());
         updateRequest.setRefreshPolicy(GlobalConfigCache.GLOBAL_CONFIG.getRefreshPolicy());
-        updateRequest.timeout(TimeValue.timeValueSeconds(10));
+        updateRequest.timeout("10s");
         try {
             return restHighLevelClient.update(updateRequest, RequestOptions.DEFAULT);
         } catch (IOException e) {
