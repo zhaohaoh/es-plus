@@ -53,6 +53,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static com.es.plus.adapter.config.GlobalConfigCache.GLOBAL_CONFIG;
@@ -98,13 +100,12 @@ public class IndexScanProccess implements InitializingBean, ApplicationListener<
             EsEntityInfo esEntityInfo = GlobalParamHolder.getEsEntityInfo(indexClass);
             
             // 获取索引信息
-            EsIndexParam esIndexParam = buildEsIndexParam(indexClass,
-                    GLOBAL_CONFIG.getGlobalSuffix());
+            EsIndexParam esIndexParam = buildEsIndexParam(indexClass);
             
             // 获取映射
             Map<String, Object> mapping = getMappings(indexClass, esIndexParam);
             
-            EsIndex annotation = indexClass.getAnnotation(EsIndex.class);
+            EsIndex esIndex = indexClass.getAnnotation(EsIndex.class);
             
             EsPlusClientFacade esPlusClientFacade = ClientContext.getClient(esIndexParam.getClientInstance());
             
@@ -128,7 +129,7 @@ public class IndexScanProccess implements InitializingBean, ApplicationListener<
             esEntityInfo.setEsIndexParam(esIndexParam);
             
             // 如果是子文档不执行创建索引的相关操作
-            Class<?> parentClass = annotation.parentClass();
+            Class<?> parentClass = esIndex.parentClass();
             if (parentClass != DefaultClass.class) {
                 continue;
             }
@@ -139,7 +140,7 @@ public class IndexScanProccess implements InitializingBean, ApplicationListener<
             }
             
             // 启动时不初始化
-            if (!annotation.startInit()) {
+            if (!esIndex.startInit()) {
                 continue;
             }
             
@@ -267,7 +268,7 @@ public class IndexScanProccess implements InitializingBean, ApplicationListener<
      * @param esSuffix es后缀
      * @return {@link EsIndexParam}
      */
-    public EsIndexParam buildEsIndexParam(Class<?> tClass, String esSuffix) {
+    public EsIndexParam buildEsIndexParam(Class<?> tClass) {
         EsIndex esIndex = tClass.getAnnotation(EsIndex.class);
         if (esIndex == null) {
             return null;
@@ -277,13 +278,22 @@ public class IndexScanProccess implements InitializingBean, ApplicationListener<
         if (StringUtils.isBlank(esIndex.index())) {
             throw new EsException("es entity annotation @EsIndex no has index");
         }
-      
+        
+        String[] indexArray = splitIndex(esIndex.index());
+        if (indexArray == null){
+            esIndexParam.setDynamicIndex(false);
+        }else{
+            esIndexParam.setDynamicIndex(true);
+            esIndexParam.setDynamicIndexPrefix(indexArray[0]);
+            esIndexParam.setDynamicIndexSpel(indexArray[1]);
+            esIndexParam.setDynamicIndexSuffix(indexArray[2]);
+        }
         
         esIndexParam.setType(esIndex.type());
-        esIndexParam.setIndex(esIndex.index() + esSuffix);
+        esIndexParam.setIndex(esIndex.index());
         
         if (StringUtils.isNotBlank(esIndex.alias())) {
-            esIndexParam.setAlias(esIndex.alias() + esSuffix);
+            esIndexParam.setAlias(esIndex.alias());
             
             //如果索引存在别名，则通过别名获取真实的索引名称
             EsPlusClientFacade esPlusClientFacade = ClientContext.getClient(esIndex.clientInstance());
@@ -322,7 +332,6 @@ public class IndexScanProccess implements InitializingBean, ApplicationListener<
         
         //添加设置的多个分词器
         String[] analyzers = esIndex.analyzer();
-        
         Map<String, Object> analysis = new HashMap<>();
         
         //添加自定义分词器
@@ -624,5 +633,50 @@ public class IndexScanProccess implements InitializingBean, ApplicationListener<
     public void onApplicationEvent(ApplicationEnvironmentPreparedEvent event) {
         //后续可以通过启动类名配置默认扫描路径
         startAppClassName = event.getSpringApplication().getMainApplicationClass().getName();
+    }
+    
+    public static String[] splitIndex(String input) {
+        // 定义正则表达式模式，其中(.*?)表示非贪婪匹配任意字符，直到遇到后面的模式
+        // #\{ 和 \} 分别匹配 #{ 和 }
+        // (.*?) 在 #{} 中进行非贪婪匹配
+        // (.*) 匹配前缀和后缀，这里使用贪婪匹配因为我们需要尽可能多地匹配字符直到遇到 #{} 或字符串末尾/开头
+        String regex = "(.*?)#\\{([^}]+)\\}(.*)";
+        
+        // 编译正则表达式
+        Pattern pattern = Pattern.compile(regex);
+        
+        // 创建匹配器对象
+        Matcher matcher = pattern.matcher(input);
+        
+        // 如果找到匹配项
+        if (matcher.matches()) {
+            // 提取前缀、中间值和后缀
+            String prefix = matcher.group(1);
+            String middle = matcher.group(2);
+            String suffix = matcher.group(3);
+            
+            if (StringUtils.isNotBlank(middle)) {
+                middle = "#{" + middle + "}";
+            }
+            // 返回结果数组
+            return new String[] {prefix, middle, suffix};
+        } else {
+            return null;
+        }
+    }
+    
+    public static void main(String[] args) {
+        // 测试示例
+        String testString1 = "es_index_test_#{value}";
+        String[] result1 = splitIndex(testString1);
+        System.out.println("Result 1: " + java.util.Arrays.toString(result1)); // 输出: [es_index_, 123, _suffix]
+        
+        String testString2 = "prefix_#{value}_anotherSuffix";
+        String[] result2 = splitIndex(testString2);
+        System.out.println("Result 2: " + java.util.Arrays.toString(result2)); // 输出: [prefix_, value, _anotherSuffix]
+        
+        // 注意：如果输入字符串不符合预期模式（即没有#{}），将抛出异常
+        // String testString3 = "no_match_here";
+        // String[] result3 = splitString(testString3); // 这将抛出IllegalArgumentException
     }
 }

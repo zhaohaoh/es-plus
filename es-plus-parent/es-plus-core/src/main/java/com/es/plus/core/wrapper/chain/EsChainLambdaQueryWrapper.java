@@ -5,9 +5,9 @@ import com.es.plus.adapter.params.EsAggResponse;
 import com.es.plus.adapter.params.EsQueryParamWrapper;
 import com.es.plus.adapter.params.EsResponse;
 import com.es.plus.adapter.properties.EsIndexParam;
-import com.es.plus.adapter.properties.GlobalParamHolder;
 import com.es.plus.adapter.tools.SFunction;
 import com.es.plus.core.ClientContext;
+import com.es.plus.core.IndexContext;
 import com.es.plus.core.wrapper.core.EsLambdaQueryWrapper;
 import org.apache.commons.lang3.StringUtils;
 
@@ -26,7 +26,7 @@ public class EsChainLambdaQueryWrapper<T> extends AbstractEsChainWrapper<T, SFun
     public EsChainLambdaQueryWrapper(Class<T> clazz) {
         super.tClass = clazz;
         super.esWrapper = new EsLambdaQueryWrapper<>(tClass);
-        EsIndexParam esIndexParam = GlobalParamHolder.getAndInitEsIndexParam(super.tClass);
+        EsIndexParam esIndexParam = IndexContext.getIndex(super.tClass);
         if (esIndexParam != null) {
             index(StringUtils.isBlank(esIndexParam.getAlias()) ? esIndexParam.getIndex() : esIndexParam.getAlias());
             EsPlusClientFacade client = ClientContext.getClient(esIndexParam.getClientInstance());
@@ -39,7 +39,7 @@ public class EsChainLambdaQueryWrapper<T> extends AbstractEsChainWrapper<T, SFun
     public EsChainLambdaQueryWrapper(Class<T> clazz, EsPlusClientFacade esPlusClientFacade) {
         super.tClass = clazz;
         super.esWrapper = new EsLambdaQueryWrapper<>(tClass);
-        EsIndexParam esIndexParam = GlobalParamHolder.getAndInitEsIndexParam(super.tClass);
+        EsIndexParam esIndexParam = IndexContext.getIndex(super.tClass);
         if (esIndexParam != null) {
             index(StringUtils.isBlank(esIndexParam.getAlias()) ? esIndexParam.getIndex() : esIndexParam.getAlias());
         }

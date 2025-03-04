@@ -1,7 +1,6 @@
 package com.es.plus.core.wrapper.core;
 
 import com.es.plus.adapter.EsPlusClientFacade;
-import com.es.plus.adapter.config.GlobalConfigCache;
 import com.es.plus.adapter.params.EsAliasResponse;
 import com.es.plus.adapter.params.EsIndexResponse;
 import com.es.plus.adapter.params.EsSettings;
@@ -23,11 +22,10 @@ public class EsIndexWrapper implements IEsIndexWrapper {
         if (esPlusClientFacade != null) {
             this.esPlusClientFacade = esPlusClientFacade;
         }
-        this.index = index + GlobalConfigCache.GLOBAL_CONFIG.getGlobalSuffix();
     }
 
     public EsIndexWrapper index(String index) {
-        this.index = index + GlobalConfigCache.GLOBAL_CONFIG.getGlobalSuffix();
+        this.index = index;
         return this;
     }
 

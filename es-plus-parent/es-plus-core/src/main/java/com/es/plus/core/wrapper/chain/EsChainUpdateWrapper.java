@@ -3,8 +3,8 @@ package com.es.plus.core.wrapper.chain;
 
 import com.es.plus.adapter.EsPlusClientFacade;
 import com.es.plus.adapter.properties.EsIndexParam;
-import com.es.plus.adapter.properties.GlobalParamHolder;
 import com.es.plus.core.ClientContext;
+import com.es.plus.core.IndexContext;
 import com.es.plus.core.wrapper.core.EsUpdateWrapper;
 import com.es.plus.core.wrapper.core.Update;
 import com.es.plus.core.wrapper.core.UpdateOperation;
@@ -14,6 +14,7 @@ import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import static com.es.plus.constant.EsConstant.MASTER;
 
@@ -29,9 +30,14 @@ public class EsChainUpdateWrapper<T> extends AbstractEsChainWrapper<T, String, E
     public EsChainUpdateWrapper(Class<T> clazz) {
         super.tClass = clazz;
         super.esWrapper = new EsUpdateWrapper<>(tClass);
-        EsIndexParam esIndexParam = GlobalParamHolder.getAndInitEsIndexParam(super.tClass);
+        EsIndexParam esIndexParam = IndexContext.getIndex(super.tClass);
         if (esIndexParam != null) {
-            index(esIndexParam.getIndex());
+            String preIndex = esIndexParam.getPreIndex();
+            String index = esIndexParam.getIndex();
+            if (!Objects.equals(preIndex, index)){
+            
+            }
+            index(index);
             type = esIndexParam.getType();
             EsPlusClientFacade client = ClientContext.getClient(esIndexParam.getClientInstance());
             if (client!=null){
@@ -43,7 +49,7 @@ public class EsChainUpdateWrapper<T> extends AbstractEsChainWrapper<T, String, E
     public EsChainUpdateWrapper(Class<T> clazz, EsPlusClientFacade esPlusClientFacade) {
         super.tClass = clazz;
         super.esWrapper = new EsUpdateWrapper<>(tClass);
-        EsIndexParam esIndexParam = GlobalParamHolder.getAndInitEsIndexParam(super.tClass);
+        EsIndexParam esIndexParam = IndexContext.getIndex(super.tClass);
         if (esIndexParam != null) {
             index(esIndexParam.getIndex());
             type = esIndexParam.getType();

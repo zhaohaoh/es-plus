@@ -14,8 +14,9 @@ public interface EsWrapper< T> {
     EsLambdaAggWrapper<T> esLambdaAggWrapper();
 
     EsAggWrapper<T> esAggWrapper();
-
-
+    
+    String[] getIndexs();
+    
     default EsUpdateField getEsUpdateField() {
         return null;
     }

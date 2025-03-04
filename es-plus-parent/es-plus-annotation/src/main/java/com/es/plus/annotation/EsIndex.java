@@ -15,7 +15,10 @@ import java.lang.annotation.Target;
 public @interface EsIndex {
 
     /**
-     * 索引名
+     * 索引名 通过spel表达式获取index名字  #{此处填入SPEL表达式}
+     * 方法1    @beanName.getYYYYMM()
+     * 方法2    T(com.xxxx.xxxx).getYYYYMM()
+     * 举例 es_index_test_#{T(com.xxxx.xxxx).getYYYYMM()}
      */
     String index() default "";
 

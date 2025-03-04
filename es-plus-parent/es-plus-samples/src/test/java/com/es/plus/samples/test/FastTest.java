@@ -234,7 +234,13 @@ public class FastTest {
     }
     
     
-  
-    
+    // 实测保存的时候不允许使用*  只有查询能用
+    @org.junit.jupiter.api.Test
+    public void esTongpeifu() {
+        FastTestDTO fastTest = new FastTestDTO();
+        fastTest.setId(6543210L);
+        fastTest.setUsername("哈哈哈哈哈");
+        Es.chainUpdate(FastTestDTO.class).index("fast_test_new_*").save(fastTest);
+    }
     
 }

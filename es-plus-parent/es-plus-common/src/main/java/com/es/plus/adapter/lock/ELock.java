@@ -69,7 +69,7 @@ public abstract class ELock implements Lock {
 
 
     @Override
-    public boolean tryLock(long time, TimeUnit unit) throws InterruptedException {
+    public boolean tryLock(long time, TimeUnit unit)  {
         long currentTimeMillis = System.currentTimeMillis();
         long millis = unit.toMillis(time);
         while (!tryLock()) {
@@ -77,7 +77,11 @@ public abstract class ELock implements Lock {
                 return false;
             }
             // 重试8次以下.
-            Thread.sleep(millis >> 3);
+            try {
+                Thread.sleep(millis >> 3);
+            } catch (InterruptedException e) {
+                 Thread.currentThread().interrupt();
+            }
         }
         return true;
     }

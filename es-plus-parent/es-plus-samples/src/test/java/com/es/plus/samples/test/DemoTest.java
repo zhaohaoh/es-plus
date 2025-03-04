@@ -46,7 +46,7 @@ public class DemoTest {
         BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
         TermQueryBuilder a = QueryBuilders.termQuery("a", "1");
         boolQueryBuilder.must(a);
-        EsResponse<FastTestDTO> list = fastTestService.esChainQueryWrapper().filter()
+        EsResponse<FastTestDTO> list = fastTestService.esChainQueryWrapper().index().filter()
                 .term(FastTestDTO::getUsername, "酷酷的").search();
         System.out.println(list);
     }

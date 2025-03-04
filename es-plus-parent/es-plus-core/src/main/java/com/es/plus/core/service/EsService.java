@@ -21,6 +21,10 @@ import java.util.Map;
 import static com.es.plus.constant.EsConstant.SCROLL_KEEP_TIME;
 
 public interface EsService<T> {
+    
+    String getIndex();
+    
+    String[] getAlias();
 
     /**
      * es查询包装器
@@ -71,54 +75,87 @@ public interface EsService<T> {
      * @param esSettings es设置
      * @return boolean
      */
-    boolean updateSettings(EsSettings esSettings);
-
+    default boolean updateSettings(EsSettings esSettings){
+     return  updateSettings(esSettings,getIndex());
+    }
+    
     /**
      * 更新设置
      *
      * @param esSettings es设置
      * @return boolean
      */
-    boolean updateSettings(Map<String, Object> esSettings);
-
+    boolean updateSettings(EsSettings esSettings,String... indexs);
+    
+    default boolean updateSettings(Map<String, Object> esSettings){
+        return  updateSettings(esSettings,getIndex());
+    }
+    /**
+     * 更新设置
+     *
+     * @param esSettings es设置
+     * @return boolean
+     */
+    boolean updateSettings(Map<String, Object> esSettings,String... indexs);
+    
+    default boolean save(T entity){
+        return  save(entity,getIndex());
+    }
     /**
      * 保存
      *
      * @param entity 实体
      * @return boolean
      */
-    boolean save(T entity);
-
+    boolean save(T entity,String... indexs);
+    
+    
+    default boolean saveOrUpdate(T entity){
+        return  saveOrUpdate(entity,getIndex());
+    }
     /**
      * 保存或更新
      *
      * @param entity 实体
      * @return boolean
      */
-    boolean saveOrUpdate(T entity);
-
+    boolean saveOrUpdate(T entity,String... indexs);
+    
+    default List<BulkItemResponse> saveOrUpdateBatch(Collection<T> entityList){
+        return  saveOrUpdateBatch(entityList,getIndex());
+    }
     /**
      * 保存或更新批处理
      *
      * @param entityList 实体列表
      * @return {@link List}<{@link BulkItemResponse}>
      */
-    List<BulkItemResponse> saveOrUpdateBatch(Collection<T> entityList);
-
+    List<BulkItemResponse> saveOrUpdateBatch(Collection<T> entityList,String... indexs);
+    
+    default List<BulkItemResponse> saveBatch(Collection<T> entityList){
+        return  saveBatch(entityList,getIndex());
+    }
     /**
      * 保存批处理
      *
      * @param entityList 实体列表
      * @return {@link List}<{@link BulkItemResponse}>
      */
-    List<BulkItemResponse> saveBatch(Collection<T> entityList);
+    List<BulkItemResponse> saveBatch(Collection<T> entityList,String... indexs);
     
     /**
      * 批量保存或更新
      */
-
-     void saveOrUpdateBatchAsyncProcessor(Collection<T> entityList);
+    default void saveOrUpdateBatchAsyncProcessor(Collection<T> entityList) {
+        saveOrUpdateBatchAsyncProcessor(entityList, getIndex());
+    }
     
+    void saveOrUpdateBatchAsyncProcessor(Collection<T> entityList, String... indexs);
+    
+    
+    default void saveBatchAsyncProcessor(Collection<T> entityList) {
+        saveBatchAsyncProcessor(entityList, getIndex());
+    }
     /**
      * 批量保存
      *
@@ -126,7 +163,11 @@ public interface EsService<T> {
      * @return {@link List}<{@link BulkItemResponse}>
      */
 
-     void saveBatchAsyncProcessor(Collection<T> entityList);
+     void saveBatchAsyncProcessor(Collection<T> entityList,String... indexs);
+    
+    default void updateBatchAsyncProcessor(Collection<T> entityList) {
+        updateBatchAsyncProcessor(entityList, getIndex());
+    }
     /**
      * 批量保存
      *
@@ -134,23 +175,85 @@ public interface EsService<T> {
      * @return {@link List}<{@link BulkItemResponse}>
      */
 
-     void updateBatchAsyncProcessor(Collection<T> entityList) ;
+     void updateBatchAsyncProcessor(Collection<T> entityList,String... indexs) ;
+    
+    default boolean removeById(Serializable id) {
+       return removeById(id, getIndex());
+    }
     /**
      * 删除根据id
      *
      * @param id id
      * @return boolean
      */
-    boolean removeById(Serializable id);
-
+    boolean removeById(Serializable id,String... indexs);
+    
+    default boolean removeByIds(Collection<? extends Serializable> idList) {
+       return removeByIds(idList, getIndex());
+    }
     /**
      * 删除根据id
      *
      * @param idList id列表
      * @return boolean
      */
-    boolean removeByIds(Collection<? extends Serializable> idList);
+    boolean removeByIds(Collection<? extends Serializable> idList,String... indexs);
+    
+    
+    default boolean updateById(T entity) {
+       return updateById(entity, getIndex());
+    }
+    /**
+     * 更新根据id
+     *
+     * @param entity 实体
+     * @return boolean
+     */
+    boolean updateById(T entity,String... indexs);
+    
+    
+    default List<BulkItemResponse> updateBatch(Collection<T> entityList) {
+       return updateBatch(entityList, getIndex());
+    }
+    /**
+     * 批处理更新
+     *
+     * @param entityList 实体列表
+     * @return {@link List}<{@link BulkItemResponse}>
+     */
+    List<BulkItemResponse> updateBatch(Collection<T> entityList,String... indexs);
+    
+    default void deleteIndex() {
+        deleteIndex(getIndex());
+    }
 
+    /**
+     * 删除索引
+     */
+    void deleteIndex(String... indexs);
+    
+    default boolean forceMerge(int maxSegments, boolean onlyExpungeDeletes, boolean flush) {
+        return forceMerge(maxSegments, onlyExpungeDeletes, flush, getIndex());
+    }
+    /**
+     * 合并
+     *
+     */
+    boolean forceMerge(int maxSegments, boolean onlyExpungeDeletes, boolean flush,String... indexs);
+    
+    /**
+     * 强制刷
+     * @return boolean
+     */
+    default boolean refresh() {
+        return refresh(getIndex());
+    }
+    /**
+     * 强制刷
+     * @return boolean
+     */
+    boolean refresh(String... indexs);
+    
     /**
      * 删除
      *
@@ -158,47 +261,6 @@ public interface EsService<T> {
      * @return {@link BulkByScrollResponse}
      */
     BulkByScrollResponse remove(EsWrapper<T> esUpdateWrapper);
-
-    /**
-     * 删除所有
-     *
-     * @return {@link BulkByScrollResponse}
-     */
-    BulkByScrollResponse removeAll();
-
-    /**
-     * 更新根据id
-     *
-     * @param entity 实体
-     * @return boolean
-     */
-    boolean updateById(T entity);
-
-    /**
-     * 批处理更新
-     *
-     * @param entityList 实体列表
-     * @return {@link List}<{@link BulkItemResponse}>
-     */
-    List<BulkItemResponse> updateBatch(Collection<T> entityList);
-
-
-    /**
-     * 删除索引
-     */
-    void deleteIndex();
-
-    /**
-     * 合并
-     *
-     */
-    boolean forceMerge(int maxSegments, boolean onlyExpungeDeletes, boolean flush);
-    /**
-     * 强制刷
-     * @return boolean
-     */
-    boolean refresh();
-
     /**
      * 更新根据包装器
      *
@@ -206,6 +268,16 @@ public interface EsService<T> {
      * @return {@link BulkByScrollResponse}
      */
     BulkByScrollResponse updateByQuery(EsWrapper<T> esUpdateWrapper);
+    
+    /**
+     * 获取根据id
+     *
+     * @param id id
+     * @return {@link T}
+     */
+    default T searchById(Serializable id) {
+        return searchById(id,getAlias());
+    }
 
     /**
      * 获取根据id
@@ -213,15 +285,21 @@ public interface EsService<T> {
      * @param id id
      * @return {@link T}
      */
-    T searchById(Serializable id);
-
+    T searchById(Serializable id,String... indexs);
+    
+    /**
+     * 获取根据ids
+     */
+    default List<T> searchById(Collection<? extends Serializable> idList) {
+        return searchByIds(idList,getAlias());
+    }
     /**
      * 列表根据id
      *
      * @param idList id列表
      * @return {@link List}<{@link T}>
      */
-    List<T> searchByIds(Collection<? extends Serializable> idList);
+    List<T> searchByIds(Collection<? extends Serializable> idList,String... indexs);
 
     /**
      * 列表

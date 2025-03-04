@@ -48,7 +48,12 @@ public abstract class AbstractEsChainWrapper<T, R, Children extends AbstractEsCh
     public QUERY getWrapper() {
         return esWrapper;
     }
-
+    
+    @Override
+    public String[] getIndexs() {
+        return indexs;
+    }
+    
     @Override
     public EsParamWrapper<T> esParamWrapper() {
         return getWrapper().esParamWrapper();
@@ -72,10 +77,6 @@ public abstract class AbstractEsChainWrapper<T, R, Children extends AbstractEsCh
 
     @Override
     public Children index(String... indexs) {
-        //手动传入的索引名需要加上后缀
-        for (int i = 0; i < indexs.length; i++) {
-            indexs[i]=indexs[i]+GlobalConfigCache.GLOBAL_CONFIG.getGlobalSuffix();
-        }
         this.indexs = indexs;
         return this.children;
     }

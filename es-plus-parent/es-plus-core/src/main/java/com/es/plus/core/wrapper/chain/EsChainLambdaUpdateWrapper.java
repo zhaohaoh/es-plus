@@ -3,9 +3,9 @@ package com.es.plus.core.wrapper.chain;
 
 import com.es.plus.adapter.EsPlusClientFacade;
 import com.es.plus.adapter.properties.EsIndexParam;
-import com.es.plus.adapter.properties.GlobalParamHolder;
 import com.es.plus.adapter.tools.SFunction;
 import com.es.plus.core.ClientContext;
+import com.es.plus.core.IndexContext;
 import com.es.plus.core.wrapper.core.EsLambdaUpdateWrapper;
 import com.es.plus.core.wrapper.core.Update;
 import com.es.plus.core.wrapper.core.UpdateOperation;
@@ -31,7 +31,7 @@ public class EsChainLambdaUpdateWrapper<T> extends AbstractEsChainWrapper<T, SFu
     public EsChainLambdaUpdateWrapper(Class<T> clazz) {
         super.tClass = clazz;
         super.esWrapper = new EsLambdaUpdateWrapper<>(tClass);
-        EsIndexParam esIndexParam = GlobalParamHolder.getAndInitEsIndexParam(super.tClass);
+        EsIndexParam esIndexParam = IndexContext.getIndex(super.tClass);
         if (esIndexParam != null) {
             index(esIndexParam.getIndex());
             type = esIndexParam.getType();
@@ -45,7 +45,7 @@ public class EsChainLambdaUpdateWrapper<T> extends AbstractEsChainWrapper<T, SFu
     public EsChainLambdaUpdateWrapper(Class<T> clazz, EsPlusClientFacade esPlusClientFacade) {
         super.tClass = clazz;
         super.esWrapper = new EsLambdaUpdateWrapper<>(tClass);
-        EsIndexParam esIndexParam = GlobalParamHolder.getAndInitEsIndexParam(super.tClass);
+        EsIndexParam esIndexParam = IndexContext.getIndex(super.tClass);
         if (esIndexParam != null) {
             index(esIndexParam.getIndex());
             type = esIndexParam.getType();

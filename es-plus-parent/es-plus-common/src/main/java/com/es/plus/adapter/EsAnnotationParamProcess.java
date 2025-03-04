@@ -28,6 +28,7 @@ import java.util.stream.Collectors;
  * @Author: hzh
  * @Date: 2022/1/21 11:10
  */
+@Deprecated
 public class EsAnnotationParamProcess {
 
     /**

@@ -1,6 +1,5 @@
 package com.es.plus.adapter.properties;
 
-import com.es.plus.adapter.EsAnnotationParamProcess;
 import com.es.plus.adapter.config.GlobalConfigCache;
 import com.es.plus.adapter.constants.EsIdType;
 import com.es.plus.adapter.exception.EsException;
@@ -22,8 +21,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @SuppressWarnings("all")
 public class GlobalParamHolder {
     private static final Logger logger = LoggerFactory.getLogger(GlobalParamHolder.class);
-    // 属性解析器
-    private static final EsAnnotationParamProcess ES_ANNOTATION_PARAM_RESOLVE = new EsAnnotationParamProcess();
+ 
     // id的线程本地变量
     private static final  Map<String,String> _ID = new ConcurrentHashMap<>();
 

@@ -3,8 +3,8 @@ package com.es.plus.core.service;
 
 import com.es.plus.adapter.EsPlusClientFacade;
 import com.es.plus.adapter.properties.EsIndexParam;
-import com.es.plus.adapter.properties.GlobalParamHolder;
 import com.es.plus.core.ClientContext;
+import com.es.plus.core.IndexContext;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,31 +17,15 @@ import java.lang.reflect.Type;
  * @Author: hzh
  * @Date: 2022/1/21 11:11
  */
-public abstract class AbstractEsService<T> implements SmartInitializingSingleton {
+public abstract class AbstractEsService<T> implements SmartInitializingSingleton , EsService<T> {
     
     private static final Logger logger = LoggerFactory.getLogger(AbstractEsService.class);
-    
-//    /**
-//     * 类型
-//     */
-//    protected String type;
-//
-//    /**
-//     * 索引,这里存的是别名
-//     */
-//    protected String alias;
-//
-//    /**
-//     * 索引
-//     */
-//    protected String index;
-    
+  
     /**
      * clazz
      */
     protected Class<T> clazz;
-    private  EsIndexParam esIndexParam;
-    
+  
     private EsPlusClientFacade esPlusClientFacade;
     
     public EsPlusClientFacade getEsPlusClientFacade() {
@@ -55,23 +39,28 @@ public abstract class AbstractEsService<T> implements SmartInitializingSingleton
             clazz = (Class<T>) tClazz;
             Class<?> indexClass = clazz;
             //添加索引信息
-            esIndexParam = GlobalParamHolder.getAndInitEsIndexParam(indexClass);
-            if (esIndexParam==null){
+            EsIndexParam esIndexParam = IndexContext.getIndex(indexClass);
+            if (esIndexParam == null){
                 logger.error("找不到索引:{}",indexClass);
                 return;
             }
             this.esPlusClientFacade = ClientContext.getClient(esIndexParam.getClientInstance());
     }
     
-    protected String getIndex() {
-        return esIndexParam.getIndex();
-    }
     
-    protected String getAlias() {
-        return StringUtils.isBlank(esIndexParam.getAlias()) ? esIndexParam.getIndex() : esIndexParam.getAlias();
+    @Override
+    public String getIndex() {
+        return IndexContext.getIndex(clazz).getIndex();
     }
+    @Override
+    public String[] getAlias() {
+        EsIndexParam index = IndexContext.getIndex(clazz);
+        return StringUtils.isBlank(index.getAlias()) ? new String[]{getIndex()} : new String[]{index.getAlias()};
+    }
+  
     
     protected String getType() {
-        return esIndexParam.getType();
+        EsIndexParam index = IndexContext.getIndex(clazz);
+        return index.getType();
     }
 }

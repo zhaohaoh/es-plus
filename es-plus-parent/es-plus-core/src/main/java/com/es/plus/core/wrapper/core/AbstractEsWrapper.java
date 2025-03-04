@@ -2,6 +2,7 @@ package com.es.plus.core.wrapper.core;
 
 
 import com.es.plus.adapter.config.GlobalConfigCache;
+import com.es.plus.adapter.exception.EsException;
 import com.es.plus.adapter.interceptor.EsUpdateField;
 import com.es.plus.adapter.params.EsHighLight;
 import com.es.plus.adapter.params.EsOrder;
@@ -60,7 +61,7 @@ import java.util.stream.Collectors;
  */
 @SuppressWarnings({"unchecked"})
 public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper<T, R, Children>> extends AbstractLambdaEsWrapper<T, R>
-        implements IEsQueryWrapper<Children, Children, R>, EsWrapper<T>, EsExtendsWrapper<Children, R> {
+        implements IEsQueryWrapper<Children, Children, R>, EsWrapper<T>, EsExtendsWrapper<Children, R>, EsStaitcsWrapper<Children> {
     protected AbstractEsWrapper() {
         //成员变量比构造方法更快执行
         queryBuilders = esParamWrapper().getEsQueryParamWrapper().getQueryBuilder().must();
@@ -75,8 +76,6 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
 
     protected QueryBuilder currentBuilder;
     
-
-    
     /*
      *实例
      */
@@ -89,7 +88,36 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
     protected EsLambdaAggWrapper<T> esLambdaAggWrapper;
 
     protected EsAggWrapper<T> esAggWrapper;
-
+    
+    protected String[] indexs;
+    
+    protected String type;
+    
+    @Override
+    public String[] getIndexs() {
+        return indexs;
+    }
+    
+    @Override
+    public Children index(String... indexs) {
+        this.indexs = indexs;
+        return this.children;
+    }
+    
+    @Override
+    public Children type(String type) {
+        this.type = type;
+        return this.children;
+    }
+    
+    @Override
+    public Children _id(String _id) {
+        if (indexs == null) {
+            throw new EsException("index is null");
+        }
+        GlobalParamHolder.set_id(indexs,_id);
+        return this.children;
+    }
 
     @Override
     public EsParamWrapper<T> esParamWrapper() {
@@ -145,7 +173,8 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
     public BoolQueryBuilder getQueryBuilder() {
         return esParamWrapper().getEsQueryParamWrapper().getQueryBuilder();
     }
-
+   
+    
     //获取select的字段
     @Override
     public EsSelect getSelect() {

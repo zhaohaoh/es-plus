@@ -7,11 +7,11 @@ import com.es.plus.adapter.lock.ELock;
 import com.es.plus.adapter.params.EsIndexResponse;
 import com.es.plus.adapter.params.EsSettings;
 import com.es.plus.adapter.properties.EsIndexParam;
-import com.es.plus.adapter.properties.GlobalParamHolder;
 import com.es.plus.adapter.util.JsonUtils;
 import com.es.plus.annotation.EsIndex;
 import com.es.plus.constant.Commend;
 import com.es.plus.constant.EsConstant;
+import com.es.plus.core.IndexContext;
 import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.common.util.set.Sets;
 import org.slf4j.Logger;
@@ -83,7 +83,7 @@ public class EsReindexProcess {
     public static boolean tryReindex(EsPlusClientFacade esPlusClientFacade, Class<?> clazz) {
         
         //获取索引信息
-        EsIndexParam esIndexParam = GlobalParamHolder.getAndInitEsIndexParam(clazz);
+        EsIndexParam esIndexParam = IndexContext.getIndex(clazz);
         
         //根据别名获取索引结果 获取不到则通过索引名获取并且修改成目前的别名
         EsIndexResponse getIndexResponse = null;
@@ -153,7 +153,7 @@ public class EsReindexProcess {
     //有事临时编写的代码
     private static boolean settingsUpdate(EsIndexResponse indexResponse, String currentIndex, Class<?> clazz,
             EsPlusClientFacade esPlusClientFacade) {
-        EsIndexParam esIndexParam = GlobalParamHolder.getAndInitEsIndexParam(clazz);
+        EsIndexParam esIndexParam = IndexContext.getIndex(clazz);
         EsSettings esSettings = esIndexParam.getEsSettings();
         Map<String, String> settings = indexResponse.getSettings();
         
@@ -314,7 +314,7 @@ public class EsReindexProcess {
      */
     public static String getMappingUpdateCommend(Map<String, Object> esIndexMapping, Class<?> clazz) {
         // 获取索引信息
-        EsIndexParam esIndexParam = GlobalParamHolder.getAndInitEsIndexParam(clazz);
+        EsIndexParam esIndexParam = IndexContext.getIndex(clazz);
         // 新map添加NUMBER_OF_SHARDS
         Map<String, Object> localIndexMapping = esIndexParam.getMappings();
         // 本地和远程的索引
