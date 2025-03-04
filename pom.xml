@@ -19,7 +19,7 @@
         <!-- 打包跳过单元测试 -->
         <skipTests>true</skipTests>
 <!--   SNAPSHOT  -->
-        <rversion>0.3.98</rversion>
+        <rversion>0.4.0</rversion>
         <elasticsearch.version>7.8.0</elasticsearch.version>
     </properties>
     <licenses>
