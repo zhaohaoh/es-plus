@@ -11,6 +11,7 @@ import com.es.plus.adapter.params.EsAggResponse;
 import com.es.plus.adapter.params.EsHighLight;
 import com.es.plus.adapter.params.EsHit;
 import com.es.plus.adapter.params.EsHits;
+import com.es.plus.adapter.params.EsIndexResponse;
 import com.es.plus.adapter.params.EsOrder;
 import com.es.plus.adapter.params.EsParamWrapper;
 import com.es.plus.adapter.params.EsQueryParamWrapper;
@@ -29,6 +30,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.http.util.EntityUtils;
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.action.DocWriteResponse;
+import org.elasticsearch.action.admin.indices.mapping.get.GetMappingsRequest;
+import org.elasticsearch.action.admin.indices.mapping.get.GetMappingsResponse;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkProcessor;
 import org.elasticsearch.action.bulk.BulkRequest;
@@ -49,6 +52,8 @@ import org.elasticsearch.client.Response;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.client.core.CountRequest;
 import org.elasticsearch.client.core.CountResponse;
+import org.elasticsearch.cluster.metadata.MappingMetadata;
+import org.elasticsearch.common.collect.ImmutableOpenMap;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.LoggingDeprecationHandler;
 import org.elasticsearch.common.xcontent.NamedXContentRegistry;
@@ -922,7 +927,59 @@ public class EsPlusRestClient implements EsPlusClient {
         }
     }
     
-
+    @Override
+    public EsIndexResponse getMappings(String indexName) {
+        //构建请求
+        GetMappingsRequest request = new GetMappingsRequest().indices(indexName);
+        //使用RestHighLevelClient发起请求
+        GetMappingsResponse response = null;
+        try {
+            response = restHighLevelClient.indices().getMapping(request, RequestOptions.DEFAULT);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        ImmutableOpenMap<String, ImmutableOpenMap<String, MappingMetadata>> mappings = response.getMappings();
+//        MappingMetadata mappingMetadata = mappings.get(indexName).get();
+        return null;
+       
+    }
+    
+    @Override
+    public String getIndexStat(String indexName) {
+        Map<String, Object> jsonRequest = new HashMap<>();
+        
+        // "_xpack/sql/translate"
+        Request request = new Request("get", "/_cluster/stats?pretty");
+        request.setJsonEntity(JsonUtils.toJsonStr(jsonRequest));
+        Response response = null;
+        try {
+            response = restHighLevelClient.getLowLevelClient().performRequest(request);
+            String res = EntityUtils.toString(response.getEntity());
+            return res;
+        } catch (IOException e) {
+            log.error("getIndexStat", e);
+        }
+        return null;
+    }
+    
+    @Override
+    public String getIndexHealth(String index) {
+        Map<String, Object> jsonRequest = new HashMap<>();
+        
+        // "_xpack/sql/translate"
+        Request request = new Request("get", "/_cluster/health?pretty");
+        request.setJsonEntity(JsonUtils.toJsonStr(jsonRequest));
+        Response response = null;
+        try {
+            response = restHighLevelClient.getLowLevelClient().performRequest(request);
+            String res = EntityUtils.toString(response.getEntity());
+            return res;
+        } catch (IOException e) {
+            log.error("getIndexHealth", e);
+        }
+        return null;
+    }
+    
     
     private <T> EsResponse<T> getEsResponse(Class<T> tClass, SearchResponse searchResponse) {
         //获取结果集

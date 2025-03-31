@@ -1,6 +1,7 @@
 package com.es.plus.adapter.core;
 
 import com.es.plus.adapter.params.EsAggResponse;
+import com.es.plus.adapter.params.EsIndexResponse;
 import com.es.plus.adapter.params.EsParamWrapper;
 import com.es.plus.adapter.params.EsResponse;
 import org.elasticsearch.action.bulk.BulkItemResponse;
@@ -175,5 +176,19 @@ public interface EsPlusClient {
      * @return {@link String}
      */
     <T> EsResponse<T> executeSQL(String sql,Class<T> tClass);
- 
+    
+    /**
+     * 获取映射
+     * @param indexName
+     * @return
+     */
+    EsIndexResponse getMappings(String indexName);
+    /**
+     * 获取索引统计信息
+     */
+    String getIndexStat(String indexName);
+    /**
+     * 获取索引健康信息
+     */
+    String getIndexHealth(String index);
 }

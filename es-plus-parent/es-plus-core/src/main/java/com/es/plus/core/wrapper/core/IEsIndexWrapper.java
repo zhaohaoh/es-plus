@@ -59,6 +59,28 @@ public interface IEsIndexWrapper  {
      * @return {@link GetIndexResponse}
      */
     EsIndexResponse getIndex();
+    
+    
+    /**
+     * 得到索引
+     *
+     * @param indexName 索引名称
+     * @return {@link GetIndexResponse}
+     */
+    EsIndexResponse getIndex(String indexName);
+    
+    /**
+     * 得到索引统计信息
+     *
+     * @param indexName 索引名称
+     * @return {@link GetIndexResponse}
+     */
+    String getIndexStat(String indexName);
+    
+    /**
+     *获取索引映射
+     */
+    EsIndexResponse getMappings(String indexName);
 
     /**
      * 得到别名索引
@@ -149,4 +171,11 @@ public interface IEsIndexWrapper  {
      * @param alias 别名
      */
     boolean forceMerge(int maxSegments, boolean onlyExpungeDeletes, boolean flush, String... index);
+    
+    /**
+     * 获取索引健康
+     * @param index
+     * @return
+     */
+    String getIndexHealth(String index);
 }

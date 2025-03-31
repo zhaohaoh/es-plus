@@ -585,4 +585,16 @@ public class EsPlusClientFacade   {
     public <T> boolean saveOrUpdate(String type, T entity, String... index) {
         return esPlusClient.saveOrUpdate(type,entity,index);
     }
+    
+    public EsIndexResponse getMappings(String indexName) {
+        return esPlusClient.getMappings(indexName);
+    }
+    
+    public String getIndexStat(String indexName) {
+        return esPlusClient.getIndexStat(indexName);
+    }
+    
+    public String getIndexHealth(String index) {
+        return esPlusClient.getIndexHealth(index);
+    }
 }

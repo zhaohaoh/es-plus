@@ -55,6 +55,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static com.es.plus.constant.EsConstant.DEFAULT_REINDEX_VERSION_TYPE;
 import static com.es.plus.constant.EsConstant.PROPERTIES;
@@ -234,13 +235,20 @@ public class EsPlusIndexRestClient implements EsPlusIndexClient {
                 Set<String> names = s.keySet();
                 names.forEach(name -> settingsMap.put(name, s.get(name)));
             });
-            
+            Collection<List<AliasMetadata>> collection = getIndexResponse.getAliases().values();
+        
             String[] indices = getIndexResponse.getIndices();
             Map<String, MappingMetadata> mappings = getIndexResponse.getMappings();
             Map<String, Object> sourceAsMap = mappings.values().stream().findFirst().get().getSourceAsMap();
             esIndexResponse.setIndices(indices);
             esIndexResponse.setMappings(sourceAsMap);
             esIndexResponse.setSettings(settingsMap);
+            if (!CollectionUtils.isEmpty(collection)) {
+                List<String> alias = collection.stream().findFirst().get().stream().map(AliasMetadata::getAlias)
+                        .collect(Collectors.toList());
+                esIndexResponse.setAliases(alias);
+            }
+            
             return esIndexResponse;
         } catch (IOException e) {
             throw new EsException("getIndex IOException", e);

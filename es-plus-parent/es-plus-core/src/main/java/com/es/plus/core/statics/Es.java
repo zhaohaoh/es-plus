@@ -7,6 +7,8 @@ import com.es.plus.core.wrapper.chain.EsChainQueryWrapper;
 import com.es.plus.core.wrapper.chain.EsChainUpdateWrapper;
 import com.es.plus.core.wrapper.core.EsIndexWrapper;
 
+import java.util.Map;
+
 /**
  * @author hzh
  * @date 2023/02/06
@@ -32,6 +34,12 @@ public class Es {
      */
     public static <T> EsChainQueryWrapper<T> chainQuery(Class<T> rClass) {
         return new EsChainQueryWrapper<>(rClass);
+    }
+    /**
+     * 无参默认以Map作为链式查询链查询
+     */
+    public static EsChainQueryWrapper<Map> chainQuery() {
+        return new EsChainQueryWrapper<>(Map.class);
     }
 
     /**

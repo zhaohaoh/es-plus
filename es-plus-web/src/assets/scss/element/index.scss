@@ -1,0 +1,37 @@
+@forward "element-plus/theme-chalk/src/common/var.scss" with (
+  $colors: (
+    'primary': (
+      // 自定义颜色
+      'base':#009688
+    ),
+    'success': (
+      'base':#1dc779
+    ),
+    'warning': (
+      'base':#ffb302
+    ),
+    'danger': (
+      'base':#e26237
+    ),
+    'error': (
+      'base':#cf4444
+    )
+  ),
+  $menu: (
+    'hover-bg-color': #f9bc60,
+    'hover-text-color':  black,
+    'text-color': #fff,
+    'bg-color' : #009688 ,
+    'active-color': #fff, 
+  ),
+  $button: (
+    'bg-color':#009688,
+     'text-color':#fff
+  ),
+  $table: (
+    // 'border-color':black
+  )
+);
+ 
+
+// @use "element-plus/theme-chalk/src/index.scss" as *;

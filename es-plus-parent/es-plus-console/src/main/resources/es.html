@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<!--  <link-->
+<!--      rel="stylesheet"-->
+<!--      href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.12/codemirror.min.css"-->
+<!--  />-->
+<!--  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.12/codemirror.min.js"></script>-->
+<!--  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.12/mode/sql/sql.min.js"></script>-->
+  
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/javascript/javascript.min.js"></script>
+  <link rel="stylesheet" href="codemirror/addon/hint/show-hint.css">
+  
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.0/addon/hint/show-hint.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.0/addon/hint/show-hint.min.js"></script>
+  
+  
+  <meta charset="UTF-8"/>
+  <title>JSON编辑器</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      height: 100vh;
+      display: flex;
+      font-family: Arial, sans-serif;
+    }
+
+    .container {
+      flex: 1;
+      display: flex;
+      gap: 1px; /* 分隔线宽度 */
+      background: #f0f0f0;
+    }
+
+    .left-panel {
+      flex: 1;
+      padding: 20px;
+      background: white;
+      border-radius: 4px 0 0 4px;
+      width: 500px;
+    }
+
+    .right-panel {
+      flex: 1;
+      padding: 20px;
+      background: #ffffff;
+      border-radius: 0 4px 4px 0;
+      overflow-y: auto;
+      height: 850px;
+    }
+
+    .json-input {
+      width: 100%;
+      height: calc(50% - 50px);
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      resize: none;
+      font-family: "Courier New", monospace;
+    }
+    .json-output {
+      width: 100%;
+      height: calc(100% - 50px);
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      resize: none;
+      font-family: "Courier New", monospace;
+    }
+
+    .controls {
+      margin-top: 10px;
+      text-align: right;
+    }
+
+    button {
+      padding: 8px 16px;
+      background: #4caf50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #45a049;
+    }
+
+    .json-output {
+      white-space: pre-wrap;
+      font-family: "Courier New", monospace;
+      color: #333;
+    }
+
+    .error {
+      color: #ff4444;
+      margin-top: 10px;
+    }
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    /* 设置宽高*/
+    .CodeMirror {
+      width: 100%;
+      height: calc(100% - 50px);
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      resize: none;
+      font-family: "Courier New", monospace;
+    }
+    .esQueryDiv{
+      height: 50%;
+    }
+    
+  </style>
+</head>
+
+<body>
+<div class="container">
+  <div class="left-panel">
+    <div class="esQueryDiv">
+      <label class="esQuery-label">
+      <textarea id="esQuery1" class="json-input" placeholder="请输入es语句..." >
+Es.chainQuery().index("sys_user2ttt_alias").search(10)
+      </textarea>
+      </label>
+      <div class="controls">
+        <button id="submitBtn1">发起请求</button>
+      </div>
+    </div>
+    
+    <div class="esQueryDiv">
+    <label class="esQuery-label">
+      <textarea id="esQuery2" class="json-input" placeholder="请输入es语句..." >
+Es.chainQuery().index("sys_user2ttt_alias").search(10)
+      </textarea>
+    </label>
+    <div class="controls">
+      <button id="submitBtn2">发起请求</button>
+    </div>
+    </div>
+  </div>
+  <!-- 在响应结果区域下方添加历史记录面板 -->
+  <div class="history-panel">
+    <div class="history-header">
+      <span>查询历史</span>
+      <button onclick="clearHistory()">清空历史</button>
+    </div>
+    <div id="history-list"></div>
+  </div>
+  <div class="right-panel">
+      <textarea id="json-output" class="json-output" placeholder="输出"></textarea>
+<!--    <div id="json-output" class="json-output" placeholder="输出"></div>-->
+    <div class="error" id="error-msg"></div>
+  </div>
+</div>
+
+
+<script src="app.js"></script>
+
+<script>
+//   function formatJSON() {
+//     const input = document.querySelector(".json-input").value;
+//     const outputDiv = document.querySelector(".json-output");
+//     const errorMsg = document.getElementById("error-msg");
+//
+//     try {
+//       const parsed = JSON.parse(input);
+//       const formatted = JSON.stringify(parsed, null, 2);
+//       outputDiv.textContent = formatted;
+//       errorMsg.textContent = "";
+//     } catch (error) {
+//       errorMsg.textContent = "无效的JSON格式";
+//       outputDiv.textContent = "";
+//     }
+// }
+</script>
+</body>
+</html>

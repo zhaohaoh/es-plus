@@ -70,7 +70,22 @@ public class EsIndexWrapper implements IEsIndexWrapper {
     public EsIndexResponse getIndex() {
         return esPlusClientFacade.getIndex(index);
     }
-
+    
+    @Override
+    public EsIndexResponse getIndex(String indexName) {
+        return esPlusClientFacade.getIndex(indexName);
+    }
+    
+    @Override
+    public String getIndexStat(String indexName) {
+        return esPlusClientFacade.getIndexStat(indexName);
+    }
+    
+    @Override
+    public EsIndexResponse getMappings(String indexName) {
+            return esPlusClientFacade.getMappings(indexName);
+    }
+    
     @Override
     public EsAliasResponse getAliasIndex(String alias) {
         return esPlusClientFacade.getAliasIndex(alias);
@@ -136,5 +151,16 @@ public class EsIndexWrapper implements IEsIndexWrapper {
     @Override
     public boolean forceMerge(int maxSegments, boolean onlyExpungeDeletes, boolean flush, String... index) {
         return esPlusClientFacade.forceMerge(maxSegments, onlyExpungeDeletes, flush, index);
+    }
+    
+    
+    /**
+     * 获取索引健康
+     * @param index
+     * @return
+     */
+    @Override
+    public String getIndexHealth(String index) {
+       return esPlusClientFacade.getIndexHealth(index);
     }
 }
