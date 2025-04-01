@@ -37,22 +37,22 @@ public class SamplesEsService extends EsServiceImpl<SamplesEsDTO> {
         // 声明语句嵌套关系是must
         InnerHitBuilder innerHitBuilder = new InnerHitBuilder("test");
         innerHitBuilder.setSize(10);
-        innerHitBuilder.setFetchSourceContext(new FetchSourceContext(false));
+        innerHitBuilder.setFetchSourceContext(new FetchSourceContext(true));
 
  
         //一级查询条件
-        EsChainLambdaQueryWrapper<SamplesEsDTO> queryWrapper = esChainQueryWrapper().must().fetch(false)
+        EsChainLambdaQueryWrapper<SamplesEsDTO> queryWrapper = esChainQueryWrapper().must().fetch(true)
                 //二级
-                .nestedQuery(SamplesEsDTO::getSamplesNesteds, SamplesNestedDTO.class,
+                .nested("samplesNesteds",
                         (esQueryWrap) -> {
-                            esQueryWrap.must().term(SamplesNestedDTO::getUsername, "3");
+                            esQueryWrap.must().term("username", "3");
                             InnerHitBuilder innerHitBuilder1 = new InnerHitBuilder();
                             innerHitBuilder1.setSize(100);
                             //三级
-                            esQueryWrap.must().nestedQuery(SamplesNestedDTO::getSamplesNestedInner, SamplesNestedInnerDTO.class,
+                            esQueryWrap.must().nested("samplesNesteds.samplesNestedInner",
                                     (innerQuery) -> {
-                                        innerQuery.must().term(SamplesNestedInnerDTO::getUsername, 3)
-                                        .term(SamplesNestedInnerDTO::getState,true);
+                                        innerQuery.must().term("username", "3");
+//                                        .term(SamplesNestedInnerDTO::getState,true);
                                     }, ScoreMode.None, innerHitBuilder1);
                         }, ScoreMode.None,innerHitBuilder);
 

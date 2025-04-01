@@ -175,7 +175,7 @@ public interface IEsQueryWrapper<Children, QUERY, R> {
 
     //TODO 迟点用 根据id查询
     Children ids(boolean condition, Collection<String> ids);
-
+    
     /**
      * 嵌套查询
      *
@@ -188,7 +188,7 @@ public interface IEsQueryWrapper<Children, QUERY, R> {
     default <S> Children nestedQuery(R path, Class<S> sClass, Consumer<EsLambdaQueryWrapper<S>> consumer) {
         return nestedQuery(true, path, sClass, consumer);
     }
-
+    
     /**
      * 嵌套查询
      *
@@ -200,7 +200,7 @@ public interface IEsQueryWrapper<Children, QUERY, R> {
      * @return {@link Children}
      */
     <S> Children nestedQuery(boolean condition, R path, Class<S> sClass, Consumer<EsLambdaQueryWrapper<S>> consumer);
-
+    
     /**
      * 嵌套查询
      *
@@ -213,7 +213,7 @@ public interface IEsQueryWrapper<Children, QUERY, R> {
     default <S> Children nestedQuery(R path, Consumer<EsQueryWrapper<S>> consumer) {
         return nestedQuery(true, path, consumer);
     }
-
+    
     /**
      * 嵌套查询
      *
@@ -224,7 +224,7 @@ public interface IEsQueryWrapper<Children, QUERY, R> {
      * @return {@link Children}
      */
     <S> Children nestedQuery(boolean condition, R path, Consumer<EsQueryWrapper<S>> consumer);
-
+    
     /**
      * 嵌套查询
      *
@@ -237,7 +237,7 @@ public interface IEsQueryWrapper<Children, QUERY, R> {
     default <S> Children nestedQuery(R path, Class<S> sClass, Consumer<EsLambdaQueryWrapper<S>> consumer, ScoreMode mode, InnerHitBuilder innerHitBuilder) {
         return nestedQuery(true, path, sClass, consumer, mode, innerHitBuilder);
     }
-
+    
     /**
      * 嵌套查询
      *
@@ -249,7 +249,7 @@ public interface IEsQueryWrapper<Children, QUERY, R> {
      * @return {@link Children}
      */
     <S> Children nestedQuery(boolean condition, R path, Class<S> sClass, Consumer<EsLambdaQueryWrapper<S>> consumer, ScoreMode mode, InnerHitBuilder innerHitBuilder);
-
+    
     /**
      * 嵌套查询
      *
@@ -262,7 +262,7 @@ public interface IEsQueryWrapper<Children, QUERY, R> {
     default <S> Children nestedQuery(R path, Consumer<EsQueryWrapper<S>> consumer, ScoreMode mode, InnerHitBuilder innerHitBuilder) {
         return nestedQuery(true, path, consumer, mode, innerHitBuilder);
     }
-
+    
     /**
      * 嵌套查询
      *
@@ -273,6 +273,57 @@ public interface IEsQueryWrapper<Children, QUERY, R> {
      * @return {@link Children}
      */
     <S> Children nestedQuery(boolean condition, R path, Consumer<EsQueryWrapper<S>> consumer, ScoreMode mode, InnerHitBuilder innerHitBuilder);
+    
+    
+    /**
+     * 嵌套查询1
+     *
+     * @param path     路径
+     * @param sClass   s类
+     * @param consumer 消费者
+     * @param mode     模式
+     * @return {@link Children}
+     */
+    default <S> Children nested(String path,  Consumer<EsQueryWrapper<S>> consumer) {
+        return nested(true, path, consumer);
+    }
+    
+    /**
+     * 嵌套查询
+     *
+     * @param condition 条件
+     * @param path      路径
+     * @param sClass    s类
+     * @param consumer  消费者
+     * @param mode      模式
+     * @return {@link Children}
+     */
+    <S> Children nested(boolean condition, String path, Consumer<EsQueryWrapper<S>> consumer);
+   
+    
+    /**
+     * 嵌套查询
+     *
+     * @param condition 条件
+     * @param path      路径
+     * @param consumer  消费者
+     * @param mode      模式
+     * @return {@link Children}
+     */
+    default <S> Children nested(String path, Consumer<EsQueryWrapper<S>> consumer, ScoreMode mode, InnerHitBuilder innerHitBuilder) {
+        return nested(true, path, consumer, mode, innerHitBuilder);
+    }
+    
+    /**
+     * 嵌套查询
+     *
+     * @param condition 条件
+     * @param path      路径
+     * @param consumer  消费者
+     * @param mode      模式
+     * @return {@link Children}
+     */
+    <S> Children nested(boolean condition, String path, Consumer<EsQueryWrapper<S>> consumer, ScoreMode mode, InnerHitBuilder innerHitBuilder);
    
     default Children gt(R name, Object from) {
         return gt(true, name, from);

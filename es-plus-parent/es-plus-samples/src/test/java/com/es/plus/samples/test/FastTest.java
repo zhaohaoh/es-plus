@@ -33,7 +33,7 @@ public class FastTest {
 
     @org.junit.jupiter.api.Test
     public void fast() {
-        EsResponse<Map> list = Es.chainQuery(Map.class).index("fast_test").term("username","酷酷的").search();
+        EsResponse<Map> list = Es.chainQuery(Map.class).index("fast_test_new_v11").term("username","酷酷的").search();
         System.out.println(list);
     }
 

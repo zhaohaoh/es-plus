@@ -252,12 +252,44 @@ public abstract class AbstractEsChainWrapper<T, R, Children extends AbstractEsCh
         getWrapper().nestedQuery(condition, path, sClass, consumer, mode, innerHitBuilder);
         return this.children;
     }
-
+    
     @Override
-    public <S> Children nestedQuery(boolean condition, R path, Consumer<EsQueryWrapper<S>> consumer, ScoreMode mode, InnerHitBuilder innerHitBuilder) {
+    public <S> Children nestedQuery(boolean condition, R path, Consumer<EsQueryWrapper<S>> consumer,
+            ScoreMode mode, InnerHitBuilder innerHitBuilder) {
         getWrapper().nestedQuery(condition, path, consumer, mode, innerHitBuilder);
         return this.children;
     }
+    
+   
+ 
+    @Override
+    public <S> Children nested(String path, Consumer<EsQueryWrapper<S>> consumer) {
+        getWrapper().nested(path, consumer);
+        return this.children;
+    }
+    
+ 
+    
+    @Override
+    public <S> Children nested(boolean condition, String path, Consumer<EsQueryWrapper<S>> consumer) {
+        getWrapper().nested(condition, path, consumer);
+        return this.children;
+    }
+    
+    @Override
+    public <S> Children nested(String path, Consumer<EsQueryWrapper<S>> consumer, ScoreMode mode, InnerHitBuilder innerHitBuilder) {
+        getWrapper().nested(path, consumer, mode, innerHitBuilder);
+        return this.children;
+    }
+    
+  
+
+    @Override
+    public <S> Children nested(boolean condition, String path, Consumer<EsQueryWrapper<S>> consumer, ScoreMode mode, InnerHitBuilder innerHitBuilder) {
+        getWrapper().nested(condition, path, consumer, mode, innerHitBuilder);
+        return this.children;
+    }
+    
 
     @Override
     public Children query(boolean condition, QueryBuilder queryBuilder) {

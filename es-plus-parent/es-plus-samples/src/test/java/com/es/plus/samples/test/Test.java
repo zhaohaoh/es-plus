@@ -1,11 +1,8 @@
 package com.es.plus.samples.test;
 
-import com.es.plus.adapter.EsPlusClientFacade;
 import com.es.plus.adapter.params.EsResponse;
 import com.es.plus.constant.EsSettingsConstants;
-import com.es.plus.core.ClientContext;
 import com.es.plus.core.statics.Es;
-import com.es.plus.core.wrapper.chain.EsChainQueryWrapper;
 import com.es.plus.samples.SamplesApplication;
 import com.es.plus.samples.dto.FastTestDTO;
 import com.es.plus.samples.dto.SamplesEsDTO;
@@ -15,7 +12,11 @@ import com.es.plus.samples.service.SamplesEsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @SpringBootTest(classes = SamplesApplication.class)
 public class Test {
@@ -177,12 +178,12 @@ public class Test {
     
     @org.junit.jupiter.api.Test
     public void tttt() {
-        EsPlusClientFacade dz = ClientContext.getClient("dz");
-        EsChainQueryWrapper<Map> mapEsChainQueryWrapper = Es.chainQuery(dz, Map.class)
-                .nestedQuery("sourceGoodsInfo", a -> a.term("relatedStatus", 1))
-                .index("yph_product_dy");
-        EsResponse<Map> search = mapEsChainQueryWrapper.search();
-        System.out.println(search);
+//        EsPlusClientFacade dz = ClientContext.getClient("dz");
+//        EsChainQueryWrapper<Map> mapEsChainQueryWrapper = Es.chainQuery(dz, Map.class)
+//                .nestedQuery("sourceGoodsInfo", a -> a.term("relatedStatus", 1))
+//                .index("yph_product_dy");
+//        EsResponse<Map> search = mapEsChainQueryWrapper.search();
+//        System.out.println(search);
     }
  
 
