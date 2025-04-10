@@ -1,6 +1,7 @@
 package com.es.plus.core.statics;
 
 import com.es.plus.adapter.EsPlusClientFacade;
+import com.es.plus.core.ClientContext;
 import com.es.plus.core.wrapper.chain.EsChainLambdaQueryWrapper;
 import com.es.plus.core.wrapper.chain.EsChainLambdaUpdateWrapper;
 import com.es.plus.core.wrapper.chain.EsChainQueryWrapper;
@@ -41,6 +42,16 @@ public class Es {
     public static EsChainQueryWrapper<Map> chainQuery() {
         return new EsChainQueryWrapper<>(Map.class);
     }
+    
+    /**
+     * 链查询
+     *
+     * @param rClass r类
+     * @return {@link EsChainQueryWrapper}<{@link T}>
+     */
+    public static  EsChainQueryWrapper<Map> chainQuery(String esClientName) {
+        return new EsChainQueryWrapper<>(Map.class, ClientContext.getClient(esClientName));
+    }
 
     /**
      * 函数链查询
@@ -61,6 +72,8 @@ public class Es {
     public static <T> EsChainQueryWrapper<T> chainQuery(EsPlusClientFacade esPlusClientFacade, Class<T> rClass) {
         return new EsChainQueryWrapper<>(rClass, esPlusClientFacade);
     }
+    
+  
 
     /**
      * 函数链更新

@@ -590,11 +590,18 @@ public class EsPlusClientFacade   {
         return esPlusClient.getMappings(indexName);
     }
     
-    public String getIndexStat(String indexName) {
-        return esPlusClient.getIndexStat(indexName);
+    public String getIndexStat() {
+        return esPlusIndexClient.getIndexStat();
     }
     
-    public String getIndexHealth(String index) {
-        return esPlusClient.getIndexHealth(index);
+    public String getIndexHealth() {
+        return esPlusIndexClient.getIndexHealth();
+    }
+    public String getNodes() {
+        return esPlusIndexClient.getNodes();
+    }
+    
+    public String getCmd(String cmd) {
+        return esPlusIndexClient.cmdGet(cmd);
     }
 }

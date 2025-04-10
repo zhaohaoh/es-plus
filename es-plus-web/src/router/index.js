@@ -18,6 +18,11 @@ const routes = [
         name: "esAddress",
         component: () => import("../views/main/esAddress.vue"),
       },
+      {
+        path: "/esIndex",
+        name: "esIndex",
+        component: () => import("../views/main/esIndex.vue"),
+      },
     ],
 
     //子路由,其他路由在页面中动态添加

@@ -3,18 +3,19 @@ import api from "./request.js";
 
 const tools = {
   eplQuery(params) {
-    return api.get({ url: "/codeGeneratorConfig/page", data: params });
+    return api.get({ url: "/es/esQuery/epl", data: params });
   },
   sqlQuery(params) {
-    return api.get({ url: "/codeGeneratorConfig/page", data: params });
+    return api.get({ url: "/es/esQuery/sql", data: params });
   },
-
-  esClientSave(params) {
-    return api.post({ url: "/es/client/save", data: params });
+  dslQuery(params) {
+    return api.get({ url: "/es/esQuery/dsl", data: params });
   },
-
-  esClientList(params) {
-    return api.post({ url: "/es/client/list", data: params });
+  deleteByIds(params) {
+    return api.delete({ url: "/es/deleteByIds", data: params });
+  },
+  updateBatch(params) {
+    return api.put({ url: "/es/updateBatch", data: params });
   },
 };
 

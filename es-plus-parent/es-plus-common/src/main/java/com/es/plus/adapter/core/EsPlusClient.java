@@ -183,12 +183,5 @@ public interface EsPlusClient {
      * @return
      */
     EsIndexResponse getMappings(String indexName);
-    /**
-     * 获取索引统计信息
-     */
-    String getIndexStat(String indexName);
-    /**
-     * 获取索引健康信息
-     */
-    String getIndexHealth(String index);
+
 }

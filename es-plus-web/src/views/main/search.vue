@@ -16,7 +16,7 @@
           />
         </label>
         <div class="controls">
-          <el-button size="small" :icon="Search" @click="">Search</el-button>
+          <el-button size="small" :icon="Search" @click="">搜索</el-button>
           <!-- 绑定点击事件 -->
         </div>
       </div>
@@ -37,26 +37,45 @@
         </label>
         <div class="controls">
           <!-- 绑定点击事件 -->
-          <el-button size="small" :icon="Search" @click="">Search</el-button>
+          <el-button size="small" :icon="Search" @click="submitSqlQuery"
+            >搜索</el-button
+          >
         </div>
       </div>
     </div>
     <div class="right-panel">
-      <textarea
+      <Codemirror
+        v-model:value="jsonView"
+        :options="jsonOptions"
+        ref="jsonEd"
+        border
+        class="json-output"
+        height="91%"
+      />
+      <div class="footer-button" justify="end">
+        <span class="dialog-footer">
+          <el-button @click="clickSave" type="danger" size="small"
+            >修改</el-button
+          >
+          <el-button type="primary" @click="clickDelete" size="small"
+            >删除</el-button
+          >
+        </span>
+      </div>
+
+      <!-- <textarea
         id="json-output"
         class="json-output"
         placeholder="输出"
-        v-model="jsonOutput"
-      >
-      ></textarea
-      >
-      <div class="error" id="error-msg">{{ errorMessage }}</div>
+        ref="textarea"
+      ></textarea> -->
+      <!-- <div class="error" id="error-msg">{{ errorMessage }}</div> -->
     </div>
   </div>
 </template>
 
-<script setup>
-import { ref, reactive } from "vue";
+<script lang="ts" setup>
+import { ref, reactive, proxy, getCurrentInstance, refs, onMounted } from "vue";
 
 import Codemirror from "codemirror-editor-vue3";
 // 引入css文件
@@ -69,10 +88,18 @@ import "codemirror/mode/sql/sql.js";
 import "codemirror/addon/hint/show-hint.css";
 import "codemirror/addon/hint/show-hint";
 import "codemirror/addon/hint/sql-hint";
+import "codemirror/mode/javascript/javascript.js";
 import { Search } from "@element-plus/icons-vue";
 
-const sql = ref("SELECT * from ");
+import { ElMessage, ElMessageBox } from "element-plus";
+import esClient from "../../api/esClient";
+
+const { proxy } = getCurrentInstance() as any;
+const sql = ref("SELECT * from fast_test_new_v128 order by id desc limit 10");
 const epl = ref('Es.chainQuery().index("").search(10)');
+const jsonEditor = ref();
+const jsonView = ref("");
+
 const cmOptions = {
   // 语言及语法模式
   mode: "text/x-sql",
@@ -97,6 +124,16 @@ const cmOptions = {
       BPSuvB: ["DocEntry", "LineNum", "UserID", "UserName"],
     },
   },
+};
+
+const jsonOptions = {
+  // 主题
+  theme: "default",
+  // 语言及语法模式
+  mode: "text/javascript",
+  lineNumbers: true,
+  lineWrapping: true, // 自动换行
+  styleActiveLine: true, // 光标行高亮
 };
 
 const epOptions = {
@@ -198,9 +235,6 @@ const onSqlReady = (sqlEditor) => {
 // // 响应式数据
 // const esQuery1 = ref('Es.chainQuery().index("sys_user2ttt_alias").search(10)');
 // const esQuery2 = ref('Es.chainQuery().index("sys_user2ttt_alias").search(10)');
-// const jsonOutput = ref("");
-// const errorMessage = ref("");
-// const history = reactive([]);
 
 // // 提交查询方法
 // const submitQuery = (queryNum) => {
@@ -220,6 +254,92 @@ const onSqlReady = (sqlEditor) => {
 //   }
 // };
 
+// // 提交查询方法
+const submitSqlQuery = () => {
+  sqlQuery(sql.value);
+};
+
+const sqlQuery = async (sql) => {
+  const param = {
+    sql: sql,
+  };
+  let res = await proxy.$api.tools.sqlQuery(param);
+  const formattedJson = JSON.stringify(res, null, 2);
+  jsonView.value = formattedJson;
+};
+
+//点击保存
+const clickSave = () => {
+  if (jsonView.value) {
+    const jsonObject = JSON.parse(jsonView.value);
+    const list = jsonObject.hits.hits;
+    if (list && list.length > 0) {
+      const index = list[0]._index;
+      const ids = list.map((item) => item._id);
+      const source = list.map((item) => item._source);
+      console.log(index + source);
+      ElMessageBox.confirm(
+        "确定编辑" + ids[0] + "...总计" + ids.length + "个数据?",
+        "编辑确认",
+        {
+          confirmButtonText: "确定",
+          cancelButtonText: "取消",
+          dangerouslyUseHTMLString: true,
+        }
+      )
+        .then(() => {
+          saveByIds(index, source);
+        })
+        .catch(() => {});
+    }
+  }
+};
+
+//点击删除
+const clickDelete = () => {
+  if (jsonView.value) {
+    const jsonObject = JSON.parse(jsonView.value);
+    const list = jsonObject.hits.hits;
+    if (list && list.length > 0) {
+      const index = list[0]._index;
+      const ids = list.map((item) => item._id);
+      console.log(index + ids);
+      ElMessageBox.confirm(
+        "确定删除" + ids[0] + "...总计" + ids.length + "个数据?",
+        "删除确认",
+        {
+          confirmButtonText: "确定",
+          cancelButtonText: "取消",
+          dangerouslyUseHTMLString: true,
+        }
+      )
+        .then(() => {
+          console.log("确认删除");
+          deleteByIds(index, ids);
+        })
+        .catch(() => {});
+    }
+  }
+};
+
+const deleteByIds = async (index, ids) => {
+  const param = {
+    ids: ids,
+    index: index,
+  };
+  let res = await proxy.$api.tools.deleteByIds(param);
+  const formattedJson = JSON.stringify(res, null, 2);
+  jsonView.value = formattedJson;
+};
+
+const saveByIds = async (index, source) => {
+  const param = {
+    index: index,
+    datas: source,
+  };
+  let res = await proxy.$api.tools.updateBatch(param);
+};
+
 // // 清空历史记录
 // const clearHistory = () => {
 //   history.splice(0, history.length);
@@ -232,6 +352,13 @@ const onSqlReady = (sqlEditor) => {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+}
+
+.footer-button {
+  margin-top: 10px;
+  display: flex;
+  flex: 1;
+  justify-content: end;
 }
 
 .container {
@@ -258,7 +385,7 @@ const onSqlReady = (sqlEditor) => {
   padding: 20px;
   background: #ffffff;
   border-radius: 0 4px 4px 0;
-  overflow-y: auto;
+  /* overflow-y: auto; */
   height: 750px;
 }
 

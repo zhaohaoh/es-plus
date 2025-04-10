@@ -25,6 +25,13 @@ services.interceptors.request.use((config) => {
       config.headers["Authorization"] = `Bearer ${token}`;
     }
   }
+  const client = localStorage.getItem("currentClient");
+
+  if (client) {
+    console.log("请求头" + client);
+    config.headers["currentEsClient"] = client;
+  }
+
   return config;
 });
 

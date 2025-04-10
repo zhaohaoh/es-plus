@@ -77,8 +77,8 @@ public class EsIndexWrapper implements IEsIndexWrapper {
     }
     
     @Override
-    public String getIndexStat(String indexName) {
-        return esPlusClientFacade.getIndexStat(indexName);
+    public String getIndexStat() {
+        return esPlusClientFacade.getIndexStat();
     }
     
     @Override
@@ -160,7 +160,21 @@ public class EsIndexWrapper implements IEsIndexWrapper {
      * @return
      */
     @Override
-    public String getIndexHealth(String index) {
-       return esPlusClientFacade.getIndexHealth(index);
+    public String getIndexHealth() {
+       return esPlusClientFacade.getIndexHealth();
+    }
+    
+    /**
+     * 获取索引集群节点信息
+     * @return
+     */
+    @Override
+    public String getNodes() {
+        return esPlusClientFacade.getNodes();
+    }
+    
+    @Override
+    public String getCmd(String cmd) {
+        return esPlusClientFacade.getCmd(cmd);
     }
 }

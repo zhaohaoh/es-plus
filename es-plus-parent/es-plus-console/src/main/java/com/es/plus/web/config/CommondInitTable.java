@@ -1,5 +1,10 @@
 package com.es.plus.web.config;
 
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.es.plus.autoconfigure.properties.ClientProperties;
+import com.es.plus.web.mapper.EsClientMapper;
+import com.es.plus.web.pojo.EsClientProperties;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
@@ -8,18 +13,39 @@ import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Component
 public class CommondInitTable {
     
     @Autowired
+    private EsClientMapper esClientMapper;
+    @Autowired
     private JdbcTemplate jdbcTemplate;
-    
+ 
     @PostConstruct
     public void init() throws SQLException, IOException {
         
         //初始化数据库表
         createTables();
+        
+        //初始化客户端
+        createClient();
+    }
+    
+    private void createClient() {
+        List<EsClientProperties> esClientProperties = esClientMapper.selectList(Wrappers.lambdaQuery());
+        Map<String, ClientProperties> map = esClientProperties.stream()
+                .collect(Collectors.toMap(EsClientProperties::getName,c->{
+                    ClientProperties clientProperties = new ClientProperties();
+                    BeanUtils.copyProperties(c, clientProperties);
+                    return clientProperties;
+                }));
+        
+//        map.forEach((k, v) -> {
+//            ClientUtil.initAndPutEsPlusClientFacade(k,v,null);
+//        });
     }
     
     /**
@@ -31,12 +57,13 @@ public class CommondInitTable {
             return;
         }
         
-        jdbcTemplate.execute("CREATE TABLE \"es_client\" (\n" + "  \"id\" INTEGER NOT NULL,\n" + "  \"address\" TEXT,\n"
-                + "  \"schema\" TEXT,\n" + "  \"username\" TEXT,\n" + "  \"password\" TEXT,\n"
-                + "  \"createTime\" DATE,\n" + "  PRIMARY KEY (\"id\")\n" + ");");
+        jdbcTemplate.execute("CREATE TABLE \"es_client\" (\n" + "  \"id\" INTEGER NOT NULL,\n" + "  \"unikey\" TEXT,\n"
+                + "  \"name\" TEXT,\n" + "  \"address\" TEXT,\n" + "  \"schema\" TEXT,\n" + "  \"username\" TEXT,\n"
+                + "  \"password\" TEXT,\n" + "  \"createTime\" DATE,\n" + "  PRIMARY KEY (\"id\")\n" + ");");
         
         
     }
     
     
+   
 }

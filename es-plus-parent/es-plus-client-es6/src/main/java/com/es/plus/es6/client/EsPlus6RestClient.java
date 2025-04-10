@@ -927,43 +927,7 @@ public class EsPlus6RestClient implements EsPlusClient {
         return null;
     }
     
-    @Override
-    public String getIndexStat(String indexName) {
-        
-        Map<String, Object> jsonRequest = new HashMap<>();
-        
-        // "_xpack/sql/translate"
-        Request request = new Request("get", "/_cluster/stats?pretty");
-        request.setJsonEntity(JsonUtils.toJsonStr(jsonRequest));
-        Response response = null;
-        try {
-            response = restHighLevelClient.getLowLevelClient().performRequest(request);
-            String res = EntityUtils.toString(response.getEntity());
-            return res;
-        } catch (IOException e) {
-            log.error("executeSql", e);
-        }
-        return null;
-    }
-    
-    @Override
-    public String getIndexHealth(String indexName) {
-        
-        Map<String, Object> jsonRequest = new HashMap<>();
-        
-        // "_xpack/sql/translate"
-        Request request = new Request("get", "/_cluster/health?pretty");
-        request.setJsonEntity(JsonUtils.toJsonStr(jsonRequest));
-        Response response = null;
-        try {
-            response = restHighLevelClient.getLowLevelClient().performRequest(request);
-            String res = EntityUtils.toString(response.getEntity());
-            return res;
-        } catch (IOException e) {
-            log.error("executeSql", e);
-        }
-        return null;
-    }
+ 
     private <T> EsResponse<T> getEsResponse(Class<T> tClass,
             SearchResponse searchResponse) {
         //获取结果集

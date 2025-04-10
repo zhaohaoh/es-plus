@@ -8,9 +8,17 @@
           :label="item.label"
           :prop="item.prop"
         />
+
         <el-table-column prop="address" label="操作" width="180">
-          <el-button type="success" plain>编辑</el-button>
-          <el-button type="danger" plain>删除</el-button>
+          <template #default="scope">
+            <el-button type="success" plain>编辑</el-button>
+            <el-button
+              type="danger"
+              @click="clickDelete(scope.$index, scope.row)"
+              plain
+              >删除</el-button
+            >
+          </template>
           <!-- </el-col> -->
         </el-table-column>
       </el-table>
@@ -28,7 +36,7 @@
   <!-- 编辑的弹窗 -->
   <el-dialog
     v-model="dialogFormVisible"
-    :title="action == 'add' ? '设置链接' : '设置链接'"
+    title="设置链接"
     :before-close="handleCancel"
     style="max-width: 660px"
   >
@@ -40,6 +48,16 @@
       style="max-width: 660px"
       label-position="top"
     >
+      <el-form-item label="唯一英文标识" prop="name" style="width: 90%">
+        <el-col :span="24">
+          <el-input v-model="esClient.unikey" />
+        </el-col>
+      </el-form-item>
+      <el-form-item label="连接中文名" prop="name" style="width: 90%">
+        <el-col :span="24">
+          <el-input v-model="esClient.name" />
+        </el-col>
+      </el-form-item>
       <el-form-item label="链接地址" prop="address" style="width: 90%">
         <el-col :span="24">
           <el-input v-model="esClient.address" />
@@ -73,10 +91,15 @@
 <script lang="ts" setup>
 import { getCurrentInstance, onMounted, reactive, ref } from "vue";
 import type { FormProps } from "element-plus";
+import { ElMessageBox } from "element-plus";
+import options from "../../store/global";
+
 const labelPosition = ref<FormProps["labelPosition"]>("right");
 
 const esClient = reactive({
   id: null,
+  unikey: "",
+  name: "",
   address: "http://",
   username: "",
   password: "",
@@ -85,9 +108,21 @@ const esClient = reactive({
 
 const tableData = ref([]);
 
-const { proxy } = getCurrentInstance();
+const { proxy } = getCurrentInstance() as any;
 
 const tableHeader = [
+  {
+    prop: "id",
+    label: "id",
+  },
+  {
+    prop: "unikey",
+    label: "唯一英文标识",
+  },
+  {
+    prop: "name",
+    label: "名称",
+  },
   {
     prop: "address",
     label: "集群地址",
@@ -112,7 +147,7 @@ const save = async () => {
     dialogFormVisible.value = false;
     console.log(esClient);
     esClientSave(esClient);
-    elMessage.success();
+    // elMessage.success();
     proxy.$refs.clientForm.resetFields();
   });
 };
@@ -120,20 +155,65 @@ const save = async () => {
 const saveClick = () => {
   dialogFormVisible.value = true;
 };
+
+const clickDelete = async (index, param) => {
+  console.log(param.id);
+  ElMessageBox.confirm("你确定删除吗?", {
+    confirmButtonText: "确定",
+    cancelButtonText: "取消",
+  })
+    .then(() => {
+      esClientDelete(param.id);
+    })
+    .catch(() => {});
+};
+
 onMounted(() => {
   getList();
 });
 
-// 获取消费者分页
+// 获取分页
 const getList = async () => {
-  let res = await proxy.$api.tools.esClientList();
-  console.log("列表对象" + res);
-  tableData.value = res;
+  let res = await proxy.$api.esClient.esClientList();
+  if (res && res.length > 0) {
+    options.value.length = 0;
+
+    res.forEach((element, index) => {
+      options.value[index] = element;
+    });
+    tableData.value = res;
+
+    // const newArray = tableData.value.map((item) => {
+    //   return {
+    //     label: item.name,
+    //     value: item,
+    //     id: item.id,
+    //   };
+    // });
+
+    // options.value.length = 0;
+
+    // console.log("22223" + JSON.stringify(options.value));
+    // newArray.forEach((element, index) => {
+    //   options.value[index] = element;
+    // });
+    // console.log("3" + JSON.stringify(options.value));
+  }
 };
 
-// 获取消费者分页
+// 保存
 const esClientSave = async (data) => {
-  let res = await proxy.$api.tools.esClientSave(data);
+  let res = await proxy.$api.esClient.esClientSave(data);
+  getList();
+};
+
+// 删除
+const esClientDelete = async (data) => {
+  const param = {
+    id: data,
+  };
+  let res = await proxy.$api.esClient.esClientDelete(param);
+  getList();
 };
 
 // 取消

@@ -28,7 +28,10 @@ public class EsIndexScanRegister implements ImportBeanDefinitionRegistrar {
         BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition(IndexScanProccess.class);
         builder.addPropertyValue("basePackage",basePackages);
         builder.addDependsOn("esPlusClientFacade");
-        registry.registerBeanDefinition("indexScanProccess", builder.getBeanDefinition());
+        boolean indexScanProccess = registry.containsBeanDefinition("indexScanProccess");
+        if (!indexScanProccess){
+            registry.registerBeanDefinition("indexScanProccess", builder.getBeanDefinition());
+        }
     }
     
 }

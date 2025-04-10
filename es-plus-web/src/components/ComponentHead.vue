@@ -2,16 +2,19 @@
   <el-row class="row-bg">
     <el-col :span="2" :offset="19">
       <el-select
-        v-model="value"
+        v-model="selectClient"
         class="m-2"
         placeholder="Select"
         style="width: 225px"
+        filterable
+        @change="clickSelect"
       >
         <el-option
           v-for="item in options"
-          :key="item.value"
-          :label="item.label"
-          :value="item.value"
+          :key="item.id"
+          :label="`${item.unikey} (${item.name})`"
+          :value="item.unikey"
+          :valueKey="item.unikey"
         />
       </el-select>
     </el-col>
@@ -19,32 +22,33 @@
 </template>
 
 <script lang="ts" setup>
-import { ref } from "vue";
+import { getCurrentInstance, onMounted, reactive, ref } from "vue";
+import options from "../store/global";
+const { proxy } = getCurrentInstance() as any;
 
-const value = ref("");
+const selectClient = ref();
 
-const options = [
-  {
-    value: "dz_product_index",
-    label: "dz_product_index",
-  },
-  {
-    value: "Option2",
-    label: "Option2",
-  },
-  {
-    value: "Option3",
-    label: "Option3",
-  },
-  {
-    value: "Option4",
-    label: "Option4",
-  },
-  {
-    value: "Option5",
-    label: "Option5",
-  },
-];
+const clickSelect = (item) => {
+  localStorage.setItem("currentClient", item);
+};
+
+onMounted(() => {
+  getList();
+  const client = localStorage.getItem("currentClient");
+  selectClient.value = client;
+});
+
+// 获取es客户端list
+const getList = async () => {
+  let res = await proxy.$api.esClient.esClientList();
+  if (res && res.length > 0) {
+    options.value.length = 0;
+
+    res.forEach((element, index) => {
+      options.value[index] = element;
+    });
+  }
+};
 </script>
 
 <style>

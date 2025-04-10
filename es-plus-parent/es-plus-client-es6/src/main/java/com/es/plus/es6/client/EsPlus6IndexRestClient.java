@@ -11,6 +11,7 @@ import com.es.plus.adapter.properties.GlobalParamHolder;
 import com.es.plus.adapter.util.JsonUtils;
 import com.es.plus.constant.EsConstant;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.http.util.EntityUtils;
 import org.elasticsearch.ElasticsearchStatusException;
 import org.elasticsearch.action.admin.indices.alias.Alias;
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequest;
@@ -25,7 +26,9 @@ import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.support.IndicesOptions;
 import org.elasticsearch.action.support.master.AcknowledgedResponse;
 import org.elasticsearch.client.GetAliasesResponse;
+import org.elasticsearch.client.Request;
 import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.client.Response;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.client.indices.CreateIndexRequest;
 import org.elasticsearch.client.indices.CreateIndexResponse;
@@ -50,9 +53,11 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static com.es.plus.constant.EsConstant.DEFAULT_REINDEX_VERSION_TYPE;
 import static com.es.plus.constant.EsConstant.PROPERTIES;
@@ -223,18 +228,32 @@ public class EsPlus6IndexRestClient implements EsPlusIndexClient {
             EsIndexResponse esIndexResponse = new EsIndexResponse();
             GetIndexResponse getIndexResponse = restHighLevelClient.indices().get(request, RequestOptions.DEFAULT);
             
-            Map<String, String> settingsMap = new HashMap<>();
-            getIndexResponse.getSettings().values().stream().findFirst().ifPresent(s -> {
-                Set<String> names = s.keySet();
-                names.forEach(name -> settingsMap.put(name, s.get(name)));
+            Map<String, String> settingsMap = new LinkedHashMap<>();
+            Map<String, Settings> settings = getIndexResponse.getSettings();
+            
+            settings.forEach((k, v) -> {
+                settingsMap.put(k, v.toString());
             });
             
+            Collection<List<AliasMetaData>> collection = getIndexResponse.getAliases().values();
+            
             String[] indices = getIndexResponse.getIndices();
+            Map<String, Object> mappingMap = new HashMap<>();
+            
             Map<String, MappingMetaData> mappings = getIndexResponse.getMappings();
-            Map<String, Object> sourceAsMap = mappings.values().stream().findFirst().get().getSourceAsMap();
+            mappings.forEach((k,v)->{
+                Map<String, Object> sourceMap = v.getSourceAsMap();
+                mappingMap.put(k,sourceMap);
+            });
             esIndexResponse.setIndices(indices);
-            esIndexResponse.setMappings(sourceAsMap);
+            esIndexResponse.setMappings(mappingMap);
             esIndexResponse.setSettings(settingsMap);
+            if (!CollectionUtils.isEmpty(collection)) {
+                List<String> alias = collection.stream().findFirst().get().stream().map(AliasMetaData::getAlias)
+                        .collect(Collectors.toList());
+                esIndexResponse.setAliases(alias);
+            }
+            
             return esIndexResponse;
         } catch (IOException e) {
             throw new EsException("getIndex IOException", e);
@@ -620,6 +639,79 @@ public class EsPlus6IndexRestClient implements EsPlusIndexClient {
         }
     }
     
+    @Override
+    public String getIndexStat() {
+        
+        Map<String, Object> jsonRequest = new HashMap<>();
+        
+        // "_xpack/sql/translate"
+        Request request = new Request("get", "/_cluster/stats?pretty");
+        request.setJsonEntity(JsonUtils.toJsonStr(jsonRequest));
+        Response response = null;
+        try {
+            response = restHighLevelClient.getLowLevelClient().performRequest(request);
+            String res = EntityUtils.toString(response.getEntity());
+            return res;
+        } catch (IOException e) {
+            log.error("executeSql", e);
+        }
+        return null;
+    }
+    
+    @Override
+    public String getIndexHealth() {
+        
+        Map<String, Object> jsonRequest = new HashMap<>();
+        
+        // "_xpack/sql/translate"
+        Request request = new Request("get", "/_cluster/health?pretty");
+        request.setJsonEntity(JsonUtils.toJsonStr(jsonRequest));
+        Response response = null;
+        try {
+            response = restHighLevelClient.getLowLevelClient().performRequest(request);
+            String res = EntityUtils.toString(response.getEntity());
+            return res;
+        } catch (IOException e) {
+            log.error("executeSql", e);
+        }
+        return null;
+    }
+    
+    @Override
+    public String getNodes() {
+        Map<String, Object> jsonRequest = new HashMap<>();
+        
+        // "_xpack/sql/translate"
+        Request request = new Request("get", "/_nodes");
+        request.setJsonEntity(JsonUtils.toJsonStr(jsonRequest));
+        Response response = null;
+        try {
+            response = restHighLevelClient.getLowLevelClient().performRequest(request);
+            String res = EntityUtils.toString(response.getEntity());
+            return res;
+        } catch (IOException e) {
+            log.error("getNodes(", e);
+        }
+        return null;
+    }
+    
+    @Override
+    public String cmdGet(String cmd) {
+        Map<String, Object> jsonRequest = new HashMap<>();
+        
+        // "_xpack/sql/translate"
+        Request request = new Request("get", cmd);
+        request.setJsonEntity(JsonUtils.toJsonStr(jsonRequest));
+        Response response = null;
+        try {
+            response = restHighLevelClient.getLowLevelClient().performRequest(request);
+            String res = EntityUtils.toString(response.getEntity());
+            return res;
+        } catch (IOException e) {
+            log.error("cmdGet", e);
+        }
+        return null;
+    }
     
     /**
      * 打印信息日志

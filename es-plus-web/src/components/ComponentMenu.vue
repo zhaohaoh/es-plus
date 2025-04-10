@@ -10,7 +10,7 @@
     :default-active="$route.path"
     router
   >
-    <el-menu-item index="1">
+    <el-menu-item index="/esIndex">
       <el-icon><icon-menu /></el-icon>
       <template #title>索引管理</template>
     </el-menu-item>

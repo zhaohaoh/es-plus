@@ -188,4 +188,22 @@ public interface EsPlusIndexClient {
      * 获取索引别名
      */
     String getAliasByIndex(String index);
+    
+    /**
+     * 获取索引统计信息
+     */
+    String getIndexStat();
+    /**
+     * 获取索引健康信息
+     */
+    String getIndexHealth();
+    
+    /**
+     *  获取集群节点信息
+     */
+    String getNodes();
+    /**
+     *  执行指定命令
+     */
+    String cmdGet(String cmd);
 }

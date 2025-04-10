@@ -75,7 +75,7 @@ public interface IEsIndexWrapper  {
      * @param indexName 索引名称
      * @return {@link GetIndexResponse}
      */
-    String getIndexStat(String indexName);
+    String getIndexStat();
     
     /**
      *获取索引映射
@@ -177,5 +177,9 @@ public interface IEsIndexWrapper  {
      * @param index
      * @return
      */
-    String getIndexHealth(String index);
+    String getIndexHealth();
+    
+    String getNodes();
+    
+    String getCmd(String cmd);
 }
