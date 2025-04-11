@@ -23,6 +23,11 @@ const routes = [
         name: "esIndex",
         component: () => import("../views/main/esIndex.vue"),
       },
+      {
+        path: "/esTable",
+        name: "esTable",
+        component: () => import("../views/main/esTable.vue"),
+      },
     ],
 
     //子路由,其他路由在页面中动态添加

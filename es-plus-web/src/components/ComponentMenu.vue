@@ -18,7 +18,7 @@
       <el-icon><icon-menu /></el-icon>
       <template #title>基础搜索</template>
     </el-menu-item>
-    <el-menu-item index="3">
+    <el-menu-item index="/esTable">
       <el-icon><icon-menu /></el-icon>
       <template #title>高级搜索</template>
     </el-menu-item>

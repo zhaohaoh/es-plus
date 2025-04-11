@@ -1,5 +1,6 @@
 <template>
   <div class="container">
+    <el-aside width="200px">Aside</el-aside>
     <div class="left-panel">
       <div class="esQuery-container">
         <label class="esQuery-label">
