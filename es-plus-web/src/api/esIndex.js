@@ -1,0 +1,27 @@
+// 用户模块的接口
+import api from "./request.js";
+
+const esIndex = {
+  indexList(params) {
+    return api.get({ url: "/es/index/list", data: params });
+  },
+  getIndex(params) {
+    return api.get({ url: "/es/index/getIndex", data: params });
+  },
+
+  getIndexStat(params) {
+    return api.post({ url: "/es/index/getIndexStat", data: params });
+  },
+
+  getIndexHealth(params) {
+    return api.post({ url: "/es/index/getIndexHealth", data: params });
+  },
+  getIndices(params) {
+    return api.get({ url: "/es/index/getIndices", data: params });
+  },
+  deleteIndex(params) {
+    return api.deleteParam({ url: "/es/index/deleteIndex", data: params });
+  },
+};
+
+export default esIndex;

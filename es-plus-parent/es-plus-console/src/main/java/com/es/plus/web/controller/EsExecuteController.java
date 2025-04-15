@@ -7,12 +7,14 @@ import com.es.plus.core.ClientContext;
 import com.es.plus.core.statics.Es;
 import com.es.plus.web.compile.core.CompilationResult;
 import com.es.plus.web.compile.core.DynamicCodeCompiler;
+import com.es.plus.web.pojo.EsPageInfo;
 import com.es.plus.web.pojo.EsRequstInfo;
 import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.action.search.SearchResponse;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -39,7 +41,7 @@ public class EsExecuteController {
             epl = epl.substring(0, epl.length() - 1);
         }
         String s = String.format(function, epl);
-        s = StringUtils.replace(s, "chainQuery()", "chainQuery(" + currentEsClient + ")");
+        s = StringUtils.replace(s, "chainQuery()", "chainQuery(\"" + currentEsClient + "\")");
         
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
         
@@ -92,6 +94,19 @@ public class EsExecuteController {
     @GetMapping("esQuery/sql")
     public String esQuerySql(String sql, @RequestHeader("currentEsClient") String currentEsClient) {
         EsResponse<Map> esResponse = Es.chainQuery(currentEsClient).executeSQL(sql);
+        SearchResponse sourceResponse = esResponse.getSourceResponse();
+        String result = sourceResponse.toString();
+        return result;
+    }
+    
+    
+    /**
+     * sql语句
+     *
+     */
+    @PostMapping("esQuery/sqlPage")
+    public String esQuerySqlPage(@RequestBody EsPageInfo esPageInfo, @RequestHeader("currentEsClient") String currentEsClient) {
+        EsResponse<Map> esResponse = Es.chainQuery(currentEsClient).executeSQL(esPageInfo.getSql());
         SearchResponse sourceResponse = esResponse.getSourceResponse();
         String result = sourceResponse.toString();
         return result;

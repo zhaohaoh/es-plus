@@ -4,15 +4,19 @@ import com.es.plus.adapter.EsPlusClientFacade;
 import com.es.plus.adapter.params.EsIndexResponse;
 import com.es.plus.core.ClientContext;
 import com.es.plus.core.statics.Es;
+import com.es.plus.web.pojo.EsIndexResponseVO;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/es/index")
@@ -24,10 +28,30 @@ public class EsIndexController {
      * @return
      */
     @GetMapping("list")
-    public List<String> list(@RequestHeader("currentEsClient") String esClientName,String keyword) {
+    public EsIndexResponseVO list(@RequestHeader("currentEsClient") String esClientName,String keyword) {
         EsPlusClientFacade client = ClientContext.getClient(esClientName);
         EsIndexResponse index = Es.chainIndex(client).getIndex("*" + keyword + "*");
-        return Arrays.asList(index.getIndices());
+        EsIndexResponseVO esIndexResponseVO = new EsIndexResponseVO();
+        BeanUtils.copyProperties(index,esIndexResponseVO);
+        Map<String, Object> mappings = index.getMappings();
+      
+        Map<String, List<String>> flatMappings = new HashMap<>();
+        mappings.forEach((k,v)->{
+            ArrayList<String> arrayList = new ArrayList<>();
+            Map map = (Map) v;
+            Map properties = (Map) map.get("properties");
+            properties.forEach((key,value)->{
+                arrayList.add((String)key);
+                Map valueMap = (Map) value;
+                Object object = valueMap.get("fields");
+                if (object!=null){
+                    arrayList.add(key+".keyword");
+                }
+            });
+            flatMappings.put(k,arrayList);
+        });
+        esIndexResponseVO.setFlatMappings(flatMappings);
+        return esIndexResponseVO;
     }
     
     

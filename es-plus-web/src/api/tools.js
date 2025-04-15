@@ -8,6 +8,9 @@ const tools = {
   sqlQuery(params) {
     return api.get({ url: "/es/esQuery/sql", data: params });
   },
+  sqlQueryPage(params) {
+    return api.get({ url: "/es/esQuery/sql", data: params });
+  },
   dslQuery(params) {
     return api.get({ url: "/es/esQuery/dsl", data: params });
   },
