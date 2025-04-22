@@ -2,6 +2,8 @@ package com.es.plus.web.config;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.es.plus.autoconfigure.properties.ClientProperties;
+import com.es.plus.autoconfigure.util.ClientUtil;
+import com.es.plus.starter.auto.EsClientConfiguration;
 import com.es.plus.web.mapper.EsClientMapper;
 import com.es.plus.web.pojo.EsClientProperties;
 import org.springframework.beans.BeanUtils;
@@ -23,6 +25,8 @@ public class CommondInitTable {
     private EsClientMapper esClientMapper;
     @Autowired
     private JdbcTemplate jdbcTemplate;
+    @Autowired
+    private EsClientConfiguration esClientConfiguration;
  
     @PostConstruct
     public void init() throws SQLException, IOException {
@@ -37,15 +41,15 @@ public class CommondInitTable {
     private void createClient() {
         List<EsClientProperties> esClientProperties = esClientMapper.selectList(Wrappers.lambdaQuery());
         Map<String, ClientProperties> map = esClientProperties.stream()
-                .collect(Collectors.toMap(EsClientProperties::getName,c->{
+                .collect(Collectors.toMap(EsClientProperties::getUnikey,c->{
                     ClientProperties clientProperties = new ClientProperties();
                     BeanUtils.copyProperties(c, clientProperties);
                     return clientProperties;
                 }));
         
-//        map.forEach((k, v) -> {
-//            ClientUtil.initAndPutEsPlusClientFacade(k,v,null);
-//        });
+        map.forEach((k, v) -> {
+            ClientUtil.initAndPutEsPlusClientFacade(k,v,null);
+        });
     }
     
     /**

@@ -2,6 +2,7 @@ package com.es.plus.web.controller;
 
 import com.es.plus.adapter.EsPlusClientFacade;
 import com.es.plus.adapter.params.EsIndexResponse;
+import com.es.plus.adapter.util.JsonUtils;
 import com.es.plus.core.ClientContext;
 import com.es.plus.core.statics.Es;
 import com.es.plus.web.pojo.EsIndexResponseVO;
@@ -9,6 +10,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -106,6 +108,43 @@ public class EsIndexController {
         String cmd = "/_cat/indices/" + string + "?format=json&v";
         return Es.chainIndex(client).getCmd(cmd);
     }
+    
+    /**
+     *  putMapping
+     */
+    @PostMapping("putMapping")
+    public void putMapping(@RequestHeader("currentEsClient") String esClientName,String indexName,String mappings) {
+        if (StringUtils.isBlank(indexName)){
+            throw new RuntimeException("索引不能为空");
+        }
+        if (StringUtils.isBlank(mappings)){
+            throw new RuntimeException("mappings不能为空");
+        }
+        Map<String, Object> map = JsonUtils.toMap(mappings);
+        EsPlusClientFacade client = ClientContext.getClient(esClientName);
+        Es.chainIndex(client).index(indexName).putMapping(map);
+    }
+    
+    /**
+     *  getMapping
+     */
+    @GetMapping("getMapping")
+    public String getMapping(@RequestHeader("currentEsClient") String esClientName,String indexName) {
+        if (StringUtils.isBlank(indexName)){
+            throw new RuntimeException("索引不能为空");
+        }
+      
+     
+        EsPlusClientFacade client = ClientContext.getClient(esClientName);
+        EsIndexResponse mappings = Es.chainIndex(client).getIndex(indexName);
+        Map<String, Object> mapping = mappings.getMappings();
+        Object object = mapping.get(indexName);
+        if (object==null){
+            return "";
+        }
+        return JsonUtils.toJsonStr(object);
+    }
+    
     
     /**
      *  删除索引

@@ -78,6 +78,13 @@
 import { ref, reactive, proxy, getCurrentInstance, refs, onMounted } from "vue";
 
 import Codemirror from "codemirror-editor-vue3";
+// 主题样式（我直接用了纯白色的，看着比较舒服）
+import "codemirror/theme/rubyblue.css";
+// 括号显示匹配
+import "codemirror/addon/edit/matchbrackets";
+import "codemirror/addon/selection/active-line";
+// 括号、引号编辑和删除时成对出现
+import "codemirror/addon/edit/closebrackets";
 // 引入css文件
 import "codemirror/lib/codemirror.css";
 // 引入主题 可以从 codemirror/theme/ 下引入多个
@@ -99,6 +106,18 @@ const sql = ref("SELECT * from fast_test_new_v128 order by id desc limit 10");
 const epl = ref('Es.chainQuery().index("").search(10)');
 const jsonEditor = ref();
 const jsonView = ref("");
+
+const jsonOptions = {
+  // 主题
+  theme: "default",
+  // 语言及语法模式
+  mode: "application/json",
+  lineNumbers: true,
+  matchBrackets: true, //括号匹配
+  lineWrapping: true, // 折叠
+  styleActiveLine: true, // 光标行高亮
+  lint: true, // 打开json校验
+};
 
 const cmOptions = {
   // 语言及语法模式
@@ -124,16 +143,6 @@ const cmOptions = {
       BPSuvB: ["DocEntry", "LineNum", "UserID", "UserName"],
     },
   },
-};
-
-const jsonOptions = {
-  // 主题
-  theme: "default",
-  // 语言及语法模式
-  mode: "text/javascript",
-  lineNumbers: true,
-  lineWrapping: true, // 自动换行
-  styleActiveLine: true, // 光标行高亮
 };
 
 const epOptions = {

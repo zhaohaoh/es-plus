@@ -1,8 +1,8 @@
 <template>
   <div class="searchForm" style="max-height: 200px; margin-left: -15px">
     <el-row
-      v-for="item in searchItems"
-      :key="item.searchKeyword"
+      v-for="(item, index) in searchItems"
+      :key="index"
       style="width: 100%; margin-bottom: 5px"
       class="custom-margin"
     >
@@ -14,7 +14,7 @@
         </el-select>
       </el-col>
       <el-col :span="3">
-        <el-select filterable v-model="item.field" placeholder="请选择">
+        <el-select filterable v-model="item.field" placeholder="请选择字段">
           <el-option
             v-for="field in currentMapping"
             :key="field"
@@ -53,14 +53,21 @@
     >
       <el-col :span="1"></el-col>
       <el-col :span="3">
-        <el-select placeholder="请选择">
-          <el-option label="must" value="must" />
-          <el-option label="should" value="should" />
-          <el-option label="mustNot" value="mustNot" />
+        <el-select
+          filterable
+          v-model="sortParam.sortName"
+          placeholder="请选择字段"
+        >
+          <el-option
+            v-for="field in currentMapping"
+            :key="field"
+            :label="field"
+            :value="field"
+          />
         </el-select>
       </el-col>
       <el-col :span="2">
-        <el-select placeholder="请选择">
+        <el-select v-model="sortParam.sort" placeholder="请选择">
           <el-option label="DESC" value="DESC" />
           <el-option label="ASC" value="ASC" />
         </el-select>
@@ -123,11 +130,6 @@ import type { FormProps } from "element-plus";
 import { ElMessageBox } from "element-plus";
 import options from "../../store/global";
 import { ElMessage } from "element-plus";
-const form = ref({
-  disabled: true,
-  mustType: "sourceProductId",
-  terms: [{ value: "" }],
-});
 
 const searchItems = ref([
   {
@@ -135,8 +137,15 @@ const searchItems = ref([
     field: "",
     searchType: "terms",
     searchKeyword: "",
+    sortName: "id",
+    sort: "DESC",
   },
 ]);
+
+const sortParam = ref({
+  sortName: "id",
+  sort: "DESC",
+});
 
 const addTerm = () => {
   searchItems.value.push({
@@ -161,10 +170,6 @@ const indexData = ref([]);
 
 const { proxy } = getCurrentInstance() as any;
 
-const onSearch = () => {
-  getIndices(keyword.value);
-};
-
 const selectIndex = ref();
 
 const clickIndex = (index) => {
@@ -184,7 +189,7 @@ const getIndices = async (keyword) => {
   indexData.value = res.indices;
 };
 
-const tableHeader = [];
+let tableHeader = [];
 const dsl = ref("Es.chainQuery()");
 
 const clickDelete = async (index, param) => {
@@ -215,7 +220,13 @@ const submitQuery = () => {
 // 获取分页
 const getList = async () => {
   let queryDsl = dsl.value + '.index("' + selectIndex.value + '")';
-
+  queryDsl =
+    queryDsl +
+    '.sortBy("' +
+    sortParam.value.sort +
+    '","' +
+    sortParam.value.sortName +
+    '")';
   searchItems.value.forEach((i) => {
     if (i && i.searchType && i.field && i.searchKeyword) {
       queryDsl +=
@@ -264,12 +275,16 @@ const eplQuery = async (epl) => {
       keys.unshift(id);
     }
 
+    tableHeader.length = 0;
+
     keys.forEach((k) => {
       tableHeader.push({
         prop: k,
         label: k,
       });
     });
+    console.log("表头" + keys);
+    console.log("表头:::" + JSON.stringify(tableHeader));
   }
 
   tableData.value = source;
@@ -324,9 +339,6 @@ const esClientDelete = async (data) => {
   margin-left: 10px;
 }
 
-.el-card {
-  /* margin-bottom: 20px; */
-}
 .el-form-item__content {
   display: flex;
   /* gap: 10px; */

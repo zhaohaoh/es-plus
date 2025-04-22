@@ -19,6 +19,12 @@ const esIndex = {
   getIndices(params) {
     return api.get({ url: "/es/index/getIndices", data: params });
   },
+  getMapping(params) {
+    return api.get({ url: "/es/index/getMapping", data: params });
+  },
+  putMapping(params) {
+    return api.postParam({ url: "/es/index/putMapping", data: params });
+  },
   deleteIndex(params) {
     return api.deleteParam({ url: "/es/index/deleteIndex", data: params });
   },

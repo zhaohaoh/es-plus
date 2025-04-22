@@ -93,6 +93,15 @@ public class EsExecuteController {
      */
     @GetMapping("esQuery/sql")
     public String esQuerySql(String sql, @RequestHeader("currentEsClient") String currentEsClient) {
+        String limit = StringUtils.substringAfterLast(sql, "limit");
+        if (StringUtils.isBlank(limit)){
+            throw new RuntimeException("分页数量不能为空");
+        }
+        String[] split = limit.split(",");
+        String pageSize = split[split.length - 1];
+        if (Integer.parseInt(pageSize.trim()) > 10000) {
+            throw new RuntimeException("分页数量不能超过10000");
+        }
         EsResponse<Map> esResponse = Es.chainQuery(currentEsClient).executeSQL(sql);
         SearchResponse sourceResponse = esResponse.getSourceResponse();
         String result = sourceResponse.toString();
@@ -106,6 +115,9 @@ public class EsExecuteController {
      */
     @PostMapping("esQuery/sqlPage")
     public String esQuerySqlPage(@RequestBody EsPageInfo esPageInfo, @RequestHeader("currentEsClient") String currentEsClient) {
+        if (esPageInfo.getSize() > 1000) {
+            throw new RuntimeException("分页数量不能超过1000");
+        }
         EsResponse<Map> esResponse = Es.chainQuery(currentEsClient).executeSQL(esPageInfo.getSql());
         SearchResponse sourceResponse = esResponse.getSourceResponse();
         String result = sourceResponse.toString();
@@ -128,7 +140,7 @@ public class EsExecuteController {
     }
     
     /**
-     * 根据id删除es数据
+     * 批量更新数据
      */
     @PutMapping("/updateBatch")
     public void updateBatch(@RequestBody EsRequstInfo esRequstInfo, @RequestHeader("currentEsClient") String currentEsClient) {

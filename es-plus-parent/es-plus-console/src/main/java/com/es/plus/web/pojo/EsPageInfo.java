@@ -19,5 +19,5 @@ public class EsPageInfo {
     /**
      * 数
      */
-    private String size;
+    private Integer size;
 }

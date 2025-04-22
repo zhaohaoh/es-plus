@@ -55,7 +55,7 @@ public class EsClientController {
         esClientMapper.insert(esClientProperties);
         ClientProperties clientProperties = new ClientProperties();
         BeanUtils.copyProperties(esClientProperties, clientProperties);
-        ClientUtil.initAndPutEsPlusClientFacade(esClientProperties.getName(), clientProperties, null);
+        ClientUtil.initAndPutEsPlusClientFacade(esClientProperties.getUnikey(), clientProperties, null);
     }
     
     //    @PostMapping("update")

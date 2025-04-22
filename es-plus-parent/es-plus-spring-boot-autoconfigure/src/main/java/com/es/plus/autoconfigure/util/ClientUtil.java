@@ -32,7 +32,11 @@ public class ClientUtil {
      */
     public  static EsPlusClientFacade initAndPutEsPlusClientFacade(String key,ClientProperties clientProperties,
             List<EsInterceptor> esInterceptors){
- 
+        String address = clientProperties.getAddress();
+        address = StringUtils.replace(address,"http://","");
+        address = StringUtils.replace(address,"https://","");
+        clientProperties.setAddress(address);
+        
         RestHighLevelClient restHighLevelClient = ClientUtil.getRestHighLevelClient(clientProperties);
         EsPlusClientFacade esPlusClientFacade = ClientContext.buildEsPlusClientFacade(clientProperties.getAddress(),
                 restHighLevelClient,

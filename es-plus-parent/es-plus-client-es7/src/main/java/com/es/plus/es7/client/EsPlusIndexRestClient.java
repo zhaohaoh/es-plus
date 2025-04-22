@@ -144,7 +144,9 @@ public class EsPlusIndexRestClient implements EsPlusIndexClient {
             PutMappingRequest putMappingRequest = new PutMappingRequest(index);
             putMappingRequest.source(mappingProperties);
             printInfoLog("putMapping index={} info={}", index, JsonUtils.toJsonStr(mappingProperties));
-            restHighLevelClient.indices().putMapping(putMappingRequest, RequestOptions.DEFAULT);
+            AcknowledgedResponse acknowledgedResponse = restHighLevelClient.indices()
+                    .putMapping(putMappingRequest, RequestOptions.DEFAULT);
+            System.out.println(acknowledgedResponse);
         } catch (IOException e) {
             throw new EsException("mappingRequest error", e);
         }
@@ -241,7 +243,7 @@ public class EsPlusIndexRestClient implements EsPlusIndexClient {
             Collection<List<AliasMetadata>> collection = getIndexResponse.getAliases().values();
         
             String[] indices = getIndexResponse.getIndices();
-            Map<String, Object> mappingMap = new HashMap<>();
+            Map<String, Object> mappingMap = new LinkedHashMap<>();
             
             Map<String, MappingMetadata> mappings = getIndexResponse.getMappings();
             mappings.forEach((k,v)->{
