@@ -10,7 +10,7 @@
     </modules>
     <groupId>io.github.zhaohaoh</groupId>
     <artifactId>es-plus</artifactId>
-    <version>${rversion}</version>
+    <version>${revision}</version>
 
     <properties>
         <maven.compiler.source>8</maven.compiler.source>
@@ -19,7 +19,7 @@
         <!-- 打包跳过单元测试 -->
         <skipTests>true</skipTests>
 <!--   SNAPSHOT  -->
-        <rversion>0.4.1</rversion>
+        <revision>0.4.1</revision>
         <elasticsearch.version>7.8.0</elasticsearch.version>
     </properties>
     <licenses>

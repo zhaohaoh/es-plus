@@ -6,18 +6,18 @@
     <parent>
         <artifactId>es-plus</artifactId>
         <groupId>io.github.zhaohaoh</groupId>
-        <version>${rversion}</version>
+        <version>${revision}</version>
     </parent>
     <groupId>io.github.zhaohaoh</groupId>
     <artifactId>es-plus-pom</artifactId>
-    <version>${rversion}</version>
+    <version>${revision}</version>
     <packaging>pom</packaging>
     <properties>
         <maven.compiler.source>8</maven.compiler.source>
         <maven.compiler.target>8</maven.compiler.target>
         <lang3.version>3.9</lang3.version>
         <spring-boot.version>2.6.3</spring-boot.version>
-        <rversion>0.4.0</rversion>
+        <revision>0.4.1</revision>
         <elasticsearch.version>7.8.0</elasticsearch.version>
         <reflections.version>0.10.2</reflections.version>
     </properties>

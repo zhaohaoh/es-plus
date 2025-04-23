@@ -5,10 +5,10 @@
     <parent>
         <artifactId>es-plus-parent</artifactId>
         <groupId>io.github.zhaohaoh</groupId>
-        <version>${rversion}</version>
+        <version>${revision}</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-    <version>${rversion}</version>
+    <version>${revision}</version>
     <artifactId>es-plus-spring-boot-starter</artifactId>
 
     <properties>
