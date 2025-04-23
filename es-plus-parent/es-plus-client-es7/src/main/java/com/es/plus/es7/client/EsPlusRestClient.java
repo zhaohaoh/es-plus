@@ -103,6 +103,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import static com.es.plus.constant.EsConstant.PAINLESS;
 
@@ -915,6 +916,16 @@ public class EsPlusRestClient implements EsPlusClient {
         if (StringUtils.isBlank(tableName)) {
             throw new EsException("sql语句中未找到表名");
         }
+        Map<String, Object> map = JsonUtils.toMap(dsl);
+        List docvalueList = (List) map.remove("docvalue_fields");
+        if (docvalueList!=null && !docvalueList.isEmpty()){
+            Map source = (Map) map.get("_source");
+            List includes =  source.get("includes") !=null ?(List)source.get("includes") :new ArrayList();
+            List fields = (List) docvalueList.stream().map(a -> ((Map) a).get("field")).collect(Collectors.toList());
+            includes.addAll(fields);
+        }
+        
+        dsl = JsonUtils.toJsonStr(map);
         String rs = executeDSL(dsl, tableName);
         XContent xContent = XContentFactory.xContent(XContentType.JSON);
         XContentParser parser = null;

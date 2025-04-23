@@ -46,7 +46,7 @@
       style="
         display: flex;
         justify-content: end;
-        margin-top: -20px;
+        margin-top: -0px;
         margin-right: 40px;
         flex-direction: row;
       "
@@ -98,7 +98,7 @@
         </el-scrollbar>
       </el-aside>
 
-      <div class="right-container">
+      <div class="right-container" v-show="tableData.length > 0">
         <el-row :gutter="10">
           <el-table
             :data="tableData"
@@ -153,6 +153,8 @@ const addTerm = () => {
     field: "",
     searchType: "terms",
     searchKeyword: "",
+    sortName: "",
+    sort: "",
   });
 };
 
@@ -175,7 +177,7 @@ const selectIndex = ref();
 const clickIndex = (index) => {
   selectIndex.value = index;
   currentMapping.value = mappings.value[selectIndex.value];
-  console.log("dangsdqian" + currentMapping.value);
+  submitQuery();
 };
 
 const getIndices = async (keyword) => {
@@ -192,18 +194,6 @@ const getIndices = async (keyword) => {
 let tableHeader = [];
 const dsl = ref("Es.chainQuery()");
 
-const clickDelete = async (index, param) => {
-  console.log(param.id);
-  ElMessageBox.confirm("你确定删除吗?", {
-    confirmButtonText: "确定",
-    cancelButtonText: "取消",
-  })
-    .then(() => {
-      esClientDelete(param.id);
-    })
-    .catch(() => {});
-};
-
 onMounted(() => {
   // getList();
   getIndices("");
@@ -219,7 +209,23 @@ const submitQuery = () => {
 
 // 获取分页
 const getList = async () => {
+  // 构造查询语句
   let queryDsl = dsl.value + '.index("' + selectIndex.value + '")';
+
+  searchItems.value.forEach((i) => {
+    if (i && i.searchType && i.field && i.searchKeyword) {
+      const mustType = i.mustType;
+      queryDsl += "." + mustType + "()";
+      const isStr = checkType(i.searchKeyword);
+      let searchKeyword = i.searchKeyword;
+      if (isStr) {
+        searchKeyword = '"' + i.searchKeyword + '"';
+      }
+      queryDsl +=
+        "." + i.searchType + '("' + i.field + '",' + searchKeyword + ")";
+    }
+  });
+
   queryDsl =
     queryDsl +
     '.sortBy("' +
@@ -227,16 +233,14 @@ const getList = async () => {
     '","' +
     sortParam.value.sortName +
     '")';
-  searchItems.value.forEach((i) => {
-    if (i && i.searchType && i.field && i.searchKeyword) {
-      queryDsl +=
-        "." + i.searchType + '("' + i.field + '",' + i.searchKeyword + ")";
-    }
-  });
   queryDsl += ".search(10)";
   console.log(queryDsl);
   eplQuery(queryDsl);
 };
+
+function checkType(value) {
+  return isNaN(value);
+}
 
 const eplQuery = async (epl) => {
   const param = {
@@ -351,5 +355,18 @@ const esClientDelete = async (data) => {
 .custom-margin {
   margin-top: 1px; /* 上边距 */
   margin-bottom: 1px; /* 下边距 */
+}
+.el-input__inner {
+  padding: 12px 15px;
+}
+.el-input {
+  width: 100%;
+}
+.el-input__inner {
+  width: 100%;
+}
+
+.el-input__inner {
+  position: relative;
 }
 </style>

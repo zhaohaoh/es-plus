@@ -105,6 +105,22 @@ public class EsExecuteController {
         EsResponse<Map> esResponse = Es.chainQuery(currentEsClient).executeSQL(sql);
         SearchResponse sourceResponse = esResponse.getSourceResponse();
         String result = sourceResponse.toString();
+//        Map<String, Object> map = JsonUtils.toMap(result);
+//        Map hits = (Map) map.get("hits");
+//        List list  = (List) hits.get("hits");
+//        if (list!=null && list.size()>0){
+//            for (Object object : list) {
+//                if (object!=null){
+//                    Map hit = (Map) object;
+//                    Map docValueMap = (Map) hit.remove("fields");
+//                    if (docValueMap!=null) {
+//                        Map data = (Map) hit.get("_source");
+//                        data.putAll(docValueMap);
+//                    }
+//                }
+//            }
+//        }
+        
         return result;
     }
     

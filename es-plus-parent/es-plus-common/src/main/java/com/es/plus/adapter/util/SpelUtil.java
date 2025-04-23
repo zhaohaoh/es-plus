@@ -8,7 +8,7 @@ import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.context.expression.BeanFactoryResolver;
-import org.springframework.core.LocalVariableTableParameterNameDiscoverer;
+import org.springframework.core.StandardReflectionParameterNameDiscoverer;
 import org.springframework.expression.Expression;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
@@ -30,7 +30,7 @@ public class SpelUtil implements BeanFactoryAware {
     private static final Pattern COMPILED = Pattern.compile("#\\{([^}]+)}");
     private static final Logger logger = LoggerFactory.getLogger(SpelUtil.class);
     
-    private static final LocalVariableTableParameterNameDiscoverer u = new LocalVariableTableParameterNameDiscoverer();
+    private static final StandardReflectionParameterNameDiscoverer u = new StandardReflectionParameterNameDiscoverer();
     
     //使用SPEL进行key的解析
     private static final ExpressionParser parser = new SpelExpressionParser();
