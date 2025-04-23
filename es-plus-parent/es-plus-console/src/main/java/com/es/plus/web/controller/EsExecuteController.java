@@ -20,7 +20,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import sun.reflect.misc.ReflectUtil;
 
 import java.lang.reflect.Method;
 import java.util.List;
@@ -53,7 +52,7 @@ public class EsExecuteController {
         
         Class<?> aClass = customClassLoader.loadClass("com.es.plus.web.controller.EsQuery");
         
-        Object object = ReflectUtil.newInstance(aClass);
+        Object object = aClass.newInstance();
         Method sleep = aClass.getDeclaredMethod("query");
         sleep.setAccessible(true);
         Object invoke = (EsResponse) sleep.invoke(object);
