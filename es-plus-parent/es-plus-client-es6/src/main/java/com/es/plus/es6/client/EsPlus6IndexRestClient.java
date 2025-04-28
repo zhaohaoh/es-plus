@@ -413,7 +413,7 @@ public class EsPlus6IndexRestClient implements EsPlusIndexClient {
         boolean exists = indexExists(reindexName);
         if (!exists) {
             EsIndexResponse indexResponse = getIndex(oldIndexName);
-            Map<String, Object> mappings = indexResponse.getMappings();
+            Map<String, Object> mappings = indexResponse.getMappings(oldIndexName);
             //更换新的配置属性
             Map<String, Object> properties = (Map<String, Object>) mappings.get(PROPERTIES);
             properties.putAll(changeMapping);

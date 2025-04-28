@@ -198,6 +198,8 @@ public class EsPlusClientFacade   {
     public EsIndexResponse getIndex(String indexName) {
         return esPlusIndexClient.getIndex(indexName);
     }
+    
+  
 
 
     /**
