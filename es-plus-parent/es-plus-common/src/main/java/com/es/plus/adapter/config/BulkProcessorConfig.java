@@ -3,6 +3,7 @@ package com.es.plus.adapter.config;
 import com.es.plus.adapter.params.BulkProcessorParam;
 import com.es.plus.adapter.util.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.DocWriteRequest;
 import org.elasticsearch.action.bulk.BackoffPolicy;
@@ -14,12 +15,16 @@ import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.unit.ByteSizeValue;
 import org.elasticsearch.common.unit.TimeValue;
+import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
+import java.util.stream.Collectors;
 
 /**
  * @Author: hzh
@@ -102,9 +107,28 @@ public class BulkProcessorConfig {
                     public void afterBulk(long executionId, BulkRequest request, BulkResponse response) {
                         // 写入之后执行
                         BulkItemResponse[] items = response.getItems();
+                        
+                        List<BulkItemResponse.Failure> failureList = Arrays.stream(items).map(BulkItemResponse::getFailure)
+                                .filter(Objects::nonNull)
+                                .collect(Collectors.toList());
+                        
+                        List<BulkItemResponse> successList = Arrays.stream(items)
+                                .filter(a -> a.getFailure() == null && StringUtils.isBlank(a.getFailureMessage()))
+                                .collect(Collectors.toList());
                         long ingestTookInMillis = response.getTook().getMillis();
-                        log.info("ES BulkProcessor Success executionId:{} timeCost:{} response:{} ",executionId,ingestTookInMillis
-                                , JsonUtils.toJsonStr(items));
+                        if (CollectionUtils.isEmpty(failureList)){
+                            log.info("ES BulkProcessor Success executionId:{} timeCost:{} response:{} "
+                                    ,executionId,ingestTookInMillis
+                                    , JsonUtils.toJsonStr(successList));
+                        }else {
+                            log.info("ES BulkProcessor Success executionId:{} timeCost:{} response:{} "
+                                    ,executionId,ingestTookInMillis
+                                    , JsonUtils.toJsonStr(successList));
+                            
+                            log.error("ES BulkProcessor Fail executionId:{} timeCost:{} response:{}"
+                                    ,executionId,ingestTookInMillis
+                                    , failureList.toString());
+                        }
                     }
                     
                     @Override
