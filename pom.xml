@@ -74,6 +74,10 @@
                     <encoding>utf-8</encoding>
                     <source>8</source>
                     <target>8</target>
+                    <compilerArgs>
+                        <!-- 增加此参数，否则动态代理获取不到方法中的参数 -->
+                        <arg>-parameters</arg>
+                    </compilerArgs>
                 </configuration>
             </plugin>
             <plugin>
