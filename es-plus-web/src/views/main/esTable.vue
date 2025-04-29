@@ -66,6 +66,7 @@
           />
         </el-select>
       </el-col>
+
       <el-col :span="2">
         <el-select v-model="sortParam.sort" placeholder="请选择">
           <el-option label="DESC" value="DESC" />
@@ -98,7 +99,11 @@
         </el-scrollbar>
       </el-aside>
 
-      <div class="right-container" v-show="tableData.length > 0">
+      <div
+        class="right-container"
+        v-show="tableData.length > 0"
+        style="margin-top: -20px"
+      >
         <el-row :gutter="10">
           <el-table
             :data="tableData"
@@ -122,6 +127,14 @@
       </div>
     </div>
   </div>
+  <div class="searchInput">
+    <el-input
+      v-model="indexKeyword"
+      placeholder="请输入索引名称"
+      style="width: 240px; margin-top: 20px; margin-left: -15px"
+      @change="onSearch"
+    />
+  </div>
 </template>
 
 <script lang="ts" setup>
@@ -131,19 +144,26 @@ import { ElMessageBox } from "element-plus";
 import options from "../../store/global";
 import { ElMessage } from "element-plus";
 
+const indexKeyword = ref("");
+
+const onSearch = () => {
+  console.log("大叔大婶" + indexKeyword.value);
+  getIndices(indexKeyword.value);
+};
+
 const searchItems = ref([
   {
     mustType: "must",
     field: "",
     searchType: "terms",
     searchKeyword: "",
-    sortName: "id",
+    sortName: "_id",
     sort: "DESC",
   },
 ]);
 
 const sortParam = ref({
-  sortName: "id",
+  sortName: "_id",
   sort: "DESC",
 });
 
@@ -293,15 +313,6 @@ const eplQuery = async (epl) => {
 
   tableData.value = source;
   console.log(tableData.value);
-};
-
-// 删除
-const esClientDelete = async (data) => {
-  const param = {
-    id: data,
-  };
-  let res = await proxy.$api.esClient.esClientDelete(param);
-  getList();
 };
 </script>
 

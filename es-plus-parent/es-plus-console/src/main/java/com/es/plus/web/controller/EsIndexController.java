@@ -42,6 +42,10 @@ public class EsIndexController {
             ArrayList<String> arrayList = new ArrayList<>();
             Map map = (Map) v;
             Map properties = (Map) map.get("properties");
+            if (properties==null){
+               
+                return;
+            }
             properties.forEach((key,value)->{
                 arrayList.add((String)key);
                 Map valueMap = (Map) value;

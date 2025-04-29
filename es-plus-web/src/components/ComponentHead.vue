@@ -5,7 +5,7 @@
         v-model="selectClient"
         class="m-2"
         placeholder="Select"
-        style="width: 225px"
+        style="width: 225px; transform: translateX(60px)"
         filterable
         @change="clickSelect"
       >

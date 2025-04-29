@@ -1,12 +1,21 @@
 <template>
   <div class="container">
     <div class="searchInput">
-      <el-input
-        v-model="keyword"
-        placeholder="请输入索引名称"
-        style="width: 300px"
-        @change="onSearch"
-      />
+      <el-row>
+        <el-col :span="22">
+          <el-input
+            v-model="keyword"
+            placeholder="请输入索引名称"
+            style="width: 300px"
+            @change="onSearch"
+          />
+        </el-col>
+        <el-col :span="2" style="transform: translateX(10px)">
+          <el-button type="primary" @click="clickMappings(item.index)" plain
+            >新建索引</el-button
+          >
+        </el-col>
+      </el-row>
     </div>
     <el-scrollbar height="700px">
       <div v-for="item in data" :key="item.index" class="scrollbar-demo-item">
