@@ -68,7 +68,7 @@ public class EsLambdaUpdateWrapper<T> extends AbstractEsWrapper<T, SFunction<T, 
     @Override
     public EsLambdaUpdateWrapper<T> setEntity(boolean condition, T entity) {
         if (condition) {
-            Field[] fields = entity.getClass().getFields();
+            Field[] fields = entity.getClass().getDeclaredFields();
             for (Field field : fields) {
                 EsFieldInfo esFieldInfo = GlobalParamHolder.getIndexField(tClass, field.getName());
                 String name = esFieldInfo.getName();

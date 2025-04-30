@@ -3,6 +3,7 @@ package com.es.plus.adapter.util;
 import com.es.plus.adapter.properties.EsFieldInfo;
 import com.es.plus.annotation.EsField;
 import com.es.plus.annotation.EsId;
+import org.apache.commons.lang3.StringUtils;
 
 import java.lang.reflect.Field;
 
@@ -14,7 +15,7 @@ import java.lang.reflect.Field;
  */
 public class AnnotationResolveUtil {
 
-    public  static EsFieldInfo resolveEsField(EsField esField){
+    public  static EsFieldInfo resolveEsField(EsField esField,Field field){
         if (esField == null) {
             return null;
         }
@@ -24,7 +25,7 @@ public class AnnotationResolveUtil {
         esFieldInfo.setFieldData(esField.fieldData());
         esFieldInfo.setIndex(esField.index());
         esFieldInfo.setCopyTo(esField.copyTo());
-        esFieldInfo.setName(esField.name());
+        esFieldInfo.setName(StringUtils.isNotBlank(esField.name())?esField.name():field.getName());
         esFieldInfo.setExist(esField.exist());
         esFieldInfo.setChild(esField.child());
         esFieldInfo.setNormalizer(esField.normalizer());

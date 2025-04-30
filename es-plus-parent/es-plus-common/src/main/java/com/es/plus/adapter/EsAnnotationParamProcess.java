@@ -163,7 +163,7 @@ public class EsAnnotationParamProcess {
             }
             // 解析注解字段
             if (esFieldInfo == null) {
-                esFieldInfo = AnnotationResolveUtil.resolveEsField(esField);
+                esFieldInfo = AnnotationResolveUtil.resolveEsField(esField,field);
             }
             // 解析实体字段
             if (esFieldInfo == null) {

@@ -72,7 +72,7 @@ public class EsUpdateWrapper<T> extends AbstractEsWrapper<T, String, EsUpdateWra
     @Override
     public EsUpdateWrapper<T> setEntity(boolean condition, T entity) {
         if (condition) {
-            Field[] fields = entity.getClass().getFields();
+            Field[] fields = entity.getClass().getDeclaredFields();
             for (Field field : fields) {
                 EsFieldInfo esFieldInfo = GlobalParamHolder.getIndexField(tClass, field.getName());
                 String name = esFieldInfo.getName();
