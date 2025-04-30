@@ -23,7 +23,7 @@ import static com.es.plus.constant.EsConstant.MASTER;
  * @Date: 2022/9/22 20:24
  * 链式方法
  */
-public class EsChainUpdateWrapper<T> extends AbstractEsChainWrapper<T, String, EsChainUpdateWrapper<T>, EsUpdateWrapper<T>> implements Update<EsChainUpdateWrapper<T>, String>, UpdateOperation<T> {
+public class EsChainUpdateWrapper<T> extends AbstractEsChainWrapper<T, String, EsChainUpdateWrapper<T>, EsUpdateWrapper<T>> implements Update<EsChainUpdateWrapper<T>, String,T>, UpdateOperation<T> {
 
     private EsPlusClientFacade esPlusClientFacade = ClientContext.getClient(MASTER);
 
@@ -224,7 +224,20 @@ public class EsChainUpdateWrapper<T> extends AbstractEsChainWrapper<T, String, E
         esWrapper.set(condition, column, val);
         return this;
     }
-
+    
+    @Override
+    public EsChainUpdateWrapper<T> setEntity(boolean condition, T entity) {
+        if (condition) {
+            esWrapper.setEntity(condition,entity);
+        }
+        return this;
+    }
+    
+    @Override
+    public EsChainUpdateWrapper<T> setEntity(T entity) {
+        return Update.super.setEntity(entity);
+    }
+    
     /**
      * 增量
      *

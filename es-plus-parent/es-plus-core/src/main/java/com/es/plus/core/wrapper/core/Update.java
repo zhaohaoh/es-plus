@@ -22,7 +22,7 @@ import java.util.Map;
  * @author miemie
  * @since 2018-12-12
  */
-public interface Update<Children, R> extends Serializable {
+public interface Update<Children, R,T> extends Serializable {
 
 
     /**
@@ -41,6 +41,25 @@ public interface Update<Children, R> extends Serializable {
      * @return children
      */
     Children set(boolean condition, R column, Object val);
+    
+    /**
+     * 设置 更新 SQL 的 SET 片段
+     *
+     * @param condition 是否加入 set
+     * @param column    字段
+     * @param val       值
+     * @return children
+     */
+    Children setEntity(boolean condition, T entity);
+    
+    /**
+     * 设置 更新 实体
+     */
+    default Children setEntity(T entity) {
+        return setEntity(true, entity);
+    }
+    
+    ;
 
     default Children increment(R column, Long val) {
         return increment(true, column, val);

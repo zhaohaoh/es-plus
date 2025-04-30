@@ -20,14 +20,15 @@ import static com.es.plus.constant.EsConstant.MASTER;
 
 /**
  * @Author: hzh
- * @Date: 2022/9/22 20:24
- * 链式方法
+ * @Date: 2022/9/22 20:24 链式方法
  */
-public class EsChainLambdaUpdateWrapper<T> extends AbstractEsChainWrapper<T, SFunction<T, ?>, EsChainLambdaUpdateWrapper<T>, EsLambdaUpdateWrapper<T>> implements Update<EsChainLambdaUpdateWrapper<T>, SFunction<T, ?>>, UpdateOperation<T> {
-
-
+public class EsChainLambdaUpdateWrapper<T>
+        extends AbstractEsChainWrapper<T, SFunction<T, ?>, EsChainLambdaUpdateWrapper<T>, EsLambdaUpdateWrapper<T>>
+        implements Update<EsChainLambdaUpdateWrapper<T>, SFunction<T, ?>, T>, UpdateOperation<T> {
+    
+    
     private EsPlusClientFacade esPlusClientFacade = ClientContext.getClient(MASTER);
-
+    
     public EsChainLambdaUpdateWrapper(Class<T> clazz) {
         super.tClass = clazz;
         super.esWrapper = new EsLambdaUpdateWrapper<>(tClass);
@@ -36,12 +37,12 @@ public class EsChainLambdaUpdateWrapper<T> extends AbstractEsChainWrapper<T, SFu
             index(esIndexParam.getIndex());
             type = esIndexParam.getType();
             EsPlusClientFacade client = ClientContext.getClient(esIndexParam.getClientInstance());
-            if (client!=null){
+            if (client != null) {
                 esPlusClientFacade = client;
             }
         }
     }
-
+    
     public EsChainLambdaUpdateWrapper(Class<T> clazz, EsPlusClientFacade esPlusClientFacade) {
         super.tClass = clazz;
         super.esWrapper = new EsLambdaUpdateWrapper<>(tClass);
@@ -54,7 +55,7 @@ public class EsChainLambdaUpdateWrapper<T> extends AbstractEsChainWrapper<T, SFu
             this.esPlusClientFacade = esPlusClientFacade;
         }
     }
-
+    
     /**
      * 保存
      *
@@ -63,12 +64,12 @@ public class EsChainLambdaUpdateWrapper<T> extends AbstractEsChainWrapper<T, SFu
      */
     @Override
     public boolean save(T t) {
-        return esPlusClientFacade.save( type, t,indexs);
+        return esPlusClientFacade.save(type, t, indexs);
     }
     
     @Override
     public boolean saveOrUpdate(T t) {
-        return esPlusClientFacade.save( type, t,indexs);
+        return esPlusClientFacade.save(type, t, indexs);
     }
     
     
@@ -79,10 +80,10 @@ public class EsChainLambdaUpdateWrapper<T> extends AbstractEsChainWrapper<T, SFu
      */
     @Override
     public BulkByScrollResponse incrementByWapper() {
-        return esPlusClientFacade.increment( type, esWrapper.esParamWrapper(),indexs);
+        return esPlusClientFacade.increment(type, esWrapper.esParamWrapper(), indexs);
     }
-
-
+    
+    
     /**
      * 保存批处理
      *
@@ -90,12 +91,12 @@ public class EsChainLambdaUpdateWrapper<T> extends AbstractEsChainWrapper<T, SFu
      */
     @Override
     public List<BulkItemResponse> saveBatch(Collection<T> entityList) {
-        return esPlusClientFacade.saveBatch( type, entityList,indexs);
+        return esPlusClientFacade.saveBatch(type, entityList, indexs);
     }
-
+    
     @Override
     public List<BulkItemResponse> saveOrUpdateBatch(Collection<T> entityList) {
-        return esPlusClientFacade.saveBatch( type, entityList,indexs);
+        return esPlusClientFacade.saveBatch(type, entityList, indexs);
     }
     
     /**
@@ -105,8 +106,9 @@ public class EsChainLambdaUpdateWrapper<T> extends AbstractEsChainWrapper<T, SFu
      */
     @Override
     public void saveBatchAsyncProcessor(Collection<T> entityList) {
-          esPlusClientFacade.saveBatchAsyncProcessor( type, entityList,indexs);
+        esPlusClientFacade.saveBatchAsyncProcessor(type, entityList, indexs);
     }
+    
     /**
      * 保存批处理异步
      *
@@ -114,8 +116,9 @@ public class EsChainLambdaUpdateWrapper<T> extends AbstractEsChainWrapper<T, SFu
      */
     @Override
     public void saveOrUpdateBatchAsyncProcessor(Collection<T> entityList) {
-        esPlusClientFacade.saveOrUpdateBatchAsyncProcessor( type, entityList,indexs);
+        esPlusClientFacade.saveOrUpdateBatchAsyncProcessor(type, entityList, indexs);
     }
+    
     /**
      * 保存批处理异步
      *
@@ -123,16 +126,16 @@ public class EsChainLambdaUpdateWrapper<T> extends AbstractEsChainWrapper<T, SFu
      */
     @Override
     public void updateBatchAsyncProcessor(Collection<T> entityList) {
-        esPlusClientFacade.updateBatchAsyncProcessor( type, entityList,indexs);
+        esPlusClientFacade.updateBatchAsyncProcessor(type, entityList, indexs);
     }
     
-  
+    
     @Override
     public boolean update(T t) {
-        return esPlusClientFacade.update( type, t,indexs);
+        return esPlusClientFacade.update(type, t, indexs);
     }
-
-
+    
+    
     /**
      * 批处理更新
      *
@@ -141,9 +144,9 @@ public class EsChainLambdaUpdateWrapper<T> extends AbstractEsChainWrapper<T, SFu
      */
     @Override
     public List<BulkItemResponse> updateBatch(Collection<T> t) {
-        return esPlusClientFacade.updateBatch(type, t,indexs);
+        return esPlusClientFacade.updateBatch(type, t, indexs);
     }
-
+    
     /**
      * 更新
      *
@@ -151,9 +154,9 @@ public class EsChainLambdaUpdateWrapper<T> extends AbstractEsChainWrapper<T, SFu
      */
     @Override
     public BulkByScrollResponse updateByQuery() {
-        return esPlusClientFacade.updateByWrapper(type, esWrapper.esParamWrapper(),indexs);
+        return esPlusClientFacade.updateByWrapper(type, esWrapper.esParamWrapper(), indexs);
     }
-
+    
     /**
      * 删除
      *
@@ -161,14 +164,14 @@ public class EsChainLambdaUpdateWrapper<T> extends AbstractEsChainWrapper<T, SFu
      */
     @Override
     public BulkByScrollResponse remove() {
-        return esPlusClientFacade.deleteByQuery( type, esWrapper.esParamWrapper(),indexs);
+        return esPlusClientFacade.deleteByQuery(type, esWrapper.esParamWrapper(), indexs);
     }
-
+    
     @Override
     public boolean removeByIds(Collection<String> ids) {
-        return esPlusClientFacade.deleteBatchByIds( type, ids,indexs);
+        return esPlusClientFacade.deleteBatchByIds(type, ids, indexs);
     }
-
+    
     /**
      * 设置scipt
      *
@@ -181,7 +184,7 @@ public class EsChainLambdaUpdateWrapper<T> extends AbstractEsChainWrapper<T, SFu
         esWrapper.setScipt(scipt, sciptParams);
         return this;
     }
-
+    
     /**
      * 设置scipt
      *
@@ -195,8 +198,8 @@ public class EsChainLambdaUpdateWrapper<T> extends AbstractEsChainWrapper<T, SFu
         esWrapper.setScipt(condition, script, sciptParams);
         return this;
     }
-
-
+    
+    
     /**
      * 设置
      *
@@ -209,7 +212,7 @@ public class EsChainLambdaUpdateWrapper<T> extends AbstractEsChainWrapper<T, SFu
         esWrapper.set(name, value);
         return this;
     }
-
+    
     /**
      * 设置
      *
@@ -223,8 +226,14 @@ public class EsChainLambdaUpdateWrapper<T> extends AbstractEsChainWrapper<T, SFu
         esWrapper.set(condition, column, val);
         return this;
     }
-
-
+    
+    @Override
+    public EsChainLambdaUpdateWrapper<T> setEntity(boolean condition, T entity) {
+        esWrapper.setEntity(condition, entity);
+        return this;
+    }
+    
+    
     /**
      * 增量
      *
@@ -237,7 +246,7 @@ public class EsChainLambdaUpdateWrapper<T> extends AbstractEsChainWrapper<T, SFu
         esWrapper.increment(name, value);
         return this;
     }
-
+    
     /**
      * 增量
      *
@@ -251,5 +260,5 @@ public class EsChainLambdaUpdateWrapper<T> extends AbstractEsChainWrapper<T, SFu
         esWrapper.increment(condition, column, val);
         return this;
     }
-
+    
 }
