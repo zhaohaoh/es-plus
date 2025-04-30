@@ -5,6 +5,7 @@ import com.es.plus.adapter.params.EsAggResponse;
 import com.es.plus.adapter.params.EsResponse;
 import com.es.plus.adapter.params.EsSettings;
 import com.es.plus.core.wrapper.chain.EsChainLambdaQueryWrapper;
+import com.es.plus.core.wrapper.chain.EsChainLambdaUpdateWrapper;
 import com.es.plus.core.wrapper.chain.EsChainUpdateWrapper;
 import com.es.plus.core.wrapper.core.EsQueryWrapper;
 import com.es.plus.core.wrapper.core.EsUpdateWrapper;
@@ -38,7 +39,7 @@ public interface EsService<T> {
      *
      * @return {@link EsUpdateWrapper}<{@link T}>
      */
-    EsUpdateWrapper<T> esUpdateWrapper();
+    EsChainUpdateWrapper<T> esUpdateWrapper();
 
     /**
      * es链查询包装器
@@ -52,7 +53,7 @@ public interface EsService<T> {
      *
      * @return {@link EsChainUpdateWrapper}<{@link T}>
      */
-    EsChainUpdateWrapper<T> esChainUpdateWrapper();
+    EsChainLambdaUpdateWrapper<T> esChainUpdateWrapper();
 
     /**
      * 创建索引

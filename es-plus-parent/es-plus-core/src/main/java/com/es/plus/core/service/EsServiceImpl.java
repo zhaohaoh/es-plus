@@ -1,11 +1,15 @@
 package com.es.plus.core.service;
 
 
-import com.es.plus.adapter.params.*;
+import com.es.plus.adapter.params.EsAggResponse;
+import com.es.plus.adapter.params.EsAliasResponse;
+import com.es.plus.adapter.params.EsQueryParamWrapper;
+import com.es.plus.adapter.params.EsResponse;
+import com.es.plus.adapter.params.EsSettings;
 import com.es.plus.core.wrapper.chain.EsChainLambdaQueryWrapper;
+import com.es.plus.core.wrapper.chain.EsChainLambdaUpdateWrapper;
 import com.es.plus.core.wrapper.chain.EsChainUpdateWrapper;
 import com.es.plus.core.wrapper.core.EsQueryWrapper;
-import com.es.plus.core.wrapper.core.EsUpdateWrapper;
 import com.es.plus.core.wrapper.core.EsWrapper;
 import org.apache.commons.lang3.ArrayUtils;
 import org.elasticsearch.action.bulk.BulkItemResponse;
@@ -15,7 +19,11 @@ import org.springframework.util.CollectionUtils;
 
 import java.io.Serializable;
 import java.time.Duration;
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -36,13 +44,13 @@ public class EsServiceImpl<T> extends AbstractEsService<T> implements EsService<
     }
     
     @Override
-    public EsUpdateWrapper<T> esUpdateWrapper() {
-        return new EsUpdateWrapper<>(this.clazz);
+    public EsChainUpdateWrapper<T> esUpdateWrapper() {
+        return new EsChainUpdateWrapper<>(this.clazz,getEsPlusClientFacade());
     }
     
     @Override
-    public EsChainUpdateWrapper<T> esChainUpdateWrapper() {
-        return new EsChainUpdateWrapper<>(clazz, getEsPlusClientFacade());
+    public EsChainLambdaUpdateWrapper<T> esChainUpdateWrapper() {
+        return new EsChainLambdaUpdateWrapper<>(clazz, getEsPlusClientFacade());
     }
     
     
