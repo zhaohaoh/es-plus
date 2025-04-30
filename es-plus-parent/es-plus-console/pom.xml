@@ -10,7 +10,7 @@
         <maven.compiler.source>8</maven.compiler.source>
         <maven.compiler.target>8</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <revision>0.4.3</revision>
+        <revision>0.4.4</revision>
     </properties>
     <description>es服务web控制台用来查询es</description>
     <dependencies>
