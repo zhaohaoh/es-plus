@@ -31,12 +31,14 @@
           <span class="health-font">status:</span>
           <span class="health-font">open</span>
         </div>
-        <div class="index-size">size:{{ item["store.size"] }}</div>
-        <!-- <div class="index-size">shard:</div>
-        <div class="index-size">repice:</div> -->
-        <div class="index-size">docs:{{ item["docs.count"] }}</div>
-        <div class="index-size">delete_docs:{{ item["docs.deleted"] }}</div>
-
+        <span class="index-size"> size: {{ item["store.size"] }}</span>
+        <span class="index-size">
+          docs: {{ item["docs.count"] }} delete_docs:
+          {{ item["docs.deleted"] }}</span
+        >
+        <span class="index-size">
+          shards: {{ item["pri"] }} replice: {{ item["rep"] }}</span
+        >
         <div class="editClass">
           <el-button type="primary" @click="clickMappings(item.index)" plain
             >设置映射</el-button

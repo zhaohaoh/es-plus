@@ -16,7 +16,9 @@
           />
         </label>
         <div class="controls">
-          <el-button size="small" :icon="Search" @click="">搜索</el-button>
+          <el-button size="small" :icon="Search" @click="submitEplQuery"
+            >搜索</el-button
+          >
           <!-- 绑定点击事件 -->
         </div>
       </div>
@@ -102,10 +104,21 @@ import { ElMessage, ElMessageBox } from "element-plus";
 import esClient from "../../api/esClient";
 
 const { proxy } = getCurrentInstance() as any;
-const sql = ref("SELECT * from fast_test_new_v128 order by id desc limit 10");
+let sql = ref("SELECT * from fast_test_new_v128 order by id desc limit 10");
 const epl = ref('Es.chainQuery().index("").search(10)');
 const jsonEditor = ref();
 const jsonView = ref("");
+
+onMounted(() => {
+  const lastSql = localStorage.getItem("lastSql");
+  if (lastSql) {
+    sql.value = lastSql;
+  }
+  const lastEpl = localStorage.getItem("lastEpl");
+  if (lastEpl) {
+    epl.value = lastEpl;
+  }
+});
 
 const jsonOptions = {
   // 主题
@@ -264,11 +277,27 @@ const onSqlReady = (sqlEditor) => {
 // };
 
 // // 提交查询方法
+const submitEplQuery = () => {
+  eplQuery(epl.value);
+};
+
+const eplQuery = async (epl) => {
+  localStorage.setItem("lastEpl", epl);
+  const param = {
+    epl: epl,
+  };
+  let res = await proxy.$api.tools.eplQuery(param);
+  const formattedJson = JSON.stringify(res, null, 2);
+  jsonView.value = formattedJson;
+};
+
+// // 提交查询方法
 const submitSqlQuery = () => {
   sqlQuery(sql.value);
 };
 
 const sqlQuery = async (sql) => {
+  localStorage.setItem("lastSql", sql);
   const param = {
     sql: sql,
   };

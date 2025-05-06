@@ -127,14 +127,50 @@
       </div>
     </div>
   </div>
-  <div class="searchInput">
+  <div class="downIndex">
     <el-input
       v-model="indexKeyword"
       placeholder="请输入索引名称"
       style="width: 240px; margin-top: 20px; margin-left: -15px"
       @change="onSearch"
     />
+    <el-button
+      type="primary"
+      @click="clickMappings(selectIndex)"
+      plain
+      style="width: 240px; margin-top: 20px; margin-left: -15px"
+      >查看映射</el-button
+    >
   </div>
+
+  <el-dialog
+    v-model="dialogFormVisible"
+    title="查看映射"
+    style="
+      max-width: 700px;
+      position: relative;
+      height: 750px;
+      transform: translateY(-50px);
+    "
+  >
+    <!-- <Codemirror
+        v-model:value="code"
+        :options="cmOptions"
+        :width="width"
+        border
+        height="600px"
+        readonly="true"
+        @ready="onReady"
+      /> -->
+    <div>
+      <JsonEditor
+        v-model:value="code"
+        height="600"
+        styles="width: 100%"
+        title="查看映射"
+      />
+    </div>
+  </el-dialog>
 </template>
 
 <script lang="ts" setup>
@@ -143,6 +179,9 @@ import type { FormProps } from "element-plus";
 import { ElMessageBox } from "element-plus";
 import options from "../../store/global";
 import { ElMessage } from "element-plus";
+
+let dialogFormVisible = ref(false);
+const code = ref("");
 
 const indexKeyword = ref("");
 
@@ -190,6 +229,23 @@ const currentMapping = ref();
 const indexData = ref([]);
 
 const { proxy } = getCurrentInstance() as any;
+
+const clickMappings = async (index) => {
+  await getMapping(index);
+  // jsonView.value = res;
+
+  dialogFormVisible.value = true;
+  selectIndex.value = index;
+};
+
+const getMapping = async (index) => {
+  const param = {
+    indexName: index,
+  };
+  let res = await proxy.$api.esIndex.getMapping(param);
+
+  code.value = JSON.stringify(res, null, 2);
+};
 
 const selectIndex = ref();
 
@@ -337,17 +393,27 @@ const eplQuery = async (epl) => {
   min-height: 36px;
 }
 .scrollbar-demo-item {
+  /* 文字换行组合技 */
+  word-break: break-all; /* 强制任意字符换行 */
+  overflow-wrap: break-word; /* 单词边界换行 */
+  white-space: pre-wrap; /* 保留空白符并换行 */
+
+  padding: 0px 10px;
+  /* 确保 padding 不会增加元素总宽度
+保持容器始终为 240px 宽度*/
+  /* box-sizing: border-box; */
+
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 50px;
+  height: 60px;
   margin: 5px 5px 5px 5px;
-  /* text-align: center; */
   border-radius: 4px;
   background: var(--el-color-primary-light-9);
   color: var(--el-color-primary);
-  font-size: 14px;
+  font-size: 15px;
+  word-wrap: break-word;
 }
 .right-container {
   margin-left: 10px;
@@ -378,5 +444,9 @@ const eplQuery = async (epl) => {
 
 .el-input__inner {
   position: relative;
+}
+.downIndex {
+  display: flex;
+  flex-direction: column;
 }
 </style>
