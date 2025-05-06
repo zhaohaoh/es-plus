@@ -147,7 +147,6 @@ import { ElMessage } from "element-plus";
 const indexKeyword = ref("");
 
 const onSearch = () => {
-  console.log("大叔大婶" + indexKeyword.value);
   getIndices(indexKeyword.value);
 };
 
