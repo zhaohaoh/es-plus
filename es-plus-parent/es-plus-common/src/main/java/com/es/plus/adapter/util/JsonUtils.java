@@ -138,6 +138,9 @@ public class JsonUtils {
     // 将对象转换成json字符串
     public static String toJsonStr(Object obj) {
         try {
+            if (obj == null){
+                return null;
+            }
             return MAPPER.writeValueAsString(obj);
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e.getMessage(), e);
@@ -147,6 +150,9 @@ public class JsonUtils {
     // 将json数据转换成pojo对象
     public static <T> T toBean(String json, Class<T> beanType) {
         try {
+            if (json == null){
+                return null;
+            }
             T t = MAPPER.readValue(json, beanType);
             return t;
         } catch (Exception e) {

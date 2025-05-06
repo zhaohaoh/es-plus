@@ -2,6 +2,7 @@ package com.es.plus.adapter.config;
 
 import com.es.plus.adapter.params.BulkProcessorParam;
 import com.es.plus.adapter.util.JsonUtils;
+import com.es.plus.adapter.util.LogUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.action.ActionListener;
@@ -97,10 +98,11 @@ public class BulkProcessorConfig {
 //                            }
 //                        }
                         int num = request.numberOfActions();
+                        String data = LogUtil.logSubstring(saves.toString());
                         log.info("ES BulkProcessor Begin  executionId:{} batchNum:{} "
                                         + "\n datas:{}"
                                         + "\nbulkActions:{} bulkSize:{} flushInterval:{} concurrent:{}",
-                                executionId,num, saves,bulkActions,bulkSize,flushInterval,concurrent);
+                                executionId,num, data,bulkActions,bulkSize,flushInterval,concurrent);
                     }
                     
                     @Override
@@ -116,14 +118,16 @@ public class BulkProcessorConfig {
                                 .filter(a -> a.getFailure() == null && StringUtils.isBlank(a.getFailureMessage()))
                                 .collect(Collectors.toList());
                         long ingestTookInMillis = response.getTook().getMillis();
+                        String jsonStr = JsonUtils.toJsonStr(successList);
+                        String res = LogUtil.logSubstring(jsonStr);
                         if (CollectionUtils.isEmpty(failureList)){
                             log.info("ES BulkProcessor Success executionId:{} timeCost:{} response:{} "
                                     ,executionId,ingestTookInMillis
-                                    , JsonUtils.toJsonStr(successList));
+                                    , res);
                         }else {
                             log.info("ES BulkProcessor Success executionId:{} timeCost:{} response:{} "
                                     ,executionId,ingestTookInMillis
-                                    , JsonUtils.toJsonStr(successList));
+                                    , res);
                             
                             log.error("ES BulkProcessor Fail executionId:{} timeCost:{} response:{}"
                                     ,executionId,ingestTookInMillis
@@ -139,10 +143,11 @@ public class BulkProcessorConfig {
                             String info = docWriteRequest.toString();
                             saves.add(info);
                         }
+                        String data = LogUtil.logSubstring(saves.toString());
                         //写入失败后
                         log.error("ES BulkProcessor  executionId:{} "
                                 + "\n datas:{} \n ex:",executionId,
-                                saves,
+                                data,
                                 failure);
                     }
                 }).setBulkActions(bulkActions) //  达到刷新的条数
