@@ -110,7 +110,9 @@ public class EsIndexController {
         EsPlusClientFacade client = ClientContext.getClient(esClientName);
         String string = "*" + keyword + "*";
         String cmd = "/_cat/indices/" + string + "?format=json&v";
-        return Es.chainIndex(client).getCmd(cmd);
+        String cmd1 = Es.chainIndex(client).getCmd(cmd);
+//        return cmd1;
+    throw new RuntimeException("dasdasdd");
     }
     
     /**

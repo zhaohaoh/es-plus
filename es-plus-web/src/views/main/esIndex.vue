@@ -93,7 +93,7 @@
 import { getCurrentInstance, onMounted, reactive, ref, computed } from "vue";
 import type { FormProps } from "element-plus";
 import JsonEditor from "../../components/JsonEditor/index.vue";
-
+import elMessage from "../../util/message";
 // import VueJsonHelper from "@/views/indices/components/Helper.vue";
 import { ElMessageBox } from "element-plus";
 import options from "../../store/global";
@@ -132,6 +132,7 @@ const saveMappinng = async () => {
   })
     .then(() => {
       putMapping(currentIndex.value, code.value);
+      elMessage.success();
     })
     .catch(() => {});
 };
@@ -211,6 +212,7 @@ const clickDelete = async (index) => {
   })
     .then(() => {
       esIndexDelete(index);
+      elMessage.success;
     })
     .catch(() => {});
 };
@@ -222,6 +224,7 @@ const esIndexDelete = async (data) => {
   };
   let res = await proxy.$api.esIndex.deleteIndex(param);
   getIndices(keyword.value);
+  elMessage.success;
 };
 </script>
 <style scoped>

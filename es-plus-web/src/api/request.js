@@ -44,6 +44,7 @@ services.interceptors.response.use(
     if (data.code === "401" || response.status === 401) {
       window.location.href = "/#/login";
     }
+
     return data;
   },
   (error) => {
@@ -73,6 +74,11 @@ services.interceptors.response.use(
             showClose: true,
           });
         }
+      } else {
+        ElMessage({
+          type: "error",
+          message: error.response.data.message,
+        });
       }
     }
     //异步异常处理
