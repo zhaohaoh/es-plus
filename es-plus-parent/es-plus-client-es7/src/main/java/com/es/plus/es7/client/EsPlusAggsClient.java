@@ -358,7 +358,7 @@ public class EsPlusAggsClient implements EsAggClient {
         String aggName = name!=null?name : field + AGG_DELIMITER + TermsAggregationBuilder.NAME;
         TermsAggregationBuilder termsAggregationBuilder = new TermsAggregationBuilder(aggName);
         termsAggregationBuilder.field(field);
-        termsAggregationBuilder.size(GlobalConfigCache.GLOBAL_CONFIG.getSearchSize());
+        termsAggregationBuilder.size(GlobalConfigCache.GLOBAL_CONFIG.getAggSize());
         return termsAggregationBuilder;
     }
     

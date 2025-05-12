@@ -58,6 +58,12 @@ public class GlobalConfig {
      * 最大查询文档数量 默认1万
      */
     private int searchSize = 10000;
+    
+    /**
+     * 最大聚合文档数量 默认1000
+     */
+    private int aggSize = 1000;
+    
     /*
      * 批量执行的数量和scoll的批次数量
      */
