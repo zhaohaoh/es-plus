@@ -5,6 +5,7 @@ import com.es.plus.adapter.params.EsIndexResponse;
 import com.es.plus.adapter.util.JsonUtils;
 import com.es.plus.core.ClientContext;
 import com.es.plus.core.statics.Es;
+import com.es.plus.web.cache.EsClientCache;
 import com.es.plus.web.pojo.EsIndexResponseVO;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -19,6 +20,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @RestController
 @RequestMapping("/es/index")
@@ -31,6 +33,13 @@ public class EsIndexController {
      */
     @GetMapping("list")
     public EsIndexResponseVO list(@RequestHeader("currentEsClient") String esClientName,String keyword) {
+        if (StringUtils.isBlank(keyword)){
+            String present = EsClientCache.CACHE_MAP.getIfPresent(keyword);
+            if (present !=null ) {
+                EsIndexResponseVO bean = JsonUtils.toBean(present, EsIndexResponseVO.class);
+                return bean;
+            }
+        }
         EsPlusClientFacade client = ClientContext.getClient(esClientName);
         EsIndexResponse index = Es.chainIndex(client).getIndex("*" + keyword + "*");
         EsIndexResponseVO esIndexResponseVO = new EsIndexResponseVO();
@@ -57,6 +66,9 @@ public class EsIndexController {
             flatMappings.put(k,arrayList);
         });
         esIndexResponseVO.setFlatMappings(flatMappings);
+        
+        EsClientCache.CACHE_MAP.put(keyword, Objects.requireNonNull(JsonUtils.toJsonStr(esIndexResponseVO)));
+       
         return esIndexResponseVO;
     }
     
@@ -111,7 +123,7 @@ public class EsIndexController {
         String string = "*" + keyword + "*";
         String cmd = "/_cat/indices/" + string + "?format=json&v";
         String cmd1 = Es.chainIndex(client).getCmd(cmd);
-         return cmd1;
+        return cmd1;
     }
     
     /**
@@ -150,6 +162,14 @@ public class EsIndexController {
         return JsonUtils.toJsonStr(object);
     }
     
+    /**
+     *  刷新索引缓存
+     */
+    @PostMapping("refreshIndexCache")
+    public void refreshIndexCache(@RequestHeader("currentEsClient") String esClientName) {
+        EsClientCache.CACHE_MAP.invalidateAll();
+    }
+    
     
     /**
      *  删除索引
@@ -162,5 +182,7 @@ public class EsIndexController {
         EsPlusClientFacade client = ClientContext.getClient(esClientName);
         Es.chainIndex(client).deleteIndex(indexName);
     }
+    
+  
     
 }
