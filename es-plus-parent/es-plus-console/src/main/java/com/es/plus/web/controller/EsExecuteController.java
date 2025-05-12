@@ -11,6 +11,7 @@ import com.es.plus.web.pojo.EsPageInfo;
 import com.es.plus.web.pojo.EsRequstInfo;
 import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.common.Strings;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -31,13 +32,16 @@ import java.util.Map;
 public class EsExecuteController {
     
     private String function = "package com.es.plus.web.controller;\n" + "\n" + "import com.es.plus.core.statics.Es;\n"
-            + "import java.util.Map;\n" + "\n" + "public class EsQuery {\n" + "\n" + "    public  Object query(){\n"
-            + "        return %s;\n" + "    }\n" + "}\n";
+            + "import java.util.Map;\n" + "import com.es.plus.core.wrapper.aggregation.EsAggWrapper;\n"
+            + "import com.es.plus.core.wrapper.chain.EsChainQueryWrapper;\n" + " \n" + "public class EsQuery {\n"
+            + "    \n" + "    public  Object query(){\n" + "         %s;\n" + "    }\n" + "}";
     
     @GetMapping("esQuery/epl")
     public Object esQueryEpl(String epl, @RequestHeader("currentEsClient") String currentEsClient) throws Exception {
         if (epl.endsWith(";")) {
+            epl= abc(epl);
             epl = epl.substring(0, epl.length() - 1);
+            System.out.println(epl);
         }
         String s = String.format(function, epl);
         s = StringUtils.replace(s, "chainQuery()", "chainQuery(\"" + currentEsClient + "\")");
@@ -55,7 +59,7 @@ public class EsExecuteController {
         Object object = aClass.newInstance();
         Method sleep = aClass.getDeclaredMethod("query");
         sleep.setAccessible(true);
-        Object invoke = (EsResponse) sleep.invoke(object);
+        Object invoke =  sleep.invoke(object);
         Object result = "";
         if (invoke instanceof EsResponse) {
             EsResponse esResponse = (EsResponse) invoke;
@@ -66,7 +70,7 @@ public class EsExecuteController {
         if (invoke instanceof EsAggResponse) {
             EsAggResponse esAggResponse = (EsAggResponse) invoke;
             esAggResponse.getAggregations();
-            result = esAggResponse.getAggregations().toString();
+            result =  Strings.toString(esAggResponse.getAggregations());
         }
         
         //        String jsonStr = JsonUtils.toJsonStr(result);
@@ -160,8 +164,30 @@ public class EsExecuteController {
     @PutMapping("/updateBatch")
     public void updateBatch(@RequestBody EsRequstInfo esRequstInfo, @RequestHeader("currentEsClient") String currentEsClient) {
         EsPlusClientFacade esPlusClientFacade = ClientContext.getClient(currentEsClient);
+   
         
         Es.chainUpdate(esPlusClientFacade, Map.class).index(esRequstInfo.getIndex()).updateBatch(esRequstInfo.getDatas());
     }
-    
+    public String abc(String input) {
+        int lastIndex = input.lastIndexOf(';');
+        
+        if (lastIndex == -1) {
+            System.out.println(input);
+            return input;
+        }
+        
+        int secondLastIndex = input.lastIndexOf(';', lastIndex - 1);
+        
+        if (secondLastIndex == -1) {
+            System.out.println(input);
+            return input;
+        }
+        
+        String result = input.substring(0, secondLastIndex + 1)
+                + "\nreturn "
+                + input.substring(secondLastIndex + 1);
+        
+        return result;
+    }
+   
 }
