@@ -160,9 +160,9 @@ public class EsReindexProcess {
         String json = JsonUtils.toJsonStr(esSettings);
         Map<String, Object> localSettings = JsonUtils.toMap(json);
         Integer remoteShards =
-                settings.get(NUMBER_OF_SHARDS) != null ? Integer.parseInt(settings.get(NUMBER_OF_SHARDS)) : 5;
+                settings.get(NUMBER_OF_SHARDS) != null ? Integer.parseInt(settings.get(NUMBER_OF_SHARDS).toString()) : 5;
         Integer remoteMaxResultWindow =
-                settings.get(MAX_RESULT_WINDOW) != null ? Integer.parseInt(settings.get(MAX_RESULT_WINDOW)) : 10000;
+                settings.get(MAX_RESULT_WINDOW) != null ? Integer.parseInt(settings.get(MAX_RESULT_WINDOW).toString()) : 10000;
         String remoteRefreshInterval = settings.get("index.refresh_interval").toString();
         if (remoteShards != localSettings.get("number_of_shards")) {
             return true;
@@ -194,7 +194,7 @@ public class EsReindexProcess {
     }
     
     
-    private static boolean analysisChange(Map<String, String> settings, Map<String, Object> analysis) {
+    private static boolean analysisChange(Map<String, Object> settings, Map<String, Object> analysis) {
         Map<StringBuilder, Object> analysisList = new LinkedHashMap<>();
         buildAnalysis(analysis, analysisList, new StringBuilder("index.analysis."));
         
@@ -210,7 +210,7 @@ public class EsReindexProcess {
             if (value == null) {
                 return true;
             }
-            if (!value.equals(entry.getValue())) {
+            if (!value.toString().equals(entry.getValue().toString())) {
                 return true;
             }
         }
