@@ -1,7 +1,9 @@
 package com.es.plus.adapter.params;
 
+import com.es.plus.adapter.util.JsonUtils;
 import lombok.Data;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -21,8 +23,12 @@ public class EsIndexResponse {
         return map;
     }
     
-    public String getSetting(String indexName) {
+    public Map<String,String> getSetting(String indexName) {
         String setting = settings.get(indexName);
-        return setting;
+        if (setting!=null) {
+            Map<String, String> settings = JsonUtils.toBean(setting, Map.class);
+            return settings;
+        }
+        return new HashMap<>();
     }
 }

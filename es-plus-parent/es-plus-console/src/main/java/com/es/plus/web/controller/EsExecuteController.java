@@ -39,10 +39,10 @@ public class EsExecuteController {
     @GetMapping("esQuery/epl")
     public Object esQueryEpl(String epl, @RequestHeader("currentEsClient") String currentEsClient) throws Exception {
         if (epl.endsWith(";")) {
-            epl= abc(epl);
             epl = epl.substring(0, epl.length() - 1);
-            System.out.println(epl);
         }
+        epl= abc(epl);
+        
         String s = String.format(function, epl);
         s = StringUtils.replace(s, "chainQuery()", "chainQuery(\"" + currentEsClient + "\")");
         
@@ -172,11 +172,10 @@ public class EsExecuteController {
         int lastIndex = input.lastIndexOf(';');
         
         if (lastIndex == -1) {
-            System.out.println(input);
-            return input;
+          return   "return "+input;
         }
         
-        int secondLastIndex = input.lastIndexOf(';', lastIndex - 1);
+        int secondLastIndex = input.lastIndexOf(';', lastIndex );
         
         if (secondLastIndex == -1) {
             System.out.println(input);
