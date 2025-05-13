@@ -155,7 +155,7 @@ public class EsReindexProcess {
             EsPlusClientFacade esPlusClientFacade) {
         EsIndexParam esIndexParam = IndexContext.getIndex(clazz);
         EsSettings esSettings = esIndexParam.getEsSettings();
-        Map<String, String> settings = indexResponse.getSetting(indexResponse.getIndices()[0]);
+        Map<String, Object> settings = indexResponse.getSetting(indexResponse.getIndices()[0]);
         
         String json = JsonUtils.toJsonStr(esSettings);
         Map<String, Object> localSettings = JsonUtils.toMap(json);
@@ -163,7 +163,7 @@ public class EsReindexProcess {
                 settings.get(NUMBER_OF_SHARDS) != null ? Integer.parseInt(settings.get(NUMBER_OF_SHARDS)) : 5;
         Integer remoteMaxResultWindow =
                 settings.get(MAX_RESULT_WINDOW) != null ? Integer.parseInt(settings.get(MAX_RESULT_WINDOW)) : 10000;
-        String remoteRefreshInterval = settings.get("index.refresh_interval");
+        String remoteRefreshInterval = settings.get("index.refresh_interval").toString();
         if (remoteShards != localSettings.get("number_of_shards")) {
             return true;
         }
@@ -206,11 +206,11 @@ public class EsReindexProcess {
         }
         
         for (Map.Entry<StringBuilder, Object> entry : analysisList.entrySet()) {
-            String value = settings.get(entry.getKey().toString());
+            Object value = settings.get(entry.getKey().toString());
             if (value == null) {
                 return true;
             }
-            if (!value.equals(entry.getValue().toString())) {
+            if (!value.equals(entry.getValue())) {
                 return true;
             }
         }

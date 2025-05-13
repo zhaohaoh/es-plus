@@ -23,10 +23,10 @@ public class EsIndexResponse {
         return map;
     }
     
-    public Map<String,String> getSetting(String indexName) {
+    public Map<String,Object> getSetting(String indexName) {
         String setting = settings.get(indexName);
         if (setting!=null) {
-            Map<String, String> settings = JsonUtils.toBean(setting, Map.class);
+            Map<String, Object> settings = JsonUtils.toBean(setting, Map.class);
             return settings;
         }
         return new HashMap<>();
