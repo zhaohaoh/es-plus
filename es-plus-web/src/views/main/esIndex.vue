@@ -43,6 +43,9 @@
           <el-button type="primary" @click="clickMappings(item.index)" plain
             >设置映射</el-button
           >
+          <el-button type="primary" @click="clickIndex(item.index)" plain
+            >查看索引信息</el-button
+          >
           <el-button type="danger" @click="clickDelete(item.index)" plain
             >删除</el-button
           >
@@ -54,7 +57,8 @@
       v-model="dialogFormVisible"
       title="设置映射"
       style="
-        max-width: 700px;
+        width: 900px;
+        max-width: 1000px;
         position: relative;
         height: 750px;
         transform: translateY(-50px);
@@ -85,6 +89,36 @@
       >
         保存/修改映射
       </el-button>
+    </el-dialog>
+
+    <el-dialog
+      v-model="dialogIndexInfo"
+      title="索引信息"
+      style="
+        width: 900px;
+        max-width: 1000px;
+        position: relative;
+        height: 750px;
+        transform: translateY(-50px);
+      "
+    >
+      <!-- <Codemirror
+        v-model:value="code"
+        :options="cmOptions"
+        :width="width"
+        border
+        height="600px"
+        readonly="true"
+        @ready="onReady"
+      /> -->
+      <div>
+        <JsonEditor
+          v-model:value="indexInfo"
+          height="600"
+          styles="width: 100%"
+          title="索引信息"
+        />
+      </div>
     </el-dialog>
   </div>
 </template>
@@ -119,7 +153,12 @@ import "codemirror/mode/javascript/javascript.js";
 
 // const jsonEditor = ref();
 // 定义响应式变量
+
+const dialogIndexInfo = ref(false);
+
 const code = ref("");
+const indexInfo = ref("");
+
 // const jsonStrData = computed(() => {
 //   console.log("获取新的值" + code.value);
 //   return code.value;
@@ -176,7 +215,21 @@ const clickMappings = async (index) => {
 
   dialogFormVisible.value = true;
   currentIndex.value = index;
-  console.log("当前索引" + currentIndex.value);
+};
+
+const clickIndex = async (index) => {
+  getIndex(index);
+  dialogIndexInfo.value = true;
+  currentIndex.value = index;
+};
+
+const getIndex = async (index) => {
+  const param = {
+    index: index,
+  };
+  let res = await proxy.$api.esIndex.getIndex(param);
+
+  indexInfo.value = JSON.stringify(res, null, 2);
 };
 
 const getMapping = async (index) => {
@@ -212,7 +265,7 @@ const clickDelete = async (index) => {
   })
     .then(() => {
       esIndexDelete(index);
-      elMessage.success;
+      elMessage.success();
     })
     .catch(() => {});
 };
@@ -224,7 +277,7 @@ const esIndexDelete = async (data) => {
   };
   let res = await proxy.$api.esIndex.deleteIndex(param);
   getIndices(keyword.value);
-  elMessage.success;
+  elMessage.success();
 };
 </script>
 <style scoped>

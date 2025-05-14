@@ -12,5 +12,5 @@ public class EsIndexResponseVO {
     private List<String> aliases;
     private Map<String, String> settings;
     
-    private Map<String,List<String>> flatMappings;
+    private Map<String,Map<String, String>> flatMappings;
 }

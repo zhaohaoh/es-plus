@@ -15,6 +15,7 @@
       </el-col>
       <el-col :span="3">
         <el-select filterable v-model="item.field" placeholder="请选择字段">
+          <el-option key="_id" label="_id" value="_id" />
           <el-option
             v-for="field in currentMapping"
             :key="field"
@@ -224,7 +225,9 @@ const tableData = ref([]);
 
 const mappings = ref([]);
 
-const currentMapping = ref();
+const currentMappingMap = ref();
+
+let currentMapping = ref();
 
 const indexData = ref([]);
 
@@ -251,7 +254,8 @@ const selectIndex = ref();
 
 const clickIndex = (index) => {
   selectIndex.value = index;
-  currentMapping.value = mappings.value[selectIndex.value];
+  currentMappingMap.value = mappings.value[selectIndex.value];
+  currentMapping.value = Object.keys(currentMappingMap.value);
   submitQuery();
 };
 
@@ -291,11 +295,21 @@ const getList = async () => {
     if (i && i.searchType && i.field && i.searchKeyword) {
       const mustType = i.mustType;
       queryDsl += "." + mustType + "()";
-      const isStr = checkType(i.searchKeyword);
+
       let searchKeyword = i.searchKeyword;
-      if (isStr) {
+      if (i.field == "_id") {
         searchKeyword = '"' + i.searchKeyword + '"';
       }
+
+      Object.entries(currentMappingMap.value).forEach(([k, v]) => {
+        if (k == i.field && (v == "text" || v == "keyword")) {
+          searchKeyword = '"' + i.searchKeyword + '"';
+        }
+        if (k == i.field && v == "long") {
+          searchKeyword = i.searchKeyword + "L";
+        }
+      });
+
       queryDsl +=
         "." + i.searchType + '("' + i.field + '",' + searchKeyword + ")";
     }
