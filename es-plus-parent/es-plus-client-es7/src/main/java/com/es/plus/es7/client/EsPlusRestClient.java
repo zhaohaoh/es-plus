@@ -1181,15 +1181,10 @@ public class EsPlusRestClient implements EsPlusClient {
     protected Object handlerSaveParamter(String index,Object esData) {
         Map<String, EsObjectHandler> esObjectHandler = GlobalConfigCache.ES_OBJECT_HANDLER;
         if (esObjectHandler !=null){
-            
-            EsObjectHandler objectHandler = esObjectHandler.get("global");
-            
-            if (objectHandler != null && objectHandler.insertFill()!=null){
-                objectHandler.setInsertFeild(esData);
+            EsObjectHandler objectHandler = esObjectHandler.get(index);
+            if (objectHandler == null){
+                objectHandler = esObjectHandler.get("global");
             }
-            
-            objectHandler = esObjectHandler.get(index);
-        
             if (objectHandler != null && objectHandler.insertFill()!=null){
                  objectHandler.setInsertFeild(esData);
               
@@ -1201,14 +1196,10 @@ public class EsPlusRestClient implements EsPlusClient {
     protected Object handlerUpdateParamter(String index,Object esData) {
         Map<String, EsObjectHandler> esObjectHandler = GlobalConfigCache.ES_OBJECT_HANDLER;
         if (esObjectHandler !=null){
-            
-            EsObjectHandler objectHandler = esObjectHandler.get("global");
-            
-            if (objectHandler != null && objectHandler.updateFill()!=null){
-                objectHandler.setUpdateFeild(esData);
+            EsObjectHandler objectHandler = esObjectHandler.get(index);
+            if (objectHandler==null){
+                objectHandler = esObjectHandler.get("global");
             }
-            
-            objectHandler = esObjectHandler.get(index);
             if (objectHandler != null && objectHandler.updateFill()!=null){
                 objectHandler.setUpdateFeild(esData);
             }
