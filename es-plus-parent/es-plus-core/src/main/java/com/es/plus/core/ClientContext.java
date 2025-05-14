@@ -58,10 +58,10 @@ public class ClientContext {
         EsPlusClient esPlusClient;
         EsPlusIndexClient esPlusIndexRestClient;
         if (GlobalConfigCache.GLOBAL_CONFIG.getVersion().equals(6)) {
-            esPlusClient = new EsPlus6RestClient(restHighLevelClient, esLockFactory);
+            esPlusClient = new EsPlus6RestClient(restHighLevelClient);
             esPlusIndexRestClient = new EsPlus6IndexRestClient(restHighLevelClient);
         }else{
-            esPlusClient = new EsPlusRestClient(restHighLevelClient, esLockFactory);
+            esPlusClient = new EsPlusRestClient(restHighLevelClient);
             esPlusIndexRestClient = new EsPlusIndexRestClient(restHighLevelClient);
         }
 
@@ -79,10 +79,10 @@ public class ClientContext {
         EsLockClient esLockClient = new EsLockClient(restHighLevelClient);
         EsLockFactory esLockFactory = new EsLockFactory(esLockClient);
         if (GlobalConfigCache.GLOBAL_CONFIG.getVersion().equals(6)) {
-            esPlusClient = new EsPlus6RestClient(restHighLevelClient, esLockFactory);
+            esPlusClient = new EsPlus6RestClient(restHighLevelClient);
             esPlusIndexRestClient = new EsPlus6IndexRestClient(restHighLevelClient);
         }else{
-            esPlusClient = new EsPlusRestClient(restHighLevelClient, esLockFactory);
+            esPlusClient = new EsPlusRestClient(restHighLevelClient);
             esPlusIndexRestClient = new EsPlusIndexRestClient(restHighLevelClient);
         }
         

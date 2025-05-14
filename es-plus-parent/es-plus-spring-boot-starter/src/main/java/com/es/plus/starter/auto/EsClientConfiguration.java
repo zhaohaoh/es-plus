@@ -1,6 +1,7 @@
 package com.es.plus.starter.auto;
 
 import com.es.plus.adapter.EsPlusClientFacade;
+import com.es.plus.adapter.config.EsObjectHandler;
 import com.es.plus.adapter.config.GlobalConfigCache;
 import com.es.plus.adapter.exception.EsException;
 import com.es.plus.adapter.interceptor.EsInterceptor;
@@ -73,8 +74,12 @@ public class EsClientConfiguration implements InitializingBean {
 
     @Autowired
     private EsProperties esProperties;
+    
     @Autowired(required = false)
     private List<EsInterceptor> esInterceptors;
+    
+    @Autowired(required = false)
+    private Map<String, EsObjectHandler> esObjectHandlerMap;
 
     /**
      * 不存在才加载，存在的话以默认的为主
@@ -157,6 +162,10 @@ public class EsClientConfiguration implements InitializingBean {
             EsPlusClientFacade esPlusClientFacade = ClientContext.buildEsPlusClientFacade(v.getAddress(),restHighLevelClient,esInterceptors);
             ClientContext.addClient(k, esPlusClientFacade);
         });
+        
+        if (esObjectHandlerMap !=null) {
+            GlobalConfigCache.ES_OBJECT_HANDLER = esObjectHandlerMap;
+        }
     }
 
     private void setAnalysis() {

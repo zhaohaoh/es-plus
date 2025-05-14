@@ -2,11 +2,11 @@ package com.es.plus.es7.client;
 
 
 import com.es.plus.adapter.config.BulkProcessorConfig;
+import com.es.plus.adapter.config.EsObjectHandler;
 import com.es.plus.adapter.config.GlobalConfigCache;
 import com.es.plus.adapter.core.EsPlusClient;
 import com.es.plus.adapter.exception.EsException;
 import com.es.plus.adapter.interceptor.EsUpdateField;
-import com.es.plus.adapter.lock.EsLockFactory;
 import com.es.plus.adapter.params.EsAggResponse;
 import com.es.plus.adapter.params.EsHighLight;
 import com.es.plus.adapter.params.EsHit;
@@ -118,16 +118,14 @@ public class EsPlusRestClient implements EsPlusClient {
     
     private final RestHighLevelClient restHighLevelClient;
     
-    private final EsLockFactory esLockFactory;
     @Override
     public RestHighLevelClient getRestHighLevelClient() {
         return restHighLevelClient;
     }
     
     
-    public EsPlusRestClient(RestHighLevelClient restHighLevelClient, EsLockFactory esLockFactory) {
+    public EsPlusRestClient(RestHighLevelClient restHighLevelClient) {
         this.restHighLevelClient = restHighLevelClient;
-        this.esLockFactory = esLockFactory;
     }
     
 
@@ -191,20 +189,30 @@ public class EsPlusRestClient implements EsPlusClient {
         }
     }
     
-    
+    /**
+     *  saveOrUpdate
+     */
     private  UpdateRequest getUpsertRequest(String type, String index, Object esData, boolean childIndex) {
+        //这里提前序列化了
+        handlerUpdateParamter(index,esData);
+        String jsonStr = JsonUtils.toJsonStr(esData);
         UpdateRequest updateRequest = new UpdateRequest(index, type,
-                GlobalParamHolder.getDocId(index, esData)).doc(JsonUtils.toJsonStr(esData), XContentType.JSON);
+                GlobalParamHolder.getDocId(index, esData)).doc(jsonStr, XContentType.JSON);//如果文档存在：仅更新esData中包含的字段。
         updateRequest.retryOnConflict(GlobalConfigCache.GLOBAL_CONFIG.getMaxRetries());
-        // 如果没有文档则新增
-        updateRequest.docAsUpsert(true);
-        //下面这段是利用额外的json去进行upsert 场景不一样
-        //                    updateRequest.upsert(JsonUtils.toJsonStr(esData), XContentType.JSON);
+        
+        //这里会改变对象的数据
+        handlerSaveParamter(index,esData);
+        //  如果文档不存在则插入下面这段的数据
+        updateRequest.upsert(JsonUtils.toJsonStr(esData), XContentType.JSON);
         if (childIndex) {
             updateRequest.routing(FieldUtils.getStrFieldValue(esData, "joinField", "parent"));
         }
         return updateRequest;
     }
+    
+    
+   
+    
     
     /**
      * 批处理更新 返回失败数据
@@ -308,6 +316,7 @@ public class EsPlusRestClient implements EsPlusClient {
     
     private   IndexRequest getIndexRequest(String index,String type, Object esData, boolean childIndex) {
         IndexRequest indexRequest = new IndexRequest(index,type);
+        handlerSaveParamter(index,esData);
         String source = JsonUtils.toJsonStr(esData);
         indexRequest.id(GlobalParamHolder.getDocId(index, esData)).source(source, XContentType.JSON);
         if (childIndex) {
@@ -459,6 +468,7 @@ public class EsPlusRestClient implements EsPlusClient {
     }
     
     private   UpdateRequest getUpdateRequest(String type, String index, Object esData, boolean childIndex) {
+        handlerUpdateParamter(index,esData);
         UpdateRequest updateRequest = new UpdateRequest(index, type,
                 GlobalParamHolder.getDocId(index, esData)).doc(JsonUtils.toJsonStr(esData), XContentType.JSON);
         updateRequest.retryOnConflict(GlobalConfigCache.GLOBAL_CONFIG.getMaxRetries());
@@ -1168,12 +1178,32 @@ public class EsPlusRestClient implements EsPlusClient {
         params.put(updateFill.getName(), updateFill.getValue());
     }
     
-    protected Object handlerSaveParamter(Object esData) {
+    protected Object handlerSaveParamter(String index,Object esData) {
+        Map<String, EsObjectHandler> esObjectHandler = GlobalConfigCache.ES_OBJECT_HANDLER;
+        if (esObjectHandler !=null){
+            EsObjectHandler objectHandler = esObjectHandler.get(index);
+            if (objectHandler == null){
+                objectHandler = esObjectHandler.get("global");
+            }
+            if (objectHandler != null && objectHandler.insertFill()!=null){
+                 objectHandler.setInsertFeild(esData);
+              
+            }
+        }
         return esData;
     }
     
-    protected Object handlerUpdateParamter(Object esData) {
-        esData = setUpdateFeild(esData);
+    protected Object handlerUpdateParamter(String index,Object esData) {
+        Map<String, EsObjectHandler> esObjectHandler = GlobalConfigCache.ES_OBJECT_HANDLER;
+        if (esObjectHandler !=null){
+            EsObjectHandler objectHandler = esObjectHandler.get(index);
+            if (objectHandler==null){
+                objectHandler = esObjectHandler.get("global");
+            }
+            if (objectHandler != null && objectHandler.updateFill()!=null){
+                objectHandler.setUpdateFeild(esData);
+            }
+        }
         return esData;
     }
     
