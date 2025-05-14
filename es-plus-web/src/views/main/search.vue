@@ -425,6 +425,7 @@ const saveByIds = async (index, source) => {
   border-radius: 0 4px 4px 0;
   /* overflow-y: auto; */
   height: 750px;
+  max-width: 700px;
 }
 
 .json-input {

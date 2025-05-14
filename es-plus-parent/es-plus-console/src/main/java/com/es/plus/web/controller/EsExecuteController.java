@@ -102,8 +102,8 @@ public class EsExecuteController {
         }
         String[] split = limit.split(",");
         String pageSize = split[split.length - 1];
-        if (Integer.parseInt(pageSize.trim()) > 10000) {
-            throw new RuntimeException("分页数量不能超过10000");
+        if (Integer.parseInt(pageSize.trim()) > 50000) {
+            throw new RuntimeException("分页数量不能超过50000");
         }
         EsResponse<Map> esResponse = Es.chainQuery(currentEsClient).executeSQL(sql);
         SearchResponse sourceResponse = esResponse.getSourceResponse();
