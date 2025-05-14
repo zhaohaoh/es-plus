@@ -1197,7 +1197,7 @@ public class EsPlusRestClient implements EsPlusClient {
         Map<String, EsObjectHandler> esObjectHandler = GlobalConfigCache.ES_OBJECT_HANDLER;
         if (esObjectHandler !=null){
             EsObjectHandler objectHandler = esObjectHandler.get(index);
-            if (objectHandler==null){
+            if (objectHandler == null){
                 objectHandler = esObjectHandler.get("global");
             }
             if (objectHandler != null && objectHandler.updateFill()!=null){
