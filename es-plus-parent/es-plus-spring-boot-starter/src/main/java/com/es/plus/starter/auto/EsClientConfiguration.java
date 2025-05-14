@@ -7,10 +7,10 @@ import com.es.plus.adapter.exception.EsException;
 import com.es.plus.adapter.interceptor.EsInterceptor;
 import com.es.plus.adapter.properties.GlobalParamHolder;
 import com.es.plus.adapter.util.XcontentBuildUtils;
-import com.es.plus.core.ClientContext;
 import com.es.plus.autoconfigure.properties.AnalysisProperties;
 import com.es.plus.autoconfigure.properties.ClientProperties;
 import com.es.plus.autoconfigure.properties.EsProperties;
+import com.es.plus.core.ClientContext;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpHost;
@@ -36,6 +36,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static com.es.plus.constant.Analyzer.ASCIIFOLDING;
 import static com.es.plus.constant.Analyzer.EP_IK_MAX_WORD;
@@ -79,7 +81,7 @@ public class EsClientConfiguration implements InitializingBean {
     private List<EsInterceptor> esInterceptors;
     
     @Autowired(required = false)
-    private Map<String, EsObjectHandler> esObjectHandlerMap;
+    private List<EsObjectHandler> esObjectHandlers;
 
     /**
      * 不存在才加载，存在的话以默认的为主
@@ -152,6 +154,13 @@ public class EsClientConfiguration implements InitializingBean {
     public void afterPropertiesSet() throws Exception {
         GlobalConfigCache.GLOBAL_CONFIG = esProperties.getGlobalConfig();
         setAnalysis();
+        
+        if (esObjectHandlers !=null) {
+            Map<String, EsObjectHandler> handlerMap = esObjectHandlers.stream()
+                    .collect(Collectors.toMap(EsObjectHandler::index, Function.identity()));
+            GlobalConfigCache.ES_OBJECT_HANDLER = handlerMap;
+        }
+        
         //设置主客户端属性 以spring的客户端为主
         Map<String, ClientProperties> clientProperties = esProperties.getClientProperties();
         if (CollectionUtils.isEmpty(clientProperties)) {
@@ -162,10 +171,6 @@ public class EsClientConfiguration implements InitializingBean {
             EsPlusClientFacade esPlusClientFacade = ClientContext.buildEsPlusClientFacade(v.getAddress(),restHighLevelClient,esInterceptors);
             ClientContext.addClient(k, esPlusClientFacade);
         });
-        
-        if (esObjectHandlerMap !=null) {
-            GlobalConfigCache.ES_OBJECT_HANDLER = esObjectHandlerMap;
-        }
     }
 
     private void setAnalysis() {
