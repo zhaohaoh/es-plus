@@ -179,23 +179,7 @@ public class EsPlus6RestClient implements EsPlusClient {
     }
     
     
-    /**
-     *  不存在的文档插入upsertData  例如多了createTime等字段
-     *  存在文档更新esData的值
-     */
-    private  UpdateRequest getUpsertRequest(String type, String index, Object esData, Object upsertData,boolean childIndex) {
-        UpdateRequest updateRequest = new UpdateRequest(index, type,
-                GlobalParamHolder.getDocId(index, esData)).doc(JsonUtils.toJsonStr(esData), XContentType.JSON);//如果文档存在：仅更新esData中包含的字段。
-        updateRequest.retryOnConflict(GlobalConfigCache.GLOBAL_CONFIG.getMaxRetries());
-        
-        //  如果文档不存在则插入下面这段的数据
-        updateRequest.upsert(JsonUtils.toJsonStr(upsertData), XContentType.JSON);
-        if (childIndex) {
-            updateRequest.routing(FieldUtils.getStrFieldValue(esData, "joinField", "parent"));
-        }
-        return updateRequest;
-    }
-    
+  
     
     
     /**

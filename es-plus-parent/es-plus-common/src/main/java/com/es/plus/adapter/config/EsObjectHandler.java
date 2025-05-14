@@ -16,11 +16,11 @@ import java.util.stream.Collectors;
  */
 public interface EsObjectHandler {
     
-    default EsUpdateField.Field insertFill(){
+    default EsUpdateField.Field[] insertFill(){
         return null;
     };
     
-    default EsUpdateField.Field updateFill(){
+    default EsUpdateField.Field[] updateFill(){
         return null;
     };
     
@@ -30,20 +30,23 @@ public interface EsObjectHandler {
     
     
     default Object setUpdateFeild(Object object) {
-        EsUpdateField.Field updateFill = updateFill();
-        if (updateFill == null) {
+        EsUpdateField.Field[] fields = updateFill();
+        if (fields == null) {
             return object;
         }
         try {
-            List<Field> fieldList = ClassUtils.getFieldList(object.getClass());
-            Map<String, Field> fieldMap = fieldList.stream()
-                    .collect(Collectors.toMap(Field::getName, Function.identity()));
-            Field field = fieldMap.get(updateFill.getName());
-            field.setAccessible(true);
-            Object value = field.get(object);
-            if (value == null) {
-                field.set(object, updateFill.getValue());
+            for (EsUpdateField.Field updateFill : fields) {
+                List<Field> fieldList = ClassUtils.getFieldList(object.getClass());
+                Map<String, Field> fieldMap = fieldList.stream()
+                        .collect(Collectors.toMap(Field::getName, Function.identity()));
+                Field field = fieldMap.get(updateFill.getName());
+                field.setAccessible(true);
+                Object value = field.get(object);
+                if (value == null) {
+                    field.set(object, updateFill.getValue());
+                }
             }
+           
         } catch (Exception e) {
             throw new EsException(e);
         }
@@ -51,19 +54,21 @@ public interface EsObjectHandler {
     }
     
     default Object setInsertFeild(Object object) {
-        EsUpdateField.Field insertFill = insertFill();
-        if (insertFill == null) {
+        EsUpdateField.Field[] fields = insertFill();
+        if (fields == null) {
             return object;
         }
         try {
-            List<Field> fieldList = ClassUtils.getFieldList(object.getClass());
-            Map<String, Field> fieldMap = fieldList.stream()
-                    .collect(Collectors.toMap(Field::getName, Function.identity()));
-            Field field = fieldMap.get(insertFill.getName());
-            field.setAccessible(true);
-            Object value = field.get(object);
-            if (value == null) {
-                field.set(object, insertFill.getValue());
+            for (EsUpdateField.Field insertFill : fields) {
+                List<Field> fieldList = ClassUtils.getFieldList(object.getClass());
+                Map<String, Field> fieldMap = fieldList.stream()
+                        .collect(Collectors.toMap(Field::getName, Function.identity()));
+                Field field = fieldMap.get(insertFill.getName());
+                field.setAccessible(true);
+                Object value = field.get(object);
+                if (value == null) {
+                    field.set(object, insertFill.getValue());
+                }
             }
         } catch (Exception e) {
             throw new EsException(e);
