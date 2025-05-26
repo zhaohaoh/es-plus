@@ -43,20 +43,26 @@ public class GlobalParamHolder {
     
             String idFeildName = null;
             //对象字段
-            if (esEntityInfo!=null){
+            if (esEntityInfo != null) {
                 idFeildName = esEntityInfo.getIdName();
             }
-             //获取索引映射的id
-             if (idFeildName == null) {
-                 idFeildName = _id(index);
-             }
-             //默认id规则
-             if (idFeildName == null) {
+            //获取索引映射的id
+            if (idFeildName == null) {
+                idFeildName = _id(index);
+            }
+            //默认id规则
+            if (idFeildName == null) {
                 idFeildName = GlobalConfigCache.GLOBAL_CONFIG.getGlobalEsId();
-             }
+            }
+        
           
             //如果map字段获取不到id走自动生成
             if (obj instanceof Map) {
+                Object _id = ((Map<?, ?>) obj).get("_id");
+                if (_id !=null){
+                    ((Map<?, ?>) obj).remove("_id");
+                    return String.valueOf(_id);
+                }
                 Object id = ((Map<?, ?>) obj).get(idFeildName);
                 if (id == null) {
                     String uuid = UUID.randomUUID().toString().replace("-", "");
@@ -72,9 +78,15 @@ public class GlobalParamHolder {
             Object id = field.get(obj);
             //如果没有值则自动生成uuid注入
             if (id == null) {
-                if (EsIdType.UUID.equals(GlobalConfigCache.GLOBAL_CONFIG.getEsIdType())) {
-                    String uuid = UUID.randomUUID().toString().replace("-", "");
-                    field.set(obj, uuid);
+                field = clazz.getDeclaredField("_id");
+                field.setAccessible(true);
+                id = field.get(obj);
+                field.set(obj,null);
+                if (id == null) {
+                    if (EsIdType.UUID.equals(GlobalConfigCache.GLOBAL_CONFIG.getEsIdType())) {
+                        String uuid = UUID.randomUUID().toString().replace("-", "");
+                        field.set(obj, uuid);
+                    }
                 }
             }
             return String.valueOf(id);

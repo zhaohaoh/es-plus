@@ -195,9 +195,10 @@ public class EsPlusRestClient implements EsPlusClient {
     private  UpdateRequest getUpsertRequest(String type, String index, Object esData, boolean childIndex) {
         //这里提前序列化了
         handlerUpdateParamter(index,esData);
+        String docId = GlobalParamHolder.getDocId(index, esData);
+        //获取id的动作要前置，因为里面会修改对象
         String jsonStr = JsonUtils.toJsonStr(esData);
-        UpdateRequest updateRequest = new UpdateRequest(index, type,
-                GlobalParamHolder.getDocId(index, esData)).doc(jsonStr, XContentType.JSON);//如果文档存在：仅更新esData中包含的字段。
+        UpdateRequest updateRequest = new UpdateRequest(index, type, docId).doc(jsonStr, XContentType.JSON);//如果文档存在：仅更新esData中包含的字段。
         updateRequest.retryOnConflict(GlobalConfigCache.GLOBAL_CONFIG.getMaxRetries());
         
         //这里会改变对象的数据
@@ -317,8 +318,10 @@ public class EsPlusRestClient implements EsPlusClient {
     private   IndexRequest getIndexRequest(String index,String type, Object esData, boolean childIndex) {
         IndexRequest indexRequest = new IndexRequest(index,type);
         handlerSaveParamter(index,esData);
+        String docId = GlobalParamHolder.getDocId(index, esData);
+        //获取id的动作要前置，因为里面会修改对象
         String source = JsonUtils.toJsonStr(esData);
-        indexRequest.id(GlobalParamHolder.getDocId(index, esData)).source(source, XContentType.JSON);
+        indexRequest.id(docId).source(source, XContentType.JSON);
         if (childIndex) {
             indexRequest.routing(FieldUtils.getStrFieldValue(esData, "joinField", "parent"));
         }
@@ -469,8 +472,9 @@ public class EsPlusRestClient implements EsPlusClient {
     
     private   UpdateRequest getUpdateRequest(String type, String index, Object esData, boolean childIndex) {
         handlerUpdateParamter(index,esData);
-        UpdateRequest updateRequest = new UpdateRequest(index, type,
-                GlobalParamHolder.getDocId(index, esData)).doc(JsonUtils.toJsonStr(esData), XContentType.JSON);
+        String docId = GlobalParamHolder.getDocId(index, esData);
+        //获取id的动作要前置，因为里面会修改对象
+        UpdateRequest updateRequest = new UpdateRequest(index, type, docId).doc(JsonUtils.toJsonStr(esData), XContentType.JSON);
         updateRequest.retryOnConflict(GlobalConfigCache.GLOBAL_CONFIG.getMaxRetries());
         if (childIndex) {
             updateRequest.routing(FieldUtils.getStrFieldValue(esData, "joinField", "parent"));

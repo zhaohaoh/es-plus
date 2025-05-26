@@ -1,7 +1,9 @@
 package com.es.plus.web.controller;
 
 import com.es.plus.adapter.EsPlusClientFacade;
+import com.es.plus.adapter.exception.EsException;
 import com.es.plus.adapter.params.EsAggResponse;
+import com.es.plus.adapter.params.EsIndexResponse;
 import com.es.plus.adapter.params.EsResponse;
 import com.es.plus.core.ClientContext;
 import com.es.plus.core.statics.Es;
@@ -25,6 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 
 @RestController
@@ -164,10 +167,28 @@ public class EsExecuteController {
     @PutMapping("/updateBatch")
     public void updateBatch(@RequestBody EsRequstInfo esRequstInfo, @RequestHeader("currentEsClient") String currentEsClient) {
         EsPlusClientFacade esPlusClientFacade = ClientContext.getClient(currentEsClient);
-   
         
-        Es.chainUpdate(esPlusClientFacade, Map.class).index(esRequstInfo.getIndex()).updateBatch(esRequstInfo.getDatas());
+        EsIndexResponse mappings = Es.chainIndex(esPlusClientFacade).getIndex(esRequstInfo.getIndex());
+        Map<String, Object> mapping = mappings.getMappings(esRequstInfo.getIndex());
+        Map object = (Map) mapping.get("properties");
+        Set keySet = object.keySet();
+        
+        List<Map> datas = esRequstInfo.getDatas();
+        for (Map map : datas) {
+            map.forEach((k,v)->{
+                if (k!="_id"){
+                    boolean contains = keySet.contains(k);
+                    if (!contains){
+                        throw new EsException("添加的字段再索引映射中不存在，请确认");
+                    }
+                }
+            });
+        }
+        
+        Es.chainUpdate(esPlusClientFacade, Map.class).index(esRequstInfo.getIndex()).saveOrUpdateBatch(esRequstInfo.getDatas());
     }
+    
+    
     public String abc(String input) {
         int lastIndex = input.lastIndexOf(';');
         

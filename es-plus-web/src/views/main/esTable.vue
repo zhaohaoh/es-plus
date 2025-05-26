@@ -74,7 +74,7 @@
           <el-option label="ASC" value="ASC" />
         </el-select>
       </el-col>
-      <el-button @click="submitQuery" type="primary"> 查询 </el-button>
+      <el-button @click="submitQuery" plain type="primary"> 查询 </el-button>
     </el-row>
   </div>
 
@@ -122,7 +122,7 @@
         </el-row>
         <el-row class="row-bg" justify="end">
           <el-col :span="1">
-            <el-button type="success" plain @click="saveClick">新增</el-button>
+            <el-button type="primary" plain @click="saveClick">新增</el-button>
           </el-col>
         </el-row>
       </div>
@@ -172,6 +172,33 @@
       />
     </div>
   </el-dialog>
+
+  <el-dialog
+    v-model="addDataVisible"
+    :title="'当前索引:' + selectIndex"
+    style="
+      max-width: 700px;
+      position: relative;
+      height: 750px;
+      transform: translateY(-50px);
+    "
+  >
+    <div>
+      <JsonEditor
+        v-model:value="addData"
+        height="600"
+        styles="width: 100%"
+        title="新增数据注意:_id必填,否则会自动生成id"
+      />
+    </div>
+    <el-button
+      type="primary"
+      @click="saveData"
+      style="position: absolute; right: 10px; bottom: 10px"
+    >
+      保存数据
+    </el-button>
+  </el-dialog>
 </template>
 
 <script lang="ts" setup>
@@ -180,9 +207,14 @@ import type { FormProps } from "element-plus";
 import { ElMessageBox } from "element-plus";
 import options from "../../store/global";
 import { ElMessage } from "element-plus";
+import elMessage from "../../util/message";
 
 let dialogFormVisible = ref(false);
+let addDataVisible = ref(false);
+
 const code = ref("");
+
+const addData = ref("{}");
 
 const indexKeyword = ref("");
 
@@ -233,9 +265,22 @@ const indexData = ref([]);
 
 const { proxy } = getCurrentInstance() as any;
 
+const saveClick = async (index) => {
+  addDataVisible.value = true;
+};
+
+const saveData = async () => {
+  const param = {
+    index: selectIndex.value,
+    datas: [JSON.parse(addData.value)],
+  };
+  console.log("baocun :" + JSON.stringify(param));
+  let res = await proxy.$api.tools.updateBatch(param);
+  elMessage.success();
+};
+
 const clickMappings = async (index) => {
   await getMapping(index);
-  // jsonView.value = res;
 
   dialogFormVisible.value = true;
   selectIndex.value = index;
@@ -339,12 +384,23 @@ const eplQuery = async (epl) => {
 
   // const jsonObject = JSON.parse(res);
   const list = res.hits.hits;
-
+  list.forEach((item) => (item._source["_id"] = item._id));
   const source = list.map((item) => item._source);
   //列表数据
   if (source != null && source.length > 0) {
     //列表数据字段名
-    let keys = Object.keys(source[0]);
+    let keys;
+    let maxLength = 0;
+
+    for (const obj of source) {
+      const longestKeys = Object.keys(obj);
+      if (longestKeys.length > maxLength) {
+        maxLength = longestKeys.length;
+        keys = longestKeys;
+      }
+    }
+    keys.push("_id");
+
     const entries = Object.entries(source[0]);
 
     // 1. 收集需要前置的键（保持entries顺序）
@@ -366,6 +422,13 @@ const eplQuery = async (epl) => {
       const [id] = keys.splice(idIndex, 1);
       // 2. 插入到数组开头
       keys.unshift(id);
+    }
+    const idIndex1 = keys.indexOf("_id");
+    if (idIndex1 > -1) {
+      // 1. 移除 id
+      const [_id] = keys.splice(idIndex1, 1);
+      // 2. 插入到数组开头
+      keys.unshift(_id);
     }
 
     tableHeader.length = 0;
