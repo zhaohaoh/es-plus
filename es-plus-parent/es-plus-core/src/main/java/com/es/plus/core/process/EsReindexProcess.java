@@ -163,7 +163,12 @@ public class EsReindexProcess {
                 settings.get(NUMBER_OF_SHARDS) != null ? Integer.parseInt(settings.get(NUMBER_OF_SHARDS).toString()) : 5;
         Integer remoteMaxResultWindow =
                 settings.get(MAX_RESULT_WINDOW) != null ? Integer.parseInt(settings.get(MAX_RESULT_WINDOW).toString()) : 10000;
-        String remoteRefreshInterval = settings.get("index.refresh_interval").toString();
+        Object object = settings.get("index.refresh_interval");
+        String remoteRefreshInterval =null;
+        if (object!=null){
+              remoteRefreshInterval = object.toString();
+        }
+     
         if (remoteShards != localSettings.get("number_of_shards")) {
             return true;
         }
