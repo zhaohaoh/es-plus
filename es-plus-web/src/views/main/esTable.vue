@@ -216,9 +216,11 @@ const code = ref("");
 
 const addData = ref("{}");
 
-const indexKeyword = ref("");
+let indexKeyword = ref("");
 
 const onSearch = () => {
+  localStorage.setItem("indexKeyword", indexKeyword.value);
+
   getIndices(indexKeyword.value);
 };
 
@@ -320,7 +322,12 @@ const dsl = ref("Es.chainQuery()");
 
 onMounted(() => {
   // getList();
+
   getIndices("");
+  const a = localStorage.getItem("indexKeyword");
+  if (a != null) {
+    indexKeyword.value = a;
+  }
 });
 
 const submitQuery = () => {
