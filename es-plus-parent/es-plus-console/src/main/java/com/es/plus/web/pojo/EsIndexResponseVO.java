@@ -9,7 +9,7 @@ import java.util.Map;
 public class EsIndexResponseVO {
     private Map<String, Object> mappings;
     private String[] indices;
-    private List<String> aliases;
+    private Map<String,List<String>> aliases;
     private Map<String, String> settings;
     
     private Map<String,Map<String, String>> flatMappings;

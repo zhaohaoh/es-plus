@@ -36,7 +36,7 @@
   <!-- 编辑的弹窗 -->
   <el-dialog
     v-model="dialogFormVisible"
-    title="设置链接"
+    title="新增链接"
     :before-close="handleCancel"
     style="max-width: 660px"
   >
@@ -48,32 +48,32 @@
       style="max-width: 660px"
       label-position="top"
     >
-      <el-form-item label="唯一英文标识" prop="name" style="width: 90%">
+      <el-form-item label="唯一英文标识" prop="name" style="width: 100%">
         <el-col :span="24">
           <el-input v-model="esClient.unikey" />
         </el-col>
       </el-form-item>
-      <el-form-item label="连接中文名" prop="name" style="width: 90%">
+      <el-form-item label="连接中文名" prop="name" style="width: 100%">
         <el-col :span="24">
           <el-input v-model="esClient.name" />
         </el-col>
       </el-form-item>
-      <el-form-item label="链接地址" prop="address" style="width: 90%">
+      <el-form-item label="链接地址" prop="address" style="width: 100%">
         <el-col :span="24">
           <el-input v-model="esClient.address" />
         </el-col>
       </el-form-item>
-      <el-form-item label="协议" prop="schema" style="width: 90%">
+      <el-form-item label="协议" prop="schema" style="width: 100%">
         <el-col :span="24">
           <el-input v-model="esClient.schema" />
         </el-col>
       </el-form-item>
-      <el-form-item label="Username" prop="username" style="width: 90%">
+      <el-form-item label="Username" prop="username" style="width: 100%">
         <el-col :span="24">
           <el-input v-model="esClient.username" />
         </el-col>
       </el-form-item>
-      <el-form-item label="Password" prop="password" style="width: 90%">
+      <el-form-item label="Password" prop="password" style="width: 100%">
         <el-col :span="24">
           <el-input v-model="esClient.password" />
         </el-col>

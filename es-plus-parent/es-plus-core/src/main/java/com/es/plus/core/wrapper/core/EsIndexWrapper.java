@@ -46,6 +46,12 @@ public class EsIndexWrapper implements IEsIndexWrapper {
         esPlusClientFacade.createIndexMapping(index, tClass);
         return this;
     }
+    
+    @Override
+    public EsIndexWrapper createIndex(String index,String alias,EsSettings esSettings,Map<String,Object> mappings) {
+        esPlusClientFacade.createIndex(index,alias,esSettings,mappings );
+        return this;
+    }
 
 
     @Override
@@ -147,7 +153,19 @@ public class EsIndexWrapper implements IEsIndexWrapper {
         esPlusClientFacade.removeAlias(index, alias);
         return this;
     }
-
+    
+    @Override
+    public EsIndexWrapper createAlias(String index, String alias) {
+        esPlusClientFacade.createAlias(index, alias);
+        return this;
+    }
+    
+    @Override
+    public EsIndexWrapper removeAlias(String index, String alias) {
+        esPlusClientFacade.removeAlias(index, alias);
+        return this;
+    }
+    
     @Override
     public boolean forceMerge(int maxSegments, boolean onlyExpungeDeletes, boolean flush, String... index) {
         return esPlusClientFacade.forceMerge(maxSegments, onlyExpungeDeletes, flush, index);

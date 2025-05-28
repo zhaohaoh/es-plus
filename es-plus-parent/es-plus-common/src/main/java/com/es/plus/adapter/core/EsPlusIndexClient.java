@@ -28,7 +28,9 @@ public interface EsPlusIndexClient {
      * @param index 索引
      */
     boolean createIndex(String index);
-
+    
+    
+    boolean createIndex(String index,String alias,EsSettings esSettings,Map<String, Object> mappings);
     /**
      * 映射
      *

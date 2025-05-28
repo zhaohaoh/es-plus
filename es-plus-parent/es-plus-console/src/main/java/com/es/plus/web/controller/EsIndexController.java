@@ -1,24 +1,30 @@
 package com.es.plus.web.controller;
 
 import com.es.plus.adapter.EsPlusClientFacade;
+import com.es.plus.adapter.exception.EsException;
 import com.es.plus.adapter.params.EsIndexResponse;
 import com.es.plus.adapter.util.JsonUtils;
 import com.es.plus.core.ClientContext;
 import com.es.plus.core.statics.Es;
 import com.es.plus.web.cache.EsClientCache;
+import com.es.plus.web.pojo.EsIndexCreateDTO;
 import com.es.plus.web.pojo.EsIndexResponseVO;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.StringJoiner;
 
 @RestController
 @RequestMapping("/es/index")
@@ -126,8 +132,23 @@ public class EsIndexController {
         EsPlusClientFacade client = ClientContext.getClient(esClientName);
         String string = "*" + keyword + "*";
         String cmd = "/_cat/indices/" + string + "?format=json&v";
-        String cmd1 = Es.chainIndex(client).getCmd(cmd);
-        return cmd1;
+        String res = Es.chainIndex(client).getCmd(cmd);
+        EsIndexResponseVO responseVO = list(esClientName, keyword);
+        Map<String, List<String>> aliases = responseVO.getAliases();
+        List<Map> list = JsonUtils.toList(res, Map.class);
+        for (Map map : list) {
+            String index = String.valueOf(map.get("index"));
+            List<String> alias = aliases.get(index);
+            if (!CollectionUtils.isEmpty(alias)) {
+                StringJoiner value = new StringJoiner(",");
+                for (String s : alias) {
+                    value.add(s);
+                }
+                map.put("alias", value.toString());
+            }
+        }
+        res = JsonUtils.toJsonStr(list);
+        return res;
     }
     
     /**
@@ -166,6 +187,47 @@ public class EsIndexController {
     }
     
     /**
+     * 创建索引
+     */
+    @PostMapping("createIndex")
+    public void createIndex(@RequestHeader("currentEsClient") String esClientName,
+            @RequestBody EsIndexCreateDTO esIndexCreateDTO) {
+        if (StringUtils.isBlank(esIndexCreateDTO.getIndexName())) {
+            throw new EsException("索引名不能为空");
+        }
+        EsPlusClientFacade client = ClientContext.getClient(esClientName);
+        Es.chainIndex(client).createIndex(esIndexCreateDTO.getIndexName(),esIndexCreateDTO.getAlias()
+                ,esIndexCreateDTO.getEsSettings(),esIndexCreateDTO.getMapping());
+        refreshIndexCache(esClientName);
+    }
+    
+    /**
+     * 设置别名
+     */
+    @PostMapping("createAlias")
+    public void createAlias(@RequestHeader("currentEsClient") String esClientName,String index,String alias) {
+        if (StringUtils.isBlank(index)||StringUtils.isBlank(alias)) {
+            throw new EsException("索引或别名不能为空");
+        }
+        EsPlusClientFacade client = ClientContext.getClient(esClientName);
+        Es.chainIndex(client).createAlias(index,alias);
+        refreshIndexCache(esClientName);
+    }
+    
+    /**
+     * 删除别名
+     */
+    @PostMapping("removeAlias")
+    public void removeAlias(@RequestHeader("currentEsClient") String esClientName,String index,String alias) {
+        if (StringUtils.isBlank(index)||StringUtils.isBlank(alias)) {
+            throw new EsException("索引或别名不能为空");
+        }
+        EsPlusClientFacade client = ClientContext.getClient(esClientName);
+        Es.chainIndex(client).removeAlias(index,alias);
+        refreshIndexCache(esClientName);
+    }
+    
+    /**
      * 刷新索引缓存
      */
     @PostMapping("refreshIndexCache")
@@ -184,6 +246,7 @@ public class EsIndexController {
         }
         EsPlusClientFacade client = ClientContext.getClient(esClientName);
         Es.chainIndex(client).deleteIndex(indexName);
+        refreshIndexCache(esClientName);
     }
     
     

@@ -108,7 +108,7 @@
         <el-row :gutter="10">
           <el-table
             :data="tableData"
-            style="max-width: 1200px; max-height: 1000px"
+            style="max-width: 1200px; max-height: 1000px; min-height: 300px"
             size="large"
           >
             <el-table-column
@@ -501,6 +501,7 @@ const eplQuery = async (epl) => {
 }
 .right-container {
   margin-left: 10px;
+  min-height: 600px;
 }
 
 .el-form-item__content {

@@ -25,6 +25,15 @@ const esIndex = {
   putMapping(params) {
     return api.postParam({ url: "/es/index/putMapping", data: params });
   },
+  createAlias(params) {
+    return api.postParam({ url: "/es/index/createAlias", data: params });
+  },
+  removeAlias(params) {
+    return api.postParam({ url: "/es/index/removeAlias", data: params });
+  },
+  createIndex(params) {
+    return api.post({ url: "/es/index/createIndex", data: params });
+  },
   deleteIndex(params) {
     return api.deleteParam({ url: "/es/index/deleteIndex", data: params });
   },

@@ -12,6 +12,7 @@ import com.es.plus.adapter.util.JsonUtils;
 import com.es.plus.constant.EsConstant;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.util.EntityUtils;
+import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.ElasticsearchStatusException;
 import org.elasticsearch.action.admin.indices.alias.Alias;
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequest;
@@ -37,8 +38,10 @@ import org.elasticsearch.client.indices.GetIndexResponse;
 import org.elasticsearch.client.indices.PutMappingRequest;
 import org.elasticsearch.cluster.metadata.AliasMetaData;
 import org.elasticsearch.cluster.metadata.MappingMetaData;
+import org.elasticsearch.common.bytes.BytesReference;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.unit.TimeValue;
+import org.elasticsearch.common.xcontent.XContentHelper;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.VersionType;
 import org.elasticsearch.index.query.QueryBuilder;
@@ -103,6 +106,40 @@ public class EsPlus6IndexRestClient implements EsPlusIndexClient {
         try {
             indexResponse = restHighLevelClient.indices().create(indexRequest, RequestOptions.DEFAULT);
         } catch (IOException e) {
+            return false;
+        }
+        return indexResponse.isAcknowledged();
+    }
+    
+    @Override
+    public boolean createIndex(String index,String alias,EsSettings esSettings,Map<String, Object> mappings) {
+        CreateIndexRequest indexRequest = new CreateIndexRequest(index);
+        Settings.Builder settings = Settings.builder();
+        
+        if (esSettings != null) {
+            String json = JsonUtils.toJsonStr(esSettings);
+            settings.loadFromSource(json, XContentType.JSON);
+            indexRequest.settings(settings);
+        }
+        if (mappings != null) {
+            indexRequest.mapping(mappings);
+        }
+        if (StringUtils.isNotBlank(alias)) {
+            indexRequest.alias(new Alias(alias));
+        }
+        
+        CreateIndexResponse indexResponse = null;
+        try {
+            try {
+                BytesReference reference = XContentHelper.toXContent(indexRequest, XContentType.JSON, true);
+                String string = reference.utf8ToString();
+                log.info("createIndex index:{} :{}",index, string);
+            } catch (IOException e) {
+                throw new ElasticsearchException(e);
+            }
+            indexResponse = restHighLevelClient.indices().create(indexRequest, RequestOptions.DEFAULT);
+        } catch (IOException e) {
+            printErrorLog("createIndex:{}", e);
             return false;
         }
         return indexResponse.isAcknowledged();
@@ -235,7 +272,6 @@ public class EsPlus6IndexRestClient implements EsPlusIndexClient {
                 settingsMap.put(k, v.toString());
             });
             
-            Collection<List<AliasMetaData>> collection = getIndexResponse.getAliases().values();
             
             String[] indices = getIndexResponse.getIndices();
             Map<String, Object> mappingMap = new HashMap<>();
@@ -248,10 +284,15 @@ public class EsPlus6IndexRestClient implements EsPlusIndexClient {
             esIndexResponse.setIndices(indices);
             esIndexResponse.setMappings(mappingMap);
             esIndexResponse.setSettings(settingsMap);
-            if (!CollectionUtils.isEmpty(collection)) {
-                List<String> alias = collection.stream().findFirst().get().stream().map(AliasMetaData::getAlias)
-                        .collect(Collectors.toList());
-                esIndexResponse.setAliases(alias);
+            if (!CollectionUtils.isEmpty( getIndexResponse.getAliases())) {
+                Map<String, List<String>> aliasesMap = new LinkedHashMap<>();
+                getIndexResponse.getAliases().forEach((k,v)->{
+                    List<String> alias = v.stream().map(AliasMetaData::getAlias)
+                            .collect(Collectors.toList());
+                    aliasesMap.put(k,alias);
+                });
+                
+                esIndexResponse.setAliases(aliasesMap);
             }
             
             return esIndexResponse;

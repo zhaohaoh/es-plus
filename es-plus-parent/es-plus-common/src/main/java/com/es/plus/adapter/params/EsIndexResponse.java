@@ -12,7 +12,7 @@ public class EsIndexResponse {
     
     private String[] indices;
     
-    private List<String> aliases;
+    private Map<String, List<String>> aliases;
     
     private Map<String, Object> settingsObj;
     

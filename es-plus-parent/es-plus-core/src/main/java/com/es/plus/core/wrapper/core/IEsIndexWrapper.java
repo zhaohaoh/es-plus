@@ -21,7 +21,8 @@ public interface IEsIndexWrapper  {
      *
      */
     EsIndexWrapper createIndex();
-    
+
+    EsIndexWrapper createIndex(String index,String alias,EsSettings esSettings,Map<String,Object> mappings);
     /**
      * 映射
      *
@@ -163,7 +164,13 @@ public interface IEsIndexWrapper  {
      * @param alias 别名
      */
     EsIndexWrapper removeAlias(String alias);
+    
+    
 
+    EsIndexWrapper createAlias(String index,String alias);
+    
+  
+    EsIndexWrapper removeAlias(String index,String alias);
     /**
      * 删除别名
      *
