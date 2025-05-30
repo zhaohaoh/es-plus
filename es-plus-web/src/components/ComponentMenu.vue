@@ -26,6 +26,11 @@
       <el-icon><icon-menu /></el-icon>
       <template #title>链接管理</template>
     </el-menu-item>
+
+    <el-menu-item index="/login">
+      <el-icon><icon-menu /></el-icon>
+      <template #title>重新登陆</template>
+    </el-menu-item>
   </el-menu>
 </template>
 
