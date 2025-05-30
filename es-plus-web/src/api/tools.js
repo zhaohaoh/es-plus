@@ -12,7 +12,7 @@ const tools = {
     return api.get({ url: "/es/esQuery/sql", data: params });
   },
   dslQuery(params) {
-    return api.get({ url: "/es/esQuery/dsl", data: params });
+    return api.post({ url: "/es/esQuery/dsl", data: params });
   },
   deleteByIds(params) {
     return api.delete({ url: "/es/deleteByIds", data: params });

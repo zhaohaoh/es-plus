@@ -2,35 +2,34 @@
   <div class="container">
     <div class="left-panel">
       <div class="esQuery-container">
+        <el-button-group style="margin-top: -10px; margin-bottom: 10px">
+          <el-button type="primary" size="small" @click="clickSql"
+            >SQL</el-button
+          >
+          <el-button type="primary" size="small" @click="clickEpl"
+            >EPL</el-button
+          >
+          <el-button type="primary" size="small" @click="clickDsl"
+            >DSL</el-button
+          >
+        </el-button-group>
+
+        <div style="min-height: 30px">
+          <el-input
+            :class="{ hidden: queryType !== 'dsl' }"
+            v-model="index"
+            placeholder="索引"
+            style="width: 100%; margin-bottom: 10px"
+          ></el-input>
+        </div>
+
         <label class="esQuery-label">
           <Codemirror
-            v-model:value="epl"
-            :options="epOptions"
-            ref="epEditor"
-            border
-            height="300"
-            width="100%"
-            @ready="onEpReady"
-            class="json-input"
-            placeholder="请输入es语句..."
-          />
-        </label>
-        <div class="controls">
-          <el-button size="small" :icon="Search" @click="submitEplQuery"
-            >搜索</el-button
-          >
-          <!-- 绑定点击事件 -->
-        </div>
-      </div>
-
-      <div class="sqlQuery-container">
-        <label class="sqlQuery-label">
-          <Codemirror
-            v-model:value="sql"
+            v-model:value="queryDsl"
             :options="cmOptions"
             ref="sqlEditor"
             border
-            height="300"
+            height="630"
             width="100%"
             @ready="onSqlReady"
             class="json-input"
@@ -38,10 +37,10 @@
           />
         </label>
         <div class="controls">
-          <!-- 绑定点击事件 -->
-          <el-button size="small" :icon="Search" @click="submitSqlQuery"
+          <el-button size="small" :icon="Search" @click="submitQuery"
             >搜索</el-button
           >
+          <!-- 绑定点击事件 -->
         </div>
       </div>
     </div>
@@ -53,6 +52,7 @@
         border
         class="json-output"
         height="91%"
+        style="margin-top: 30px"
       />
       <div class="footer-button" justify="end">
         <span class="dialog-footer">
@@ -104,21 +104,66 @@ import { ElMessage, ElMessageBox } from "element-plus";
 import esClient from "../../api/esClient";
 
 const { proxy } = getCurrentInstance() as any;
-let sql = ref("SELECT * from fast_test_new_v128 order by id desc limit 10");
-const epl = ref('Es.chainQuery().index("").search(10)');
+let sql = "SELECT * from fast_test_new_v128 order by id desc limit 10";
+let dsl =
+  "{\n" +
+  '    "query": {\n' +
+  '        "bool": {\n' +
+  '            "must": [\n' +
+  "                {\n" +
+  '                    "match_all": {}\n' +
+  "                }\n" +
+  "            ],\n" +
+  '            "must_not": [],\n' +
+  '            "should": []\n' +
+  "        }\n" +
+  "    },\n" +
+  '    "from": 0,\n' +
+  '    "size": 1,\n' +
+  '    "sort": [],\n' +
+  '    "aggs": {}\n' +
+  "}";
+let epl = 'Es.chainQuery().index("").search(10)';
+let queryDsl = ref("");
+let queryType = ref("sql");
+let index = ref("");
+
 const jsonEditor = ref();
 const jsonView = ref("");
 
 onMounted(() => {
+  clickSql();
+});
+
+const clickSql = () => {
   const lastSql = localStorage.getItem("lastSql");
   if (lastSql) {
-    sql.value = lastSql;
+    queryDsl.value = lastSql;
+  } else {
+    queryDsl.value = sql;
   }
+  queryType.value = "sql";
+};
+
+const clickEpl = () => {
   const lastEpl = localStorage.getItem("lastEpl");
   if (lastEpl) {
-    epl.value = lastEpl;
+    queryDsl.value = lastEpl;
+  } else {
+    queryDsl.value = epl;
   }
-});
+  queryType.value = "epl";
+};
+
+const clickDsl = () => {
+  const lastDsl = localStorage.getItem("lastDsl");
+  if (lastDsl) {
+    queryDsl.value = lastDsl;
+  } else {
+    queryDsl.value = dsl;
+  }
+  queryType.value = "dsl";
+};
 
 const jsonOptions = {
   // 主题
@@ -172,6 +217,17 @@ const epOptions = {
   // tab宽度
   tabSize: 4,
   indentUnit: 4,
+  // 代码提示功能
+  hintOptions: {
+    // 避免由于提示列表只有一个提示信息时，自动填充
+    completeSingle: false,
+    // 不同的语言支持从配置中读取自定义配置 sql语言允许配置表和字段信息，用于代码提示
+    tables: {
+      BPSuv: ["DocEntry", "Subject", "DocStatus", "Remarks"],
+      BPSuvA: ["DocEntry", "LineNum", "Question", "QstType"],
+      BPSuvB: ["DocEntry", "LineNum", "UserID", "UserName"],
+    },
+  },
 };
 
 // 代码联想提示源
@@ -275,10 +331,31 @@ const onSqlReady = (sqlEditor) => {
 //     jsonOutput.value = "";
 //   }
 // };
+const submitQuery = () => {
+  if (queryType.value == "epl") {
+    eplQuery(queryDsl.value);
+  }
+  if (queryType.value == "sql") {
+    sqlQuery(queryDsl.value);
+  }
+  if (queryType.value == "dsl") {
+    dslQuery(queryDsl.value);
+  }
+};
+const dslQuery = async (dsl) => {
+  localStorage.setItem("lastDsl", dsl);
+  const param = {
+    dsl: dsl,
+    index: index.value,
+  };
+  let res = await proxy.$api.tools.dslQuery(param);
+  const formattedJson = JSON.stringify(res, null, 2);
+  jsonView.value = formattedJson;
+};
 
 // // 提交查询方法
 const submitEplQuery = () => {
-  eplQuery(epl.value);
+  eplQuery(queryDsl.value);
 };
 
 const eplQuery = async (epl) => {
@@ -293,7 +370,7 @@ const eplQuery = async (epl) => {
 
 // // 提交查询方法
 const submitSqlQuery = () => {
-  sqlQuery(sql.value);
+  sqlQuery(queryDsl.value);
 };
 
 const sqlQuery = async (sql) => {
@@ -398,7 +475,9 @@ const saveByIds = async (index, source) => {
   flex: 1;
   justify-content: end;
 }
-
+.hidden {
+  display: none !important;
+}
 .container {
   flex: 1;
   display: flex;
@@ -424,7 +503,7 @@ const saveByIds = async (index, source) => {
   background: #ffffff;
   border-radius: 0 4px 4px 0;
   /* overflow-y: auto; */
-  height: 750px;
+  height: 800px;
   max-width: 700px;
 }
 

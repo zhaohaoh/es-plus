@@ -9,6 +9,7 @@ import com.es.plus.core.ClientContext;
 import com.es.plus.core.statics.Es;
 import com.es.plus.web.compile.core.CompilationResult;
 import com.es.plus.web.compile.core.DynamicCodeCompiler;
+import com.es.plus.web.pojo.EsDslInfo;
 import com.es.plus.web.pojo.EsPageInfo;
 import com.es.plus.web.pojo.EsRequstInfo;
 import org.apache.commons.lang3.StringUtils;
@@ -83,10 +84,10 @@ public class EsExecuteController {
     }
     
     
-    @GetMapping("esQuery/dsl")
-    public String esQueryDsl(String index, String dsl, @RequestHeader("currentEsClient") String currentEsClient) {
+    @PostMapping("esQuery/dsl")
+    public String esQueryDsl(@RequestBody EsDslInfo  esDslInfo, @RequestHeader("currentEsClient") String currentEsClient) {
         EsPlusClientFacade esPlusClientFacade = ClientContext.getClient(currentEsClient);
-        String executed = Es.chainQuery(esPlusClientFacade, Map.class).index(index).executeDSL(dsl);
+        String executed = Es.chainQuery(esPlusClientFacade, Map.class).index(esDslInfo.getIndex()).executeDSL(esDslInfo.getDsl());
         return executed;
     }
     
