@@ -32,6 +32,13 @@ services.interceptors.request.use((config) => {
     config.headers["currentEsClient"] = client;
   }
 
+  const esToken = localStorage.getItem("es-plus-token");
+
+  if (esToken) {
+    console.log("请求头" + esToken);
+    config.headers["satoken"] = esToken;
+  }
+
   return config;
 });
 

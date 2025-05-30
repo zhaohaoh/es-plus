@@ -1,5 +1,6 @@
 package com.es.plus.web.controller;
 
+import cn.dev33.satoken.stp.StpUtil;
 import com.es.plus.adapter.EsPlusClientFacade;
 import com.es.plus.adapter.exception.EsException;
 import com.es.plus.adapter.params.EsIndexResponse;
@@ -222,6 +223,10 @@ public class EsIndexController {
         if (StringUtils.isBlank(index)||StringUtils.isBlank(alias)) {
             throw new EsException("索引或别名不能为空");
         }
+        Object loginId = StpUtil.getLoginId();
+        if (!loginId.equals(1)){
+            throw new RuntimeException("无权操作");
+        }
         EsPlusClientFacade client = ClientContext.getClient(esClientName);
         Es.chainIndex(client).removeAlias(index,alias);
         refreshIndexCache(esClientName);
@@ -243,6 +248,10 @@ public class EsIndexController {
     public void deleteIndex(@RequestHeader("currentEsClient") String esClientName, String indexName) {
         if (StringUtils.isBlank(indexName)) {
             throw new RuntimeException("需要删除的索引不能为空");
+        }
+        Object loginId = StpUtil.getLoginId();
+        if (!loginId.equals(1)){
+            throw new RuntimeException("无权操作");
         }
         EsPlusClientFacade client = ClientContext.getClient(esClientName);
         Es.chainIndex(client).deleteIndex(indexName);

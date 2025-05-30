@@ -463,7 +463,6 @@ const clickDelete = async (index) => {
   })
     .then(() => {
       esIndexDelete(index);
-      elMessage.success();
     })
     .catch(() => {});
 };
@@ -474,6 +473,7 @@ const esIndexDelete = async (data) => {
     indexName: data,
   };
   let res = await proxy.$api.esIndex.deleteIndex(param);
+  elMessage.success();
   getIndices(keyword.value);
 };
 </script>

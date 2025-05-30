@@ -4,7 +4,7 @@ const routes = [
   {
     path: "/",
     name: "main",
-    // redirect: "/main",
+    redirect: "/login",
     component: () => import("../views/Main.vue"),
     meta: { title: "首页" },
     children: [
@@ -29,36 +29,13 @@ const routes = [
         component: () => import("../views/main/esTable.vue"),
       },
     ],
-
-    //子路由,其他路由在页面中动态添加
-
-    // {
-    //   path: "/queue",
-    //   name: "queue",
-    //   component: () => import("../views/mq/Queue.vue"),
-    // },
-    // {
-    //   path: "/consumer/group",
-    //   name: "consumerGroup",
-    //   component: () => import("../views/mq/ConsumerGroup.vue"),
-    // },
-    // {
-    //   path: "/consumer",
-    //   name: "consumer",
-    //   component: () => import("../views/mq/Consumer.vue"),
-    // },
-    // {
-    //   path: "/historyMessage",
-    //   name: "historyMessage",
-    //   component: () => import("../views/mq/HistoryMessage.vue"),
-    // },
   },
   // 登录的路由
-  // {
-  //   path: "/login",
-  //   name: "login",
-  //   component: () => import("../views/Login.vue"),
-  // },
+  {
+    path: "/login",
+    name: "login",
+    component: () => import("../views/main/login.vue"),
+  },
 ];
 
 const router = createRouter({
