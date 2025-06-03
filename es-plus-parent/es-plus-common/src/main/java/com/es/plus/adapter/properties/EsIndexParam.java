@@ -105,6 +105,9 @@ public class EsIndexParam {
     public String getIndex() {
         if (dynamicIndex) {
             String spelValue = SpelUtil.parseSpelValue(dynamicIndexSpel);
+            if (spelValue == null){
+                return index + GlobalConfigCache.GLOBAL_CONFIG.getGlobalSuffix();
+            }
             String index = dynamicIndexPrefix + spelValue + dynamicIndexSuffix;
             if (!Objects.equals(preIndex, index)) {
                 preIndex = index;

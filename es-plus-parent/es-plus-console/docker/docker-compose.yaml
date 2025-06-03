@@ -1,0 +1,20 @@
+version: '3'
+services:
+  es-plus-console:
+    build:
+      context: ./
+      dockerfile: ./Dockerfile
+    #开启权限
+    privileged: true
+    #开启jmap权限
+    cap_add:
+     -  SYS_PTRACE
+    # volumes:
+    #  -  /logs:/logs
+    #  -  /upload:/upload
+    #  -  ./config:/config
+    restart: always
+    container_name: es-plus-console
+    image: es-plus-console
+    ports:
+      - 8808:8808

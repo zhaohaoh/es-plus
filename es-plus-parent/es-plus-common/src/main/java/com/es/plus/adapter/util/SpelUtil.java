@@ -79,17 +79,22 @@ public class SpelUtil implements BeanFactoryAware {
      * @return
      */
     public static String parseSpelValue(String key) {
-        if (StringUtils.isEmpty(key)) {
-            return key;
+        try {
+            if (StringUtils.isEmpty(key)) {
+                return key;
+            }
+            String spel = parseSpecialSpel(key);
+            if (spel == null ||spel.isEmpty()) {
+                return key;
+            }
+            
+            Expression expression = parser.parseExpression(spel);
+            String value = (String) expression.getValue(context);
+            return value;
+        }catch (Exception e)  {
+         logger.error("spel parseSpelValue error", e);
+          return null;
         }
-        String spel = parseSpecialSpel(key);
-        if (spel == null ||spel.isEmpty()) {
-            return key;
-        }
-        
-        Expression expression = parser.parseExpression(spel);
-        String value = (String) expression.getValue(context);
-        return value;
     }
     
     public static <T> T parseSpelValue(String key, Class<T> tClass) {
