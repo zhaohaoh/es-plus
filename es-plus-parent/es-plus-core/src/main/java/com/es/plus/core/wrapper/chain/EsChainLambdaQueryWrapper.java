@@ -9,7 +9,7 @@ import com.es.plus.adapter.tools.SFunction;
 import com.es.plus.core.ClientContext;
 import com.es.plus.core.IndexContext;
 import com.es.plus.core.wrapper.core.EsLambdaQueryWrapper;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.ArrayUtils;
 
 import java.time.Duration;
 
@@ -28,7 +28,7 @@ public class EsChainLambdaQueryWrapper<T> extends AbstractEsChainWrapper<T, SFun
         super.esWrapper = new EsLambdaQueryWrapper<>(tClass);
         EsIndexParam esIndexParam = IndexContext.getIndex(super.tClass);
         if (esIndexParam != null) {
-            index(StringUtils.isBlank(esIndexParam.getAlias()) ? esIndexParam.getIndex() : esIndexParam.getAlias());
+            index(ArrayUtils.isEmpty(esIndexParam.getAlias()) ? esIndexParam.getIndex() : esIndexParam.getAlias());
             EsPlusClientFacade client = ClientContext.getClient(esIndexParam.getClientInstance());
             if (client!=null){
                 esPlusClientFacade = client;
@@ -41,7 +41,7 @@ public class EsChainLambdaQueryWrapper<T> extends AbstractEsChainWrapper<T, SFun
         super.esWrapper = new EsLambdaQueryWrapper<>(tClass);
         EsIndexParam esIndexParam = IndexContext.getIndex(super.tClass);
         if (esIndexParam != null) {
-            index(StringUtils.isBlank(esIndexParam.getAlias()) ? esIndexParam.getIndex() : esIndexParam.getAlias());
+            index(ArrayUtils.isEmpty(esIndexParam.getAlias()) ? esIndexParam.getIndex() : esIndexParam.getAlias());
         }
         if (esPlusClientFacade != null) {
             this.esPlusClientFacade = esPlusClientFacade;

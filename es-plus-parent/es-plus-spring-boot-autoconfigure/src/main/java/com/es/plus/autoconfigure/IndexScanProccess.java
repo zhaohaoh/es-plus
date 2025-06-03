@@ -6,8 +6,8 @@ import com.es.plus.adapter.config.ConnectFailHandleEnum;
 import com.es.plus.adapter.exception.EsException;
 import com.es.plus.adapter.lock.ELock;
 import com.es.plus.adapter.params.BulkProcessorParam;
-import com.es.plus.adapter.params.EsAliasResponse;
 import com.es.plus.adapter.params.EsSettings;
+import com.es.plus.adapter.pojo.EsReindexResult;
 import com.es.plus.adapter.properties.EsEntityInfo;
 import com.es.plus.adapter.properties.EsFieldInfo;
 import com.es.plus.adapter.properties.EsIndexParam;
@@ -27,6 +27,7 @@ import com.es.plus.constant.EsFieldType;
 import com.es.plus.constant.JavaTypeEnum;
 import com.es.plus.core.ClientContext;
 import com.es.plus.core.process.EsReindexProcess;
+import com.es.plus.core.statics.Es;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -111,7 +112,7 @@ public class IndexScanProccess implements InitializingBean, ApplicationListener<
             
             BulkProcessor bulkProcessor = indexClass.getAnnotation(BulkProcessor.class);
             //设置批量异常处理的参数
-            if (bulkProcessor!=null){
+            if (bulkProcessor != null) {
                 BulkProcessorParam bulkProcessorParam = new BulkProcessorParam();
                 bulkProcessorParam.setBulkActions(bulkProcessor.bulkActions());
                 bulkProcessorParam.setBulkSize(new ByteSizeValue(bulkProcessor.bulkSize(), ByteSizeUnit.MB));
@@ -119,11 +120,13 @@ public class IndexScanProccess implements InitializingBean, ApplicationListener<
                 bulkProcessorParam.setFlushInterval(TimeValue.timeValueSeconds(bulkProcessor.flushInterval()));
                 bulkProcessorParam.setBackoffPolicyTime(bulkProcessor.BackoffPolicyTime());
                 bulkProcessorParam.setBackoffPolicyRetryMax(bulkProcessor.BackoffPolicyRetryMax());
-                BulkProcessorConfig.getBulkProcessor(esPlusClientFacade.getEsPlusClient().getRestHighLevelClient(),
-                        esIndexParam.getIndex());
+                for (String index : esIndexParam.getIndex()) {
+                    BulkProcessorConfig.getBulkProcessor(esPlusClientFacade.getEsPlusClient().getRestHighLevelClient(),
+                            index );
+                }
+            
             }
-         
-                    
+            
             // 参数设置
             esIndexParam.setMappings(mapping);
             esEntityInfo.setEsIndexParam(esIndexParam);
@@ -146,12 +149,11 @@ public class IndexScanProccess implements InitializingBean, ApplicationListener<
             
             try {
                 //尝试创建或重建索引
-                tryCreateOrReindex(esPlusClientFacade,indexClass, esIndexParam);
+                tryCreateOrReindex(esPlusClientFacade, indexClass, esIndexParam);
             } catch (Exception e) {
                 if (StringUtils.isNotBlank(e.getLocalizedMessage()) && e.getLocalizedMessage()
                         .contains("ConnectException")) {
-                    if (GLOBAL_CONFIG.getConnectFailHandle()
-                            .equals(ConnectFailHandleEnum.THROW_EXCEPTION)) {
+                    if (GLOBAL_CONFIG.getConnectFailHandle().equals(ConnectFailHandleEnum.THROW_EXCEPTION)) {
                         throw new EsException(e);
                     } else {
                         GLOBAL_CONFIG.setStartInit(false);
@@ -162,10 +164,9 @@ public class IndexScanProccess implements InitializingBean, ApplicationListener<
             }
         }
         
-        
         //1.全部索引都reindex    2.当前索引在重建索引的名单中
         String reindexScope = GLOBAL_CONFIG.getReindexScope();
-        if (StringUtils.isNotBlank(reindexScope)){
+        if (StringUtils.isNotBlank(reindexScope)) {
             Collection<EsPlusClientFacade> clients = ClientContext.getClients();
             for (EsPlusClientFacade esPlusClientFacade : clients) {
                 List<String> indexList = Arrays.stream(reindexScope.split(",")).collect(Collectors.toList());
@@ -173,69 +174,127 @@ public class IndexScanProccess implements InitializingBean, ApplicationListener<
                 EsReindexInterceptor esInterceptor = new EsReindexInterceptor(esPlusClientFacade.getEsLockFactory());
                 esInterceptor.setReindexList(indexList);
                 esPlusClientFacade.addInterceptor(esInterceptor);
-            
+                
                 log.info("reindexEnable:{} reindexScope :{} esPlusClientFacade host:{} addInterceptor",
-                        GLOBAL_CONFIG.isAutoReindex()
-                        ,reindexScope,esPlusClientFacade.getHost());
+                        GLOBAL_CONFIG.isAutoReindex(), reindexScope, esPlusClientFacade.getHost());
             }
         }
     }
     
-    private void tryCreateOrReindex(EsPlusClientFacade esPlusClientFacade,Class<?> indexClass, EsIndexParam esIndexParam) {
-        String index = esIndexParam.getIndex();
-        String alias = esIndexParam.getAlias();
-        //此处获取的是执行锁
-        ELock eLock = esPlusClientFacade.getLock(index);
-        boolean lock = eLock.tryLock();
-        try {
-            if (lock) {
-                //取索引名判断，会同时判断索引名和别名
-                boolean exists = esPlusClientFacade.indexExists(index) || esPlusClientFacade.indexExists(alias);
-                if (exists) {
-                    boolean isReindex = EsReindexProcess.tryReindex(esPlusClientFacade, indexClass);
-                    if (isReindex) {
-                        reindexTask(esPlusClientFacade,esIndexParam);
+    private void tryCreateOrReindex(EsPlusClientFacade esPlusClientFacade, Class<?> indexClass,
+            EsIndexParam esIndexParam) {
+        String[] indexs = esIndexParam.getIndex();
+        String[] aliases = esIndexParam.getAlias();
+        String alias = null;
+        if (aliases != null && aliases.length == 1) {
+            alias = esIndexParam.getAlias()[0];
+        } else {
+            log.error("{} 多别名的索引不支持自动reindex  别名:{},", Arrays.toString(esIndexParam.getIndex()),
+                    Arrays.toString(esIndexParam.getAlias()));
+            return;
+        }
+        log.info("Es-plus tryCreateIndexOrMappingOrReindex indexNames:{}", Arrays.toString(esIndexParam.getIndex()));
+        for (String index : indexs) {
+            //此处获取的是执行锁
+            ELock eLock = esPlusClientFacade.getLock(index);
+            boolean lock = eLock.tryLock();
+            try {
+                if (lock) {
+                    //取索引名判断，会同时判断索引名和别名
+                    boolean exists =
+                            esPlusClientFacade.indexExists(index) || (alias != null && esPlusClientFacade.indexExists(
+                                    alias));
+                    if (exists) {
+                        boolean isReindex = EsReindexProcess.tryReindex(esPlusClientFacade, index, alias, indexClass);
+                        if (isReindex) {
+                            reindexTask(esPlusClientFacade, esIndexParam, index);
+                        }
+                    } else {
+                        esPlusClientFacade.createIndexMapping(index, indexClass);
+                        exists = true;
                     }
+                    esIndexParam.setExists(exists);
+                    log.info("init es-plus index={}", index);
                 } else {
-                    esPlusClientFacade.createIndexMapping(index, indexClass);
-                    exists = true;
+                    //异步更新reindex后的index的任务
+                    reindexTask(esPlusClientFacade, esIndexParam, index);
                 }
-                esIndexParam.setExists(exists);
-                log.info("init es-plus index={}",index);
-            } else {
-                //异步更新reindex后的index的任务
-                reindexTask(esPlusClientFacade,esIndexParam);
+            } finally {
+                if (lock) {
+                    eLock.unlock();
+                }
+            }
+        }
+        
+    }
+    
+    private String getReindexNewIndexName(String index, EsIndexParam esIndexParam) {
+        String currentIndex = index;
+        while (true) {
+            EsReindexResult record;
+            try {
+                boolean exists = Es.chainIndex().index("es_plus_reindex_record").indexExists();
+                if (!exists){
+                    return index;
+                }
+                record = Es.chainQuery(EsReindexResult.class).index("es_plus_reindex_record")._id(currentIndex).search()
+                        .getOne();
+                if (record == null || record.getReIndexName() == null || record.getProcessType() == null
+                        || record.getProcessType() == 0) {
+                    return null;
+                }
+            } catch (Exception e) {
+                log.error("getReindexNewIndexName Exception:", e);
+                return index;
             }
             
-        } finally {
-            if (lock) {
-                eLock.unlock();
+            if (record.getProcessType().equals(1)) {
+                log.error(
+                        "Es-plus 当前注解索引已经产生reindex的变更。系统自动使用索引  当前索引:{} 已经reindex成功的索引:{}",
+                        currentIndex, record.getReIndexName());
+                String[] indexParamIndex = esIndexParam.getIndex();
+                String[] idxs = ArrayUtils.removeElement(indexParamIndex, currentIndex);
+                idxs = ArrayUtils.add(idxs, record.getReIndexName());
+                esIndexParam.setIndex(idxs);
+                currentIndex = record.getReIndexName();
             }
+            
+            return currentIndex;
         }
     }
     
     /**
-     *   重建索引的任务  每10秒获取一次索引别名。检测reindex是否完成。
+     * 重建索引的任务  每10秒获取一次索引别名。检测reindex是否完成。
      */
-    public void reindexTask(EsPlusClientFacade esPlusClientFacade,EsIndexParam esIndexParam) {
-        String annotationIndex = esIndexParam.getIndex();
-        String alias = esIndexParam.getAlias();
+    public void reindexTask(EsPlusClientFacade esPlusClientFacade, EsIndexParam esIndexParam, String annotationIndex) {
+        String alias = esIndexParam.getAlias()[0];
+        String[] indexs = esIndexParam.getIndex();
         ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.submit(()->{
+        executor.submit(() -> {
             while (true) {
                 // 定时任务
-                String index = esPlusClientFacade.getAliasIndex(alias).getIndexs().stream().findFirst().get();
-                if (!index.equals(annotationIndex)) {
-                    log.info("reindex maybe success changeIndex newIndex={} oldIndex:{}", index,annotationIndex);
-                    esIndexParam.setIndex(index);
-                    //解锁
-                    ELock eLock = esPlusClientFacade.getLock(annotationIndex + EsConstant.REINDEX_LOCK_SUFFIX);
-                    eLock.unlock();
+                EsReindexResult record = Es.chainQuery(EsReindexResult.class).index("es_plus_reindex_record")
+                        ._id(annotationIndex).search().getOne();
+                if (record != null) {
+                    String reIndexName = record.getReIndexName();
+                    if (record.getProcessType().equals(1)) {
+                        ArrayUtils.removeElement(indexs, annotationIndex);
+                        ArrayUtils.add(indexs, reIndexName);
+                        log.info("reindex maybe success changeIndex newIndex={} oldIndex:{} lastIndexParam:{}",
+                                reIndexName, annotationIndex, esIndexParam);
+                        
+                        //解锁
+                        ELock eLock = esPlusClientFacade.getLock(annotationIndex + EsConstant.REINDEX_LOCK_SUFFIX);
+                        eLock.unlock();
+                        break;
+                    }else{
+                        try {
+                            Thread.sleep(10000);
+                        } catch (InterruptedException e) {
+                        }
+                    }
+                }else{
                     break;
-                }
-                try {
-                    Thread.sleep(10000);
-                } catch (InterruptedException e) {
                 }
             }
         });
@@ -275,14 +334,17 @@ public class IndexScanProccess implements InitializingBean, ApplicationListener<
         }
         
         EsIndexParam esIndexParam = new EsIndexParam();
-        if (StringUtils.isBlank(esIndex.index())) {
+        if (ArrayUtils.isEmpty(esIndex.index())) {
             throw new EsException("es entity annotation @EsIndex no has index");
         }
         
-        String[] indexArray = splitIndex(esIndex.index());
-        if (indexArray == null){
+        String[] indexArray = splitIndex(esIndex.index()[0]);
+        if (indexArray == null) {
             esIndexParam.setDynamicIndex(false);
-        }else{
+        } else {
+            if (esIndex.index().length > 1) {
+                throw new EsException("dynamicIndex 不支持多索引名");
+            }
             esIndexParam.setDynamicIndex(true);
             esIndexParam.setDynamicIndexPrefix(indexArray[0]);
             esIndexParam.setDynamicIndexSpel(indexArray[1]);
@@ -292,25 +354,15 @@ public class IndexScanProccess implements InitializingBean, ApplicationListener<
         esIndexParam.setType(esIndex.type());
         esIndexParam.setIndex(esIndex.index());
         
-        if (StringUtils.isNotBlank(esIndex.alias())) {
+        //如果索引名和别名都只有一个   之前是为了做索引自动reindex 目前为了兼容多索引名和多alias名称就先这样兼容
+        if (ArrayUtils.isNotEmpty(esIndex.alias())) {
             esIndexParam.setAlias(esIndex.alias());
-            
-            //如果索引存在别名，则通过别名获取真实的索引名称
-            EsPlusClientFacade esPlusClientFacade = ClientContext.getClient(esIndex.clientInstance());
-            EsAliasResponse aliasResponse = esPlusClientFacade.getAliasIndex(esIndexParam.getAlias());
-            Set<String> indexs = aliasResponse.getIndexs();
-            if (!CollectionUtils.isEmpty(indexs)) {
-                if (indexs.size() > 1) {
-                    throw new EsException("存在多个索引指向同一个索引别名，请检查");
-                }
-                String index = indexs.stream().findFirst().get();
-                if (!index.equals(esIndex.index())) {
-                    log.error("索引已设置别名 别名获取到的索引和注解设置的索引不一致，请检查。" + " 最终设置的索引:{} 注解上的索引:{} 别名:{}", index,
-                            esIndex.index(), esIndex.alias());
-                }
-                esIndexParam.setIndex(index);
-            }
         }
+        String[] index = esIndexParam.getIndex();
+        for (String idx : index) {
+            getReindexNewIndexName(idx,esIndexParam);
+        }
+        
         
         // 索引配置
         EsSettings esSettings = new EsSettings();
@@ -324,8 +376,7 @@ public class IndexScanProccess implements InitializingBean, ApplicationListener<
         esSettings.setNumberOfReplicas(esIndex.replices());
         esSettings.setRefreshInterval(esIndex.initRefreshInterval());
         esSettings.setMaxResultWindow(
-                esIndex.initMaxResultWindow() <= 0 ? GLOBAL_CONFIG.getSearchSize()
-                        : esIndex.initMaxResultWindow());
+                esIndex.initMaxResultWindow() <= 0 ? GLOBAL_CONFIG.getSearchSize() : esIndex.initMaxResultWindow());
         if (StringUtils.isNotBlank(esIndex.defaultAnalyzer())) {
             esSettings.setDefaultAnalyzer(esIndex.defaultAnalyzer());
         }
@@ -424,7 +475,7 @@ public class IndexScanProccess implements InitializingBean, ApplicationListener<
             }
             // 解析注解字段
             if (esFieldInfo == null) {
-                esFieldInfo = AnnotationResolveUtil.resolveEsField(esField,field);
+                esFieldInfo = AnnotationResolveUtil.resolveEsField(esField, field);
             }
             // 解析实体字段
             if (esFieldInfo == null) {
@@ -452,10 +503,12 @@ public class IndexScanProccess implements InitializingBean, ApplicationListener<
                         properties.put(EsConstant.FIELDS, KEYWORDS_MAP);
                         //双类型字符串的映射转换
                         convertKeywordMap.put(esMappingName, esMappingName + ".keyword");
-                    }else if (EsFieldType.KEYWORD.name().toLowerCase().equals(fieldType)){
+                    } else if (EsFieldType.KEYWORD.name().toLowerCase().equals(fieldType)) {
                         //很关键
                         properties.put(EsConstant.TYPE, "keyword");
-                        properties.put(IGNORE_ABOVE, esFieldInfo.getIgnoreAbove()== null || esFieldInfo.getIgnoreAbove()==0? 256 :esFieldInfo.getIgnoreAbove());
+                        properties.put(IGNORE_ABOVE,
+                                esFieldInfo.getIgnoreAbove() == null || esFieldInfo.getIgnoreAbove() == 0 ? 256
+                                        : esFieldInfo.getIgnoreAbove());
                     } else {
                         properties.put(EsConstant.TYPE, fieldType);
                     }
@@ -669,11 +722,11 @@ public class IndexScanProccess implements InitializingBean, ApplicationListener<
         // 测试示例
         String testString1 = "es_index_test_#{value}";
         String[] result1 = splitIndex(testString1);
-        System.out.println("Result 1: " + java.util.Arrays.toString(result1)); // 输出: [es_index_, 123, _suffix]
+        System.out.println("Result 1: " + Arrays.toString(result1)); // 输出: [es_index_, 123, _suffix]
         
         String testString2 = "prefix_#{value}_anotherSuffix";
         String[] result2 = splitIndex(testString2);
-        System.out.println("Result 2: " + java.util.Arrays.toString(result2)); // 输出: [prefix_, value, _anotherSuffix]
+        System.out.println("Result 2: " + Arrays.toString(result2)); // 输出: [prefix_, value, _anotherSuffix]
         
         // 注意：如果输入字符串不符合预期模式（即没有#{}），将抛出异常
         // String testString3 = "no_match_here";

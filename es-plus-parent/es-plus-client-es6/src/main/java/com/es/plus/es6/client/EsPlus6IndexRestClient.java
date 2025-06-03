@@ -10,6 +10,7 @@ import com.es.plus.adapter.properties.EsIndexParam;
 import com.es.plus.adapter.properties.GlobalParamHolder;
 import com.es.plus.adapter.util.JsonUtils;
 import com.es.plus.constant.EsConstant;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.util.EntityUtils;
 import org.elasticsearch.ElasticsearchException;
@@ -53,6 +54,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.util.CollectionUtils;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -92,8 +94,12 @@ public class EsPlus6IndexRestClient implements EsPlusIndexClient {
     public void createIndex(String index, Class<?> tClass) {
         EsIndexParam esIndexParam = GlobalParamHolder.getAndInitEsIndexParam(tClass);
         if (StringUtils.isBlank(index)) {
-            index = esIndexParam.getIndex();
+            for (String esIndexParamIndex : esIndexParam.getIndex()) {
+                CreateIndexRequest indexRequest = new CreateIndexRequest(esIndexParamIndex);
+                indexRequest(esIndexParam, indexRequest);
+            }
         }
+        
         CreateIndexRequest indexRequest = new CreateIndexRequest(index);
         indexRequest(esIndexParam, indexRequest);
     }
@@ -153,16 +159,16 @@ public class EsPlus6IndexRestClient implements EsPlusIndexClient {
      */
     @Override
     public boolean putMapping(String index, Class<?> tClass) {
-        EsIndexParam esIndexParam = GlobalParamHolder.getAndInitEsIndexParam(tClass);
+        EsIndexParam esDocParam = GlobalParamHolder.getAndInitEsIndexParam(tClass);
         if (StringUtils.isBlank(index)) {
-            index = esIndexParam.getIndex();
+            throw new EsException("index 不能为空");
         }
-        Map<String, Object> mappingProperties = esIndexParam.getMappings();
+        Map<String, Object> mappingProperties = esDocParam.getMappings();
         try {
             //将settings和mappings封装到一个IndexClient对象中
             PutMappingRequest putMappingRequest = new PutMappingRequest(index);
             putMappingRequest.source(mappingProperties);
-            printInfoLog("putMapping info={}", JsonUtils.toJsonStr(mappingProperties));
+            printInfoLog("putMapping index={} info={}", index, JsonUtils.toJsonStr(mappingProperties));
             restHighLevelClient.indices().putMapping(putMappingRequest, RequestOptions.DEFAULT);
             return true;
         } catch (IOException e) {
@@ -190,11 +196,17 @@ public class EsPlus6IndexRestClient implements EsPlusIndexClient {
      * @param index  指数
      * @param tClass t类
      */
+    /**
+     * 创建索引映射
+     *
+     * @param index  指数
+     * @param tClass t类
+     */
     @Override
     public void createIndexMapping(String index, Class<?> tClass) {
         EsIndexParam esIndexParam = GlobalParamHolder.getAndInitEsIndexParam(tClass);
         if (StringUtils.isBlank(index)) {
-            index = esIndexParam.getIndex();
+            throw new EsException("index 不能为空");
         }
         doCreateIndexMapping(index, esIndexParam);
     }
@@ -632,8 +644,12 @@ public class EsPlus6IndexRestClient implements EsPlusIndexClient {
                 String json = JsonUtils.toJsonStr(esSettings);
                 settings.loadFromSource(json, XContentType.JSON);
             }
-            if (StringUtils.isNotBlank(esIndexParam.getAlias())) {
-                indexRequest.alias(new Alias(esIndexParam.getAlias()));
+            if (ArrayUtils.isNotEmpty(esIndexParam.getAlias())) {
+                List<Alias> aliases = new ArrayList<>();
+                for (String alias : esIndexParam.getAlias()) {
+                    aliases.add(new Alias(alias));
+                }
+                indexRequest.aliases(aliases);
             }
         }
         try {
@@ -662,8 +678,12 @@ public class EsPlus6IndexRestClient implements EsPlusIndexClient {
             String json = JsonUtils.toJsonStr(esSettings);
             settings.loadFromSource(json, XContentType.JSON);
         }
-        if (StringUtils.isNotBlank(esIndexParam.getAlias())) {
-            indexRequest.alias(new Alias(esIndexParam.getAlias()));
+        if (ArrayUtils.isNotEmpty(esIndexParam.getAlias())) {
+            List<Alias> aliases = new ArrayList<>();
+            for (String alias : esIndexParam.getAlias()) {
+                aliases.add(new Alias(alias));
+            }
+            indexRequest.aliases(aliases);
         }
         
         try {

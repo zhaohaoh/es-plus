@@ -2,7 +2,6 @@ package com.es.plus.core.service;
 
 
 import com.es.plus.adapter.params.EsAggResponse;
-import com.es.plus.adapter.params.EsAliasResponse;
 import com.es.plus.adapter.params.EsQueryParamWrapper;
 import com.es.plus.adapter.params.EsResponse;
 import com.es.plus.adapter.params.EsSettings;
@@ -59,11 +58,10 @@ public class EsServiceImpl<T> extends AbstractEsService<T> implements EsService<
      */
     @Override
     public void createIndex() {
-        EsAliasResponse aliasIndex = getEsPlusClientFacade().getAliasIndex(getIndex());
-        if (!CollectionUtils.isEmpty(aliasIndex.getIndexs())) {
-            return;
+        for (String index : getIndex()) {
+            getEsPlusClientFacade().createIndex(index, clazz);
         }
-        getEsPlusClientFacade().createIndex(getIndex(), clazz);
+    
     }
     
     /**
@@ -71,11 +69,9 @@ public class EsServiceImpl<T> extends AbstractEsService<T> implements EsService<
      */
     @Override
     public void createIndexMapping() {
-        EsAliasResponse aliasIndex = getEsPlusClientFacade().getAliasIndex(getIndex());
-        if (!CollectionUtils.isEmpty(aliasIndex.getIndexs())) {
-            return;
+        for (String index : getIndex()) {
+         getEsPlusClientFacade().createIndexMapping(index, clazz);
         }
-        getEsPlusClientFacade().createIndexMapping(getIndex(), clazz);
     }
     
     /**
@@ -83,11 +79,9 @@ public class EsServiceImpl<T> extends AbstractEsService<T> implements EsService<
      */
     @Override
     public void createMapping() {
-        EsAliasResponse aliasIndex = getEsPlusClientFacade().getAliasIndex(getIndex());
-        if (!CollectionUtils.isEmpty(aliasIndex.getIndexs())) {
-            return;
+        for (String index : getIndex()) {
+            getEsPlusClientFacade().putMapping(index, clazz);
         }
-        getEsPlusClientFacade().putMapping(getIndex(), clazz);
     }
     
     /**

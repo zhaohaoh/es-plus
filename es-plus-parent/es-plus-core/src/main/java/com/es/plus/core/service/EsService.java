@@ -23,7 +23,7 @@ import static com.es.plus.constant.EsConstant.SCROLL_KEEP_TIME;
 
 public interface EsService<T> {
     
-    String getIndex();
+    String[] getIndex();
     
     String[] getAlias();
 

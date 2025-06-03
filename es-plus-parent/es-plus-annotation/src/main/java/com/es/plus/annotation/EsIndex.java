@@ -20,7 +20,7 @@ public @interface EsIndex {
      * 方法2    T(com.xxxx.xxxx).getYYYYMM()
      * 举例 es_index_test_#{T(com.xxxx.xxxx).getYYYYMM()}
      */
-    String index() default "";
+    String[] index();
 
     /**
      * 类型 高版本已默认_doc。旧版本需要手动设置
@@ -68,7 +68,7 @@ public @interface EsIndex {
     /**
      * 别名
      */
-    String alias() default "";
+    String[] alias();
 
     /**
      * 是否试着重建索引

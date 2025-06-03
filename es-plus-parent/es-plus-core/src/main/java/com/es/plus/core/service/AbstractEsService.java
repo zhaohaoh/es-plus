@@ -5,7 +5,7 @@ import com.es.plus.adapter.EsPlusClientFacade;
 import com.es.plus.adapter.properties.EsIndexParam;
 import com.es.plus.core.ClientContext;
 import com.es.plus.core.IndexContext;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.SmartInitializingSingleton;
@@ -49,13 +49,13 @@ public abstract class AbstractEsService<T> implements SmartInitializingSingleton
     
     
     @Override
-    public String getIndex() {
+    public String[] getIndex() {
         return IndexContext.getIndex(clazz).getIndex();
     }
     @Override
     public String[] getAlias() {
         EsIndexParam index = IndexContext.getIndex(clazz);
-        return StringUtils.isBlank(index.getAlias()) ? new String[]{getIndex()} : new String[]{index.getAlias()};
+        return ArrayUtils.isEmpty(index.getAlias()) ? getIndex() : index.getAlias();
     }
   
     

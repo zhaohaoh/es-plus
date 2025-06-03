@@ -21,7 +21,7 @@ public class IndexContext {
         if (esIndexParam != null && esIndexParam.getDynamicIndex()) {
             String clientInstance = esIndexParam.getClientInstance();
             String preIndex = esIndexParam.getPreIndex();
-            index = esIndexParam.getIndex();
+            index = esIndexParam.getIndex()[0];
             if (!Objects.equals(preIndex, index)) {
                 log.info("dynamicIndex preIndex:{} newIndex:{} begin", preIndex, index);
                 EsPlusClientFacade client = ClientContext.getClient(clientInstance);

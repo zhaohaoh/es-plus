@@ -14,7 +14,6 @@ import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 import static com.es.plus.constant.EsConstant.MASTER;
 
@@ -33,10 +32,8 @@ public class EsChainUpdateWrapper<T> extends AbstractEsChainWrapper<T, String, E
         EsIndexParam esIndexParam = IndexContext.getIndex(super.tClass);
         if (esIndexParam != null) {
             String preIndex = esIndexParam.getPreIndex();
-            String index = esIndexParam.getIndex();
-            if (!Objects.equals(preIndex, index)){
+            String[] index = esIndexParam.getIndex();
             
-            }
             index(index);
             type = esIndexParam.getType();
             EsPlusClientFacade client = ClientContext.getClient(esIndexParam.getClientInstance());

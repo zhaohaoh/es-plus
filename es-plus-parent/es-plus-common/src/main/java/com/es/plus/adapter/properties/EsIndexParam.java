@@ -6,8 +6,12 @@ import com.es.plus.adapter.params.EsSettings;
 import com.es.plus.adapter.util.SpelUtil;
 import lombok.Data;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Data
 public class EsIndexParam {
@@ -15,12 +19,12 @@ public class EsIndexParam {
     /**
      * 索引名 创建的索引后缀+S0或者S1 但这里存的默认和别名一样
      */
-    private String index;
+    private String[] index;
     
     /**
      * 索引别名  默认index就是索引别名
      */
-    private String alias;
+    private String[] alias;
     
     /**
      * 类型
@@ -94,7 +98,7 @@ public class EsIndexParam {
      *  获取原来的index名字
      */
     public String getOriIndex() {
-        return index + GlobalConfigCache.GLOBAL_CONFIG.getGlobalSuffix();
+        return index[0] + GlobalConfigCache.GLOBAL_CONFIG.getGlobalSuffix();
     }
     
     /**
@@ -102,29 +106,35 @@ public class EsIndexParam {
      *
      * @return
      */
-    public String getIndex() {
+    public String[] getIndex() {
+        List<String> indexs = new ArrayList<>();
         if (dynamicIndex) {
-            String spelValue = SpelUtil.parseSpelValue(dynamicIndexSpel);
-            if (spelValue == null){
-                return index + GlobalConfigCache.GLOBAL_CONFIG.getGlobalSuffix();
+            for (String idx : index) {
+                String spelValue = SpelUtil.parseSpelValue(dynamicIndexSpel);
+                if (spelValue == null) {
+                    idx = idx + GlobalConfigCache.GLOBAL_CONFIG.getGlobalSuffix();
+                }
+                idx = dynamicIndexPrefix + spelValue + dynamicIndexSuffix;
+                if (!Objects.equals(preIndex, idx)) {
+                    preIndex = idx;
+                }
+                idx = idx + GlobalConfigCache.GLOBAL_CONFIG.getGlobalSuffix();
+                indexs.add(idx);
             }
-            String index = dynamicIndexPrefix + spelValue + dynamicIndexSuffix;
-            if (!Objects.equals(preIndex, index)) {
-                preIndex = index;
-            }
-            return index + GlobalConfigCache.GLOBAL_CONFIG.getGlobalSuffix();
-        } else {
-            return index + GlobalConfigCache.GLOBAL_CONFIG.getGlobalSuffix();
+        }else{
+            indexs = Arrays.stream(index).map(idx->idx + GlobalConfigCache.GLOBAL_CONFIG.getGlobalSuffix()).collect(Collectors.toList());
         }
+    
+        return indexs.toArray(new String[0]);
     }
     
     /**
      * 获取别名
      */
-    public String getAlias() {
-        if (alias==null){
+    public String[] getAlias() {
+        if (alias == null) {
             return null;
         }
-        return alias + GlobalConfigCache.GLOBAL_CONFIG.getGlobalSuffix();
+        return Arrays.stream(alias).map(s -> s + GlobalConfigCache.GLOBAL_CONFIG.getGlobalSuffix()).toArray(String[]::new);
     }
 }

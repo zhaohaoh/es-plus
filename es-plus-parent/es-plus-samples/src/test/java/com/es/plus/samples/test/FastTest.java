@@ -239,8 +239,16 @@ public class FastTest {
     public void esTongpeifu() {
         FastTestDTO fastTest = new FastTestDTO();
         fastTest.setId(6543210L);
-        fastTest.setUsername("哈哈哈哈哈");
-        Es.chainUpdate(FastTestDTO.class).index("fast_test_new_*").save(fastTest);
+        fastTest.setUsername("哈哈哈哈哈123");
+        Es.chainUpdate(FastTestDTO.class).index("fast_test_new_v116", "fast_test_new_v115").save(fastTest);
     }
     
+    
+    @org.junit.jupiter.api.Test
+    public void aaaaaaaa() {
+        
+        EsResponse<FastTestDTO> search = Es.chainQuery(FastTestDTO.class)
+                .index("asda","fast_test_new_alias").search();
+        System.out.println(search);
+    }
 }
