@@ -113,12 +113,13 @@ public class EsIndexParam {
                 String spelValue = SpelUtil.parseSpelValue(dynamicIndexSpel);
                 if (spelValue == null) {
                     idx = idx + GlobalConfigCache.GLOBAL_CONFIG.getGlobalSuffix();
+                }else{
+                    idx = dynamicIndexPrefix + spelValue + dynamicIndexSuffix;
+                    if (!Objects.equals(preIndex, idx)) {
+                        preIndex = idx;
+                    }
+                    idx = idx + GlobalConfigCache.GLOBAL_CONFIG.getGlobalSuffix();
                 }
-                idx = dynamicIndexPrefix + spelValue + dynamicIndexSuffix;
-                if (!Objects.equals(preIndex, idx)) {
-                    preIndex = idx;
-                }
-                idx = idx + GlobalConfigCache.GLOBAL_CONFIG.getGlobalSuffix();
                 indexs.add(idx);
             }
         }else{
