@@ -105,7 +105,7 @@ public class EsExecuteController {
             throw new RuntimeException("分页数量不能为空");
         }
         String[] split = limit.split(",");
-        String pageSize = split[split.length - 1];
+        String pageSize = split[split.length - 1].trim();
         if (Integer.parseInt(pageSize.trim()) > 50000) {
             throw new RuntimeException("分页数量不能超过50000");
         }
