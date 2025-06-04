@@ -5,9 +5,11 @@ import com.es.plus.adapter.config.GlobalConfigCache;
 import com.es.plus.adapter.params.EsSettings;
 import com.es.plus.adapter.util.SpelUtil;
 import lombok.Data;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -84,18 +86,18 @@ public class EsIndexParam {
     /**
      * 前一个索引名
      */
-    private String preIndex;
+    private String[] preIndex;
     
     
     /**
      * 前一个索引
      */
-    public String getPreIndex() {
-       return preIndex;
+    public String[] getPreIndex() {
+        return preIndex;
     }
     
     /**
-     *  获取原来的index名字
+     * 获取原来的index名字
      */
     public String getOriIndex() {
         return index[0] + GlobalConfigCache.GLOBAL_CONFIG.getGlobalSuffix();
@@ -109,23 +111,44 @@ public class EsIndexParam {
     public String[] getIndex() {
         List<String> indexs = new ArrayList<>();
         if (dynamicIndex) {
-            for (String idx : index) {
-                String spelValue = SpelUtil.parseSpelValue(dynamicIndexSpel);
-                if (spelValue == null) {
-                    idx = idx + GlobalConfigCache.GLOBAL_CONFIG.getGlobalSuffix();
-                }else{
-                    idx = dynamicIndexPrefix + spelValue + dynamicIndexSuffix;
-                    if (!Objects.equals(preIndex, idx)) {
-                        preIndex = idx;
+            Object spelValue = SpelUtil.parseSpelObjectValue(dynamicIndexSpel);
+            if (spelValue == null) {
+                indexs = Arrays.stream(index).map(idx -> idx + GlobalConfigCache.GLOBAL_CONFIG.getGlobalSuffix())
+                        .collect(Collectors.toList());
+            } else {
+                if (spelValue instanceof Collection) {
+                    Collection<String> indexColl = (Collection) spelValue;
+                    for (String index : indexColl) {
+                        index = dynamicIndexPrefix + index + dynamicIndexSuffix;
+                        index = index + GlobalConfigCache.GLOBAL_CONFIG.getGlobalSuffix();
+                        indexs.add(index);
                     }
-                    idx = idx + GlobalConfigCache.GLOBAL_CONFIG.getGlobalSuffix();
+                } else if (spelValue instanceof String[]) {
+                    String[] indexColl = (String[]) spelValue;
+                    for (String index : indexColl) {
+                        index = dynamicIndexPrefix + index + dynamicIndexSuffix;
+                        index = index + GlobalConfigCache.GLOBAL_CONFIG.getGlobalSuffix();
+                        indexs.add(index);
+                    }
+                } else if (spelValue instanceof String) {
+                    String indexColl = (String) spelValue;
+                    for (String index : StringUtils.split(indexColl, ",")) {
+                        index = dynamicIndexPrefix + index + dynamicIndexSuffix;
+                        index = index + GlobalConfigCache.GLOBAL_CONFIG.getGlobalSuffix();
+                        indexs.add(index);
+                    }
                 }
-                indexs.add(idx);
+                String indexArray = Arrays.toString(indexs.toArray(new String[0]));
+                String preIndexArray = Arrays.toString(preIndex);
+                if (!Objects.equals(preIndexArray, indexArray)) {
+                    preIndex = indexs.toArray(new String[0]);
+                }
             }
-        }else{
-            indexs = Arrays.stream(index).map(idx->idx + GlobalConfigCache.GLOBAL_CONFIG.getGlobalSuffix()).collect(Collectors.toList());
+        } else {
+            indexs = Arrays.stream(index).map(idx -> idx + GlobalConfigCache.GLOBAL_CONFIG.getGlobalSuffix())
+                    .collect(Collectors.toList());
         }
-    
+        
         return indexs.toArray(new String[0]);
     }
     
@@ -136,6 +159,7 @@ public class EsIndexParam {
         if (alias == null) {
             return null;
         }
-        return Arrays.stream(alias).map(s -> s + GlobalConfigCache.GLOBAL_CONFIG.getGlobalSuffix()).toArray(String[]::new);
+        return Arrays.stream(alias).map(s -> s + GlobalConfigCache.GLOBAL_CONFIG.getGlobalSuffix())
+                .toArray(String[]::new);
     }
 }

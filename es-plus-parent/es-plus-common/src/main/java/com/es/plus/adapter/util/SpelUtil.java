@@ -107,7 +107,21 @@ public class SpelUtil implements BeanFactoryAware {
         }
         
         Expression expression = parser.parseExpression(spel);
-        T value = expression.getValue(expression, tClass);
+        T value = expression.getValue(context, tClass);
+        return value;
+    }
+    
+    public static Object parseSpelObjectValue(String key) {
+        if (StringUtils.isEmpty(key)) {
+            return null;
+        }
+        String spel = parseSpecialSpel(key);
+        if (spel == null) {
+            return null;
+        }
+        
+        Expression expression = parser.parseExpression(spel);
+        Object value = expression.getValue(context);
         return value;
     }
     

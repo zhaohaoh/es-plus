@@ -188,7 +188,7 @@ public class IndexScanProccess implements InitializingBean, ApplicationListener<
         String alias = null;
         if (aliases != null && aliases.length == 1) {
             alias = esIndexParam.getAlias()[0];
-        } else {
+        } else if (aliases != null && aliases.length > 1) {
             log.error("{} 多别名的索引不支持自动reindex  别名:{},", Arrays.toString(esIndexParam.getIndex()),
                     Arrays.toString(esIndexParam.getAlias()));
             return;
@@ -337,7 +337,7 @@ public class IndexScanProccess implements InitializingBean, ApplicationListener<
         if (ArrayUtils.isEmpty(esIndex.index())) {
             throw new EsException("es entity annotation @EsIndex no has index");
         }
-        
+        // TODO 这里要改
         String[] indexArray = splitIndex(esIndex.index()[0]);
         if (indexArray == null) {
             esIndexParam.setDynamicIndex(false);

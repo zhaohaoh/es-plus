@@ -68,7 +68,7 @@ public @interface EsIndex {
     /**
      * 别名
      */
-    String[] alias();
+    String[] alias() default {};
 
     /**
      * 是否试着重建索引

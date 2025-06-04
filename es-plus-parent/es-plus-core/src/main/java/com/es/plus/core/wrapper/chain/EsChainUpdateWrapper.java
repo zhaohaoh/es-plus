@@ -31,7 +31,7 @@ public class EsChainUpdateWrapper<T> extends AbstractEsChainWrapper<T, String, E
         super.esWrapper = new EsUpdateWrapper<>(tClass);
         EsIndexParam esIndexParam = IndexContext.getIndex(super.tClass);
         if (esIndexParam != null) {
-            String preIndex = esIndexParam.getPreIndex();
+            String[] preIndex = esIndexParam.getPreIndex();
             String[] index = esIndexParam.getIndex();
             
             index(index);
