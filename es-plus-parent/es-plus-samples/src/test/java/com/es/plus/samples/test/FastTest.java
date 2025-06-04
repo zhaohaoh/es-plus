@@ -248,7 +248,7 @@ public class FastTest {
     public void aaaaaaaa() {
         
         EsResponse<FastTestDTO> search = Es.chainQuery(FastTestDTO.class)
-                .index("asda","fast_test_new_alias").search();
+                 .search();
         System.out.println(search);
     }
 }
