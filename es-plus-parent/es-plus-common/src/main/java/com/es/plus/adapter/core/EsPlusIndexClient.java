@@ -3,6 +3,7 @@ package com.es.plus.adapter.core;
 import com.es.plus.adapter.params.EsAliasResponse;
 import com.es.plus.adapter.params.EsIndexResponse;
 import com.es.plus.adapter.params.EsSettings;
+import org.elasticsearch.action.admin.cluster.node.tasks.list.ListTasksResponse;
 import org.elasticsearch.client.GetAliasesResponse;
 import org.elasticsearch.client.indices.GetIndexResponse;
 import org.elasticsearch.index.query.QueryBuilder;
@@ -208,4 +209,31 @@ public interface EsPlusIndexClient {
      *  执行指定命令
      */
     String cmdGet(String cmd);
+    
+    /**
+     * 异步迁移索引
+     * @param oldIndexName
+     * @param reindexName
+     * @return
+     */
+    String reindexTaskAsync(String oldIndexName, String reindexName);
+    
+    /**
+     * 异步迁移任务列表
+     * @return
+     */
+    ListTasksResponse reindexTaskList();
+    
+    /**
+     * 获取任务
+     * @param taskId
+     * @return
+     */
+    String reindexTaskGet(String taskId);
+    /**
+     * 取消任务
+     * @return
+     */
+    
+    Boolean cancelTask(String taskId);
 }

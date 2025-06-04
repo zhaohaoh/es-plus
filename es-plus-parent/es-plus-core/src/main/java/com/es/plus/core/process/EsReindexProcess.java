@@ -90,9 +90,9 @@ public class EsReindexProcess {
         getIndexResponse = esPlusClientFacade.getIndex(index);
         
         String oldAlias = esPlusClientFacade.getAliasByIndex(index);
-        if (oldAlias == null) {
+        if (oldAlias == null && alias!=null) {
             esPlusClientFacade.createAlias(index, alias);
-        } else if (!oldAlias.equals(alias)) {
+        } else if (alias != null && !oldAlias.equals(alias)) {
             esPlusClientFacade.replaceAlias(index, oldAlias, alias);
         }
         

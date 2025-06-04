@@ -16,6 +16,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.http.util.EntityUtils;
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.ElasticsearchStatusException;
+import org.elasticsearch.action.admin.cluster.node.tasks.list.ListTasksRequest;
+import org.elasticsearch.action.admin.cluster.node.tasks.list.ListTasksResponse;
 import org.elasticsearch.action.admin.indices.alias.Alias;
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequest;
 import org.elasticsearch.action.admin.indices.alias.get.GetAliasesRequest;
@@ -38,6 +40,12 @@ import org.elasticsearch.client.indices.CreateIndexResponse;
 import org.elasticsearch.client.indices.GetIndexRequest;
 import org.elasticsearch.client.indices.GetIndexResponse;
 import org.elasticsearch.client.indices.PutMappingRequest;
+import org.elasticsearch.client.tasks.CancelTasksRequest;
+import org.elasticsearch.client.tasks.CancelTasksResponse;
+import org.elasticsearch.client.tasks.GetTaskRequest;
+import org.elasticsearch.client.tasks.GetTaskResponse;
+import org.elasticsearch.client.tasks.TaskId;
+import org.elasticsearch.client.tasks.TaskSubmissionResponse;
 import org.elasticsearch.cluster.metadata.AliasMetadata;
 import org.elasticsearch.cluster.metadata.MappingMetadata;
 import org.elasticsearch.common.bytes.BytesReference;
@@ -50,6 +58,7 @@ import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.elasticsearch.index.reindex.ReindexRequest;
 import org.elasticsearch.rest.RestStatus;
+import org.elasticsearch.tasks.TaskInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.CollectionUtils;
@@ -62,6 +71,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -490,6 +500,87 @@ public class EsPlusIndexRestClient implements EsPlusIndexClient {
         }
     }
     
+    @Override
+    public String reindexTaskAsync(String oldIndexName, String reindexName) {
+        ReindexRequest reindexRequest = new ReindexRequest();
+        reindexRequest.setSourceIndices(oldIndexName);
+        reindexRequest.setDestIndex(reindexName);
+        reindexRequest.setDestOpType(EsConstant.DEFAULT_DEST_OP_TYPE);
+        reindexRequest.setConflicts(EsConstant.DEFAULT_CONFLICTS);
+        reindexRequest.setRefresh(true);
+        reindexRequest.setDestVersionType(VersionType.valueOf(DEFAULT_REINDEX_VERSION_TYPE));
+        reindexRequest.setSourceBatchSize(GlobalConfigCache.GLOBAL_CONFIG.getBatchSize());
+        reindexRequest.setTimeout(TimeValue.timeValueNanos(Long.MAX_VALUE));
+        try {
+           
+            TaskSubmissionResponse response = restHighLevelClient.submitReindexTask(reindexRequest, RequestOptions.DEFAULT );
+            return response.getTask();
+        } catch (Exception e) {
+            throw new EsException("reindex exception oldIndexName:" + oldIndexName + ", reindexName:  " + reindexName,
+                    e);
+        }
+    }
+    
+    @Override
+    public ListTasksResponse reindexTaskList() {
+        ListTasksRequest listTasksRequest = new ListTasksRequest();
+//        listTasksRequest.setActions("indices:data/write/reindex");
+        listTasksRequest.setDetailed(true);
+        listTasksRequest.setWaitForCompletion(true);
+        ListTasksResponse listTasksResponse = null;
+        try {
+            listTasksResponse = restHighLevelClient.tasks().list(listTasksRequest, RequestOptions.DEFAULT);
+        } catch (IOException e) {
+            throw new EsException("reindexTaskList exception oldIndexName:", e);
+        }
+        for (TaskInfo taskInfo : listTasksResponse.getTasks()) {
+            if ("reindex".equals(taskInfo.getType())) {
+                String fullTaskId = taskInfo.getTaskId().toString();
+                
+            }
+        }
+        return listTasksResponse;
+    }
+    
+    
+    @Override
+    public String reindexTaskGet(String taskId) {
+        String[] split = taskId.split(":");
+        GetTaskRequest listTasksRequest = new GetTaskRequest(split[0],Long.parseLong(split[1]));
+     
+        try {
+            Optional<GetTaskResponse> getTaskResponse = restHighLevelClient.tasks()
+                    .get(listTasksRequest, RequestOptions.DEFAULT);
+            GetTaskResponse response = getTaskResponse.orElseGet(null);
+            if (response != null) {
+                TaskInfo taskInfo = response.getTaskInfo();
+                return taskInfo.toString();
+            }
+        } catch (IOException e) {
+            throw new EsException("reindexTaskList exception oldIndexName:", e);
+        }
+         return null;
+    }
+    
+    /**
+     * 取消任务
+     * @return
+     */
+    @Override
+    public Boolean cancelTask(String taskId) {
+        CancelTasksRequest cancelTasksRequest =   new org.elasticsearch.client.tasks.CancelTasksRequest.Builder()
+                .withTaskId(new TaskId(taskId))
+                .build();
+ 
+        try {
+            // 执行取消操作
+            CancelTasksResponse cancel = restHighLevelClient.tasks().cancel(cancelTasksRequest, RequestOptions.DEFAULT);
+            return true;
+        } catch (IOException e) {
+            throw new EsException("reindexTaskList exception oldIndexName:", e);
+        }
+    }
+   
     @Override
     public boolean reindex(String oldIndexName, String reindexName, Map<String, Object> changeMapping) {
         boolean exists = indexExists(reindexName);

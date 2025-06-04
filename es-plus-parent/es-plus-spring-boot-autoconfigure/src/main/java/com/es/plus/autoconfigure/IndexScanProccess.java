@@ -202,8 +202,7 @@ public class IndexScanProccess implements InitializingBean, ApplicationListener<
                 if (lock) {
                     //取索引名判断，会同时判断索引名和别名
                     boolean exists =
-                            esPlusClientFacade.indexExists(index) || (alias != null && esPlusClientFacade.indexExists(
-                                    alias));
+                            esPlusClientFacade.indexExists(index);
                     if (exists) {
                         boolean isReindex = EsReindexProcess.tryReindex(esPlusClientFacade, index, alias, indexClass);
                         if (isReindex) {

@@ -15,6 +15,7 @@ import com.es.plus.adapter.params.EsParamWrapper;
 import com.es.plus.adapter.params.EsResponse;
 import com.es.plus.adapter.params.EsSettings;
 import com.es.plus.adapter.util.CollectionUtil;
+import org.elasticsearch.action.admin.cluster.node.tasks.list.ListTasksResponse;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.client.GetAliasesResponse;
 import org.elasticsearch.client.indices.GetIndexResponse;
@@ -276,7 +277,38 @@ public class EsPlusClientFacade   {
     public boolean reindex(String oldIndexName, String reindexName) {
         return esPlusIndexClient.reindex(oldIndexName, reindexName);
     }
-
+    
+    /**
+     * 迁移重建索引异步
+     *
+     * @param oldIndexName
+     * @param reindexName
+     * @return
+     */
+    public String reindexTaskAsync(String oldIndexName, String reindexName) {
+        return esPlusIndexClient.reindexTaskAsync(oldIndexName, reindexName);
+    }
+    
+    /**
+     * 迁移重建索引异步任务
+     *
+     * @param oldIndexName
+     * @param reindexName
+     * @return
+     */
+    public String reindexTaskList() {
+        ListTasksResponse listTasksResponse = esPlusIndexClient.reindexTaskList();
+        return listTasksResponse.toString();
+    }
+    
+    /**
+     * 迁移重建索引异步任务
+     *
+     */
+    public String reindexTaskGet(String taskId) {
+        String string = esPlusIndexClient.reindexTaskGet(taskId);
+        return string;
+    }
     /**
      * 迁移重建索引
      *
