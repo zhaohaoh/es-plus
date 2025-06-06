@@ -918,6 +918,16 @@ public class EsPlusRestClient implements EsPlusClient {
     
     @Override
     public <T> EsResponse<T> executeSQL(String sql, Class<T> tClass) {
+        String limit = StringUtils.substringAfterLast(sql, "limit");
+        Integer from=null;
+        Integer size=null;
+        if (limit!=null && limit.contains(",")){
+            String[] split = limit.split(",");
+            from = Integer.parseInt(split[0].trim());
+            size = Integer.parseInt(split[1].trim());
+            sql = sql.replace(limit,"");
+        }
+        
         String dsl = translateSql(sql);
         // 匹配 SQL 语句中的表名
         Pattern pattern = Pattern.compile("(?i)FROM\\s+([\\w.]+)");
@@ -931,6 +941,8 @@ public class EsPlusRestClient implements EsPlusClient {
             throw new EsException("sql语句中未找到表名");
         }
         Map<String, Object> map = JsonUtils.toMap(dsl);
+        map.put("from",from);
+        map.put("size",size);
         List docvalueList = (List) map.remove("docvalue_fields");
         if (docvalueList!=null && !docvalueList.isEmpty()){
             Map source = (Map) map.get("_source");

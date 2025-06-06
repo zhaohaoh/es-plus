@@ -102,8 +102,9 @@ public class EsExecuteController {
     public String esQuerySql(String sql, @RequestHeader("currentEsClient") String currentEsClient) {
         String limit = StringUtils.substringAfterLast(sql, "limit");
         if (StringUtils.isBlank(limit)){
-            throw new RuntimeException("分页数量不能为空");
+            sql = sql+" limit 100";
         }
+        
         String[] split = limit.split(",");
         String pageSize = split[split.length - 1].trim();
         if (Integer.parseInt(pageSize.trim()) > 50000) {
