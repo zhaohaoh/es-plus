@@ -103,6 +103,7 @@ public class EsExecuteController {
         String limit = StringUtils.substringAfterLast(sql, "limit");
         if (StringUtils.isBlank(limit)){
             sql = sql+" limit 100";
+            limit = StringUtils.substringAfterLast(sql, "limit");
         }
         
         String[] split = limit.split(",");
