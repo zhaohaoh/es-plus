@@ -19,7 +19,7 @@ public class UserController {
     public SaTokenInfo doLogin(String username, String password) {
         // 此处仅作模拟示例，真实项目需要从数据库中查询数据进行比对
         if ("admin".equals(username) && adminpassword.equals(password)) {
-            StpUtil.login(1);
+            StpUtil.login("1");
             // 第2步，获取 Token  相关参数
             SaTokenInfo tokenInfo = StpUtil.getTokenInfo();
             return tokenInfo;

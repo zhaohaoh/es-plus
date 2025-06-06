@@ -57,14 +57,20 @@ public class CommondInitTable {
      */
     private void createTables() throws SQLException {
         List<String> tables = jdbcTemplate.queryForList("SELECT name FROM sqlite_master ", String.class);
-        if (tables.contains("es_client")) {
-            return;
+        if (!tables.contains("es_client")) {
+            jdbcTemplate.execute("CREATE TABLE \"es_client\" (\n" + "  \"id\" INTEGER NOT NULL,\n" + "  \"unikey\" TEXT,\n"
+                    + "  \"name\" TEXT,\n" + "  \"address\" TEXT,\n" + "  \"schema\" TEXT,\n" + "  \"username\" TEXT,\n"
+                    + "  \"password\" TEXT,\n" + "  \"createTime\" DATE,\n" + "  PRIMARY KEY (\"id\")\n" + ");");
+            
         }
         
-        jdbcTemplate.execute("CREATE TABLE \"es_client\" (\n" + "  \"id\" INTEGER NOT NULL,\n" + "  \"unikey\" TEXT,\n"
-                + "  \"name\" TEXT,\n" + "  \"address\" TEXT,\n" + "  \"schema\" TEXT,\n" + "  \"username\" TEXT,\n"
-                + "  \"password\" TEXT,\n" + "  \"createTime\" DATE,\n" + "  PRIMARY KEY (\"id\")\n" + ");");
-        
+  
+        if (!tables.contains("es_reindex_task")) {
+            jdbcTemplate.execute("CREATE TABLE \"es_reindex_task\" (\n" + "  \"id\" INTEGER NOT NULL,\n"
+                    + "  \"es_client_name\" TEXT,\n" + "  \"source_index\" TEXT,\n" + "  \"target_index\" TEXT,\n"
+                    + "  \"task_id\" TEXT,\n" + "  \"create_time\" DATE,\n" + "  \"create_uid\" integer,\n"
+                    + "  PRIMARY KEY (\"id\")\n" + ");");
+        }
         
     }
     

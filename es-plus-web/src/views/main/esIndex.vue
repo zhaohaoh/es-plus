@@ -57,6 +57,12 @@
             plain
             >设置别名</el-button
           >
+          <el-button
+            type="primary"
+            plain
+            @click="clickReindex(item.index, item.alias)"
+            >迁移索引</el-button
+          >
           <el-button type="danger" @click="clickDelete(item.index)" plain
             >删除</el-button
           >
@@ -92,6 +98,96 @@
         style="position: absolute; right: 10px; bottom: 10px"
         >删除别名
       </el-button>
+    </el-dialog>
+
+    <el-dialog
+      v-model="reindexVisble"
+      :title="'当前索引:' + currentIndex"
+      :style="{ height: `${reindexDialogHeigt}px`, width: `600px` }"
+    >
+      <el-button-group style="margin-top: -0px; margin-bottom: 11px">
+        <el-button
+          type="primary"
+          plain
+          @click="(jumpDataMove = false), (reindexDialogHeigt = 200)"
+          >同源迁移</el-button
+        >
+        <el-button
+          type="primary"
+          plain
+          @click="(jumpDataMove = true), (reindexDialogHeigt = 300)"
+          >跨数据源</el-button
+        >
+      </el-button-group>
+      <div v-show="jumpDataMove" style="margin-bottom: 10px">
+        <div class="dataMoveClient-form">
+          目标数据源:
+          <el-select
+            v-model="dataMoveClient"
+            class="m-2"
+            placeholder="Select"
+            style="width: 225px"
+            filterable
+          >
+            <el-option
+              v-for="item in options"
+              :key="item.id"
+              :label="`${item.unikey} (${item.name})`"
+              :value="item.unikey"
+              :valueKey="item.unikey"
+            />
+          </el-select>
+        </div>
+        <div class="dataMoveClient-form">
+          最大迁移数量:
+          <el-input
+            placeholder="本次迁移最大限制数量"
+            v-model="moveSize"
+            style="display: inline"
+          />
+        </div>
+      </div>
+      <el-input placeholder="目标索引" v-model="reindexName" />
+      <el-button
+        type="primary"
+        plain
+        @click="doMove"
+        style="position: absolute; right: 110px; bottom: 10px"
+        >点击迁移
+      </el-button>
+      <el-button
+        type="primary"
+        plain
+        @click="clickReindexTaskList"
+        style="position: absolute; right: 10px; bottom: 10px"
+        >任务明细
+      </el-button>
+    </el-dialog>
+
+    <el-dialog
+      v-model="reindexTableVisble"
+      title="迁移任务明细"
+      style="
+        width: 1500px;
+        position: relative;
+        height: 600px;
+        transform: translateY(80px);
+        transform: translateX(50px);
+      "
+    >
+      <el-table
+        :data="reindexTableData"
+        style="max-width: 1500px; max-height: 1000px; min-height: 300px"
+        size="large"
+      >
+        <el-table-column
+          v-for="item in tableHeader"
+          :key="item.prop"
+          :label="item.label"
+          :prop="item.prop"
+          width="180"
+        />
+      </el-table>
     </el-dialog>
 
     <el-dialog
@@ -273,12 +369,59 @@ import "codemirror/addon/hint/show-hint.css";
 import "codemirror/addon/hint/show-hint";
 import "codemirror/addon/hint/sql-hint";
 import "codemirror/mode/javascript/javascript.js";
+const dataMoveClient = ref();
+const jumpDataMove = ref(false);
 
 const addIndexVisble = ref(false);
 const createAliasVisble = ref(false);
 const dialogIndexInfo = ref(false);
+const reindexVisble = ref(false);
+const reindexTableVisble = ref(false);
 
 const saveIndexMappings = ref("{}");
+const reindexName = ref("");
+const reindexTableData = ref([]);
+const moveSize = ref(100000);
+const reindexDialogHeigt = ref(200);
+
+const tableHeader = [
+  {
+    prop: "id",
+    label: "id",
+  },
+  {
+    prop: "esClientName",
+    label: "client名字",
+  },
+  {
+    prop: "sourceIndex",
+    label: "来源索引",
+  },
+  {
+    prop: "targetIndex",
+    label: "目标索引",
+  },
+  {
+    prop: "taskId",
+    label: "任务id",
+  },
+  {
+    prop: "createTime",
+    label: "创建时间",
+  },
+  {
+    prop: "createUid",
+    label: "创建人id",
+  },
+  {
+    prop: "completed",
+    label: "完成",
+  },
+  {
+    prop: "taskJson",
+    label: "任务明细json",
+  },
+];
 
 const esIndexAdd = reactive({
   indexName: "",
@@ -350,6 +493,63 @@ const putMapping = async (indexName, mappings) => {
   getIndices("");
 };
 
+const doMove = async () => {
+  if (jumpDataMove.value === true) {
+    doDataMove();
+  } else {
+    doReindex();
+  }
+};
+
+const doReindex = async () => {
+  ElMessageBox.confirm("确认迁移到 " + reindexName.value + " 吗?", {
+    confirmButtonText: "确定",
+    cancelButtonText: "取消",
+  })
+    .then(() => {
+      reindexApi();
+    })
+    .catch(() => {});
+};
+
+const doDataMove = async () => {
+  ElMessageBox.confirm(
+    "确认迁移到 " + dataMoveClient.value + "." + reindexName.value + " 吗?",
+    {
+      confirmButtonText: "确定",
+      cancelButtonText: "取消",
+    }
+  )
+    .then(() => {
+      doDataMoveApi();
+    })
+    .catch(() => {});
+};
+
+const doDataMoveApi = async () => {
+  const param = {
+    targetClient: dataMoveClient.value,
+    maxSize: moveSize.value,
+    targetIndex: reindexName.value,
+    sourceIndex: currentIndex.value,
+  };
+
+  let res = await proxy.$api.esIndex.indexDataMove(param);
+  reindexVisble.value = false;
+  reindexName.value = "";
+};
+
+const reindexApi = async () => {
+  const param = {
+    targetIndex: reindexName.value,
+    sourceIndex: currentIndex.value,
+  };
+
+  let res = await proxy.$api.esIndex.reindex(param);
+  reindexVisble.value = false;
+  reindexName.value = "";
+};
+
 const handleValueUpdate = (newValue) => {
   // 这里可以同步到父组件的 data
   code.value = newValue;
@@ -389,6 +589,20 @@ const clickIndex = async (index) => {
 const clickSetAlias = async (index, alias) => {
   changeAlias.value = alias;
   createAliasVisble.value = true;
+  currentIndex.value = index;
+};
+const clickReindexTaskList = async (index, alias) => {
+  reindexTableVisble.value = true;
+  const param = {
+    sourceIndex: currentIndex.value,
+  };
+  let res = await proxy.$api.esIndex.reindexTaskList(param);
+  console.log(res);
+  reindexTableData.value = res;
+};
+
+const clickReindex = async (index, alias) => {
+  reindexVisble.value = true;
   currentIndex.value = index;
 };
 
@@ -557,5 +771,8 @@ span {
   border-radius: 4px;
   resize: none;
   font-family: "Courier New", monospace;
+}
+.dataMoveClient-form {
+  margin-bottom: 10px;
 }
 </style>

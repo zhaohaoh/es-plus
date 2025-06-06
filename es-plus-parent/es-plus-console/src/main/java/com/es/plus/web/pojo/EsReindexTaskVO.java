@@ -1,7 +1,6 @@
 package com.es.plus.web.pojo;
 
 import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
@@ -12,7 +11,7 @@ import lombok.Data;
  */
 @Data
 @TableName("es_reindex_task")
-public class EsReindexTask {
+public class EsReindexTaskVO {
     @TableId(type = IdType.AUTO)
     private Long id;
     
@@ -20,32 +19,32 @@ public class EsReindexTask {
     /**
      * 源索引
      */
-    @TableField(value = "source_index")
     private String sourceIndex;
     
     /**
      * 目标索引
      */
-    @TableField(value = "target_index")
     private String targetIndex;
     
     /**
      * 任务id
      */
-    @TableField(value = "task_id")
     private String taskId;
     
     /**
      * 创建时间
      */
-    @TableField(value = "create_time")
     private Long createTime;
     
     /**
      * 创建人
      */
-    @TableField(value = "create_uid")
     private Long createUid;
     
-  
+    /**
+     * 创建人
+     */
+    private String taskJson;
+    private Boolean completed;
+    
 }

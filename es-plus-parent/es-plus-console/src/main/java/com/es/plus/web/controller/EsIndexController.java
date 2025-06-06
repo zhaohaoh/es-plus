@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.es.plus.adapter.EsPlusClientFacade;
 import com.es.plus.adapter.exception.EsException;
 import com.es.plus.adapter.params.EsIndexResponse;
+import com.es.plus.adapter.params.EsResponse;
 import com.es.plus.adapter.util.JsonUtils;
 import com.es.plus.core.ClientContext;
 import com.es.plus.core.statics.Es;
@@ -15,6 +16,9 @@ import com.es.plus.web.pojo.EsIndexCreateDTO;
 import com.es.plus.web.pojo.EsIndexResponseVO;
 import com.es.plus.web.pojo.EsReindexRequst;
 import com.es.plus.web.pojo.EsReindexTask;
+import com.es.plus.web.pojo.EsReindexTaskVO;
+import com.es.plus.web.pojo.EsindexDataMove;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,17 +31,22 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.StringJoiner;
+import java.util.stream.Collectors;
 
+@Slf4j
 @RestController
 @RequestMapping("/es/index")
 public class EsIndexController {
+    
     @Autowired
     private EsReindexMapper esReindexMapper;
+    
     /**
      * 根据当前es链接地址  模糊查询所有索引名
      *
@@ -55,6 +64,9 @@ public class EsIndexController {
         }
         EsPlusClientFacade client = ClientContext.getClient(esClientName);
         EsIndexResponse index = Es.chainIndex(client).getIndex("*" + keyword + "*");
+        if (index == null) {
+            throw new EsException("无匹配的索引");
+        }
         EsIndexResponseVO esIndexResponseVO = new EsIndexResponseVO();
         BeanUtils.copyProperties(index, esIndexResponseVO);
         Map<String, Object> mappings = index.getMappings();
@@ -141,6 +153,9 @@ public class EsIndexController {
         String string = "*" + keyword + "*";
         String cmd = "/_cat/indices/" + string + "?format=json&v";
         String res = Es.chainIndex(client).getCmd(cmd);
+        if (res==null){
+            throw new EsException("无匹配索引");
+        }
         EsIndexResponseVO responseVO = list(esClientName, keyword);
         Map<String, List<String>> aliases = responseVO.getAliases();
         List<Map> list = JsonUtils.toList(res, Map.class);
@@ -204,8 +219,8 @@ public class EsIndexController {
             throw new EsException("索引名不能为空");
         }
         EsPlusClientFacade client = ClientContext.getClient(esClientName);
-        Es.chainIndex(client).createIndex(esIndexCreateDTO.getIndexName(),esIndexCreateDTO.getAlias()
-                ,esIndexCreateDTO.getEsSettings(),esIndexCreateDTO.getMapping());
+        Es.chainIndex(client).createIndex(esIndexCreateDTO.getIndexName(), esIndexCreateDTO.getAlias(),
+                esIndexCreateDTO.getEsSettings(), esIndexCreateDTO.getMapping());
         refreshIndexCache(esClientName);
     }
     
@@ -213,12 +228,12 @@ public class EsIndexController {
      * 设置别名
      */
     @PostMapping("createAlias")
-    public void createAlias(@RequestHeader("currentEsClient") String esClientName,String index,String alias) {
-        if (StringUtils.isBlank(index)||StringUtils.isBlank(alias)) {
+    public void createAlias(@RequestHeader("currentEsClient") String esClientName, String index, String alias) {
+        if (StringUtils.isBlank(index) || StringUtils.isBlank(alias)) {
             throw new EsException("索引或别名不能为空");
         }
         EsPlusClientFacade client = ClientContext.getClient(esClientName);
-        Es.chainIndex(client).createAlias(index,alias);
+        Es.chainIndex(client).createAlias(index, alias);
         refreshIndexCache(esClientName);
     }
     
@@ -226,16 +241,16 @@ public class EsIndexController {
      * 删除别名
      */
     @PostMapping("removeAlias")
-    public void removeAlias(@RequestHeader("currentEsClient") String esClientName,String index,String alias) {
-        if (StringUtils.isBlank(index)||StringUtils.isBlank(alias)) {
+    public void removeAlias(@RequestHeader("currentEsClient") String esClientName, String index, String alias) {
+        if (StringUtils.isBlank(index) || StringUtils.isBlank(alias)) {
             throw new EsException("索引或别名不能为空");
         }
         Object loginId = StpUtil.getLoginId();
-        if (!loginId.equals(1)){
+        if (!loginId.equals("1")) {
             throw new RuntimeException("无权操作");
         }
         EsPlusClientFacade client = ClientContext.getClient(esClientName);
-        Es.chainIndex(client).removeAlias(index,alias);
+        Es.chainIndex(client).removeAlias(index, alias);
         refreshIndexCache(esClientName);
     }
     
@@ -243,22 +258,21 @@ public class EsIndexController {
      * reindex
      */
     @PostMapping("reindex")
-    public String reindex(@RequestHeader("currentEsClient") String esClientName,@RequestBody EsReindexRequst esReindexRequst) {
+    public String reindex(@RequestHeader("currentEsClient") String esClientName,
+            @RequestBody EsReindexRequst esReindexRequst) {
         String sourceIndex = esReindexRequst.getSourceIndex();
         String targetIndex = esReindexRequst.getTargetIndex();
-        if (StringUtils.isBlank(sourceIndex)
-                 || StringUtils.isBlank(targetIndex)) {
+        if (StringUtils.isBlank(sourceIndex) || StringUtils.isBlank(targetIndex)) {
             throw new EsException("索引不能为空");
         }
         
-//        Object loginId = StpUtil.getLoginId();
-//        if (!loginId.equals(1)){
-//            throw new RuntimeException("无权操作");
-//        }
- 
+        Object loginId = StpUtil.getLoginId();
+        if (!loginId.equals("1")) {
+            throw new RuntimeException("无权操作");
+        }
+        
         EsPlusClientFacade client = ClientContext.getClient("hzh_local");
         String taskId = client.reindexTaskAsync(sourceIndex, targetIndex);
-        
         
         refreshIndexCache(esClientName);
         EsReindexTask esReindexTask = new EsReindexTask();
@@ -266,28 +280,63 @@ public class EsIndexController {
         esReindexTask.setSourceIndex(sourceIndex);
         esReindexTask.setTargetIndex(targetIndex);
         esReindexTask.setCreateTime(System.currentTimeMillis());
-        esReindexTask.setCreateUid( StpUtil.getLoginId()!=null? Long.parseLong(StpUtil.getLoginId().toString()):0);
+        esReindexTask.setCreateUid(StpUtil.getLoginId() != null ? Long.parseLong(StpUtil.getLoginId().toString()) : 0);
+        esReindexTask.setEsClientName(esClientName);
         
         LambdaQueryWrapper<EsReindexTask> eq = Wrappers.<EsReindexTask>lambdaQuery()
                 .eq(EsReindexTask::getTaskId, esReindexTask.getTaskId());
         EsReindexTask reindexTask = esReindexMapper.selectOne(eq);
         //数据重复
-        if (reindexTask != null){
-           return reindexTask.getTaskId();
+        if (reindexTask != null) {
+            return reindexTask.getTaskId();
         }
         esReindexMapper.insert(esReindexTask);
- 
+        
         return taskId;
     }
     
     /**
      * reindex任务明细列表
      */
-    @PostMapping("reindexTaskList")
-    public String reindexTaskList(@RequestHeader("currentEsClient") String esClientName) {
+    @GetMapping("reindexTaskList")
+    public List<EsReindexTaskVO> reindexTaskList(@RequestHeader("currentEsClient") String esClientName,
+            String sourceIndex) {
+        LambdaQueryWrapper<EsReindexTask> eq = Wrappers.<EsReindexTask>lambdaQuery()
+                .eq(EsReindexTask::getEsClientName, esClientName).eq(EsReindexTask::getSourceIndex, sourceIndex)
+                //只查看前10个
+                .last("limit 10").orderByDesc(EsReindexTask::getCreateTime);
+        List<EsReindexTask> esReindexTasks = esReindexMapper.selectList(eq);
+        List<EsReindexTaskVO> reindexTaskVOS = esReindexTasks.stream().map(a -> {
+            EsReindexTaskVO esReindexTaskVO = new EsReindexTaskVO();
+            BeanUtils.copyProperties(a, esReindexTaskVO);
+            String string = reindexTaskGet(esClientName, esReindexTaskVO.getTaskId());
+            esReindexTaskVO.setTaskJson(string);
+            Map<String, Object> map = JsonUtils.toMap(string);
+            Long time = (Long) map.get("start_time_in_millis");
+            String running_time = (String) map.get("running_time");
+            Duration parse = Duration.parse("PT" + running_time);
+            long millis = parse.toMillis();
+            long l = time + millis;
+            // 已经运行结束超过10秒 认为结束
+            long end = System.currentTimeMillis();
+            if (l + 10000 <= end) {
+                esReindexTaskVO.setCompleted(true);
+            } else {
+                esReindexTaskVO.setCompleted(false);
+            }
+            return esReindexTaskVO;
+        }).collect(Collectors.toList());
+        return reindexTaskVOS;
+    }
+    
+    /**
+     * reindex任务明细获取
+     */
+    @GetMapping("reindexTaskGet")
+    public String reindexTaskGet(@RequestHeader("currentEsClient") String esClientName, String taskId) {
         
-        EsPlusClientFacade client = ClientContext.getClient("hzh_local");
-        String reindexTaskList = client.reindexTaskList();
+        EsPlusClientFacade client = ClientContext.getClient(esClientName);
+        String reindexTaskList = client.reindexTaskGet(taskId);
         
         return reindexTaskList;
     }
@@ -295,13 +344,49 @@ public class EsIndexController {
     /**
      * reindex任务明细获取
      */
-    @GetMapping("reindexTaskGet")
-    public String reindexTaskGet(@RequestHeader("currentEsClient") String esClientName,String taskId) {
+    @PostMapping("indexDataMove")
+    public String indexDataMove(@RequestHeader("currentEsClient") String esClientName,
+            @RequestBody EsindexDataMove esindexDataMove) {
+        esindexDataMove.setSourceClient(esClientName);
+        EsPlusClientFacade sourceClient = ClientContext.getClient(esindexDataMove.getSourceClient());
+        EsPlusClientFacade targetClient = ClientContext.getClient(esindexDataMove.getTargetClient());
+        if (sourceClient == null || targetClient == null) {
+            throw new EsException("来源或目标客户端为空");
+        }
+        if (esindexDataMove.getTargetIndex() == null || esindexDataMove.getSourceIndex() == null) {
+            throw new EsException("来源或目标索引为空");
+        }
         
-        EsPlusClientFacade client = ClientContext.getClient("hzh_local");
-        String reindexTaskList = client.reindexTaskGet(taskId);
+        if (esindexDataMove.getMaxSize()>1000000){
+            throw new EsException("跨集群迁移最大限制100万数据量");
+        }
+        Integer maxSize = esindexDataMove.getMaxSize();
+        int totalSize=0;
+        EsResponse<Map> res = Es.chainQuery(sourceClient,Map.class).index(esindexDataMove.getSourceIndex())
+                .sortByDesc("_id")
+                .search(1000);
+        List<Map> list = res.getList();
+        if (list!=null){
+            while (true){
+                Object[] tailSortValues = res.getTailSortValues();
+                totalSize += list.size();
+                if (totalSize >= maxSize){
+                    log.info("同步数量大于最大限制数量 停止同步 syncSize:{} maxSize:{}",totalSize,maxSize);
+                    break;
+                }
+                res = Es.chainQuery(sourceClient, Map.class)
+                        .index(esindexDataMove.getSourceIndex())
+                        .sortByDesc("_id").searchAfterValues(tailSortValues).search(1000);
+                list = res.getList();
+                if (CollectionUtils.isEmpty(list)){
+                    break;
+                }
+                Es.chainUpdate(targetClient, Map.class).index(esindexDataMove.getTargetIndex()).saveOrUpdateBatch(list);
+                log.info("Es-plus 跨集群迁移 本次同步数据 :{}",list.size());
+            }
+        }
         
-        return reindexTaskList;
+        return "";
     }
     
     /**
@@ -322,7 +407,7 @@ public class EsIndexController {
             throw new RuntimeException("需要删除的索引不能为空");
         }
         Object loginId = StpUtil.getLoginId();
-        if (!loginId.equals(1)){
+        if (!loginId.equals("1")) {
             throw new RuntimeException("无权操作");
         }
         EsPlusClientFacade client = ClientContext.getClient(esClientName);

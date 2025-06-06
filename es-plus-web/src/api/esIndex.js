@@ -37,6 +37,22 @@ const esIndex = {
   deleteIndex(params) {
     return api.deleteParam({ url: "/es/index/deleteIndex", data: params });
   },
+
+  reindex(params) {
+    return api.post({ url: "/es/index/reindex", data: params });
+  },
+
+  reindexTaskList(params) {
+    return api.get({ url: "/es/index/reindexTaskList", data: params });
+  },
+
+  reindexTaskGet(params) {
+    return api.get({ url: "/es/index/reindexTaskGet", data: params });
+  },
+
+  indexDataMove(params) {
+    return api.post({ url: "/es/index/indexDataMove", data: params });
+  },
 };
 
 export default esIndex;

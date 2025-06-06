@@ -31,13 +31,9 @@ export default defineConfig({
     port: 5173,
     open: false, // 启动是否自动打开浏览器
     // proxy: {
-    //   ["/api"]: {
-    //     target: "http://localhost", //
+    //   "^/": {
+    //     target: "http://localhost:8808", // 替换为你的后端地址
     //     changeOrigin: true,
-    //     log: "debug",
-    //     rewrite: (path) => {
-    //       return path.replace(new RegExp("^" + "/api"), "");
-    //     },
     //   },
     // },
   },
