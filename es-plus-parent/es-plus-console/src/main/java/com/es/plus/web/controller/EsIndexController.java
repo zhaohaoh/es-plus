@@ -7,12 +7,14 @@ import com.es.plus.adapter.EsPlusClientFacade;
 import com.es.plus.adapter.exception.EsException;
 import com.es.plus.adapter.params.EsIndexResponse;
 import com.es.plus.adapter.params.EsResponse;
+import com.es.plus.adapter.params.EsSettings;
 import com.es.plus.adapter.pojo.EsPlusGetTaskResponse;
 import com.es.plus.adapter.util.JsonUtils;
 import com.es.plus.core.ClientContext;
 import com.es.plus.core.statics.Es;
 import com.es.plus.web.cache.EsClientCache;
 import com.es.plus.web.mapper.EsReindexMapper;
+import com.es.plus.web.pojo.EsCopyRequest;
 import com.es.plus.web.pojo.EsIndexCreateDTO;
 import com.es.plus.web.pojo.EsIndexResponseVO;
 import com.es.plus.web.pojo.EsReindexRequst;
@@ -252,6 +254,35 @@ public class EsIndexController {
         EsPlusClientFacade client = ClientContext.getClient(esClientName);
         Es.chainIndex(client).removeAlias(index, alias);
         refreshIndexCache(esClientName);
+    }
+    
+    
+    /**
+     * 复制索引 复制索引配置和映射 不复制别名
+     */
+    @PostMapping("copyIndex")
+    public void copyIndex(@RequestHeader("currentEsClient") String esClientName, @RequestBody EsCopyRequest esCopyRequest) {
+        esCopyRequest.setSourceClient(esClientName);
+        EsPlusClientFacade sourceClient = ClientContext.getClient(esCopyRequest.getSourceClient());
+        EsPlusClientFacade targetClient = ClientContext.getClient(esCopyRequest.getTargetClient());
+        if (sourceClient == null || targetClient == null) {
+            throw new EsException("来源或目标客户端为空");
+        }
+        String sourceIndex = esCopyRequest.getSourceIndex();
+        String targetIndex = esCopyRequest.getTargetIndex();
+        if (StringUtils.isBlank(sourceIndex) || StringUtils.isBlank(targetIndex)) {
+            throw new EsException("索引不能为空");
+        }
+        EsIndexResponse response = sourceClient.getIndex(sourceIndex);
+    
+        Map<String, Object> mappings = response.getMappings(sourceIndex);
+        Map<String, Object> setting = response.getSetting(sourceIndex);
+        String jsonStr = JsonUtils.toJsonStr(setting);
+        EsSettings esSettings = JsonUtils.toBean(jsonStr, EsSettings.class);
+        List<String> alias = response.getAlias(sourceIndex);
+        String[] array = alias.toArray(alias.toArray(new String[0]));
+        //索引复制 复制配置，映射 不复制别名
+        boolean index = targetClient.createIndex(targetIndex,null, esSettings, mappings);
     }
     
     /**

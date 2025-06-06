@@ -10,7 +10,7 @@
             @change="onSearch"
           />
         </el-col>
-        <el-col :span="2" style="transform: translateX(10px)">
+        <el-col :span="2" style="transform: translateX(15px)">
           <el-button type="primary" @click="clickCreateIndex()" plain
             >新建索引</el-button
           >
@@ -109,17 +109,38 @@
         <el-button
           type="primary"
           plain
-          @click="(jumpDataMove = false), (reindexDialogHeigt = 200)"
+          @click="
+            (jumpDataMove = 1),
+              (reindexDialogHeigt = 230),
+              (moveName = '点击复制')
+          "
+          >索引复制</el-button
+        >
+        <el-button
+          type="primary"
+          plain
+          @click="
+            (jumpDataMove = 2),
+              (reindexDialogHeigt = 200),
+              (moveName = '点击迁移')
+          "
           >同源迁移</el-button
         >
         <el-button
           type="primary"
           plain
-          @click="(jumpDataMove = true), (reindexDialogHeigt = 300)"
+          @click="
+            (jumpDataMove = 3),
+              (reindexDialogHeigt = 300),
+              (moveName = '点击迁移')
+          "
           >跨数据源</el-button
         >
       </el-button-group>
-      <div v-show="jumpDataMove" style="margin-bottom: 10px">
+      <div
+        v-show="jumpDataMove == 1 || jumpDataMove == 3"
+        style="margin-bottom: 10px"
+      >
         <div class="dataMoveClient-form">
           目标数据源:
           <el-select
@@ -138,14 +159,14 @@
             />
           </el-select>
         </div>
-        <div class="dataMoveClient-form">
-          最大迁移数量:
-          <el-input
-            placeholder="本次迁移最大限制数量"
-            v-model="moveSize"
-            style="display: inline"
-          />
-        </div>
+      </div>
+      <div v-show="jumpDataMove == 3" class="dataMoveClient-form">
+        最大迁移数量:
+        <el-input
+          placeholder="本次迁移最大限制数量"
+          v-model="moveSize"
+          style="display: inline"
+        />
       </div>
       <el-input placeholder="目标索引" v-model="reindexName" />
       <el-button
@@ -153,7 +174,7 @@
         plain
         @click="doMove"
         style="position: absolute; right: 110px; bottom: 10px"
-        >点击迁移
+        >{{ moveName }}
       </el-button>
       <el-button
         type="primary"
@@ -370,7 +391,7 @@ import "codemirror/addon/hint/show-hint";
 import "codemirror/addon/hint/sql-hint";
 import "codemirror/mode/javascript/javascript.js";
 const dataMoveClient = ref();
-const jumpDataMove = ref(false);
+const jumpDataMove = ref(1);
 
 const addIndexVisble = ref(false);
 const createAliasVisble = ref(false);
@@ -383,6 +404,8 @@ const reindexName = ref("");
 const reindexTableData = ref([]);
 const moveSize = ref(100000);
 const reindexDialogHeigt = ref(200);
+
+const moveName = ref("点击迁移");
 
 const tableHeader = [
   {
@@ -494,11 +517,39 @@ const putMapping = async (indexName, mappings) => {
 };
 
 const doMove = async () => {
-  if (jumpDataMove.value === true) {
+  if (jumpDataMove.value === 3) {
     doDataMove();
-  } else {
+  } else if (jumpDataMove.value === 2) {
     doReindex();
+  } else if (jumpDataMove.value === 1) {
+    copyIndex();
   }
+};
+
+const copyIndex = async () => {
+  ElMessageBox.confirm(
+    "确认复制索引到 " + dataMoveClient.value + "." + reindexName.value + " 吗?",
+    {
+      confirmButtonText: "确定",
+      cancelButtonText: "取消",
+    }
+  )
+    .then(() => {
+      doCopyIndexApi();
+    })
+    .catch(() => {});
+};
+
+const doCopyIndexApi = async () => {
+  const param = {
+    targetClient: dataMoveClient.value,
+    targetIndex: reindexName.value,
+    sourceIndex: currentIndex.value,
+  };
+
+  let res = await proxy.$api.esIndex.copyIndex(param);
+  reindexVisble.value = false;
+  reindexName.value = "";
 };
 
 const doReindex = async () => {

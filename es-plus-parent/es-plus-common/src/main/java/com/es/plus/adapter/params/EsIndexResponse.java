@@ -34,4 +34,8 @@ public class EsIndexResponse {
         }
         return new HashMap<>();
     }
+    public List<String> getAlias(String indexName) {
+        List<String> alias = aliases.get(indexName);
+        return alias;
+    }
 }

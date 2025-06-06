@@ -162,6 +162,45 @@ public class EsPlus6IndexRestClient implements EsPlusIndexClient {
         return indexResponse.isAcknowledged();
     }
     
+    @Override
+    public boolean createIndex(String index,String[] alias,Map<String, Object> esSettings,Map<String, Object> mappings) {
+        CreateIndexRequest indexRequest = new CreateIndexRequest(index);
+        Settings.Builder settings = Settings.builder();
+        
+        if (esSettings != null) {
+            String json = JsonUtils.toJsonStr(esSettings);
+            settings.loadFromSource(json, XContentType.JSON);
+            indexRequest.settings(settings);
+        }
+        if (mappings != null) {
+            indexRequest.mapping(mappings);
+        }
+        if (ArrayUtils.isNotEmpty(alias)) {
+            List<Alias> newAliases = new ArrayList<>();
+            for (String a : alias) {
+                Alias one = new Alias(a);
+                newAliases.add(one);
+            }
+            indexRequest.aliases(newAliases);
+        }
+        
+        CreateIndexResponse indexResponse = null;
+        try {
+            try {
+                BytesReference reference = XContentHelper.toXContent(indexRequest, XContentType.JSON, true);
+                String string = reference.utf8ToString();
+                log.info("createIndex index:{} :{}",index, string);
+            } catch (IOException e) {
+                throw new ElasticsearchException(e);
+            }
+            indexResponse = restHighLevelClient.indices().create(indexRequest, RequestOptions.DEFAULT);
+        } catch (IOException e) {
+            printErrorLog("createIndex:{}", e);
+            return false;
+        }
+        return indexResponse.isAcknowledged();
+    }
+    
     /**
      * 映射
      *

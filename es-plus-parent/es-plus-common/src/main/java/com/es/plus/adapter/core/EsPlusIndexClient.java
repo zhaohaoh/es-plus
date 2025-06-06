@@ -33,6 +33,11 @@ public interface EsPlusIndexClient {
     
     
     boolean createIndex(String index,String alias,EsSettings esSettings,Map<String, Object> mappings);
+    
+    /**
+     *  创建索引
+     */
+    boolean createIndex(String index,String[] alias,Map<String, Object> esSettings,Map<String, Object> mappings);
     /**
      * 映射
      *

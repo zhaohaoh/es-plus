@@ -53,6 +53,9 @@ const esIndex = {
   indexDataMove(params) {
     return api.post({ url: "/es/index/indexDataMove", data: params });
   },
+  copyIndex(params) {
+    return api.post({ url: "/es/index/copyIndex", data: params });
+  },
 };
 
 export default esIndex;

@@ -136,6 +136,14 @@ public class EsPlusClientFacade   {
     public boolean createIndex(String index,String alias,EsSettings esSettings,Map<String,Object> mappings) {
         return esPlusIndexClient.createIndex(index,alias,esSettings,mappings);
     }
+    /**
+     * 创建索引
+     *
+     * @param index 索引
+     */
+    public boolean createIndex(String index,String[] alias,Map<String,Object> esSettings,Map<String,Object> mappings) {
+        return esPlusIndexClient.createIndex(index,alias,esSettings,mappings);
+    }
 
     /**
      * 创建索引
