@@ -3,6 +3,7 @@ package com.es.plus.adapter.core;
 import com.es.plus.adapter.params.EsAliasResponse;
 import com.es.plus.adapter.params.EsIndexResponse;
 import com.es.plus.adapter.params.EsSettings;
+import com.es.plus.adapter.pojo.EsPlusGetTaskResponse;
 import org.elasticsearch.action.admin.cluster.node.tasks.list.ListTasksResponse;
 import org.elasticsearch.client.GetAliasesResponse;
 import org.elasticsearch.client.indices.GetIndexResponse;
@@ -229,7 +230,7 @@ public interface EsPlusIndexClient {
      * @param taskId
      * @return
      */
-    String reindexTaskGet(String taskId);
+    EsPlusGetTaskResponse reindexTaskGet(String taskId);
     /**
      * 取消任务
      * @return

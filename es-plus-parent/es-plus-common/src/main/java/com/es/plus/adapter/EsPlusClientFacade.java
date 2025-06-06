@@ -14,6 +14,7 @@ import com.es.plus.adapter.params.EsIndexResponse;
 import com.es.plus.adapter.params.EsParamWrapper;
 import com.es.plus.adapter.params.EsResponse;
 import com.es.plus.adapter.params.EsSettings;
+import com.es.plus.adapter.pojo.EsPlusGetTaskResponse;
 import com.es.plus.adapter.util.CollectionUtil;
 import org.elasticsearch.action.admin.cluster.node.tasks.list.ListTasksResponse;
 import org.elasticsearch.action.bulk.BulkItemResponse;
@@ -305,8 +306,8 @@ public class EsPlusClientFacade   {
      * 迁移重建索引异步任务
      *
      */
-    public String reindexTaskGet(String taskId) {
-        String string = esPlusIndexClient.reindexTaskGet(taskId);
+    public EsPlusGetTaskResponse reindexTaskGet(String taskId) {
+        EsPlusGetTaskResponse string = esPlusIndexClient.reindexTaskGet(taskId);
         return string;
     }
     /**

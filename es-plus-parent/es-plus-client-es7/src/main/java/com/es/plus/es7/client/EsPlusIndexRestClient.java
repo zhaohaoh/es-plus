@@ -7,6 +7,7 @@ import com.es.plus.adapter.exception.EsException;
 import com.es.plus.adapter.params.EsAliasResponse;
 import com.es.plus.adapter.params.EsIndexResponse;
 import com.es.plus.adapter.params.EsSettings;
+import com.es.plus.adapter.pojo.EsPlusGetTaskResponse;
 import com.es.plus.adapter.properties.EsIndexParam;
 import com.es.plus.adapter.properties.GlobalParamHolder;
 import com.es.plus.adapter.util.JsonUtils;
@@ -544,17 +545,24 @@ public class EsPlusIndexRestClient implements EsPlusIndexClient {
     
     
     @Override
-    public String reindexTaskGet(String taskId) {
+    public EsPlusGetTaskResponse reindexTaskGet(String taskId) {
         String[] split = taskId.split(":");
         GetTaskRequest listTasksRequest = new GetTaskRequest(split[0],Long.parseLong(split[1]));
      
         try {
             Optional<GetTaskResponse> getTaskResponse = restHighLevelClient.tasks()
                     .get(listTasksRequest, RequestOptions.DEFAULT);
-            GetTaskResponse response = getTaskResponse.orElseGet(null);
+            
+            GetTaskResponse response = getTaskResponse.orElse(null);
             if (response != null) {
+                EsPlusGetTaskResponse res = new EsPlusGetTaskResponse();
                 TaskInfo taskInfo = response.getTaskInfo();
-                return taskInfo.toString();
+                if (taskInfo!=null) {
+                    String taskInfoString = taskInfo.toString();
+                    res.setTaskInfo(taskInfoString);
+                }
+                res.setCompleted(response.isCompleted());
+                return res;
             }
         } catch (IOException e) {
             throw new EsException("reindexTaskList exception oldIndexName:", e);

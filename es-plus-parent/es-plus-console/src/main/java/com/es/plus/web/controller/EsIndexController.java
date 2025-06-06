@@ -7,6 +7,7 @@ import com.es.plus.adapter.EsPlusClientFacade;
 import com.es.plus.adapter.exception.EsException;
 import com.es.plus.adapter.params.EsIndexResponse;
 import com.es.plus.adapter.params.EsResponse;
+import com.es.plus.adapter.pojo.EsPlusGetTaskResponse;
 import com.es.plus.adapter.util.JsonUtils;
 import com.es.plus.core.ClientContext;
 import com.es.plus.core.statics.Es;
@@ -31,7 +32,6 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -153,7 +153,7 @@ public class EsIndexController {
         String string = "*" + keyword + "*";
         String cmd = "/_cat/indices/" + string + "?format=json&v";
         String res = Es.chainIndex(client).getCmd(cmd);
-        if (res==null){
+        if (res == null) {
             throw new EsException("无匹配索引");
         }
         EsIndexResponseVO responseVO = list(esClientName, keyword);
@@ -271,7 +271,7 @@ public class EsIndexController {
             throw new RuntimeException("无权操作");
         }
         
-        EsPlusClientFacade client = ClientContext.getClient("hzh_local");
+        EsPlusClientFacade client = ClientContext.getClient(esClientName);
         String taskId = client.reindexTaskAsync(sourceIndex, targetIndex);
         
         refreshIndexCache(esClientName);
@@ -309,20 +309,11 @@ public class EsIndexController {
         List<EsReindexTaskVO> reindexTaskVOS = esReindexTasks.stream().map(a -> {
             EsReindexTaskVO esReindexTaskVO = new EsReindexTaskVO();
             BeanUtils.copyProperties(a, esReindexTaskVO);
-            String string = reindexTaskGet(esClientName, esReindexTaskVO.getTaskId());
-            esReindexTaskVO.setTaskJson(string);
-            Map<String, Object> map = JsonUtils.toMap(string);
-            Long time = (Long) map.get("start_time_in_millis");
-            String running_time = (String) map.get("running_time");
-            Duration parse = Duration.parse("PT" + running_time);
-            long millis = parse.toMillis();
-            long l = time + millis;
-            // 已经运行结束超过10秒 认为结束
-            long end = System.currentTimeMillis();
-            if (l + 10000 <= end) {
-                esReindexTaskVO.setCompleted(true);
-            } else {
-                esReindexTaskVO.setCompleted(false);
+            EsPlusGetTaskResponse string = reindexTaskGet(esClientName, esReindexTaskVO.getTaskId());
+            if (string != null) {
+                boolean completed = string.isCompleted();
+                esReindexTaskVO.setTaskJson(string.getTaskInfo());
+                esReindexTaskVO.setCompleted(completed);
             }
             return esReindexTaskVO;
         }).collect(Collectors.toList());
@@ -333,12 +324,12 @@ public class EsIndexController {
      * reindex任务明细获取
      */
     @GetMapping("reindexTaskGet")
-    public String reindexTaskGet(@RequestHeader("currentEsClient") String esClientName, String taskId) {
+    public EsPlusGetTaskResponse reindexTaskGet(@RequestHeader("currentEsClient") String esClientName, String taskId) {
         
         EsPlusClientFacade client = ClientContext.getClient(esClientName);
-        String reindexTaskList = client.reindexTaskGet(taskId);
+        EsPlusGetTaskResponse esPlusGetTaskResponse = client.reindexTaskGet(taskId);
         
-        return reindexTaskList;
+        return esPlusGetTaskResponse;
     }
     
     /**
@@ -357,32 +348,30 @@ public class EsIndexController {
             throw new EsException("来源或目标索引为空");
         }
         
-        if (esindexDataMove.getMaxSize()>1000000){
+        if (esindexDataMove.getMaxSize() > 1000000) {
             throw new EsException("跨集群迁移最大限制100万数据量");
         }
         Integer maxSize = esindexDataMove.getMaxSize();
-        int totalSize=0;
-        EsResponse<Map> res = Es.chainQuery(sourceClient,Map.class).index(esindexDataMove.getSourceIndex())
-                .sortByDesc("_id")
-                .search(1000);
+        int totalSize = 0;
+        EsResponse<Map> res = Es.chainQuery(sourceClient, Map.class).index(esindexDataMove.getSourceIndex())
+                .sortByDesc("_id").search(1000);
         List<Map> list = res.getList();
-        if (list!=null){
-            while (true){
+        if (list != null) {
+            while (true) {
                 Object[] tailSortValues = res.getTailSortValues();
                 totalSize += list.size();
-                if (totalSize >= maxSize){
-                    log.info("同步数量大于最大限制数量 停止同步 syncSize:{} maxSize:{}",totalSize,maxSize);
+                if (totalSize >= maxSize) {
+                    log.info("同步数量大于最大限制数量 停止同步 syncSize:{} maxSize:{}", totalSize, maxSize);
                     break;
                 }
-                res = Es.chainQuery(sourceClient, Map.class)
-                        .index(esindexDataMove.getSourceIndex())
-                        .sortByDesc("_id").searchAfterValues(tailSortValues).search(1000);
+                res = Es.chainQuery(sourceClient, Map.class).index(esindexDataMove.getSourceIndex()).sortByDesc("_id")
+                        .searchAfterValues(tailSortValues).search(1000);
                 list = res.getList();
-                if (CollectionUtils.isEmpty(list)){
+                if (CollectionUtils.isEmpty(list)) {
                     break;
                 }
                 Es.chainUpdate(targetClient, Map.class).index(esindexDataMove.getTargetIndex()).saveOrUpdateBatch(list);
-                log.info("Es-plus 跨集群迁移 本次同步数据 :{}",list.size());
+                log.info("Es-plus 跨集群迁移 本次同步数据 :{}", list.size());
             }
         }
         
