@@ -67,8 +67,9 @@ public class CommondInitTable {
   
         if (!tables.contains("es_reindex_task")) {
             jdbcTemplate.execute("CREATE TABLE \"es_reindex_task\" (\n" + "  \"id\" INTEGER NOT NULL,\n"
-                    + "  \"es_client_name\" TEXT,\n" + "  \"source_index\" TEXT,\n" + "  \"target_index\" TEXT,\n"
+                    + "  \"source_client\" TEXT,\n" + "  \"source_index\" TEXT,\n" + "  \"target_index\" TEXT,\n"
                     + "  \"task_id\" TEXT,\n" + "  \"create_time\" DATE,\n" + "  \"create_uid\" integer,\n"
+                    + "  \"target_client\" TEXT,\n" + "  \"type\" integer,\n" + "  \"task_json\" TEXT,\n"
                     + "  PRIMARY KEY (\"id\")\n" + ");");
         }
         

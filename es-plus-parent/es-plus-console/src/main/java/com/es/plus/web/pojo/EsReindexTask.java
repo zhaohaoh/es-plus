@@ -15,8 +15,19 @@ import lombok.Data;
 public class EsReindexTask {
     @TableId(type = IdType.AUTO)
     private Long id;
+ 
+    /**
+     * 来源客户端
+     */
+    @TableField(value = "source_client")
+    private String sourceClient;
     
-    private String esClientName;
+    /**
+     * 目标客户端
+     */
+    @TableField(value = "target_client")
+    private String targetClient;
+    
     /**
      * 源索引
      */
@@ -29,6 +40,11 @@ public class EsReindexTask {
     @TableField(value = "target_index")
     private String targetIndex;
     
+    /**
+     * 任务类型 1=同集群reindex 2=跨集群数据迁移
+     */
+    @TableField(value = "type")
+    private Integer type;
     /**
      * 任务id
      */
@@ -46,6 +62,11 @@ public class EsReindexTask {
      */
     @TableField(value = "create_uid")
     private Long createUid;
+    /**
+     * 任务明细
+     */
+    @TableField(value = "task_json")
+    private String taskJson;
     
   
 }

@@ -207,7 +207,19 @@
           :label="item.label"
           :prop="item.prop"
           width="180"
-        />
+        >
+          <template #default="scope">
+            {{
+              item.prop === "type"
+                ? scope.row.type === 1
+                  ? "同源迁移"
+                  : scope.row.type === 2
+                  ? "跨源迁移"
+                  : "同源迁移"
+                : scope.row[item.prop]
+            }}
+          </template>
+        </el-table-column>
       </el-table>
     </el-dialog>
 
@@ -403,9 +415,19 @@ const saveIndexMappings = ref("{}");
 const reindexName = ref("");
 const reindexTableData = ref([]);
 const moveSize = ref(100000);
-const reindexDialogHeigt = ref(200);
+const reindexDialogHeigt = ref(230);
 
 const moveName = ref("点击迁移");
+
+const formatType = (row) => {
+  if (row.type == 1) {
+    return "同源迁移";
+  }
+  if (row.type == 2) {
+    return "跨源迁移";
+  }
+  return;
+};
 
 const tableHeader = [
   {
@@ -413,8 +435,12 @@ const tableHeader = [
     label: "id",
   },
   {
-    prop: "esClientName",
-    label: "client名字",
+    prop: "sourceClient",
+    label: "来源数据源",
+  },
+  {
+    prop: "targetClient",
+    label: "目标数据源",
   },
   {
     prop: "sourceIndex",
@@ -439,6 +465,10 @@ const tableHeader = [
   {
     prop: "completed",
     label: "完成",
+  },
+  {
+    prop: "type",
+    label: "任务类型",
   },
   {
     prop: "taskJson",
@@ -648,7 +678,7 @@ const clickReindexTaskList = async (index, alias) => {
     sourceIndex: currentIndex.value,
   };
   let res = await proxy.$api.esIndex.reindexTaskList(param);
-  console.log(res);
+
   reindexTableData.value = res;
 };
 

@@ -15,7 +15,16 @@ public class EsReindexTaskVO {
     @TableId(type = IdType.AUTO)
     private Long id;
     
-    private String esClientName;
+    /**
+     * 来源客户端
+     */
+   
+    private String sourceClient;
+    
+    /**
+     * 目标客户端
+     */
+    private String targetClient;
     /**
      * 源索引
      */
@@ -45,6 +54,12 @@ public class EsReindexTaskVO {
      * 创建人
      */
     private String taskJson;
+    
+    
+    /**
+     * 类型
+     */
+    private Integer type;
     private Boolean completed;
     
 }

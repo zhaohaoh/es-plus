@@ -6,7 +6,6 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.es.plus.adapter.EsPlusClientFacade;
 import com.es.plus.adapter.exception.EsException;
 import com.es.plus.adapter.params.EsIndexResponse;
-import com.es.plus.adapter.params.EsResponse;
 import com.es.plus.adapter.params.EsSettings;
 import com.es.plus.adapter.pojo.EsPlusGetTaskResponse;
 import com.es.plus.adapter.util.JsonUtils;
@@ -21,6 +20,7 @@ import com.es.plus.web.pojo.EsReindexRequst;
 import com.es.plus.web.pojo.EsReindexTask;
 import com.es.plus.web.pojo.EsReindexTaskVO;
 import com.es.plus.web.pojo.EsindexDataMove;
+import com.es.plus.web.service.EsReIndexService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -48,6 +48,9 @@ public class EsIndexController {
     
     @Autowired
     private EsReindexMapper esReindexMapper;
+    
+    @Autowired
+    private EsReIndexService esIndexService;
     
     /**
      * 根据当前es链接地址  模糊查询所有索引名
@@ -261,7 +264,8 @@ public class EsIndexController {
      * 复制索引 复制索引配置和映射 不复制别名
      */
     @PostMapping("copyIndex")
-    public void copyIndex(@RequestHeader("currentEsClient") String esClientName, @RequestBody EsCopyRequest esCopyRequest) {
+    public void copyIndex(@RequestHeader("currentEsClient") String esClientName,
+            @RequestBody EsCopyRequest esCopyRequest) {
         esCopyRequest.setSourceClient(esClientName);
         EsPlusClientFacade sourceClient = ClientContext.getClient(esCopyRequest.getSourceClient());
         EsPlusClientFacade targetClient = ClientContext.getClient(esCopyRequest.getTargetClient());
@@ -274,7 +278,7 @@ public class EsIndexController {
             throw new EsException("索引不能为空");
         }
         EsIndexResponse response = sourceClient.getIndex(sourceIndex);
-    
+        
         Map<String, Object> mappings = response.getMappings(sourceIndex);
         Map<String, Object> setting = response.getSetting(sourceIndex);
         String jsonStr = JsonUtils.toJsonStr(setting);
@@ -282,7 +286,7 @@ public class EsIndexController {
         List<String> alias = response.getAlias(sourceIndex);
         String[] array = alias.toArray(alias.toArray(new String[0]));
         //索引复制 复制配置，映射 不复制别名
-        boolean index = targetClient.createIndex(targetIndex,null, esSettings, mappings);
+        boolean index = targetClient.createIndex(targetIndex, null, esSettings, mappings);
     }
     
     /**
@@ -312,16 +316,10 @@ public class EsIndexController {
         esReindexTask.setTargetIndex(targetIndex);
         esReindexTask.setCreateTime(System.currentTimeMillis());
         esReindexTask.setCreateUid(StpUtil.getLoginId() != null ? Long.parseLong(StpUtil.getLoginId().toString()) : 0);
-        esReindexTask.setEsClientName(esClientName);
-        
-        LambdaQueryWrapper<EsReindexTask> eq = Wrappers.<EsReindexTask>lambdaQuery()
-                .eq(EsReindexTask::getTaskId, esReindexTask.getTaskId());
-        EsReindexTask reindexTask = esReindexMapper.selectOne(eq);
-        //数据重复
-        if (reindexTask != null) {
-            return reindexTask.getTaskId();
-        }
-        esReindexMapper.insert(esReindexTask);
+        esReindexTask.setSourceClient(esClientName);
+        esReindexTask.setTargetClient(esClientName);
+        esReindexTask.setType(1);
+        esIndexService.reindexTaskInsert(esReindexTask);
         
         return taskId;
     }
@@ -333,18 +331,20 @@ public class EsIndexController {
     public List<EsReindexTaskVO> reindexTaskList(@RequestHeader("currentEsClient") String esClientName,
             String sourceIndex) {
         LambdaQueryWrapper<EsReindexTask> eq = Wrappers.<EsReindexTask>lambdaQuery()
-                .eq(EsReindexTask::getEsClientName, esClientName).eq(EsReindexTask::getSourceIndex, sourceIndex)
+                .eq(EsReindexTask::getSourceClient, esClientName).eq(EsReindexTask::getSourceIndex, sourceIndex)
                 //只查看前10个
                 .last("limit 10").orderByDesc(EsReindexTask::getCreateTime);
         List<EsReindexTask> esReindexTasks = esReindexMapper.selectList(eq);
         List<EsReindexTaskVO> reindexTaskVOS = esReindexTasks.stream().map(a -> {
             EsReindexTaskVO esReindexTaskVO = new EsReindexTaskVO();
             BeanUtils.copyProperties(a, esReindexTaskVO);
-            EsPlusGetTaskResponse string = reindexTaskGet(esClientName, esReindexTaskVO.getTaskId());
-            if (string != null) {
-                boolean completed = string.isCompleted();
-                esReindexTaskVO.setTaskJson(string.getTaskInfo());
-                esReindexTaskVO.setCompleted(completed);
+            if (a.getType()==null || a.getType()==1){
+                EsPlusGetTaskResponse string = reindexTaskGet(esClientName, esReindexTaskVO.getTaskId());
+                if (string != null) {
+                    boolean completed = string.isCompleted();
+                    esReindexTaskVO.setTaskJson(string.getTaskInfo());
+                    esReindexTaskVO.setCompleted(completed);
+                }
             }
             return esReindexTaskVO;
         }).collect(Collectors.toList());
@@ -364,61 +364,23 @@ public class EsIndexController {
     }
     
     /**
-     * reindex任务明细获取
+     * 跨集群数据迁移
      */
     @PostMapping("indexDataMove")
     public String indexDataMove(@RequestHeader("currentEsClient") String esClientName,
             @RequestBody EsindexDataMove esindexDataMove) {
         esindexDataMove.setSourceClient(esClientName);
-        EsPlusClientFacade sourceClient = ClientContext.getClient(esindexDataMove.getSourceClient());
-        EsPlusClientFacade targetClient = ClientContext.getClient(esindexDataMove.getTargetClient());
-        if (sourceClient == null || targetClient == null) {
-            throw new EsException("来源或目标客户端为空");
-        }
-        if (esindexDataMove.getTargetIndex() == null || esindexDataMove.getSourceIndex() == null) {
-            throw new EsException("来源或目标索引为空");
-        }
-        
-        if (esindexDataMove.getMaxSize() > 1000000) {
-            throw new EsException("跨集群迁移最大限制100万数据量");
-        }
-        if (esindexDataMove.getBatchSize()<=0){
-            throw new EsException("批次数量有误");
-        }
-        
-        Integer maxSize = esindexDataMove.getMaxSize();
-        int totalSize = 0;
-        EsResponse<Map> res = Es.chainQuery(sourceClient, Map.class).index(esindexDataMove.getSourceIndex())
-                .sortByDesc("_id").search(esindexDataMove.getBatchSize());
-        List<Map> list = res.getList();
-        if (list != null) {
-            while (true) {
-                if (CollectionUtils.isEmpty(list)) {
-                    break;
-                }
-                totalSize += list.size();
-                
-                if (totalSize >= maxSize) {
-                    log.info("同步数量大于最大限制数量 停止同步 syncSize:{} maxSize:{}", totalSize, maxSize);
-                    break;
-                }
-                
-                // 执行保存
-                Es.chainUpdate(targetClient, Map.class).index(esindexDataMove.getTargetIndex()).saveOrUpdateBatch(list);
-                log.info("Es-plus 跨集群迁移 本次同步数据 :{}", list.size());
-                list.clear();
-                
-                Object[] tailSortValues = res.getTailSortValues();
-                res = Es.chainQuery(sourceClient, Map.class).index(esindexDataMove.getSourceIndex()).sortByDesc("_id")
-                        .searchAfterValues(tailSortValues).search(esindexDataMove.getBatchSize());
-                list = res.getList();
-                try {
-                    Thread.sleep(esindexDataMove.getSleepTime());
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        }
+        esIndexService.indexDataMove(esindexDataMove);
+        return "";
+    }
+    
+    
+    /**
+     * reindex任务明细获取
+     */
+    @PostMapping("indexDataMoveStop")
+    public String indexDataMoveStop(@RequestHeader("currentEsClient") String esClientName,
+            @RequestBody EsindexDataMove esindexDataMove) {
         
         return "";
     }
