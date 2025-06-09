@@ -406,6 +406,7 @@ public class EsIndexController {
                 // 执行保存
                 Es.chainUpdate(targetClient, Map.class).index(esindexDataMove.getTargetIndex()).saveOrUpdateBatch(list);
                 log.info("Es-plus 跨集群迁移 本次同步数据 :{}", list.size());
+                list.clear();
                 
                 Object[] tailSortValues = res.getTailSortValues();
                 res = Es.chainQuery(sourceClient, Map.class).index(esindexDataMove.getSourceIndex()).sortByDesc("_id")
