@@ -26,6 +26,8 @@ public class SearchHitsUtil {
 //                sourceAsMap.put("index", hit.getIndex());
                 T bean = JsonUtils.toBean(hit.getSourceAsString(), tClass);
                 if (tClass.equals(Map.class)) {
+                    Map map = (Map) bean;
+                    map.put("_id", hit.getId());
                     return bean;
                 }
                 //设置高亮

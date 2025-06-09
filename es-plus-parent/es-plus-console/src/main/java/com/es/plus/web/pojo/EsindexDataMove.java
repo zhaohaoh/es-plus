@@ -39,8 +39,11 @@ public class EsindexDataMove {
     
     
     /**
-     * 睡眠时间
+     * 睡眠时间 毫秒
      */
-    private Integer sleepTime = 2000;
-    
+    private Integer sleepTime = 1000;
+    /**
+     * 每次批量同步的数量
+     */
+    private Integer batchSize = 1000;
 }

@@ -382,27 +382,40 @@ public class EsIndexController {
         if (esindexDataMove.getMaxSize() > 1000000) {
             throw new EsException("跨集群迁移最大限制100万数据量");
         }
+        if (esindexDataMove.getBatchSize()<=0){
+            throw new EsException("批次数量有误");
+        }
+        
         Integer maxSize = esindexDataMove.getMaxSize();
         int totalSize = 0;
         EsResponse<Map> res = Es.chainQuery(sourceClient, Map.class).index(esindexDataMove.getSourceIndex())
-                .sortByDesc("_id").search(1000);
+                .sortByDesc("_id").search(esindexDataMove.getBatchSize());
         List<Map> list = res.getList();
         if (list != null) {
             while (true) {
-                Object[] tailSortValues = res.getTailSortValues();
+                if (CollectionUtils.isEmpty(list)) {
+                    break;
+                }
                 totalSize += list.size();
+                
                 if (totalSize >= maxSize) {
                     log.info("同步数量大于最大限制数量 停止同步 syncSize:{} maxSize:{}", totalSize, maxSize);
                     break;
                 }
-                res = Es.chainQuery(sourceClient, Map.class).index(esindexDataMove.getSourceIndex()).sortByDesc("_id")
-                        .searchAfterValues(tailSortValues).search(1000);
-                list = res.getList();
-                if (CollectionUtils.isEmpty(list)) {
-                    break;
-                }
+                
+                // 执行保存
                 Es.chainUpdate(targetClient, Map.class).index(esindexDataMove.getTargetIndex()).saveOrUpdateBatch(list);
                 log.info("Es-plus 跨集群迁移 本次同步数据 :{}", list.size());
+                
+                Object[] tailSortValues = res.getTailSortValues();
+                res = Es.chainQuery(sourceClient, Map.class).index(esindexDataMove.getSourceIndex()).sortByDesc("_id")
+                        .searchAfterValues(tailSortValues).search(esindexDataMove.getBatchSize());
+                list = res.getList();
+                try {
+                    Thread.sleep(esindexDataMove.getSleepTime());
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
             }
         }
         
