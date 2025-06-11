@@ -15,12 +15,26 @@
         </el-button-group>
 
         <div style="min-height: 30px">
-          <el-input
+          <el-select
             :class="{ hidden: queryType !== 'dsl' }"
             v-model="index"
             placeholder="索引"
-            style="width: 100%; margin-bottom: 10px"
-          ></el-input>
+            filterable
+            style="width: 500px; margin-bottom: 10px"
+          >
+            <el-option
+              v-for="item in indexData"
+              :key="item"
+              :label="item"
+              :value="item"
+            />
+          </el-select>
+          <el-button
+            @click="copySelectedText"
+            :class="{ hidden: queryType !== 'dsl' }"
+            style="margin-left: 10px; margin-bottom: 10px"
+            >复制名称
+          </el-button>
         </div>
 
         <label class="esQuery-label">
@@ -56,10 +70,13 @@
       />
       <div class="footer-button" justify="end">
         <span class="dialog-footer">
-          <el-button @click="clickSave" type="danger" size="small"
+          <el-button @click="clickAdd" type="primary" size="small" plain
+            >新增</el-button
+          >
+          <el-button @click="clickSave" type="primary" size="small" plain
             >修改</el-button
           >
-          <el-button type="primary" @click="clickDelete" size="small"
+          <el-button type="primary" @click="clickDelete" size="small" plain
             >删除</el-button
           >
         </span>
@@ -74,6 +91,32 @@
       <!-- <div class="error" id="error-msg">{{ errorMessage }}</div> -->
     </div>
   </div>
+  <el-dialog
+    v-model="addDataVisible"
+    :title="'当前索引:' + index"
+    style="
+      max-width: 700px;
+      position: relative;
+      height: 750px;
+      transform: translateY(-50px);
+    "
+  >
+    <div>
+      <JsonEditor
+        v-model:value="addData"
+        height="600"
+        styles="width: 100%"
+        title="新增数据注意:_id必填,否则会自动生成id"
+      />
+    </div>
+    <el-button
+      type="primary"
+      @click="doAdd"
+      style="position: absolute; right: 10px; bottom: 10px"
+    >
+      保存数据
+    </el-button>
+  </el-dialog>
 </template>
 
 <script lang="ts" setup>
@@ -102,6 +145,7 @@ import { Search } from "@element-plus/icons-vue";
 
 import { ElMessage, ElMessageBox } from "element-plus";
 import esClient from "../../api/esClient";
+import elMessage from "../../util/message";
 
 const { proxy } = getCurrentInstance() as any;
 let sql = "SELECT * from fast_test_new_v128 order by id desc limit 10";
@@ -131,9 +175,32 @@ let index = ref("");
 const jsonEditor = ref();
 const jsonView = ref("");
 
+const addDataVisible = ref(false);
+const addData = ref("");
+const indexData = ref([]);
 onMounted(() => {
   clickSql();
+  getIndices("");
 });
+
+// 复制选中文本
+const copySelectedText = () => {
+  if (index.value) {
+    navigator.clipboard
+      .writeText(index.value)
+      .then(() => ElMessage.success("复制成功"))
+      .catch(() => ElMessage.error("复制失败"));
+  }
+};
+
+const getIndices = async (keyword) => {
+  const param = {
+    keyword: keyword,
+  };
+  let res = await proxy.$api.esIndex.indexList(param);
+
+  indexData.value = res.indices;
+};
 
 const clickSql = () => {
   const lastSql = localStorage.getItem("lastSql");
@@ -383,6 +450,35 @@ const sqlQuery = async (sql) => {
   jsonView.value = formattedJson;
 };
 
+const clickAdd = () => {
+  addDataVisible.value = true;
+};
+
+//点击新增
+const doAdd = () => {
+  if (index.value == null || index.value == "") {
+    ElMessage.success("索引名称未填写");
+  } else {
+    ElMessageBox.confirm("索引:" + index.value, "新增数据", {
+      confirmButtonText: "确定",
+      cancelButtonText: "取消",
+      dangerouslyUseHTMLString: true,
+    })
+      .then(() => {
+        const data = JSON.parse(addData.value);
+        const datas: any[] = [];
+        // 如果是数组，展开元素；否则直接推入
+        if (Array.isArray(data)) {
+          datas.push(...data); // 使用展开运算符
+        } else {
+          datas.push(data);
+        }
+        saveByIds(index.value, datas);
+      })
+      .catch(() => {});
+  }
+};
+
 //点击保存
 const clickSave = () => {
   if (jsonView.value) {
@@ -452,6 +548,7 @@ const saveByIds = async (index, source) => {
     index: index,
     datas: source,
   };
+  console.log(param);
   let res = await proxy.$api.tools.updateBatch(param);
 };
 

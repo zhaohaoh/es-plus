@@ -120,12 +120,12 @@
             />
           </el-table>
         </el-row>
+        <el-row class="row-bg" justify="end">
+          <el-col :span="1">
+            <el-button type="primary" plain @click="saveClick">新增</el-button>
+          </el-col>
+        </el-row>
       </div>
-      <el-row class="row-bg" justify="end">
-        <el-col :span="1">
-          <el-button type="primary" plain @click="saveClick">新增</el-button>
-        </el-col>
-      </el-row>
     </div>
   </div>
   <div class="downIndex">
