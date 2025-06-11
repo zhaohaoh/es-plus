@@ -34,10 +34,12 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
@@ -281,12 +283,18 @@ public class EsIndexController {
         
         Map<String, Object> mappings = response.getMappings(sourceIndex);
         Map<String, Object> setting = response.getSetting(sourceIndex);
+        Set<String> keySet = setting.keySet();
+        ArrayList<String> strings = new ArrayList<>(keySet);
+        for (String string : strings) {
+            Object value = setting.remove(string);
+            setting.put(string.replaceFirst("index.",""), value);
+        }
         String jsonStr = JsonUtils.toJsonStr(setting);
         EsSettings esSettings = JsonUtils.toBean(jsonStr, EsSettings.class);
         List<String> alias = response.getAlias(sourceIndex);
         String[] array = alias.toArray(alias.toArray(new String[0]));
         //索引复制 复制配置，映射 不复制别名
-        boolean index = targetClient.createIndex(targetIndex, null, esSettings, mappings);
+         boolean index = targetClient.createIndex(targetIndex, null, esSettings, mappings);
     }
     
     /**
