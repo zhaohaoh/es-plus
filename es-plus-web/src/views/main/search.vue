@@ -79,6 +79,9 @@
           <el-button type="primary" @click="clickDelete" size="small" plain
             >删除</el-button
           >
+          <el-button type="primary" @click="clickGetField" size="small" plain
+            >提取字段</el-button
+          >
         </span>
       </div>
 
@@ -115,6 +118,28 @@
       style="position: absolute; right: 10px; bottom: 10px"
     >
       保存数据
+    </el-button>
+  </el-dialog>
+
+  <el-dialog
+    v-model="convertFieldVisible"
+    title="获取字段"
+    style="
+      width: 600px;
+      max-width: 600px;
+      position: relative;
+      height: 150px;
+      transform: translateY(80px);
+      transform: translateX(50px);
+    "
+  >
+    <el-input v-model="convertField" />
+    <el-button
+      type="primary"
+      plain
+      @click="confirmConvertField"
+      style="position: absolute; right: 10px; bottom: 10px"
+      >确认转换
     </el-button>
   </el-dialog>
 </template>
@@ -172,9 +197,9 @@ let queryDsl = ref("");
 let queryType = ref("sql");
 let index = ref("");
 
-const jsonEditor = ref();
 const jsonView = ref("");
-
+const convertField = ref("");
+const convertFieldVisible = ref(false);
 const addDataVisible = ref(false);
 const addData = ref("");
 const indexData = ref([]);
@@ -230,6 +255,27 @@ const clickDsl = () => {
     queryDsl.value = dsl;
   }
   queryType.value = "dsl";
+};
+
+const clickGetField = () => {
+  convertFieldVisible.value = true;
+};
+
+const confirmConvertField = () => {
+  console.log(convertField.value);
+  const data = JSON.parse(jsonView.value);
+  let allWareIds = data.hits.hits
+    .flatMap((hit) => hit._source?.[convertField.value] || []) // 安全提取并展开数组
+    .filter(Boolean); // 过滤空值（如果存在）
+  console.log(allWareIds);
+  // 提取所有 wareId 的逻辑
+  if (allWareIds.length <= 0) {
+    allWareIds = data.hits.hits
+      .flatMap((hit) => hit.fields?.[convertField.value] || []) // 安全提取并展开数组
+      .filter(Boolean); // 过滤空值（如果存在）
+  }
+  convertFieldVisible.value = false;
+  jsonView.value = JSON.stringify(allWareIds);
 };
 
 const jsonOptions = {

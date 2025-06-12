@@ -960,8 +960,13 @@ public class EsPlusRestClient implements EsPlusClient {
             throw new EsException("sql语句中未找到表名");
         }
         Map<String, Object> map = JsonUtils.toMap(dsl);
-        map.put("from",from);
-        map.put("size",size);
+        if (from!=null){
+            map.put("from",from);
+        }
+        if (size!=null){
+            map.put("size",size);
+        }
+   
         List docvalueList = (List) map.get("docvalue_fields");
         if (docvalueList!=null && !docvalueList.isEmpty() && !map.get("_source").equals(Boolean.FALSE)){
             Map source = (Map) map.get("_source");

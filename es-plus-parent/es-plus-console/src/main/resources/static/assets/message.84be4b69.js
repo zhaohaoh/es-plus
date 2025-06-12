@@ -1,1 +1,0 @@
-import{R as e}from"./index.7b9c95b2.js";const a={success(){e({message:"\u64CD\u4F5C\u6210\u529F",type:"success"})},error(){e({message:"\u64CD\u4F5C\u5931\u8D25",type:"fail"})},error(s){e({message:s,type:"fail",center:!0,showClose:!0})}};export{a as e};
