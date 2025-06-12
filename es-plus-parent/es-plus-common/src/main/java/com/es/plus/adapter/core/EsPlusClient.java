@@ -177,6 +177,8 @@ public interface EsPlusClient {
      */
     <T> EsResponse<T> executeSQL(String sql,Class<T> tClass);
     
+    
+    String executeSQL(String sql);
     /**
      * 获取映射
      * @param indexName

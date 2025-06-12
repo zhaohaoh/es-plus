@@ -207,7 +207,7 @@ public class FastTest {
     
     @org.junit.jupiter.api.Test
     public void sql() {
-        EsResponse<Map> esResponse = Es.chainQuery(Map.class).executeSQL("select * from  fast_test_alias");
+        EsResponse<Map> esResponse = Es.chainQuery(Map.class).executeSQLep("select * from  fast_test_alias");
         System.out.println(esResponse);
     }
     

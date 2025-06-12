@@ -80,5 +80,7 @@ interface ChainQueryWrapper<T> {
      *
      * @return {@link String}
      */
-    EsResponse<T> executeSQL(String sql);
+    EsResponse<T> executeSQLep(String sql);
+    
+    String executeSQL(String sql);
 }

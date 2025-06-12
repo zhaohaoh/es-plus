@@ -7,6 +7,8 @@ import com.es.plus.adapter.params.EsIndexResponse;
 import com.es.plus.adapter.params.EsResponse;
 import com.es.plus.core.ClientContext;
 import com.es.plus.core.statics.Es;
+import com.es.plus.core.wrapper.aggregation.EsAggWrapper;
+import com.es.plus.core.wrapper.chain.EsChainQueryWrapper;
 import com.es.plus.web.compile.core.CompilationResult;
 import com.es.plus.web.compile.core.DynamicCodeCompiler;
 import com.es.plus.web.pojo.EsDslInfo;
@@ -29,6 +31,8 @@ import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 
 @RestController
@@ -100,20 +104,56 @@ public class EsExecuteController {
      */
     @GetMapping("esQuery/sql")
     public String esQuerySql(String sql, @RequestHeader("currentEsClient") String currentEsClient) {
+        // 匹配 SQL 语句中的表名
+        Pattern pattern = Pattern.compile("(?i)FROM\\s+([\\w.]+)");
+        Matcher matcher = pattern.matcher(sql);
+        String tableName = null;
+        // 提取表名
+        if (matcher.find()) {
+            tableName = matcher.group(1);
+        }
+        if (StringUtils.isBlank(tableName)) {
+            throw new EsException("sql语句中未找到表名");
+        }
+        if (sql.contains("group")&&containsAgg(sql)){
+            String terms = StringUtils.substringAfterLast(sql, "by").trim();
+            String trim = StringUtils.substringBetween(sql, "select", "from").trim();
+         
+            EsChainQueryWrapper<Map> queryWrapper = Es.chainQuery(currentEsClient).index(tableName);
+            EsAggWrapper<Map> termsed = queryWrapper.esAggWrapper().terms(terms,a->{
+                aggStr(a, trim);
+                return;
+            });
+            EsAggResponse<Map> aggregations = queryWrapper.aggregations();
+           return Strings.toString(aggregations.getAggregations());
+        } else if (containsAgg(sql)) {
+            EsChainQueryWrapper<Map> queryWrapper = Es.chainQuery(currentEsClient).index(tableName);
+            EsAggWrapper<Map> mapEsAggWrapper = queryWrapper.esAggWrapper();
+            String trim = StringUtils.substringBetween(sql, "select", "from").trim();
+            aggStr(mapEsAggWrapper, trim);
+            EsAggResponse<Map> aggregations = queryWrapper.aggregations();
+            return Strings.toString(aggregations.getAggregations());
+        } else if (sql.contains("group")) {
+            String terms = StringUtils.substringAfterLast(sql, "by").trim();
+            EsChainQueryWrapper<Map> queryWrapper = Es.chainQuery(currentEsClient).index(tableName);
+            queryWrapper.esAggWrapper().terms(terms);
+            EsAggResponse<Map> aggregations = queryWrapper.aggregations();
+            return Strings.toString(aggregations.getAggregations());
+        }
+        
         String limit = StringUtils.substringAfterLast(sql, "limit");
         if (StringUtils.isBlank(limit)){
             sql = sql+" limit 100";
             limit = StringUtils.substringAfterLast(sql, "limit");
         }
-        
         String[] split = limit.split(",");
         String pageSize = split[split.length - 1].trim();
         if (Integer.parseInt(pageSize.trim()) > 50000) {
             throw new RuntimeException("分页数量不能超过50000");
         }
-        EsResponse<Map> esResponse = Es.chainQuery(currentEsClient).executeSQL(sql);
-        SearchResponse sourceResponse = esResponse.getSourceResponse();
-        String result = sourceResponse.toString();
+        String result = Es.chainQuery(currentEsClient).executeSQL(sql);
+       
+       
 //        Map<String, Object> map = JsonUtils.toMap(result);
 //        Map hits = (Map) map.get("hits");
 //        List list  = (List) hits.get("hits");
@@ -133,6 +173,48 @@ public class EsExecuteController {
         return result;
     }
     
+    private static void aggStr(EsAggWrapper<Map> a, String trim) {
+        if (trim.contains("sum")){
+            String field = StringUtils.substringBetween(trim, "(", ")");
+            a.sum(field);
+        }
+        else if (trim.contains("avg")){
+            String field = StringUtils.substringBetween(trim, "(", ")");
+            a.avg(field);
+        }
+        else if (trim.contains("count")){
+            String field = StringUtils.substringBetween(trim, "(", ")");
+            if (!field.contains("*")){
+                a.count(field);
+            }else{
+                a.count("_id");
+            }
+        }
+        else if (trim.contains("max")){
+            String field = StringUtils.substringBetween(trim, "(", ")");
+            a.max(field);
+        }
+        else if (trim.contains("min")){
+            String field = StringUtils.substringBetween(trim, "(", ")");
+            a.min(field);
+        }
+    }
+    
+    public boolean containsAgg(String str){
+       if (str.contains("count")){
+            return true;
+        }else if (str.contains("sum")){
+            return true;
+        }else if (str.contains("min")){
+            return true;
+        }else if (str.contains("avg")){
+            return true;
+        }else if (str.contains("max")){
+            return true;
+        }
+        return false;
+    }
+    
     
     /**
      * sql语句
@@ -143,7 +225,7 @@ public class EsExecuteController {
         if (esPageInfo.getSize() > 1000) {
             throw new RuntimeException("分页数量不能超过1000");
         }
-        EsResponse<Map> esResponse = Es.chainQuery(currentEsClient).executeSQL(esPageInfo.getSql());
+        EsResponse<Map> esResponse = Es.chainQuery(currentEsClient).executeSQLep(esPageInfo.getSql());
         SearchResponse sourceResponse = esResponse.getSourceResponse();
         String result = sourceResponse.toString();
         return result;

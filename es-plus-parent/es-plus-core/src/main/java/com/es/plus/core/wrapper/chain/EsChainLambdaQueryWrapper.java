@@ -156,8 +156,13 @@ public class EsChainLambdaQueryWrapper<T> extends AbstractEsChainWrapper<T, SFun
     }
     
     @Override
-    public EsResponse<T> executeSQL(String sql) {
+    public EsResponse<T> executeSQLep(String sql) {
         return esPlusClientFacade.executeSQL(sql,tClass);
+    }
+    
+    @Override
+    public String executeSQL(String sql) {
+        return esPlusClientFacade.executeSQL(sql);
     }
     
 }

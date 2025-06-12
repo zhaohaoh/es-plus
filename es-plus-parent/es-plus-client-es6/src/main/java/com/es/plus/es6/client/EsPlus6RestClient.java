@@ -98,6 +98,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import static com.es.plus.constant.EsConstant.PAINLESS;
 
@@ -906,29 +907,59 @@ public class EsPlus6RestClient implements EsPlusClient {
         return null;
     }
     @Override
-    public <T> EsResponse<T> executeSQL(String sql,Class<T> tClass) {
+    public <T> EsResponse<T> executeSQL(String sql, Class<T> tClass) {
+        String rs = executeSQL(sql);
+        XContent xContent = XContentFactory.xContent(XContentType.JSON);
+        XContentParser parser = null;
+        try {
+            parser = xContent.createParser(NamedXContentRegistry.EMPTY, LoggingDeprecationHandler.INSTANCE, rs);
+            SearchResponse searchResponse = SearchResponse.fromXContent(parser);
+            return getEsResponse(tClass, searchResponse);
+        } catch (IOException e) {
+            throw new EsException("result parse error", e);
+        }
+    }
+    
+    @Override
+    public String executeSQL(String sql) {
+        String limit = StringUtils.substringAfterLast(sql, "limit");
+        Integer from=null;
+        Integer size=null;
+        if (limit!=null && limit.contains(",")){
+            String[] split = limit.split(",");
+            from = Integer.parseInt(split[0].trim());
+            size = Integer.parseInt(split[1].trim());
+            sql = sql.replace(limit,"");
+        }
+        if (sql.contains("group")){
+            sql =StringUtils.substringBeforeLast(sql,"limit");
+        }
         String dsl = translateSql(sql);
         // 匹配 SQL 语句中的表名
-        Pattern pattern = Pattern.compile("FROM\\s+([a-zA-Z_]+)");
+        Pattern pattern = Pattern.compile("(?i)FROM\\s+([\\w.]+)");
         Matcher matcher = pattern.matcher(sql);
         String tableName = null;
         // 提取表名
         if (matcher.find()) {
             tableName = matcher.group(1);
         }
-        if (StringUtils.isBlank(tableName)){
+        if (StringUtils.isBlank(tableName)) {
             throw new EsException("sql语句中未找到表名");
         }
-        String rs = executeDSL(dsl, tableName);
-        XContent xContent = XContentFactory.xContent(XContentType.JSON);
-        XContentParser parser = null;
-        try {
-            parser = xContent.createParser(NamedXContentRegistry.EMPTY, LoggingDeprecationHandler.INSTANCE, rs);
-            SearchResponse searchResponse = SearchResponse.fromXContent(parser);
-            return getEsResponse(tClass,searchResponse);
-        } catch (IOException e) {
-            throw new EsException("result parse error",e);
+        Map<String, Object> map = JsonUtils.toMap(dsl);
+        map.put("from",from);
+        map.put("size",size);
+        List docvalueList = (List) map.remove("docvalue_fields");
+        if (docvalueList!=null && !docvalueList.isEmpty()){
+            Map source = (Map) map.get("_source");
+            List includes =  source.get("includes") !=null ?(List)source.get("includes") :new ArrayList();
+            List fields = (List) docvalueList.stream().map(a -> ((Map) a).get("field")).collect(Collectors.toList());
+            includes.addAll(fields);
         }
+        
+        dsl = JsonUtils.toJsonStr(map);
+        String rs = executeDSL(dsl, tableName);
+        return rs;
     }
     
     @Override
