@@ -11,7 +11,12 @@
 
         <el-table-column prop="address" label="操作" width="180">
           <template #default="scope">
-            <el-button type="success" plain>编辑</el-button>
+            <el-button
+              type="success"
+              plain
+              @click="clickEdit(scope.$index, scope.row)"
+              >编辑</el-button
+            >
             <el-button
               type="danger"
               @click="clickDelete(scope.$index, scope.row)"
@@ -36,7 +41,7 @@
   <!-- 编辑的弹窗 -->
   <el-dialog
     v-model="dialogFormVisible"
-    title="新增链接"
+    title="保存链接"
     :before-close="handleCancel"
     style="max-width: 660px"
   >
@@ -81,6 +86,7 @@
     </el-form>
     <template #footer>
       <span class="dialog-footer">
+        <el-button @click="testClient">测试</el-button>
         <el-button @click="handleCancel">取消</el-button>
         <el-button type="primary" @click="save"> 保存 </el-button>
       </span>
@@ -91,12 +97,12 @@
 <script lang="ts" setup>
 import { getCurrentInstance, onMounted, reactive, ref } from "vue";
 import type { FormProps } from "element-plus";
-import { ElMessageBox } from "element-plus";
+import { ElMessageBox, ElMessage } from "element-plus";
 import options from "../../store/global";
 
 const labelPosition = ref<FormProps["labelPosition"]>("right");
 
-const esClient = reactive({
+let esClient = reactive({
   id: null,
   unikey: "",
   name: "",
@@ -154,6 +160,21 @@ const save = async () => {
 
 const saveClick = () => {
   dialogFormVisible.value = true;
+};
+
+const clickEdit = async (index, param) => {
+  getEsClient(param.id);
+  dialogFormVisible.value = true;
+};
+
+const testClient = async () => {
+  let res = await proxy.$api.esClient.testClient(esClient);
+
+  if (res === true) {
+    ElMessage.success("连接成功");
+  } else {
+    ElMessage.error("连接失败:" + esClient.address);
+  }
 };
 
 const clickDelete = async (index, param) => {
@@ -214,6 +235,15 @@ const esClientDelete = async (data) => {
   };
   let res = await proxy.$api.esClient.esClientDelete(param);
   getList();
+};
+
+// 获取
+const getEsClient = async (data) => {
+  const param = {
+    id: data,
+  };
+  let res = await proxy.$api.esClient.get(param);
+  Object.assign(esClient, res);
 };
 
 // 取消

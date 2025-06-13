@@ -898,8 +898,8 @@ public class EsPlusIndexRestClient implements EsPlusIndexClient {
             return res;
         } catch (IOException e) {
             log.error("getIndexHealth", e);
+            throw new EsException(e);
         }
-        return null;
     }
     
     

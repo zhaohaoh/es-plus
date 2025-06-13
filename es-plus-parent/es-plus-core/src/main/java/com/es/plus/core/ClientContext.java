@@ -35,6 +35,15 @@ public class ClientContext {
     public static void addClient(String name, EsPlusClientFacade esPlusClientFacade) {
         CLIENT_MAP.put(name, esPlusClientFacade);
     }
+    
+    /**
+     * 删除客户端
+     *
+     * @param name               名字
+     */
+    public static void removeClient(String name) {
+        CLIENT_MAP.remove(name);
+    }
 
     /**
      * 得到客户
