@@ -78,15 +78,9 @@ public class GlobalParamHolder {
             Object id = field.get(obj);
             //如果没有值则自动生成uuid注入
             if (id == null) {
-                field = clazz.getDeclaredField("_id");
-                field.setAccessible(true);
-                id = field.get(obj);
-                field.set(obj,null);
-                if (id == null) {
-                    if (EsIdType.UUID.equals(GlobalConfigCache.GLOBAL_CONFIG.getEsIdType())) {
-                        String uuid = UUID.randomUUID().toString().replace("-", "");
-                        field.set(obj, uuid);
-                    }
+                if (EsIdType.UUID.equals(GlobalConfigCache.GLOBAL_CONFIG.getEsIdType())) {
+                    String uuid = UUID.randomUUID().toString().replace("-", "");
+                    field.set(obj, uuid);
                 }
             }
             return String.valueOf(id);
