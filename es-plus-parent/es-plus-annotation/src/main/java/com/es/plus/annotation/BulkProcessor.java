@@ -18,7 +18,7 @@ public @interface BulkProcessor {
     /**
      * 单位MB 默认10MB
      */
-    int bulkSize() default 10;
+    int bulkSize() default 5;
     
     /**
      * 刷新周期  单位秒 默认5秒
