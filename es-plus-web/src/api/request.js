@@ -134,6 +134,14 @@ const api = {
     };
     return services(options);
   },
+  post(options) {
+    options.method = "post";
+    options.data = JSON.stringify(options.data);
+    services.defaults.headers = {
+      "Content-Type": "application/json;charset=UTF-8",
+    };
+    return services(options);
+  },
   postParam(options) {
     options.method = "post";
     //form有区别需要用的data

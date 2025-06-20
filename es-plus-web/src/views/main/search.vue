@@ -80,7 +80,7 @@
             >删除</el-button
           >
           <el-button type="primary" @click="clickGetField" size="small" plain
-            >提取字段</el-button
+            >更多操作</el-button
           >
         </span>
       </div>
@@ -123,16 +123,20 @@
 
   <el-dialog
     v-model="convertFieldVisible"
-    title="获取字段"
+    title="更多操作"
     style="
       width: 600px;
       max-width: 600px;
       position: relative;
-      height: 150px;
+      height: 200px;
       transform: translateY(80px);
       transform: translateX(50px);
     "
   >
+    <el-button-group style="margin-top: 0px; margin-bottom: 11px">
+      <el-button type="primary" plain>提取字段</el-button>
+      <el-button type="primary" plain @click="excelExport">数据导出</el-button>
+    </el-button-group>
     <el-input v-model="convertField" />
     <el-button
       type="primary"
@@ -167,11 +171,11 @@ import "codemirror/addon/hint/show-hint";
 import "codemirror/addon/hint/sql-hint";
 import "codemirror/mode/javascript/javascript.js";
 import { Search } from "@element-plus/icons-vue";
-
+import axios from "axios";
 import { ElMessage, ElMessageBox } from "element-plus";
 import esClient from "../../api/esClient";
 import elMessage from "../../util/message";
-
+import config from "../../config";
 const { proxy } = getCurrentInstance() as any;
 let sql = "SELECT * from fast_test_new_v128 order by id desc limit 10";
 let dsl =
@@ -255,6 +259,54 @@ const clickDsl = () => {
     queryDsl.value = dsl;
   }
   queryType.value = "dsl";
+};
+
+const excelExport = () => {
+  const data = JSON.parse(jsonView.value);
+  let d = data.hits.hits
+    .map((hit) => hit._source) // 安全提取并展开数组
+    .filter(Boolean);
+  let res = exportExcel(d);
+};
+
+// 在组件方法中
+const exportExcel = async (param) => {
+  try {
+    const response = await axios({
+      method: "post", // 或 'post' 根据接口要求
+      url: "/es/file/excelExport",
+      baseURL: config.baseUrl,
+      responseType: "blob", // 关键配置：指定响应类型为二进制流
+      data: param, // POST 请求参数
+    });
+
+    // 处理文件名（后端可能通过 Content-Disposition 返回）
+    const filename = getFilenameFromHeader(response.headers) || "export.xlsx";
+
+    // 创建 Blob 对象并触发下载
+    const blob = new Blob([response.data], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+    const link = document.createElement("a");
+    link.href = window.URL.createObjectURL(blob);
+    link.download = filename;
+    link.click();
+
+    // 清理资源
+    window.URL.revokeObjectURL(link.href);
+  } catch (error) {
+    console.error("导出失败:", error);
+    // 可添加用户提示（如使用 Element Plus 的 ElMessage）
+    // ElMessage.error('导出失败，请重试');
+  }
+};
+
+// 从响应头解析文件名（可选）
+const getFilenameFromHeader = (headers) => {
+  const contentDisposition = headers["content-disposition"];
+  if (!contentDisposition) return "";
+  const filenameMatch = contentDisposition.match(/filename="?(.+)"?/);
+  return filenameMatch?.[1] || "";
 };
 
 const clickGetField = () => {

@@ -12,7 +12,7 @@ public class BulkProcessorParam {
     
     private int bulkActions = 1000;
     
-    private ByteSizeValue bulkSize = new ByteSizeValue(10, ByteSizeUnit.MB);
+    private ByteSizeValue bulkSize = new ByteSizeValue(5, ByteSizeUnit.MB);
     
     private TimeValue flushInterval = TimeValue.timeValueSeconds(5);
     
