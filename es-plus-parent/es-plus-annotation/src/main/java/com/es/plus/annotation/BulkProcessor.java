@@ -5,7 +5,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-//  1000条或者10MB或者3秒发起一次输入插入
+//  1000条或者10MB或者5秒发起一次输入插入
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface BulkProcessor {
