@@ -61,7 +61,8 @@ public class BulkProcessorConfig {
     private static BulkProcessor doGetBulkProcessor(RestHighLevelClient restHighLevelClient,BulkProcessorParam param) {
         
         BiConsumer<BulkRequest, ActionListener<BulkResponse>> bulkConsumer =
-                (request, bulkListener) -> restHighLevelClient.bulkAsync(request, RequestOptions.DEFAULT, bulkListener);
+                (request, bulkListener) ->
+                        restHighLevelClient.bulkAsync(request, RequestOptions.DEFAULT, bulkListener);
         
         int bulkActions = param.getBulkActions();
         ByteSizeValue bulkSize = param.getBulkSize();
