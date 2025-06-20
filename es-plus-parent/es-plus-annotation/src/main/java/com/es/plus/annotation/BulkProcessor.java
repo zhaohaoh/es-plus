@@ -16,7 +16,7 @@ public @interface BulkProcessor {
     int bulkActions() default 1000;
     
     /**
-     * 单位MB 默认10MB
+     * 单位MB 默认5MB
      */
     int bulkSize() default 5;
     
