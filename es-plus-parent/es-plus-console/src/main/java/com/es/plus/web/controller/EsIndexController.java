@@ -181,6 +181,24 @@ public class EsIndexController {
         return res;
     }
     
+    
+    /**
+     * updateSettings
+     */
+    @PostMapping("updateSettings")
+    public void updateSettings(@RequestHeader("currentEsClient") String esClientName, String indexName, String mappings) {
+        if (StringUtils.isBlank(indexName)) {
+            throw new RuntimeException("索引不能为空");
+        }
+        if (StringUtils.isBlank(mappings)) {
+            throw new RuntimeException("mappings不能为空");
+        }
+        
+        Map<String, Object> map = JsonUtils.toMap(mappings);
+        EsPlusClientFacade client = ClientContext.getClient(esClientName);
+        Es.chainIndex(client).index(indexName).updateSettings(map);
+    }
+    
     /**
      * putMapping
      */
