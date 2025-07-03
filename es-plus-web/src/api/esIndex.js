@@ -10,7 +10,7 @@ const esIndex = {
   },
 
   getIndexStat(params) {
-    return api.post({ url: "/es/index/getIndexStat", data: params });
+    return api.get({ url: "/es/index/getIndexStat", data: params });
   },
 
   getIndexHealth(params) {
@@ -24,6 +24,9 @@ const esIndex = {
   },
   putMapping(params) {
     return api.postParam({ url: "/es/index/putMapping", data: params });
+  },
+  updateSettings(params) {
+    return api.postParam({ url: "/es/index/updateSettings", data: params });
   },
   createAlias(params) {
     return api.postParam({ url: "/es/index/createAlias", data: params });

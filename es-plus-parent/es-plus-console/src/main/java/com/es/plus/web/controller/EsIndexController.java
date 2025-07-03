@@ -141,15 +141,7 @@ public class EsIndexController {
         return indexResponse;
     }
     
-    /**
-     * getNodes
-     */
-    @GetMapping("getNodes")
-    public String getNodes(@RequestHeader("currentEsClient") String esClientName) {
-        EsPlusClientFacade client = ClientContext.getClient(esClientName);
-        String res = Es.chainIndex(client).getNodes();
-        return res;
-    }
+
     
     /**
      * getNodes
@@ -186,15 +178,15 @@ public class EsIndexController {
      * updateSettings
      */
     @PostMapping("updateSettings")
-    public void updateSettings(@RequestHeader("currentEsClient") String esClientName, String indexName, String mappings) {
+    public void updateSettings(@RequestHeader("currentEsClient") String esClientName, String indexName, String settings) {
         if (StringUtils.isBlank(indexName)) {
             throw new RuntimeException("索引不能为空");
         }
-        if (StringUtils.isBlank(mappings)) {
-            throw new RuntimeException("mappings不能为空");
+        if (StringUtils.isBlank(settings)) {
+            throw new RuntimeException("settings不能为空");
         }
         
-        Map<String, Object> map = JsonUtils.toMap(mappings);
+        Map<String, Object> map = JsonUtils.toMap(settings);
         EsPlusClientFacade client = ClientContext.getClient(esClientName);
         Es.chainIndex(client).index(indexName).updateSettings(map);
     }

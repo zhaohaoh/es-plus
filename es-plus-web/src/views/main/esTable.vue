@@ -137,9 +137,16 @@
     />
     <el-button
       type="primary"
+      @click="onSearch()"
+      plain
+      style="width: 240px; margin-top: 10px; margin-left: -15px"
+      >查询过滤</el-button
+    >
+    <el-button
+      type="primary"
       @click="clickMappings(selectIndex)"
       plain
-      style="width: 240px; margin-top: 20px; margin-left: -15px"
+      style="width: 240px; margin-top: 10px; margin-left: -15px"
       >查看映射</el-button
     >
   </div>

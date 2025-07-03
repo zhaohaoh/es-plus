@@ -2,13 +2,25 @@
   <div class="container">
     <div class="searchInput">
       <el-row>
-        <el-col :span="22">
+        <el-col :span="20">
           <el-input
             v-model="keyword"
             placeholder="请输入索引名称"
             style="width: 300px"
             @change="onSearch"
           />
+          <el-button
+            type="primary"
+            @click="onSearch()"
+            plain
+            style="transform: translateX(10px)"
+            >查询</el-button
+          >
+        </el-col>
+        <el-col :span="2" style="transform: translateX(30px)">
+          <el-button type="primary" @click="clickClusterInfo()" plain
+            >集群信息</el-button
+          >
         </el-col>
         <el-col :span="2" style="transform: translateX(15px)">
           <el-button type="primary" @click="clickCreateIndex()" plain
@@ -371,6 +383,64 @@
           title="索引信息"
         />
       </div>
+      <el-button
+        type="primary"
+        plain
+        @click="settingsOpen"
+        style="position: absolute; right: 10px; bottom: 10px"
+      >
+        索引配置编辑
+      </el-button>
+    </el-dialog>
+
+    <el-dialog
+      v-model="dialogSettings"
+      title="索引可修改配置"
+      style="
+        width: 900px;
+        max-width: 1000px;
+        position: relative;
+        height: 750px;
+        transform: translateY(-50px);
+      "
+    >
+      <div>
+        <JsonEditor
+          v-model:value="settings"
+          height="600"
+          styles="width: 100%"
+          title="索引配置信息"
+        />
+      </div>
+      <el-button
+        type="primary"
+        plain
+        @click="updateSettings"
+        style="position: absolute; right: 10px; bottom: 10px"
+      >
+        保存
+      </el-button>
+    </el-dialog>
+
+    <el-dialog
+      v-model="clusterInfoVisble"
+      title="集群信息"
+      style="
+        width: 900px;
+        max-width: 1000px;
+        position: relative;
+        height: 750px;
+        transform: translateY(-50px);
+      "
+    >
+      <div>
+        <JsonEditor
+          v-model:value="cluseterInfo"
+          height="600"
+          styles="width: 100%"
+          title="集群信息"
+        />
+      </div>
     </el-dialog>
   </div>
 </template>
@@ -405,11 +475,13 @@ import "codemirror/mode/javascript/javascript.js";
 const dataMoveClient = ref();
 const jumpDataMove = ref(1);
 
+const clusterInfoVisble = ref(false);
 const addIndexVisble = ref(false);
 const createAliasVisble = ref(false);
 const dialogIndexInfo = ref(false);
 const reindexVisble = ref(false);
 const reindexTableVisble = ref(false);
+const dialogSettings = ref(false);
 
 const saveIndexMappings = ref("{}");
 const reindexName = ref("");
@@ -419,15 +491,7 @@ const reindexDialogHeigt = ref(230);
 
 const moveName = ref("点击迁移");
 
-const formatType = (row) => {
-  if (row.type == 1) {
-    return "同源迁移";
-  }
-  if (row.type == 2) {
-    return "跨源迁移";
-  }
-  return;
-};
+const cluseterInfo = ref("");
 
 const tableHeader = [
   {
@@ -489,13 +553,51 @@ const esIndexAddMappings = null;
 
 const code = ref("");
 const indexInfo = ref("");
-
 const changeAlias = ref("");
+const settings = ref("");
 
 // const jsonStrData = computed(() => {
 //   console.log("获取新的值" + code.value);
 //   return code.value;
 // });
+
+const settingsOpen = async () => {
+  dialogSettings.value = true;
+  const setting = JSON.parse(indexInfo.value).settingsObj;
+
+  Object.keys(setting).forEach((key) => {
+    if (key.startsWith("index.")) {
+      // 检查键是否以 "index." 开头
+      const newKey = key.replace(/^index\./, ""); // 删除开头的 "index."
+      setting[newKey] = setting[key]; // 创建新键值对
+      if (newKey == "creation_date") {
+        delete setting[newKey]; // 删除旧键
+      }
+      if (newKey == "uuid") {
+        delete setting[newKey]; // 删除旧键
+      }
+      if (newKey == "version.created") {
+        delete setting[newKey]; // 删除旧键
+      }
+      if (newKey == "number_of_shards") {
+        delete setting[newKey]; // 删除旧键
+      }
+      if (newKey == "provided_name") {
+        delete setting[newKey]; // 删除旧键
+      }
+      if (newKey == "routing.allocation.include._tier_preference") {
+        delete setting[newKey]; // 删除旧键
+      }
+      delete setting[key]; // 删除旧键
+    }
+    if (setting["max_result_window"] == null) {
+      setting["max_result_window"] = "10000";
+    }
+  });
+
+  settings.value = JSON.stringify(setting, null, 2);
+  console.log("aaa" + JSON.stringify(settings.value));
+};
 
 const saveIndex = async () => {
   ElMessageBox.confirm("你确定保存吗?", {
@@ -542,6 +644,29 @@ const putMapping = async (indexName, mappings) => {
   };
 
   let res = await proxy.$api.esIndex.putMapping(param);
+  dialogFormVisible.value = false;
+  onSearch();
+};
+
+const updateSettings = async () => {
+  ElMessageBox.confirm("你确定保存吗?", {
+    confirmButtonText: "确定",
+    cancelButtonText: "取消",
+  })
+    .then(() => {
+      doUpdateSettings(currentIndex.value, settings.value);
+      elMessage.success();
+    })
+    .catch(() => {});
+};
+
+const doUpdateSettings = async (indexName, settings) => {
+  const param = {
+    indexName: indexName,
+    settings: settings,
+  };
+
+  let res = await proxy.$api.esIndex.updateSettings(param);
   dialogFormVisible.value = false;
   getIndices("");
 };
@@ -698,6 +823,7 @@ const createAlias = async (index, alias) => {
   };
   let res = await proxy.$api.esIndex.createAlias(param);
   createAliasVisble.value = false;
+  onSearch();
 };
 const removeAlias = async () => {
   deleteAlias(currentIndex.value, changeAlias.value);
@@ -710,10 +836,18 @@ const deleteAlias = async (index, alias) => {
   };
   let res = await proxy.$api.esIndex.removeAlias(param);
   createAliasVisble.value = false;
+  onSearch();
 };
 
 const clickCreateIndex = async () => {
   addIndexVisble.value = true;
+};
+
+const clickClusterInfo = async () => {
+  let res = await proxy.$api.esIndex.getIndexStat();
+  cluseterInfo.value = JSON.stringify(res, null, 2);
+  console.log(res);
+  clusterInfoVisble.value = true;
 };
 
 const getIndex = async (index) => {
