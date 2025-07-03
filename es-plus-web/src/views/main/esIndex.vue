@@ -56,6 +56,7 @@
         <span class="index-size">
           shards: {{ item["pri"] }} replice: {{ item["rep"] }}</span
         >
+
         <div class="editClass">
           <el-button type="primary" @click="clickMappings(item.index)" plain
             >设置映射</el-button

@@ -107,6 +107,7 @@
       >
         <el-row :gutter="10">
           <el-table
+            @cell-dblclick="copyText"
             :data="tableData"
             style="max-width: 1200px; max-height: 1000px; min-height: 300px"
             size="large"
@@ -273,6 +274,14 @@ let currentMapping = ref();
 const indexData = ref([]);
 
 const { proxy } = getCurrentInstance() as any;
+
+const copyText = async (row, column, cell, event) => {
+  // 双击复制
+
+  const textToCopy = event.target.innerText;
+
+  navigator.clipboard.writeText(textToCopy);
+};
 
 const saveClick = async (index) => {
   addDataVisible.value = true;
@@ -456,10 +465,22 @@ const eplQuery = async (epl) => {
     console.log("表头" + keys);
     console.log("表头:::" + JSON.stringify(tableHeader));
   }
-
+  for (const obj of source) {
+    Object.entries(obj).forEach(([k, v]) => {
+      const isObj = isObject(v);
+      if (isObj) {
+        obj[k] = JSON.stringify(v);
+      }
+    });
+  }
   tableData.value = source;
   console.log(tableData.value);
 };
+
+function isObject(value) {
+  const type = Object.prototype.toString.call(value);
+  return type === "[object Object]" || type === "[object Array]";
+}
 </script>
 
 <style scoped>
