@@ -179,11 +179,14 @@ public interface EsPlusClient {
     
     
     String executeSQL(String sql);
+    
+    String sql2Dsl(String sql,boolean explain);
     /**
      * 获取映射
      * @param indexName
      * @return
      */
     EsIndexResponse getMappings(String indexName);
-
+    
+    String explain(String sql);
 }

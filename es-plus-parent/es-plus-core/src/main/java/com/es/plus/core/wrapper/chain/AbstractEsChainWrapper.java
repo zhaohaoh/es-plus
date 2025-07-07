@@ -553,4 +553,10 @@ public abstract class AbstractEsChainWrapper<T, R, Children extends AbstractEsCh
         getWrapper().searchAfterValues(searchAfterValues);
         return this.children;
     }
+    
+    @Override
+    public Children profile() {
+        getWrapper().profile();
+        return this.children;
+    }
 }

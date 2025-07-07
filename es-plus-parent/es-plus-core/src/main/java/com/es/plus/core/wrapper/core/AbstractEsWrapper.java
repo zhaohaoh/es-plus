@@ -1024,4 +1024,9 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
         getEsQueryParamWrapper().setSearchAfterValues(searchAfterValues);
         return children;
     }
+    @Override
+    public Children profile() {
+        getEsQueryParamWrapper().setProfile(true);
+        return this.children;
+    }
 }

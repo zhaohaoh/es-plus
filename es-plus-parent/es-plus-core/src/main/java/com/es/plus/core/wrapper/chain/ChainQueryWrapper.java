@@ -55,12 +55,7 @@ interface ChainQueryWrapper<T> {
      * @param scollId  scoll id
      */
     EsResponse<T> scroll(int size, Duration keepTime, String scollId);
-
-    /**
-     * 性能分析
-     */
-    EsResponse<T> profile();
-
+ 
     /**
      * 执行dsl
      *
@@ -83,4 +78,8 @@ interface ChainQueryWrapper<T> {
     EsResponse<T> executeSQLep(String sql);
     
     String executeSQL(String sql);
+    
+    String sql2Dsl(String sql);
+    
+    String explainSQL(String sql);
 }

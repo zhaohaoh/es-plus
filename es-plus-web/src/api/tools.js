@@ -5,6 +5,13 @@ const tools = {
   eplQuery(params) {
     return api.get({ url: "/es/esQuery/epl", data: params });
   },
+  sql2Dsl(params) {
+    return api.get({ url: "/es/esQuery/sql2Dsl", data: params });
+  },
+  explain(params) {
+    return api.get({ url: "/es/esQuery/explain", data: params });
+  },
+
   sqlQuery(params) {
     return api.get({ url: "/es/esQuery/sql", data: params });
   },

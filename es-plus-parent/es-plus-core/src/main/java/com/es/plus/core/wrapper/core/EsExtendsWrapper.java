@@ -1,6 +1,7 @@
 package com.es.plus.core.wrapper.core;
 
 
+import com.es.plus.adapter.params.EsResponse;
 import com.es.plus.adapter.params.EsSelect;
 import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.search.sort.NestedSortBuilder;
@@ -148,5 +149,9 @@ public interface EsExtendsWrapper<Children, R> {
      * @return {@link Children}
      */
     Children searchAfterValues(Object[] searchAfterValues);
-
+    
+    /**
+     * 性能分析
+     */
+    Children profile() ;
 }

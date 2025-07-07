@@ -171,7 +171,7 @@ public class SamplesEsService extends EsServiceImpl<SamplesEsDTO> {
                         // 声明内部语句关系的should
                         a.must()
                                 .term(SamplesEsDTO::getNickName, "dasdsad")
-                                .term(SamplesEsDTO::getPhone, "1386859111")).profile();
+                                .term(SamplesEsDTO::getPhone, "1386859111")).profile().search();
         System.out.println(esResponse);
     }
 

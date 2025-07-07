@@ -624,6 +624,15 @@ public class EsPlusClientFacade   {
         return esPlusClient.executeSQL(sql);
     }
     
+    public String explain(String sql) {
+        return esPlusClient.explain(sql);
+    }
+    
+    public String sql2Dsl(String sql) {
+        return esPlusClient.sql2Dsl(sql,false);
+    }
+    
+    
     public <T> EsResponse<T> executeSQL(String sql,Class<T> tClass) {
         return esPlusClient.executeSQL(sql,tClass);
     }

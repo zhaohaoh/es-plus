@@ -898,6 +898,9 @@ public class EsPlusRestClient implements EsPlusClient {
         return null;
     }
     
+    /**
+     * es 自带的sql翻译
+     */
     @Override
     public String translateSql(String sql) {
         Map<String, Object> jsonRequest = new HashMap<>();
@@ -931,7 +934,24 @@ public class EsPlusRestClient implements EsPlusClient {
     }
     
     @Override
+    public String explain(String sql) {
+        String dsl = sql2Dsl(sql,true);
+        // 匹配 SQL 语句中的表名
+        String tableName = getTableName(sql);
+        return executeDSL(dsl, tableName);
+    }
+    
+    @Override
     public String executeSQL(String sql) {
+        String dsl = sql2Dsl(sql,false);
+        // 匹配 SQL 语句中的表名
+        String tableName = getTableName(sql);
+        return executeDSL(dsl, tableName);
+    }
+    
+    
+    @Override
+    public String sql2Dsl(String sql,boolean explain) {
         String limit = StringUtils.substringAfterLast(sql, "limit");
         Integer from=null;
         Integer size=null;
@@ -948,6 +968,32 @@ public class EsPlusRestClient implements EsPlusClient {
         if (dsl==null){
             throw new EsException("sql无法转换成dsl");
         }
+
+    
+        Map<String, Object> map = JsonUtils.toMap(dsl);
+        if (from!=null){
+            map.put("from",from);
+        }
+        if (size!=null){
+            map.put("size",size);
+        }
+        
+        List docvalueList = (List) map.get("docvalue_fields");
+        if (docvalueList!=null && !docvalueList.isEmpty() && !map.get("_source").equals(Boolean.FALSE)){
+            Map source = (Map) map.get("_source");
+            List includes =  source.get("includes") !=null ?(List)source.get("includes") :new ArrayList();
+            List fields = (List) docvalueList.stream().map(a -> ((Map) a).get("field")).collect(Collectors.toList());
+            includes.addAll(fields);
+        }
+        if (explain){
+            map.put("profile",true);
+//            map.put("size",0);
+        }
+        dsl = JsonUtils.toJsonStr(map);
+        return dsl;
+    }
+    
+    private  String getTableName(String sql) {
         // 匹配 SQL 语句中的表名
         Pattern pattern = Pattern.compile("(?i)FROM\\s+([\\w.]+)");
         Matcher matcher = pattern.matcher(sql);
@@ -959,25 +1005,7 @@ public class EsPlusRestClient implements EsPlusClient {
         if (StringUtils.isBlank(tableName)) {
             throw new EsException("sql语句中未找到表名");
         }
-        Map<String, Object> map = JsonUtils.toMap(dsl);
-        if (from!=null){
-            map.put("from",from);
-        }
-        if (size!=null){
-            map.put("size",size);
-        }
-   
-        List docvalueList = (List) map.get("docvalue_fields");
-        if (docvalueList!=null && !docvalueList.isEmpty() && !map.get("_source").equals(Boolean.FALSE)){
-            Map source = (Map) map.get("_source");
-            List includes =  source.get("includes") !=null ?(List)source.get("includes") :new ArrayList();
-            List fields = (List) docvalueList.stream().map(a -> ((Map) a).get("field")).collect(Collectors.toList());
-            includes.addAll(fields);
-        }
-        
-        dsl = JsonUtils.toJsonStr(map);
-        String rs = executeDSL(dsl, tableName);
-        return rs;
+        return tableName;
     }
     
     @Override
@@ -997,7 +1025,7 @@ public class EsPlusRestClient implements EsPlusClient {
        
     }
     
-
+  
     
     
     private <T> EsResponse<T> getEsResponse(Class<T> tClass, SearchResponse searchResponse) {

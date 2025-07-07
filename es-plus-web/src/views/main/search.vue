@@ -51,6 +51,20 @@
           />
         </label>
         <div class="controls">
+          <el-button
+            size="small"
+            @click="sql2Dsl"
+            primary
+            v-show="queryType == 'sql'"
+            >转DSL</el-button
+          >
+          <el-button
+            size="small"
+            @click="explain"
+            primary
+            v-show="queryType == 'sql'"
+            >输出执行计划</el-button
+          >
           <el-button size="small" :icon="Search" @click="submitQuery"
             >搜索</el-button
           >
@@ -507,6 +521,25 @@ const submitQuery = () => {
     dslQuery(queryDsl.value);
   }
 };
+
+const sql2Dsl = async () => {
+  const param = {
+    sql: queryDsl.value,
+  };
+  let res = await proxy.$api.tools.sql2Dsl(param);
+  const formattedJson = JSON.stringify(res, null, 2);
+  jsonView.value = formattedJson;
+};
+
+const explain = async () => {
+  const param = {
+    sql: queryDsl.value,
+  };
+  let res = await proxy.$api.tools.explain(param);
+  const formattedJson = JSON.stringify(res, null, 2);
+  jsonView.value = formattedJson;
+};
+
 const dslQuery = async (dsl) => {
   localStorage.setItem("lastDsl", dsl);
   const param = {

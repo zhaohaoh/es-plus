@@ -130,14 +130,7 @@ public class EsChainLambdaQueryWrapper<T> extends AbstractEsChainWrapper<T, SFun
         return esPlusClientFacade.scroll(type, esWrapper.esParamWrapper(), keepTime, scollId,indexs);
     }
 
-    /**
-     * 性能分析
-     */
-    @Override
-    public EsResponse<T> profile() {
-        esWrapper.esParamWrapper().getEsQueryParamWrapper().setProfile(true);
-        return esPlusClientFacade.search( type, esWrapper.esParamWrapper(),indexs);
-    }
+    
 
     /**
      * 执行dsl
@@ -163,6 +156,16 @@ public class EsChainLambdaQueryWrapper<T> extends AbstractEsChainWrapper<T, SFun
     @Override
     public String executeSQL(String sql) {
         return esPlusClientFacade.executeSQL(sql);
+    }
+    
+    @Override
+    public String sql2Dsl(String sql) {
+        return esPlusClientFacade.sql2Dsl(sql);
+    }
+    
+    @Override
+    public String explainSQL(String sql) {
+        return esPlusClientFacade.explain(sql);
     }
     
 }
