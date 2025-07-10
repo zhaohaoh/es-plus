@@ -35,5 +35,5 @@ app.config.globalProperties.$api = api;
 // app.use(ElementPlus)
 // 要在mount前面否则未渲染
 //
-app.use(router).use(store).use(JsonViewer).use(ElementPlus);
+app.use(router).use(store).use(JsonViewer).use(ElemnoentPlus);
 app.mount("#app");

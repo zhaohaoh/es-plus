@@ -7,12 +7,20 @@ import com.es.plus.adapter.core.EsPlusIndexClient;
 import com.es.plus.adapter.interceptor.EsInterceptor;
 import com.es.plus.adapter.interceptor.EsPlusClientProxy;
 import com.es.plus.adapter.lock.EsLockFactory;
+import com.es.plus.adapter.util.JsonUtils;
 import com.es.plus.es6.client.EsPlus6IndexRestClient;
 import com.es.plus.es6.client.EsPlus6RestClient;
 import com.es.plus.es7.client.EsPlusIndexRestClient;
 import com.es.plus.es7.client.EsPlusRestClient;
 import com.es.plus.lock.EsLockClient;
+import org.apache.http.util.EntityUtils;
+import org.elasticsearch.client.Request;
+import org.elasticsearch.client.Response;
+import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.boot.configurationprocessor.json.JSONObject;
 
 import java.util.Collection;
 import java.util.List;
@@ -24,6 +32,11 @@ import java.util.concurrent.ConcurrentHashMap;
  * @Date: 2023/2/1 16:57
  */
 public class ClientContext {
+    /**
+     * logger
+     */
+    private static final Logger log = LoggerFactory.getLogger(ClientContext.class);
+    
     private static final Map<String, EsPlusClientFacade> CLIENT_MAP = new ConcurrentHashMap<>();
 
     /**
@@ -87,6 +100,7 @@ public class ClientContext {
         EsPlusIndexClient esPlusIndexRestClient;
         EsLockClient esLockClient = new EsLockClient(restHighLevelClient);
         EsLockFactory esLockFactory = new EsLockFactory(esLockClient);
+//        String version = getVersion(restHighLevelClient);
         if (GlobalConfigCache.GLOBAL_CONFIG.getVersion().equals(6)) {
             esPlusClient = new EsPlus6RestClient(restHighLevelClient);
             esPlusIndexRestClient = new EsPlus6IndexRestClient(restHighLevelClient);
@@ -101,8 +115,33 @@ public class ClientContext {
         
         EsPlusClientFacade esPlusClientFacade = new EsPlusClientFacade(esPlusClientProxy, esPlusIndexRestClient, esLockFactory,host);
         
+        log.info("Es-plus client Facade build success version:{}",version);
         return esPlusClientFacade;
     }
-
-
+    
+//    public static String getVersion(RestHighLevelClient restHighLevelClient) {
+//            final String opensearch = "opensearch";
+//            final String distribution = "distribution";
+//        try {
+//            RestClient client = restHighLevelClient.getLowLevelClient();
+//            Request request = new Request("GET", "/");
+//            Response res = client.performRequest(request);
+//            if (res.getStatusLine().getStatusCode() == 200) {
+//                String jsonStr = EntityUtils.toString(res.getEntity(), "utf-8");
+//                Map<String, Object> map = JsonUtils.toMap(jsonStr);
+//                Map<String, Object> version = (Map<String, Object>) map.get("version");
+//                if (opensearch.equals(version.get(distribution))) {
+//                    int lucene_version = Integer.parseInt(version.get("lucene_version").toString().split("\\.")[0]);
+//                    return String.valueOf(lucene_version - 1);
+//                }
+//
+//                return version.get("number").toString();
+//            } else {
+//                String responseStr = EntityUtils.toString(res.getEntity());
+//            }
+//        } catch (Exception e) {
+//            log.error("getEsVersion", e);
+//        }
+//        return null;
+//    }
 }

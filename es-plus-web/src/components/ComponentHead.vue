@@ -23,9 +23,9 @@
 
 <script lang="ts" setup>
 import { getCurrentInstance, onMounted, reactive, ref } from "vue";
-import options from "../store/global";
-const { proxy } = getCurrentInstance() as any;
 
+const { proxy } = getCurrentInstance() as any;
+import options from "../store/global";
 const selectClient = ref();
 
 const clickSelect = (item) => {
