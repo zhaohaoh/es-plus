@@ -115,7 +115,7 @@ public class ClientContext {
         
         EsPlusClientFacade esPlusClientFacade = new EsPlusClientFacade(esPlusClientProxy, esPlusIndexRestClient, esLockFactory,host);
         
-        log.info("Es-plus client Facade build success version:{}",version);
+//        log.info("Es-plus client Facade build success version:{}",version);
         return esPlusClientFacade;
     }
     
