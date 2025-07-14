@@ -3,24 +3,24 @@
     <div class="left-panel">
       <div class="esQuery-container">
         <el-button-group style="margin-top: -10px; margin-bottom: 10px">
-          <el-button type="primary" size="small" @click="clickSql"
+          <el-button type="primary" plain size="small" @click="clickSql"
             >SQL</el-button
           >
-          <el-button type="primary" size="small" @click="clickEpl"
+          <el-button type="primary" plain size="small" @click="clickEpl"
             >EPL</el-button
           >
-          <el-button type="primary" size="small" @click="clickDsl"
+          <el-button type="primary" plain size="small" @click="clickDsl"
             >DSL</el-button
           >
         </el-button-group>
 
         <div style="min-height: 30px">
+          <!-- :class="{ hidden: queryType !== 'dsl' }" -->
           <el-select
-            :class="{ hidden: queryType !== 'dsl' }"
             v-model="index"
             placeholder="索引"
             filterable
-            style="width: 500px; margin-bottom: 10px"
+            style="width: 400px; margin-bottom: 10px"
           >
             <el-option
               v-for="item in indexData"
@@ -29,12 +29,21 @@
               :value="item"
             />
           </el-select>
+          <!-- :class="{ hidden: queryType !== 'dsl' }" -->
           <el-button
             @click="copySelectedText"
-            :class="{ hidden: queryType !== 'dsl' }"
+            type="primary"
             style="margin-left: 10px; margin-bottom: 10px"
+            plain
             >复制名称
           </el-button>
+          <el-button
+            type="primary"
+            @click="clickIndex"
+            plain
+            style="margin-left: 10px; margin-bottom: 10px"
+            >查看索引</el-button
+          >
         </div>
 
         <label class="esQuery-label">
@@ -54,18 +63,25 @@
           <el-button
             size="small"
             @click="sql2Dsl"
-            primary
+            type="primary"
+            plain
             v-show="queryType == 'sql'"
             >转DSL</el-button
           >
           <el-button
             size="small"
             @click="explain"
-            primary
+            type="primary"
+            plain
             v-show="queryType == 'sql'"
             >输出执行计划</el-button
           >
-          <el-button size="small" :icon="Search" @click="submitQuery"
+          <el-button
+            size="small"
+            :icon="Search"
+            @click="submitQuery"
+            plain
+            type="primary"
             >搜索</el-button
           >
           <!-- 绑定点击事件 -->
@@ -160,6 +176,27 @@
       >确认转换
     </el-button>
   </el-dialog>
+
+  <el-dialog
+    v-model="dialogIndexInfo"
+    title="索引信息"
+    style="
+      width: 900px;
+      max-width: 1000px;
+      position: relative;
+      height: 750px;
+      transform: translateY(-50px);
+    "
+  >
+    <div>
+      <JsonEditor
+        v-model:value="indexInfo"
+        height="600"
+        styles="width: 100%"
+        title="索引信息"
+      />
+    </div>
+  </el-dialog>
 </template>
 
 <script lang="ts" setup>
@@ -234,6 +271,26 @@ const copySelectedText = () => {
       .then(() => ElMessage.success("复制成功"))
       .catch(() => ElMessage.error("复制失败"));
   }
+};
+
+const indexInfo = ref("");
+const dialogIndexInfo = ref(false);
+const clickIndex = async () => {
+  if (!index.value) {
+    ElMessage.error("请选择索引");
+    return;
+  }
+  getIndex(index.value);
+  dialogIndexInfo.value = true;
+};
+
+const getIndex = async (index) => {
+  const param = {
+    index: index,
+  };
+  let res = await proxy.$api.esIndex.getIndex(param);
+
+  indexInfo.value = JSON.stringify(res, null, 2);
 };
 
 const getIndices = async (keyword) => {
@@ -707,6 +764,7 @@ const saveByIds = async (index, source) => {
   display: none !important;
 }
 .container {
+  max-height: 9000px;
   flex: 1;
   display: flex;
   align-items: stretch;
@@ -723,6 +781,7 @@ const saveByIds = async (index, source) => {
   background: white;
   border-radius: 4px 0 0 4px;
   width: 500px;
+  height: 780px;
 }
 
 .right-panel {
@@ -731,8 +790,8 @@ const saveByIds = async (index, source) => {
   background: #ffffff;
   border-radius: 0 4px 4px 0;
   /* overflow-y: auto; */
-  height: 800px;
-  max-width: 700px;
+  height: 780px;
+  max-width: 650px;
 }
 
 .json-input {
@@ -764,16 +823,16 @@ const saveByIds = async (index, source) => {
 
 button {
   padding: 8px 16px;
-  background: #4caf50;
-  color: white;
-  border: none;
+  /* background: #4caf50; */
+  /* color: white; */
+  /* border: none; */
   border-radius: 4px;
   cursor: pointer;
 }
 
-button:hover {
+/* button:hover {
   background: #45a049;
-}
+} */
 
 .error {
   color: #ff4444;

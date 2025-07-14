@@ -12,7 +12,7 @@
         <el-table-column prop="address" label="操作" width="180">
           <template #default="scope">
             <el-button
-              type="success"
+              type="primary"
               plain
               @click="clickEdit(scope.$index, scope.row)"
               >编辑</el-button
@@ -30,7 +30,7 @@
     </el-row>
     <el-row class="row-bg" justify="end">
       <el-col :span="1">
-        <el-button type="success" plain @click="saveClick">新增</el-button>
+        <el-button type="primary" plain @click="saveClick">新增</el-button>
       </el-col>
       <!-- <el-col :span="1">
         <el-button type="success" plain>编辑</el-button>

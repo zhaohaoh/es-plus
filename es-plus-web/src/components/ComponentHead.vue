@@ -26,6 +26,7 @@ import { getCurrentInstance, onMounted, reactive, ref } from "vue";
 
 const { proxy } = getCurrentInstance() as any;
 import options from "../store/global";
+import { ElMessage } from "element-plus";
 const selectClient = ref();
 
 const clickSelect = (item) => {
@@ -35,11 +36,19 @@ const clickSelect = (item) => {
 onMounted(() => {
   getList();
   const client = localStorage.getItem("currentClient");
+  if (!client) {
+    ElMessage.error("请选择索引链接");
+    return;
+  }
   selectClient.value = client;
 });
 
 // 获取es客户端list
 const getList = async () => {
+  if (!selectClient.value) {
+    ElMessage.error("请选择索引链接");
+    return;
+  }
   let res = await proxy.$api.esClient.esClientList();
   if (res && res.length > 0) {
     options.value.length = 0;
