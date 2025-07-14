@@ -117,7 +117,7 @@
               :key="item.prop"
               :label="item.label"
               :prop="item.prop"
-              width="150"
+              width="180"
             />
           </el-table>
         </el-row>
