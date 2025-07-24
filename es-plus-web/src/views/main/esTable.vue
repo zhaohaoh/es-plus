@@ -52,7 +52,9 @@
         flex-direction: row;
       "
     >
-      <el-col :span="1"></el-col>
+      <el-col :span="2">
+          <el-button type="primary" plain @click="jsonTableChange">JSON/表格</el-button>
+      </el-col>
       <el-col :span="3">
         <el-select
           filterable
@@ -82,7 +84,7 @@
   <div class="container" style="margin-left: -20px; margin-top: 10px">
     <div class="buju">
       <el-aside width="250px">
-        <el-scrollbar height="600px">
+        <el-scrollbar >
           <p
             v-for="item in indexData"
             :key="item"
@@ -99,17 +101,17 @@
           </p>
         </el-scrollbar>
       </el-aside>
-
+        
       <div
         class="right-container"
-        v-show="tableData.length > 0"
+        v-show="tableData.length > 0 && jsonOrTable=='table'"
         style="margin-top: -20px"
       >
         <el-row :gutter="10">
           <el-table
             @cell-dblclick="copyText"
             :data="tableData"
-            style="max-width: 1200px; max-height: 1000px; min-height: 300px"
+            style="max-width: 1200px; max-height: 1000px; min-height: 100px"
             size="large"
           >
             <el-table-column
@@ -127,13 +129,30 @@
           </el-col>
         </el-row>
       </div>
+   <el-card class="box-card" v-if="jsonOrTable=='json'">
+      <div  class="right-container"  >
+        <JsonEditor
+          v-model:value="tableDataJson"
+          height="600"
+          width="800"
+          styles="width: 100%"
+          title=""
+        />
+        <el-row class="row-bg" justify="end">
+          <el-col :span="1">
+            <el-button type="primary" plain @click="saveClick">新增</el-button>
+          </el-col>
+        </el-row>
+      </div>
+  </el-card>
     </div>
   </div>
+  
   <div class="downIndex">
     <el-input
       v-model="indexKeyword"
       placeholder="请输入索引名称"
-      style="width: 240px; margin-top: 20px; margin-left: -15px"
+      style="width: 240px; margin-top: 0px; margin-left: -15px"
       @change="onSearch"
     />
     <el-button
@@ -216,15 +235,22 @@ import { ElMessageBox } from "element-plus";
 import options from "../../store/global";
 import { ElMessage } from "element-plus";
 import elMessage from "../../util/message";
-
+import JsonEditor from "../../components/JsonEditor/index.vue";
 let dialogFormVisible = ref(false);
 let addDataVisible = ref(false);
 
 const code = ref("");
 
+const jsonOrTable = ref('json');
+
 const addData = ref("{}");
 
 let indexKeyword = ref("");
+
+const jsonTableChange= () => { 
+   jsonOrTable.value=jsonOrTable.value==='json'?'table' :'json';
+   console.log('表格控制值'+jsonOrTable.value)
+};
 
 const onSearch = () => {
   localStorage.setItem("indexKeyword", indexKeyword.value);
@@ -264,6 +290,7 @@ const removeTerm = (index) => {
 };
 
 const tableData = ref([]);
+const tableDataJson=ref('');
 
 const mappings = ref([]);
 
@@ -338,12 +365,15 @@ const dsl = ref("Es.chainQuery()");
 
 onMounted(() => {
   // getList();
-
-  getIndices("");
   const a = localStorage.getItem("indexKeyword");
   if (a != null) {
     indexKeyword.value = a;
+    getIndices(indexKeyword.value);
+  }else{
+    getIndices("");
   }
+ 
+
 });
 
 const submitQuery = () => {
@@ -474,7 +504,7 @@ const eplQuery = async (epl) => {
     });
   }
   tableData.value = source;
-  console.log(tableData.value);
+ tableDataJson.value=JSON.stringify(source, null, 2);
 };
 
 function isObject(value) {
@@ -531,6 +561,9 @@ function isObject(value) {
   margin-left: 10px;
   min-height: 600px;
 }
+.container{
+  height: 600px;
+}
 
 .el-form-item__content {
   display: flex;
@@ -561,5 +594,13 @@ function isObject(value) {
 .downIndex {
   display: flex;
   flex-direction: column;
+}
+
+.box-card {
+  /* margin-top: 50px; */
+  width: 100%
+}
+.el-scrollbar{
+  height:580px;
 }
 </style>

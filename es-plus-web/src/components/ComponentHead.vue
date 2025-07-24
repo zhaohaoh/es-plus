@@ -34,13 +34,13 @@ const clickSelect = (item) => {
 };
 
 onMounted(() => {
-  getList();
-  const client = localStorage.getItem("currentClient");
+   const client = localStorage.getItem("currentClient");
   if (!client) {
     ElMessage.error("请选择索引链接");
     return;
   }
   selectClient.value = client;
+  getList();
 });
 
 // 获取es客户端list
