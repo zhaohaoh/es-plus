@@ -14,10 +14,10 @@ Es-Plus 是Elasticsearch Api增强工具 - 只做增强不做改变，简化`CRU
 - **静态链式es编程**: 支持使用静态类，无需指定对应实体类即可执行。可以简单快速对es的索引进行增删改查。
 - **多数据源es**: 通用@EsIndex指定默认数据源
 - **自定义es执行前后拦截器**: @EsInterceptors 具体用法见下面的例子
-
+- **提供Es控制台页面**: 新功能-提供es多数据源增删改查的控制台 详见下方例子
 
 ## 引入
-目前使用版本0.3.5
+目前使用版本0.4.72
 本次更新
 - **多数据源es**: 通用@EsIndex指定默认数据源
 - **自定义es执行前后拦截器**: @EsInterceptors 具体用法见下面的例子
@@ -30,7 +30,10 @@ Es-Plus 是Elasticsearch Api增强工具 - 只做增强不做改变，简化`CRU
             <version>Latest Version</version>
         </dependency>
 ```
-
+## 新-es控制台类似navicat es-head的es查询编辑工具。
+### 下载es-plus-console的jar包 java -jar启动后 自动打开网站
+![img.png](img.png)
+![img_1.png](img_1.png)
 ## 简单两步! 快速开始!
 
 ###  第一步 application.peoperties配置
