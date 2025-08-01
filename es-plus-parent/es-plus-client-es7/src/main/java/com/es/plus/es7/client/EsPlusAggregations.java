@@ -8,6 +8,7 @@ import com.es.plus.adapter.properties.EsFieldInfo;
 import com.es.plus.adapter.properties.GlobalParamHolder;
 import com.es.plus.adapter.tools.LambdaUtils;
 import com.es.plus.adapter.tools.SFunction;
+import com.es.plus.adapter.util.JsonUtils;
 import com.es.plus.adapter.util.SearchHitsUtil;
 import com.es.plus.constant.EsConstant;
 import org.apache.commons.lang3.StringUtils;
@@ -141,10 +142,10 @@ public class EsPlusAggregations<T> implements EsAggResponse<T> {
             //多个桶聚合
             else if (agg instanceof MultiBucketsAggregation){
                 if (multiBucketMap==null){
-                    multiBucketMap=new HashMap<>();
+                    multiBucketMap=new LinkedHashMap<>();
                 }
                 MultiBucketsAggregation aggregation = (MultiBucketsAggregation) agg;
-                Map<String, EsAggResult<T>> data = new HashMap<>();
+                Map<String, EsAggResult<T>> data = new LinkedHashMap<>();
                 multiBucketMap.put(aggName,data);
                 List<? extends MultiBucketsAggregation.Bucket> buckets = aggregation.getBuckets();
                 for (MultiBucketsAggregation.Bucket bucket : buckets) {
@@ -152,7 +153,12 @@ public class EsPlusAggregations<T> implements EsAggResponse<T> {
                     EsAggResult<T> subAgg = getResult( bucketAggregations);
                     long docCount = bucket.getDocCount();
                     subAgg.setDocCount(docCount);
+                    Object key = bucket.getKey();
                     String keyAsString = bucket.getKeyAsString();
+                    if (key instanceof Map){
+                        keyAsString = JsonUtils.toJsonStr(key);
+                    }
+                   
                     data.put(keyAsString, subAgg);
                 }
             }

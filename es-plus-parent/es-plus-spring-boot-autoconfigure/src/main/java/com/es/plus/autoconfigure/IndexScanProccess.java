@@ -469,6 +469,7 @@ public class IndexScanProccess implements InitializingBean, ApplicationListener<
             
             if (esId != null) {
                 esFieldInfo = AnnotationResolveUtil.resolveEsId(esId);
+                fieldType =EsFieldType.KEYWORD.name().toLowerCase();
                 entityInfo.setIdName(
                         StringUtils.isNotBlank(esFieldInfo.getName()) ? esFieldInfo.getName() : field.getName());
             }

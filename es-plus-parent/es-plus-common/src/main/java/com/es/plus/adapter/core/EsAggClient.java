@@ -9,6 +9,7 @@ import org.elasticsearch.search.aggregations.bucket.filter.Filters;
 import org.elasticsearch.search.aggregations.bucket.geogrid.InternalGeoHashGrid;
 import org.elasticsearch.search.aggregations.bucket.geogrid.InternalGeoTileGrid;
 import org.elasticsearch.search.aggregations.bucket.histogram.DateHistogramAggregationBuilder;
+import org.elasticsearch.search.aggregations.bucket.histogram.DateHistogramInterval;
 import org.elasticsearch.search.aggregations.bucket.missing.Missing;
 import org.elasticsearch.search.aggregations.bucket.sampler.Sampler;
 import org.elasticsearch.search.aggregations.bucket.significant.SignificantTerms;
@@ -180,20 +181,20 @@ public interface EsAggClient {
      * name.
      */
 
-    BaseAggregationBuilder dateHistogram(String name,String field);
+    BaseAggregationBuilder dateHistogram(String name,String field, DateHistogramInterval dateHistogramInterval);
 
     /**
      * Create a new {@link Stringange} aggregation with the given name.
      */
 
-    BaseAggregationBuilder range(String name,String field);
+    BaseAggregationBuilder range(String name,String field,String key ,Double from,Double to);
 
     /**
      * Create a new {@link DateStringangeAggregationBuilder} aggregation with the
      * given name.
      */
 
-    BaseAggregationBuilder dateRange(String name,String field);
+    BaseAggregationBuilder dateRange(String name,String field,String key ,String from,String to);
 
     /**
      * Create a new {@link IpStringangeAggregationBuilder} aggregation with the
@@ -207,6 +208,7 @@ public interface EsAggClient {
      */
 
     BaseAggregationBuilder terms(String name,String field);
+    
     
     /**
      * Create a new {@link Percentiles} aggregation with the given name.

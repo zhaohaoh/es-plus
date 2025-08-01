@@ -15,6 +15,7 @@ import org.elasticsearch.search.aggregations.bucket.geogrid.InternalGeoHashGrid;
 import org.elasticsearch.search.aggregations.bucket.geogrid.InternalGeoTileGrid;
 import org.elasticsearch.search.aggregations.bucket.global.Global;
 import org.elasticsearch.search.aggregations.bucket.histogram.DateHistogramAggregationBuilder;
+import org.elasticsearch.search.aggregations.bucket.histogram.DateHistogramInterval;
 import org.elasticsearch.search.aggregations.bucket.histogram.Histogram;
 import org.elasticsearch.search.aggregations.bucket.missing.Missing;
 import org.elasticsearch.search.aggregations.bucket.nested.Nested;
@@ -195,18 +196,18 @@ public interface IEsBaseAggWrapper<Children, R,T> {
      * Create a new {@link DateHistogramAggregationBuilder} aggregation with the given
      * name.
      */
-    Children dateHistogram(String name,R field, Consumer<Children> subAgg);
+    Children dateHistogram(String name,R field, DateHistogramInterval dateHistogramInterval, Consumer<Children> subAgg);
     
     /**
      * Create a new {@link Range} aggregation with the given name.
      */
-    Children range(String name,R field, Consumer<Children> subAgg);
+    Children range(String name,R field,String key ,double from,double to, Consumer<Children> subAgg);
     
     /**
      * Create a new {@link DateRangeAggregationBuilder} aggregation with the
      * given name.
      */
-    Children dateRange(String name,R field, Consumer<Children> subAgg);
+    Children dateRange(String name,R field,String key ,String from,String to, Consumer<Children> subAgg);
     
     /**
      * Create a new {@link IpRangeAggregationBuilder} aggregation with the

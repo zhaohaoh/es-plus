@@ -14,6 +14,7 @@ import org.elasticsearch.search.aggregations.bucket.geogrid.InternalGeoHashGrid;
 import org.elasticsearch.search.aggregations.bucket.geogrid.InternalGeoTileGrid;
 import org.elasticsearch.search.aggregations.bucket.global.Global;
 import org.elasticsearch.search.aggregations.bucket.histogram.DateHistogramAggregationBuilder;
+import org.elasticsearch.search.aggregations.bucket.histogram.DateHistogramInterval;
 import org.elasticsearch.search.aggregations.bucket.histogram.Histogram;
 import org.elasticsearch.search.aggregations.bucket.missing.Missing;
 import org.elasticsearch.search.aggregations.bucket.nested.Nested;
@@ -230,23 +231,23 @@ public interface IEsAggWrapper<Children, R,T> extends  IEsBaseAggWrapper<Childre
      * Create a new {@link DateHistogramAggregationBuilder} aggregation with the given
      * field.
      */
-    default Children dateHistogram(R field){
-       return   dateHistogram(null,field,null);
+    default Children dateHistogram(R field,DateHistogramInterval dateHistogramInterval){
+       return   dateHistogram(null,field,   dateHistogramInterval,null);
      };
 
     /**
      * Create a new {@link Range} aggregation with the given field.
      */
-    default Children range(R field){
-       return   range(null,field,null);
+    default Children range(R field,String key,double from, double to){
+       return   range(null,field,key,from,to,null);
      };
 
     /**
      * Create a new {@link DateRangeAggregationBuilder} aggregation with the
      * given field.
      */
-    default Children dateRange(R field){
-       return   dateRange(null,field,null);
+    default Children dateRange(R field,String key,String from, String to){
+       return   dateRange(null,field,key,from,to,null);
      };
 
     /**
@@ -588,23 +589,23 @@ public interface IEsAggWrapper<Children, R,T> extends  IEsBaseAggWrapper<Childre
      * Create a new {@link DateHistogramAggregationBuilder} aggregation with the given
      * field.
      */
-    default Children dateHistogram(String name,R field){
-        return   dateHistogram(name,field,null);
+    default Children dateHistogram(String name,R field,DateHistogramInterval dateHistogramInterval){
+        return   dateHistogram(name,field, dateHistogramInterval,null);
     };
     
     /**
      * Create a new {@link Range} aggregation with the given field.
      */
-    default Children range(String name,R field){
-        return   range(name,field,null);
+    default Children range(String name,R field,String key ,double from,double to){
+        return   range(name,field,key,from,to,null);
     };
     
     /**
      * Create a new {@link DateRangeAggregationBuilder} aggregation with the
      * given field.
      */
-    default Children dateRange(String name,R field){
-        return   dateRange(name,field,null);
+    default Children dateRange(String name,R field,String key ,String from,String to){
+        return   dateRange(name,field,key,from,to,null);
     };
     
     /**
@@ -939,23 +940,23 @@ public interface IEsAggWrapper<Children, R,T> extends  IEsBaseAggWrapper<Childre
      * Create a new {@link DateHistogramAggregationBuilder} aggregation with the given
      * field.
      */
-    default Children dateHistogram(R field,Consumer<Children> subAgg){
-        return   dateHistogram(null,field,subAgg);
+    default Children dateHistogram(R field,DateHistogramInterval dateHistogramInterval,Consumer<Children> subAgg){
+        return   dateHistogram(null,field,dateHistogramInterval,subAgg);
     };
     
     /**
      * Create a new {@link Range} aggregation with the given field.
      */
-    default Children range(R field,Consumer<Children> subAgg){
-        return   range(null,field,subAgg);
+    default Children range(R field,String key,double from,double to,Consumer<Children> subAgg){
+        return   range(null,field,key,from,to,subAgg);
     };
     
     /**
      * Create a new {@link DateRangeAggregationBuilder} aggregation with the
      * given field.
      */
-    default Children dateRange(R field,Consumer<Children> subAgg){
-        return   dateRange(null,field,subAgg);
+    default Children dateRange(R field,String key,String from,String to,Consumer<Children> subAgg){
+        return   dateRange(null,field,key,from,to,subAgg);
     };
     
     /**

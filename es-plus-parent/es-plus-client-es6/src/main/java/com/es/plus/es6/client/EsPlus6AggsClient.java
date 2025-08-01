@@ -3,6 +3,7 @@ package com.es.plus.es6.client;
 import com.es.plus.adapter.config.GlobalConfigCache;
 import com.es.plus.adapter.core.EsAggClient;
 import com.es.plus.adapter.params.EsParamWrapper;
+import org.elasticsearch.index.query.MultiTermQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.search.aggregations.BaseAggregationBuilder;
 import org.elasticsearch.search.aggregations.bucket.adjacency.AdjacencyMatrixAggregationBuilder;
@@ -11,6 +12,7 @@ import org.elasticsearch.search.aggregations.bucket.filter.FiltersAggregationBui
 import org.elasticsearch.search.aggregations.bucket.global.Global;
 import org.elasticsearch.search.aggregations.bucket.global.GlobalAggregationBuilder;
 import org.elasticsearch.search.aggregations.bucket.histogram.DateHistogramAggregationBuilder;
+import org.elasticsearch.search.aggregations.bucket.histogram.DateHistogramInterval;
 import org.elasticsearch.search.aggregations.bucket.histogram.Histogram;
 import org.elasticsearch.search.aggregations.bucket.histogram.HistogramAggregationBuilder;
 import org.elasticsearch.search.aggregations.bucket.missing.MissingAggregationBuilder;
@@ -287,28 +289,32 @@ public class EsPlus6AggsClient implements EsAggClient {
      * aggName.
      */
     @Override
-    public BaseAggregationBuilder dateHistogram(String name,String field) {
-        String aggName = name!=null?name : field + AGG_DELIMITER + WeightedAvgAggregationBuilder.NAME;
+    public BaseAggregationBuilder dateHistogram(String name,String field, DateHistogramInterval dateHistogramInterval) {
+        String aggName = name!=null?name : field + AGG_DELIMITER + DateHistogramAggregationBuilder.NAME;
         DateHistogramAggregationBuilder dateHistogramAggregationBuilder = new DateHistogramAggregationBuilder(aggName);
         dateHistogramAggregationBuilder.field(field);
+        dateHistogramAggregationBuilder.dateHistogramInterval(dateHistogramInterval);
+        
         return  dateHistogramAggregationBuilder;
     }
-
+ 
     /**
      *
      */
     @Override
-    public BaseAggregationBuilder range(String name,String field) {
+    public BaseAggregationBuilder range(String name,String field,String key ,Double from,Double to) {
         String aggName = name!=null?name : field + AGG_DELIMITER + RangeAggregationBuilder.NAME;
         RangeAggregationBuilder rangeAggregationBuilder = new RangeAggregationBuilder(aggName);
+        rangeAggregationBuilder.addRange(key,from,to);
         return rangeAggregationBuilder;
     }
-
-
+    
+    
     @Override
-    public BaseAggregationBuilder dateRange(String name,String field) {
+    public BaseAggregationBuilder dateRange(String name,String field,String key ,String from,String to) {
         String aggName = name!=null?name : field + AGG_DELIMITER + DateRangeAggregationBuilder.NAME;
         DateRangeAggregationBuilder dateRangeAggregationBuilder = new DateRangeAggregationBuilder(aggName);
+        dateRangeAggregationBuilder.addRange(key,from,to);
         return dateRangeAggregationBuilder;
     }
 

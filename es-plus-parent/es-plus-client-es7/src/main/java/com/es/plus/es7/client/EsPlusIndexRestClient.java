@@ -110,10 +110,10 @@ public class EsPlusIndexRestClient implements EsPlusIndexClient {
                 CreateIndexRequest indexRequest = new CreateIndexRequest(esIndexParamIndex);
                 indexRequest(esIndexParam, indexRequest);
             }
+        }else{
+            CreateIndexRequest indexRequest = new CreateIndexRequest(index);
+            indexRequest(esIndexParam, indexRequest);
         }
-        
-        CreateIndexRequest indexRequest = new CreateIndexRequest(index);
-        indexRequest(esIndexParam, indexRequest);
     }
     
     @Override
@@ -213,20 +213,35 @@ public class EsPlusIndexRestClient implements EsPlusIndexClient {
     public boolean putMapping(String index, Class<?> tClass) {
         EsIndexParam esDocParam = GlobalParamHolder.getAndInitEsIndexParam(tClass);
         if (StringUtils.isBlank(index)) {
-            throw new EsException("index 不能为空");
+            for (String esDocParamIndex : esDocParam.getIndex()) {
+                Map<String, Object> mappingProperties = esDocParam.getMappings();
+                try {
+                    //将settings和mappings封装到一个IndexClient对象中
+                    PutMappingRequest putMappingRequest = new PutMappingRequest(esDocParamIndex);
+                    putMappingRequest.source(mappingProperties);
+                    printInfoLog("putMapping index={} info={}", esDocParamIndex, JsonUtils.toJsonStr(mappingProperties));
+                    restHighLevelClient.indices().putMapping(putMappingRequest, RequestOptions.DEFAULT);
+                    return true;
+                } catch (IOException e) {
+                    printErrorLog("putMapping:{}", e);
+                    return false;
+                }
+            }
+        }else{
+            Map<String, Object> mappingProperties = esDocParam.getMappings();
+            try {
+                //将settings和mappings封装到一个IndexClient对象中
+                PutMappingRequest putMappingRequest = new PutMappingRequest(index);
+                putMappingRequest.source(mappingProperties);
+                printInfoLog("putMapping index={} info={}", index, JsonUtils.toJsonStr(mappingProperties));
+                restHighLevelClient.indices().putMapping(putMappingRequest, RequestOptions.DEFAULT);
+                return true;
+            } catch (IOException e) {
+                printErrorLog("putMapping:{}", e);
+                return false;
+            }
         }
-        Map<String, Object> mappingProperties = esDocParam.getMappings();
-        try {
-            //将settings和mappings封装到一个IndexClient对象中
-            PutMappingRequest putMappingRequest = new PutMappingRequest(index);
-            putMappingRequest.source(mappingProperties);
-            printInfoLog("putMapping index={} info={}", index, JsonUtils.toJsonStr(mappingProperties));
-            restHighLevelClient.indices().putMapping(putMappingRequest, RequestOptions.DEFAULT);
-            return true;
-        } catch (IOException e) {
-            printErrorLog("putMapping:{}", e);
-            return false;
-        }
+        return true;
     }
     
     @Override
@@ -254,9 +269,13 @@ public class EsPlusIndexRestClient implements EsPlusIndexClient {
     public void createIndexMapping(String index, Class<?> tClass) {
         EsIndexParam esIndexParam = GlobalParamHolder.getAndInitEsIndexParam(tClass);
         if (StringUtils.isBlank(index)) {
-            throw new EsException("index 不能为空");
+            String[] indexs = esIndexParam.getIndex();
+            for (String idx : indexs) {
+                doCreateIndexMapping(idx, esIndexParam);
+            }
+        }else{
+            doCreateIndexMapping(index, esIndexParam);
         }
-        doCreateIndexMapping(index, esIndexParam);
     }
     
     /**

@@ -12,6 +12,7 @@ import org.elasticsearch.search.aggregations.bucket.filter.FilterAggregationBuil
 import org.elasticsearch.search.aggregations.bucket.global.Global;
 import org.elasticsearch.search.aggregations.bucket.global.GlobalAggregationBuilder;
 import org.elasticsearch.search.aggregations.bucket.histogram.DateHistogramAggregationBuilder;
+import org.elasticsearch.search.aggregations.bucket.histogram.DateHistogramInterval;
 import org.elasticsearch.search.aggregations.bucket.histogram.Histogram;
 import org.elasticsearch.search.aggregations.bucket.histogram.HistogramAggregationBuilder;
 import org.elasticsearch.search.aggregations.bucket.missing.Missing;
@@ -215,18 +216,18 @@ public interface IEsAggFuncWrapper<Children, R,T> {
      * Create a new {@link DateHistogramAggregationBuilder} aggregation with the given
      * name.
      */
-    Children dateHistogramFn(R name, Function<DateHistogramAggregationBuilder, DateHistogramAggregationBuilder> fn);
+    Children dateHistogramFn(R name, DateHistogramInterval dateHistogramInterval,Function<DateHistogramAggregationBuilder, DateHistogramAggregationBuilder> fn);
     
     /**
      * Create a new {@link Range} aggregation with the given name.
      */
-    Children rangeFn(R name, Function<RangeAggregationBuilder, RangeAggregationBuilder> fn);
+    Children rangeFn(R name, String key,double from, double to,Function<RangeAggregationBuilder, RangeAggregationBuilder> fn);
     
     /**
      * Create a new {@link DateRangeAggregationBuilder} aggregation with the
      * given name.
      */
-    Children dateRangeFn(R name, Function<DateRangeAggregationBuilder, DateRangeAggregationBuilder> fn);
+    Children dateRangeFn(R name, String key,String from, String to,Function<DateRangeAggregationBuilder, DateRangeAggregationBuilder> fn);
     
     /**
      * Create a new {@link IpRangeAggregationBuilder} aggregation with the
