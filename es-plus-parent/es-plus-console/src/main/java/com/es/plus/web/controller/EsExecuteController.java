@@ -1,5 +1,6 @@
 package com.es.plus.web.controller;
 
+import com.baomidou.mybatisplus.core.toolkit.sql.SqlUtils;
 import com.es.plus.adapter.EsPlusClientFacade;
 import com.es.plus.adapter.exception.EsException;
 import com.es.plus.adapter.params.EsAggResponse;
@@ -15,6 +16,7 @@ import com.es.plus.web.pojo.EsDslInfo;
 import com.es.plus.web.pojo.EsPageInfo;
 import com.es.plus.web.pojo.EsRequstInfo;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Triple;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.common.Strings;
 import org.elasticsearch.index.query.BoolQueryBuilder;
@@ -33,11 +35,15 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 
 @RestController
@@ -120,11 +126,12 @@ public class EsExecuteController {
         if (StringUtils.isBlank(tableName)) {
             throw new EsException("sql语句中未找到表名");
         }
+        
         if (sql.contains("group")&&containsAgg(sql)){
             String terms = StringUtils.substringAfterLast(sql, "by").trim();
             String trim = StringUtils.substringBetween(sql, "select", "from").trim();
-         
             EsChainQueryWrapper<Map> queryWrapper = Es.chainQuery(currentEsClient).index(tableName);
+            setWhereSql(sql, queryWrapper);
             EsAggWrapper<Map> termsed = queryWrapper.esAggWrapper().terms(terms,a->{
                 aggStr(a, trim);
                 return;
@@ -133,6 +140,7 @@ public class EsExecuteController {
            return Strings.toString(aggregations.getAggregations());
         } else if (containsAgg(sql)) {
             EsChainQueryWrapper<Map> queryWrapper = Es.chainQuery(currentEsClient).index(tableName);
+            setWhereSql(sql, queryWrapper);
             EsAggWrapper<Map> mapEsAggWrapper = queryWrapper.esAggWrapper();
             String trim = StringUtils.substringBetween(sql, "select", "from").trim();
             aggStr(mapEsAggWrapper, trim);
@@ -140,7 +148,12 @@ public class EsExecuteController {
             return Strings.toString(aggregations.getAggregations());
         } else if (sql.contains("group")) {
             String terms = StringUtils.substringAfterLast(sql, "by").trim();
+        
+      
             EsChainQueryWrapper<Map> queryWrapper = Es.chainQuery(currentEsClient).index(tableName);
+            
+            setWhereSql(sql, queryWrapper);
+            
             queryWrapper.esAggWrapper().terms(terms);
             EsAggResponse<Map> aggregations = queryWrapper.aggregations();
             return Strings.toString(aggregations.getAggregations());
@@ -158,6 +171,35 @@ public class EsExecuteController {
         }
         String result = Es.chainQuery(currentEsClient).executeSQL(sql);
         return result;
+    }
+    
+    private  void setWhereSql(String sql, EsChainQueryWrapper<Map> queryWrapper) {
+        List<Triple<String, String, String>> triples = extractWhereParams(sql);
+        if (!triples.isEmpty()) {
+            triples.forEach(
+                    t->{
+                        String k = t.getLeft();
+                        String v = t.getRight();
+                        String where = StringUtils.substringAfter(sql, "where");
+                        if (where.contains("or")){
+                            queryWrapper.should();
+                        }
+                        queryWrapper.terms(  t.getMiddle().equals("="),k,v.replace("=",""));
+                        queryWrapper.ge(t.getMiddle().equals(">="),k,v.replace(">=",""));
+                        queryWrapper.gt(t.getMiddle().equals(">"),k,v.replace(">",""));
+                        queryWrapper.le(t.getMiddle().equals("<="),k,v.replace("<=",""));
+                        queryWrapper.lt(t.getMiddle().equals("<"),k,v.replace("<",""));
+                        if (t.getMiddle().equals("!=")){
+                            queryWrapper.mustNot(a->{
+                                a.term(k,v);
+                            });
+                        }
+                        String[] split = t.getRight().split(",");
+                        queryWrapper.terms(t.getMiddle().equalsIgnoreCase("in"),k, Arrays.stream(split).collect(Collectors.toSet()));
+                    }
+            );
+           
+        }
     }
     
     /**
@@ -184,6 +226,7 @@ public class EsExecuteController {
             String trim = StringUtils.substringBetween(sql, "select", "from").trim();
             
             EsChainQueryWrapper<Map> queryWrapper = Es.chainQuery(currentEsClient).index(tableName).profile();
+            setWhereSql(sql, queryWrapper);
             EsAggWrapper<Map> termsed = queryWrapper.esAggWrapper().terms(terms,a->{
                 aggStr(a, trim);
                 return;
@@ -192,6 +235,7 @@ public class EsExecuteController {
             return Strings.toString(aggregations.getAggregations());
         } else if (containsAgg(sql)) {
             EsChainQueryWrapper<Map> queryWrapper = Es.chainQuery(currentEsClient).index(tableName).profile();
+            setWhereSql(sql, queryWrapper);
             EsAggWrapper<Map> mapEsAggWrapper = queryWrapper.esAggWrapper();
             String trim = StringUtils.substringBetween(sql, "select", "from").trim();
             aggStr(mapEsAggWrapper, trim);
@@ -200,6 +244,7 @@ public class EsExecuteController {
         } else if (sql.contains("group")) {
             String terms = StringUtils.substringAfterLast(sql, "by").trim();
             EsChainQueryWrapper<Map> queryWrapper = Es.chainQuery(currentEsClient).index(tableName).profile();
+            setWhereSql(sql, queryWrapper);
             queryWrapper.esAggWrapper().terms(terms);
             EsAggResponse<Map> aggregations = queryWrapper.aggregations();
             return Strings.toString(aggregations.getAggregations());
@@ -243,6 +288,7 @@ public class EsExecuteController {
             String trim = StringUtils.substringBetween(sql, "select", "from").trim();
             
             EsChainQueryWrapper<Map> queryWrapper = Es.chainQuery(currentEsClient).index(tableName);
+            setWhereSql(sql, queryWrapper);
             EsAggWrapper<Map> termsed = queryWrapper.esAggWrapper().terms(terms,a->{
                 aggStr(a, trim);
                 return;
@@ -251,6 +297,7 @@ public class EsExecuteController {
             return sourceBuilder.toString();
         } else if (containsAgg(sql)) {
             EsChainQueryWrapper<Map> queryWrapper = Es.chainQuery(currentEsClient).index(tableName);
+            setWhereSql(sql, queryWrapper);
             EsAggWrapper<Map> mapEsAggWrapper = queryWrapper.esAggWrapper();
             String trim = StringUtils.substringBetween(sql, "select", "from").trim();
             aggStr(mapEsAggWrapper, trim);
@@ -259,6 +306,7 @@ public class EsExecuteController {
         } else if (sql.contains("group")) {
             String terms = StringUtils.substringAfterLast(sql, "by").trim();
             EsChainQueryWrapper<Map> queryWrapper = Es.chainQuery(currentEsClient).index(tableName);
+            setWhereSql(sql, queryWrapper);
             EsAggWrapper<Map> mapEsAggWrapper = queryWrapper.esAggWrapper();
             mapEsAggWrapper.terms(terms);
             SearchSourceBuilder sourceBuilder = getSearchSourceBuilder(queryWrapper, mapEsAggWrapper);
@@ -419,5 +467,109 @@ public class EsExecuteController {
         
         return result;
     }
-   
+    /**
+     * 提取 SQL WHERE 子句中的参数，返回 List<Triple<参数名, 条件运算符, 参数值>>
+     * @param sql SQL 语句
+     * @return List<Triple<String, String, String>>，例如：
+     *         [("status", "IN", "1,2"), ("createTime", "<=", "2025-02-05 00:00:00")]
+     */
+    public static List<Triple<String, String, String>> extractWhereParams(String sql) {
+        List<Triple<String, String, String>> params = new ArrayList<>();
+        String whereClause = extractWhereClause(sql);
+        
+        if (whereClause == null || whereClause.trim().isEmpty()) {
+            return params;
+        }
+        
+        // 1. 匹配普通比较条件（=, >, <, >=, <=, !=）
+        Pattern comparisonPattern = Pattern.compile(
+                "(\\w+)\\s*(>=|<=|!=|=|>|<)\\s*(?:'([^']*)'|\"([^\"]*)\"|([^\\s,)]+))",
+                Pattern.CASE_INSENSITIVE
+        );
+        
+        // 匹配 IN 子句（支持数字、字符串、混合类型，包括换行符）
+        Pattern inPattern = Pattern.compile(
+                "(?i)(\\w+)\\s+IN\\s*\\(\\s*([\\s\\S]*?)\\s*\\)",
+                Pattern.CASE_INSENSITIVE
+        );
+        
+        // 处理普通比较条件
+        Matcher comparisonMatcher = comparisonPattern.matcher(whereClause);
+        while (comparisonMatcher.find()) {
+            String paramName = comparisonMatcher.group(1);
+            String operator = comparisonMatcher.group(2);
+            String paramValue = comparisonMatcher.group(3) != null ? comparisonMatcher.group(3) :
+                    comparisonMatcher.group(4) != null ? comparisonMatcher.group(4) :
+                            comparisonMatcher.group(5);
+            params.add(Triple.of(paramName, operator, paramValue));
+        }
+        
+        // 处理 IN 子句
+        Matcher inMatcher = inPattern.matcher(whereClause);
+        while (inMatcher.find()) {
+            String paramName = inMatcher.group(1);
+            String operator = "IN";
+            String inValues = inMatcher.group(2).trim();
+            
+            // 提取 IN 里面的各个值（支持数字、字符串、混合类型）
+            String[] values = extractInValues(inValues);
+            params.add(Triple.of(paramName, operator, String.join(",", values)));
+        }
+        
+        return params;
+    }
+    
+    private static String extractWhereClause(String sql) {
+        String cleanSql = removeSqlComments(sql);
+        
+        // 更宽松的 WHERE 子句匹配
+        Pattern wherePattern = Pattern.compile(
+                "(?i)\\bWHERE\\b\\s+(.+)", // 匹配 WHERE 后的所有内容
+                Pattern.DOTALL // 让 `.` 匹配换行符
+        );
+        
+        Matcher whereMatcher = wherePattern.matcher(cleanSql);
+        if (whereMatcher.find()) {
+            String whereClause = whereMatcher.group(1).trim();
+            return whereClause;
+//            // 检查是否包含 IN 子句（可选）
+//            if (whereClause.toLowerCase().contains(" in ")) {
+//                return whereClause;
+//            }
+        }
+        
+        return null;
+    }
+    private static String removeSqlComments(String sql) {
+        // 移除单行注释 (-- ...)
+        String noSingleLineComments = sql.replaceAll("--.*", "");
+        // 移除多行注释 (/* ... */)
+        String noMultiLineComments = noSingleLineComments.replaceAll("(?s)/\\*.*?\\*/", "");
+        return noMultiLineComments.trim();
+    }
+    /**
+     * 提取 IN 子句中的值列表（支持数字、字符串、混合类型）
+     */
+    private static String[] extractInValues(String inValues) {
+        // 匹配数字或带引号的字符串
+        Pattern valuePattern = Pattern.compile(
+                "('[^']*'|\"[^\"]*\"|\\d+|[^\\s,]+)",
+                Pattern.CASE_INSENSITIVE
+        );
+        Matcher valueMatcher = valuePattern.matcher(inValues);
+        
+        List<String> values = new ArrayList<>();
+        while (valueMatcher.find()) {
+            String value = valueMatcher.group(1).trim();
+            // 去掉引号（如果存在）
+            if (value.startsWith("'") && value.endsWith("'")) {
+                value = value.substring(1, value.length() - 1);
+            } else if (value.startsWith("\"") && value.endsWith("\"")) {
+                value = value.substring(1, value.length() - 1);
+            }
+            values.add(value);
+        }
+        
+        return values.toArray(new String[0]);
+    }
 }
