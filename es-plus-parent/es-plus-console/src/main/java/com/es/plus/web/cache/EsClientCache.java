@@ -8,7 +8,7 @@ import java.util.concurrent.TimeUnit;
 public class EsClientCache {
     
     public static  final Cache<String,String> CACHE_MAP = CacheBuilder.newBuilder()
-            .expireAfterAccess(5, TimeUnit.MINUTES)
+            .expireAfterAccess(1, TimeUnit.MINUTES)
             .initialCapacity(100)
             .maximumSize(100)
             .build();

@@ -121,7 +121,7 @@ public class EsExecuteController {
         sql=sql.replace("GROUP","group");
         sql=sql.replace("LIMIT","limit");
         // 匹配 SQL 语句中的表名
-        Pattern pattern = Pattern.compile("(?i)FROM\\s+([\\w.]+)");
+        Pattern pattern = Pattern.compile("(?i)FROM\\s+([\\w.\\-]+)");
         Matcher matcher = pattern.matcher(sql);
         String tableName = null;
         // 提取表名
@@ -137,9 +137,8 @@ public class EsExecuteController {
             String trim = StringUtils.substringBetween(sql, "select", "from").trim();
             EsChainQueryWrapper<Map> queryWrapper = Es.chainQuery(currentEsClient).index(tableName);
             setWhereSql(sql, queryWrapper);
-            EsAggWrapper<Map> termsed = queryWrapper.esAggWrapper().terms(terms,a->{
+            EsAggWrapper<Map> termsed = queryWrapper.esAggWrapper().terms(terms).subAgg(a->{
                 aggStr(a, trim);
-                return;
             });
             EsAggResponse<Map> aggregations = queryWrapper.aggregations();
            return Strings.toString(aggregations.getAggregations());
@@ -237,9 +236,8 @@ public class EsExecuteController {
             
             EsChainQueryWrapper<Map> queryWrapper = Es.chainQuery(currentEsClient).index(tableName).profile();
             setWhereSql(sql, queryWrapper);
-            EsAggWrapper<Map> termsed = queryWrapper.esAggWrapper().terms(terms,a->{
+            EsAggWrapper<Map> termsed = queryWrapper.esAggWrapper().terms(terms).subAgg(a->{
                 aggStr(a, trim);
-                return;
             });
             EsAggResponse<Map> aggregations = queryWrapper.aggregations();
             return Strings.toString(aggregations.getAggregations());
@@ -304,9 +302,8 @@ public class EsExecuteController {
             
             EsChainQueryWrapper<Map> queryWrapper = Es.chainQuery(currentEsClient).index(tableName);
             setWhereSql(sql, queryWrapper);
-            EsAggWrapper<Map> termsed = queryWrapper.esAggWrapper().terms(terms,a->{
+            EsAggWrapper<Map> termsed = queryWrapper.esAggWrapper().terms(terms).subAgg(a->{
                 aggStr(a, trim);
-                return;
             });
             SearchSourceBuilder sourceBuilder = getSearchSourceBuilder(queryWrapper, termsed);
             return sourceBuilder.toString();

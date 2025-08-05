@@ -4,9 +4,16 @@ import com.es.plus.adapter.properties.EsFieldInfo;
 import com.es.plus.adapter.properties.GlobalParamHolder;
 import com.es.plus.adapter.tools.LambdaUtils;
 import com.es.plus.adapter.tools.SFunction;
+import com.es.plus.constant.EsConstant;
 import lombok.Data;
 import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.search.aggregations.Aggregation;
+import org.elasticsearch.search.aggregations.bucket.significant.SignificantTermsAggregationBuilder;
+import org.elasticsearch.search.aggregations.metrics.AvgAggregationBuilder;
+import org.elasticsearch.search.aggregations.metrics.MaxAggregationBuilder;
+import org.elasticsearch.search.aggregations.metrics.MinAggregationBuilder;
+import org.elasticsearch.search.aggregations.metrics.SumAggregationBuilder;
+import org.elasticsearch.search.aggregations.metrics.ValueCountAggregationBuilder;
 import org.springframework.util.CollectionUtils;
 
 import java.util.Collection;
@@ -280,63 +287,63 @@ public class EsAggResult<T> {
     /**
      * 获取多桶数据多级嵌套
      */
-    public Map<String, EsAggResult<T>> getMultiBucketNestedMap(SFunction<T,?> aggName) {
-        if (CollectionUtils.isEmpty(multiBucketsMap)) {
-            return new HashMap<>();
-        }
-        Map<String, EsAggResult<T>> esAggResultMap = multiBucketsMap.get(getAggregationField(aggName));
-        if (esAggResultMap==null){
-            return new HashMap<>();
-        }
-        return esAggResultMap;
-    }
+//    public Map<String, EsAggResult<T>> getMultiBucketNestedMap(SFunction<T,?> aggName) {
+//        if (CollectionUtils.isEmpty(multiBucketsMap)) {
+//            return new HashMap<>();
+//        }
+//        Map<String, EsAggResult<T>> esAggResultMap = multiBucketsMap.get(getAggregationField(aggName));
+//        if (esAggResultMap==null){
+//            return new HashMap<>();
+//        }
+//        return esAggResultMap;
+//    }
     
     
-    /**
-     * 获取多桶本级数据
-     */
-    public Map<String, Long> getMultiBucketMap(SFunction<T,?> aggName) {
-        if (CollectionUtils.isEmpty(multiBucketsMap)) {
-            return new HashMap<>();
-        }
-        Map<String, EsAggResult<T>> map = multiBucketsMap.get(getAggregationField(aggName));
-        Map<String, Long> result = new HashMap<>();
-        if (!CollectionUtils.isEmpty(map)) {
-            map.forEach((k, v) -> {
-                result.put(k, v.getDocCount());
-            });
-        }
-        return result;
-    }
+//    /**
+//     * 获取多桶本级数据
+//     */
+//    public Map<String, Long> getMultiBucketMap(SFunction<T,?> aggName) {
+//        if (CollectionUtils.isEmpty(multiBucketsMap)) {
+//            return new HashMap<>();
+//        }
+//        Map<String, EsAggResult<T>> map = multiBucketsMap.get(getAggregationField(aggName));
+//        Map<String, Long> result = new HashMap<>();
+//        if (!CollectionUtils.isEmpty(map)) {
+//            map.forEach((k, v) -> {
+//                result.put(k, v.getDocCount());
+//            });
+//        }
+//        return result;
+//    }
+//
+//
+//    /**
+//     * 获取单桶数据嵌套
+//     */
+//    public  EsAggResult<T> getSingleBucketNested(SFunction<T,?> aggName) {
+//        if (CollectionUtils.isEmpty(singleBucketsMap)) {
+//            return new EsAggResult<>();
+//        }
+//        Tuple<Long, EsAggResult<T>> aggResultTuple = singleBucketsMap.get(getAggregationField(aggName));
+//        if (aggResultTuple==null){
+//            return new EsAggResult<>();
+//        }
+//        return aggResultTuple.v2();
+//    }
     
-    
-    /**
-     * 获取单桶数据嵌套
-     */
-    public  EsAggResult<T> getSingleBucketNested(SFunction<T,?> aggName) {
-        if (CollectionUtils.isEmpty(singleBucketsMap)) {
-            return new EsAggResult<>();
-        }
-        Tuple<Long, EsAggResult<T>> aggResultTuple = singleBucketsMap.get(getAggregationField(aggName));
-        if (aggResultTuple==null){
-            return new EsAggResult<>();
-        }
-        return aggResultTuple.v2();
-    }
-    
-    /**
-     * 获取单桶count数据
-     */
-    public Long getSingleBucketDocCount(SFunction<T,?> aggName) {
-        if (CollectionUtils.isEmpty(singleBucketsMap)) {
-            return null;
-        }
-        Tuple<Long, EsAggResult<T>> aggResultTuple = singleBucketsMap.get(getAggregationField(aggName));
-        if (aggResultTuple==null){
-            return null;
-        }
-        return  aggResultTuple.v1();
-    }
+//    /**
+//     * 获取单桶count数据
+//     */
+//    public Long getSingleBucketDocCount(SFunction<T,?> aggName) {
+//        if (CollectionUtils.isEmpty(singleBucketsMap)) {
+//            return null;
+//        }
+//        Tuple<Long, EsAggResult<T>> aggResultTuple = singleBucketsMap.get(getAggregationField(aggName));
+//        if (aggResultTuple==null){
+//            return null;
+//        }
+//        return  aggResultTuple.v1();
+//    }
     
     /**
      * 获取count值
@@ -345,7 +352,7 @@ public class EsAggResult<T> {
         if (CollectionUtils.isEmpty(countMap)){
             return null;
         }
-        Long result = countMap.get(getAggregationField(aggName));
+        Long result = countMap.get(getAggregationField(aggName)+ EsConstant.AGG_DELIMITER + ValueCountAggregationBuilder.NAME);
         return result;
     }
     
@@ -356,7 +363,7 @@ public class EsAggResult<T> {
         if (CollectionUtils.isEmpty(sumMap)){
             return null;
         }
-        Double result = sumMap.get(getAggregationField(aggName));
+        Double result = sumMap.get(getAggregationField(aggName)+ EsConstant.AGG_DELIMITER + SumAggregationBuilder.NAME);
         return result;
     }
     
@@ -367,7 +374,7 @@ public class EsAggResult<T> {
         if (CollectionUtils.isEmpty(maxMap)){
             return null;
         }
-        Double result = maxMap.get(getAggregationField(aggName));
+        Double result = maxMap.get(getAggregationField(aggName)+ EsConstant.AGG_DELIMITER + MaxAggregationBuilder.NAME);
         return result;
     }
     
@@ -378,7 +385,7 @@ public class EsAggResult<T> {
         if (CollectionUtils.isEmpty(minMap)){
             return null;
         }
-        Double result = minMap.get(getAggregationField(aggName));
+        Double result = minMap.get(getAggregationField(aggName)+ EsConstant.AGG_DELIMITER + MinAggregationBuilder.NAME);
         return result;
     }
     
@@ -390,7 +397,7 @@ public class EsAggResult<T> {
             return null;
         }
         
-        Double result = avgMap.get(getAggregationField(aggName));
+        Double result = avgMap.get(getAggregationField(aggName)+ EsConstant.AGG_DELIMITER + AvgAggregationBuilder.NAME);
         return result;
     }
     
