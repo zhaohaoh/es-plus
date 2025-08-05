@@ -115,6 +115,11 @@ public class EsExecuteController {
      */
     @GetMapping("esQuery/sql")
     public String esQuerySql(String sql, @RequestHeader("currentEsClient") String currentEsClient) {
+        sql=sql.replace("SELECT","select");
+        sql=sql.replace("BY","by");
+        sql=sql.replace("FROM","from");
+        sql=sql.replace("GROUP","group");
+        sql=sql.replace("LIMIT","limit");
         // 匹配 SQL 语句中的表名
         Pattern pattern = Pattern.compile("(?i)FROM\\s+([\\w.]+)");
         Matcher matcher = pattern.matcher(sql);
@@ -210,6 +215,11 @@ public class EsExecuteController {
      */
     @GetMapping("esQuery/explain")
     public String explain(String sql, @RequestHeader("currentEsClient") String currentEsClient) {
+        sql=sql.replace("SELECT","select");
+        sql=sql.replace("BY","by");
+        sql=sql.replace("FROM","from");
+        sql=sql.replace("GROUP","group");
+        sql=sql.replace("LIMIT","limit");
         // 匹配 SQL 语句中的表名
         Pattern pattern = Pattern.compile("(?i)FROM\\s+([\\w.]+)");
         Matcher matcher = pattern.matcher(sql);
@@ -272,6 +282,11 @@ public class EsExecuteController {
      */
     @GetMapping("esQuery/sql2Dsl")
     public String sql2Dsl(String sql, @RequestHeader("currentEsClient") String currentEsClient) {
+        sql=sql.replace("SELECT","select");
+        sql=sql.replace("BY","by");
+        sql=sql.replace("FROM","from");
+        sql=sql.replace("GROUP","group");
+        sql=sql.replace("LIMIT","limit");
         // 匹配 SQL 语句中的表名
         Pattern pattern = Pattern.compile("(?i)FROM\\s+([\\w.]+)");
         Matcher matcher = pattern.matcher(sql);
