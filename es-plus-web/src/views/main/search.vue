@@ -269,9 +269,28 @@ const copySelectedText = () => {
     navigator.clipboard
       .writeText(index.value)
       .then(() => ElMessage.success("复制成功"))
-      .catch(() => ElMessage.error("复制失败"));
+      .catch(() => fallbackCopy(index.value));
   }
 };
+
+// 备用方法（兼容旧浏览器和内网 HTTP）
+function fallbackCopy(text) {
+  const textarea = document.createElement("textarea");
+  textarea.value = text;
+  document.body.appendChild(textarea);
+  textarea.select();
+
+  try {
+    const success = document.execCommand("copy");
+    // console.log(success ? "降级复制成功" : "降级复制失败");
+  } catch (err) {
+    console.error("降级复制出错:", err);
+    // 最终提示用户手动复制
+    alert("自动复制失败，请按 Ctrl+C 手动复制：\n" + text);
+  }
+
+  document.body.removeChild(textarea);
+}
 
 const indexInfo = ref("");
 const dialogIndexInfo = ref(false);

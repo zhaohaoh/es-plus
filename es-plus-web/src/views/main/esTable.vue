@@ -307,8 +307,27 @@ const copyText = async (row, column, cell, event) => {
 
   const textToCopy = event.target.innerText;
 
-  navigator.clipboard.writeText(textToCopy);
+  fallbackCopy(textToCopy)
 };
+
+// 备用方法（兼容旧浏览器和内网 HTTP）
+function fallbackCopy(text) {
+  const textarea = document.createElement("textarea");
+  textarea.value = text;
+  document.body.appendChild(textarea);
+  textarea.select();
+
+  try {
+    const success = document.execCommand("copy");
+    // console.log(success ? "降级复制成功" : "降级复制失败");
+  } catch (err) {
+    console.error("降级复制出错:", err);
+    // 最终提示用户手动复制
+    alert("自动复制失败，请按 Ctrl+C 手动复制：\n" + text);
+  }
+
+  document.body.removeChild(textarea);
+}
 
 const saveClick = async (index) => {
   addDataVisible.value = true;
