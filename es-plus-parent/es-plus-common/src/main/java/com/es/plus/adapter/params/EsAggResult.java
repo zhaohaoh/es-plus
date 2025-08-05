@@ -1,6 +1,11 @@
 package com.es.plus.adapter.params;
 
+import com.es.plus.adapter.properties.EsFieldInfo;
+import com.es.plus.adapter.properties.GlobalParamHolder;
+import com.es.plus.adapter.tools.LambdaUtils;
+import com.es.plus.adapter.tools.SFunction;
 import lombok.Data;
+import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.search.aggregations.Aggregation;
 import org.springframework.util.CollectionUtils;
 
@@ -17,7 +22,7 @@ import java.util.Map;
  */
 @Data
 public class EsAggResult<T> {
-    
+    private Class<T> tClass;
     /**
      * count聚合后数据
      */
@@ -217,7 +222,7 @@ public class EsAggResult<T> {
     
     
     /**
-     * 获取第一个count值
+     * 获取count值
      */
     public Long getCount(String aggName) {
         if (CollectionUtils.isEmpty(countMap)){
@@ -228,7 +233,7 @@ public class EsAggResult<T> {
     }
     
     /**
-     * 获取第一个sum值
+     * 获取sum值
      */
     public Double getSum(String aggName) {
         if (CollectionUtils.isEmpty(sumMap)){
@@ -239,7 +244,7 @@ public class EsAggResult<T> {
     }
     
     /**
-     * 获取第一个Max
+     * 获取Max
      */
     public Double getMax(String aggName) {
         if (CollectionUtils.isEmpty(maxMap)){
@@ -250,7 +255,7 @@ public class EsAggResult<T> {
     }
     
     /**
-     * 获取第一个Min
+     * 获取Min
      */
     public Double getMin(String aggName) {
         if (CollectionUtils.isEmpty(minMap)){
@@ -261,7 +266,7 @@ public class EsAggResult<T> {
     }
     
     /**
-     * 获取第一个avg
+     * 获取avg
      */
     public Double getAvg(String aggName) {
         if (CollectionUtils.isEmpty(avgMap)){
@@ -271,5 +276,133 @@ public class EsAggResult<T> {
         return result;
     }
     
+//    ---------------------------------------------------------- function方法获取aggName
+    /**
+     * 获取多桶数据多级嵌套
+     */
+    public Map<String, EsAggResult<T>> getMultiBucketNestedMap(SFunction<T,?> aggName) {
+        if (CollectionUtils.isEmpty(multiBucketsMap)) {
+            return new HashMap<>();
+        }
+        Map<String, EsAggResult<T>> esAggResultMap = multiBucketsMap.get(getAggregationField(aggName));
+        if (esAggResultMap==null){
+            return new HashMap<>();
+        }
+        return esAggResultMap;
+    }
     
+    
+    /**
+     * 获取多桶本级数据
+     */
+    public Map<String, Long> getMultiBucketMap(SFunction<T,?> aggName) {
+        if (CollectionUtils.isEmpty(multiBucketsMap)) {
+            return new HashMap<>();
+        }
+        Map<String, EsAggResult<T>> map = multiBucketsMap.get(getAggregationField(aggName));
+        Map<String, Long> result = new HashMap<>();
+        if (!CollectionUtils.isEmpty(map)) {
+            map.forEach((k, v) -> {
+                result.put(k, v.getDocCount());
+            });
+        }
+        return result;
+    }
+    
+    
+    /**
+     * 获取单桶数据嵌套
+     */
+    public  EsAggResult<T> getSingleBucketNested(SFunction<T,?> aggName) {
+        if (CollectionUtils.isEmpty(singleBucketsMap)) {
+            return new EsAggResult<>();
+        }
+        Tuple<Long, EsAggResult<T>> aggResultTuple = singleBucketsMap.get(getAggregationField(aggName));
+        if (aggResultTuple==null){
+            return new EsAggResult<>();
+        }
+        return aggResultTuple.v2();
+    }
+    
+    /**
+     * 获取单桶count数据
+     */
+    public Long getSingleBucketDocCount(SFunction<T,?> aggName) {
+        if (CollectionUtils.isEmpty(singleBucketsMap)) {
+            return null;
+        }
+        Tuple<Long, EsAggResult<T>> aggResultTuple = singleBucketsMap.get(getAggregationField(aggName));
+        if (aggResultTuple==null){
+            return null;
+        }
+        return  aggResultTuple.v1();
+    }
+    
+    /**
+     * 获取count值
+     */
+    public Long getCount(SFunction<T,?> aggName) {
+        if (CollectionUtils.isEmpty(countMap)){
+            return null;
+        }
+        Long result = countMap.get(getAggregationField(aggName));
+        return result;
+    }
+    
+    /**
+     * 获取sum值
+     */
+    public Double getSum(SFunction<T,?> aggName) {
+        if (CollectionUtils.isEmpty(sumMap)){
+            return null;
+        }
+        Double result = sumMap.get(getAggregationField(aggName));
+        return result;
+    }
+    
+    /**
+     * 获取Max
+     */
+    public Double getMax(SFunction<T,?> aggName) {
+        if (CollectionUtils.isEmpty(maxMap)){
+            return null;
+        }
+        Double result = maxMap.get(getAggregationField(aggName));
+        return result;
+    }
+    
+    /**
+     * 获取Min
+     */
+    public Double getMin(SFunction<T,?> aggName) {
+        if (CollectionUtils.isEmpty(minMap)){
+            return null;
+        }
+        Double result = minMap.get(getAggregationField(aggName));
+        return result;
+    }
+    
+    /**
+     * 获取avg
+     */
+    public Double getAvg(SFunction<T,?> aggName) {
+        if (CollectionUtils.isEmpty(avgMap)){
+            return null;
+        }
+        
+        Double result = avgMap.get(getAggregationField(aggName));
+        return result;
+    }
+    
+    private String getAggregationField(SFunction<T, ?> sFunction) {
+        String name = nameToString(sFunction);
+        String keyword = GlobalParamHolder.getStringKeyword(tClass, name);
+        return StringUtils.isBlank(keyword) ? name : keyword;
+    }
+    
+    private String nameToString(SFunction<T, ?> function) {
+        String fieldName = LambdaUtils.getFieldName(function);
+        EsFieldInfo indexField = GlobalParamHolder.getIndexField(tClass, fieldName);
+        return indexField != null && StringUtils.isNotBlank(indexField.getName()) ? indexField.getName() : fieldName;
+    }
 }

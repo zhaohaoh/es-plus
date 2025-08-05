@@ -93,6 +93,7 @@ public class EsPlusAggregations<T> implements EsAggResponse<T> {
         }
         
         EsAggResult<T> esAgg = new EsAggResult<>();
+        esAgg.setTClass(tClass);
         
         //多桶多层聚合
         Map<String,Map<String, EsAggResult<T>>> multiBucketMap= null;

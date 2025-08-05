@@ -99,7 +99,7 @@ public interface IEsAggFuncWrapper<Children, R,T> {
      * @param consumer 消费者
      * @return {@link Children}
      */
-    Children subAggregation(Consumer<Children> consumer);
+    Children subAgg(Consumer<Children> consumer);
     
     /**
      * 统计
@@ -107,218 +107,218 @@ public interface IEsAggFuncWrapper<Children, R,T> {
      * @param name 名字
      * @return {@link Children}
      */
-    Children countFn(R name, Function<ValueCountAggregationBuilder, ValueCountAggregationBuilder> fn);
+    Children count(R name, Function<ValueCountAggregationBuilder, ValueCountAggregationBuilder> fn);
     
     /**
      * Create a new {@link Avg} aggregation with the given name.
      */
-    Children avgFn(R name, Function<AvgAggregationBuilder, AvgAggregationBuilder> fn);
+    Children avg(R name, Function<AvgAggregationBuilder, AvgAggregationBuilder> fn);
     
     /**
      * Create a new {@link Avg} aggregation with the given name.
      */
-    Children weightedAvgFn(R name, Function<WeightedAvgAggregationBuilder, WeightedAvgAggregationBuilder> fn);
+    Children weightedAvg(R name, Function<WeightedAvgAggregationBuilder, WeightedAvgAggregationBuilder> fn);
     
     /**
      * Create a new {@link Max} aggregation with the given name.
      */
-    Children maxFn(R name, Function<MaxAggregationBuilder, MaxAggregationBuilder> fn);
+    Children max(R name, Function<MaxAggregationBuilder, MaxAggregationBuilder> fn);
     
     /**
      * Create a new {@link Min} aggregation with the given name.
      */
-    Children minFn(R name, Function<MinAggregationBuilder, MinAggregationBuilder> fn);
+    Children min(R name, Function<MinAggregationBuilder, MinAggregationBuilder> fn);
     
     /**
      * Create a new {@link Sum} aggregation with the given name.
      */
-    Children sumFn(R name, Function<SumAggregationBuilder, SumAggregationBuilder> fn);
+    Children sum(R name, Function<SumAggregationBuilder, SumAggregationBuilder> fn);
     
     /**
      * Create a new {@link Stats} aggregation with the given name.
      */
-    Children statsFn(R name, Function<StatsAggregationBuilder, StatsAggregationBuilder> fn);
+    Children stats(R name, Function<StatsAggregationBuilder, StatsAggregationBuilder> fn);
     
     /**
      * Create a new {@link ExtendedStats} aggregation with the given name.
      */
-    Children extendedStatsFn(R name, Function<ExtendedStatsAggregationBuilder, ExtendedStatsAggregationBuilder> fn);
+    Children extendedStats(R name, Function<ExtendedStatsAggregationBuilder, ExtendedStatsAggregationBuilder> fn);
     
     /**
      * Create a new {@link Filter} aggregation with the given name.
      */
-    Children filterFn(R name, Supplier<EsWrapper<T>> filter, Function<FilterAggregationBuilder, FilterAggregationBuilder> fn);
+    Children filter(R name, Supplier<EsWrapper<T>> filter, Function<FilterAggregationBuilder, FilterAggregationBuilder> fn);
     
     
     /**
      * Create a new {@link AdjacencyMatrix} aggregation with the given name.
      */
-    Children adjacencyMatrixFn(R name, Map<String, Supplier<EsWrapper<T>>> filters, Function<AdjacencyMatrixAggregationBuilder, AdjacencyMatrixAggregationBuilder> fn);
+    Children adjacencyMatrix(R name, Map<String, Supplier<EsWrapper<T>>> filters, Function<AdjacencyMatrixAggregationBuilder, AdjacencyMatrixAggregationBuilder> fn);
     
     /**
      * Create a new {@link AdjacencyMatrix} aggregation with the given name and separator
      */
-    Children adjacencyMatrixFn(R name, String separator, Map<String, Supplier<EsWrapper<T>>> filters, Function<AdjacencyMatrixAggregationBuilder, AdjacencyMatrixAggregationBuilder> fn);
+    Children adjacencyMatrix(R name, String separator, Map<String, Supplier<EsWrapper<T>>> filters, Function<AdjacencyMatrixAggregationBuilder, AdjacencyMatrixAggregationBuilder> fn);
     
     /**
      * Create a new {@link Sampler} aggregation with the given name.
      */
-    Children samplerFn(R name, Function<SamplerAggregationBuilder, SamplerAggregationBuilder> fn);
+    Children sampler(R name, Function<SamplerAggregationBuilder, SamplerAggregationBuilder> fn);
     
     /**
      * Create a new {@link Sampler} aggregation with the given name.
      */
-    Children diversifiedSamplerFn(R name, Function<DiversifiedAggregationBuilder, DiversifiedAggregationBuilder> fn);
+    Children diversifiedSampler(R name, Function<DiversifiedAggregationBuilder, DiversifiedAggregationBuilder> fn);
     
     /**
      * Create a new {@link Global} aggregation with the given name.
      */
-    Children globalFn(R name, Function<GlobalAggregationBuilder, GlobalAggregationBuilder> fn);
+    Children global(R name, Function<GlobalAggregationBuilder, GlobalAggregationBuilder> fn);
     
     /**
      * Create a new {@link Missing} aggregation with the given name.
      */
-    Children missingFn(R name, Function<MissingAggregationBuilder, MissingAggregationBuilder> fn);
+    Children missing(R name, Function<MissingAggregationBuilder, MissingAggregationBuilder> fn);
     
     /**
      * Create a new {@link Nested} aggregation with the given name.
      */
-    Children nestedFn(R name, String path, Function<NestedAggregationBuilder, NestedAggregationBuilder> fn);
+    Children nested(R name, String path, Function<NestedAggregationBuilder, NestedAggregationBuilder> fn);
     
     /**
      * Create a new {@link ReverseNested} aggregation with the given name.
      */
-    Children reverseNestedFn(R name, Function<ReverseNestedAggregationBuilder, ReverseNestedAggregationBuilder> fn);
+    Children reverseNested(R name, Function<ReverseNestedAggregationBuilder, ReverseNestedAggregationBuilder> fn);
     
     /**
      * Create a new {@link GeoDistance} aggregation with the given name.
      */
-    Children geoDistanceFn(R name, GeoPoint origin, Function<GeoDistanceAggregationBuilder, GeoDistanceAggregationBuilder> fn);
+    Children geoDistance(R name, GeoPoint origin, Function<GeoDistanceAggregationBuilder, GeoDistanceAggregationBuilder> fn);
     
     /**
      * Create a new {@link Histogram} aggregation with the given name.
      */
-    Children histogramFn(R name, Function<HistogramAggregationBuilder, HistogramAggregationBuilder> fn);
+    Children histogram(R name, Function<HistogramAggregationBuilder, HistogramAggregationBuilder> fn);
     
     /**
      * Create a new {@link SignificantTerms} aggregation with the given name.
      */
-    Children significantTermsFn(R name, Function<SignificantTermsAggregationBuilder, SignificantTermsAggregationBuilder> fn);
+    Children significantTerms(R name, Function<SignificantTermsAggregationBuilder, SignificantTermsAggregationBuilder> fn);
     
     
     /**
      * Create a new {@link SignificantTextAggregationBuilder} aggregation with the given name and text field name
      */
-    Children significantTextFn(R name, String fieldName, Function<SignificantTextAggregationBuilder, SignificantTextAggregationBuilder> fn);
+    Children significantText(R name, String fieldName, Function<SignificantTextAggregationBuilder, SignificantTextAggregationBuilder> fn);
     
     
     /**
      * Create a new {@link DateHistogramAggregationBuilder} aggregation with the given
      * name.
      */
-    Children dateHistogramFn(R name, DateHistogramInterval dateHistogramInterval,Function<DateHistogramAggregationBuilder, DateHistogramAggregationBuilder> fn);
+    Children dateHistogram(R name, DateHistogramInterval dateHistogramInterval,Function<DateHistogramAggregationBuilder, DateHistogramAggregationBuilder> fn);
     
     /**
      * Create a new {@link Range} aggregation with the given name.
      */
-    Children rangeFn(R name, String key,double from, double to,Function<RangeAggregationBuilder, RangeAggregationBuilder> fn);
+    Children range(R name, String key,double from, double to,Function<RangeAggregationBuilder, RangeAggregationBuilder> fn);
     
     /**
      * Create a new {@link DateRangeAggregationBuilder} aggregation with the
      * given name.
      */
-    Children dateRangeFn(R name, String key,String from, String to,Function<DateRangeAggregationBuilder, DateRangeAggregationBuilder> fn);
+    Children dateRange(R name, String key,String from, String to,Function<DateRangeAggregationBuilder, DateRangeAggregationBuilder> fn);
     
     /**
      * Create a new {@link IpRangeAggregationBuilder} aggregation with the
      * given name.
      */
-    Children ipRangeFn(R name, Function<IpRangeAggregationBuilder, IpRangeAggregationBuilder> fn);
+    Children ipRange(R name, Function<IpRangeAggregationBuilder, IpRangeAggregationBuilder> fn);
     
     /**
      * Create a new {@link Terms} aggregation with the given name.
      */
-    Children termsFn(R name, Function<TermsAggregationBuilder, TermsAggregationBuilder> fn);
+    Children terms(R name, Function<TermsAggregationBuilder, TermsAggregationBuilder> fn);
     
     /**
      * Create a new {@link Percentiles} aggregation with the given name.
      */
-    Children percentilesFn(R name, Function<PercentilesAggregationBuilder, PercentilesAggregationBuilder> fn);
+    Children percentiles(R name, Function<PercentilesAggregationBuilder, PercentilesAggregationBuilder> fn);
     
     /**
      * Create a new {@link PercentileRanks} aggregation with the given name.
      */
-    Children percentileRanksFn(R name, double[] values, Function<PercentileRanksAggregationBuilder, PercentileRanksAggregationBuilder> fn);
+    Children percentileRanks(R name, double[] values, Function<PercentileRanksAggregationBuilder, PercentileRanksAggregationBuilder> fn);
     
     /**
      * Create a new {@link MedianAbsoluteDeviation} aggregation with the given name
      */
-    Children medianAbsoluteDeviationFn(R name, Function<MedianAbsoluteDeviationAggregationBuilder, MedianAbsoluteDeviationAggregationBuilder> fn);
+    Children medianAbsoluteDeviation(R name, Function<MedianAbsoluteDeviationAggregationBuilder, MedianAbsoluteDeviationAggregationBuilder> fn);
     
     /**
      * Create a new {@link Cardinality} aggregation with the given name.
      */
-    Children cardinalityFn(R name, Function<CardinalityAggregationBuilder, CardinalityAggregationBuilder> fn);
+    Children cardinality(R name, Function<CardinalityAggregationBuilder, CardinalityAggregationBuilder> fn);
     
     /**
      * Create a new {@link TopHits} aggregation with the given name.
      */
-    Children topHitsFn(R name, Function<TopHitsAggregationBuilder, TopHitsAggregationBuilder> fn);
+    Children topHits(R name, Function<TopHitsAggregationBuilder, TopHitsAggregationBuilder> fn);
     
     /**
      * Create a new {@link GeoBounds} aggregation with the given name.
      */
-    Children geoBoundsFn(R name, Function<GeoBoundsAggregationBuilder, GeoBoundsAggregationBuilder> fn);
+    Children geoBounds(R name, Function<GeoBoundsAggregationBuilder, GeoBoundsAggregationBuilder> fn);
     
     /**
      * Create a new {@link GeoCentroid} aggregation with the given name.
      */
-    Children geoCentroidFn(R name, Function<GeoCentroidAggregationBuilder, GeoCentroidAggregationBuilder> fn);
+    Children geoCentroid(R name, Function<GeoCentroidAggregationBuilder, GeoCentroidAggregationBuilder> fn);
     
     /**
      * Create a new {@link ScriptedMetric} aggregation with the given name.
      */
-    Children scriptedMetricFn(R name, Function<ScriptedMetricAggregationBuilder, ScriptedMetricAggregationBuilder> fn);
+    Children scriptedMetric(R name, Function<ScriptedMetricAggregationBuilder, ScriptedMetricAggregationBuilder> fn);
     
     /**
      * Create a new {@link CompositeAggregationBuilder} aggregation with the given name.
      */
-    Children compositeFn(R name, List<CompositeValuesSourceBuilder<?>> sources, Function<CompositeAggregationBuilder, CompositeAggregationBuilder> fn);
+    Children composite(R name, List<CompositeValuesSourceBuilder<?>> sources, Function<CompositeAggregationBuilder, CompositeAggregationBuilder> fn);
     
     
     /**
      * piple的方法
      */
-    Children derivativeFn(R name, Function<DerivativePipelineAggregationBuilder, DerivativePipelineAggregationBuilder> fn, String bucketsPath);
+    Children derivative(R name, Function<DerivativePipelineAggregationBuilder, DerivativePipelineAggregationBuilder> fn, String bucketsPath);
     
-    Children maxBucketFn(R name, Function<MaxBucketPipelineAggregationBuilder, MaxBucketPipelineAggregationBuilder> fn, String bucketsPath);
+    Children maxBucket(R name, Function<MaxBucketPipelineAggregationBuilder, MaxBucketPipelineAggregationBuilder> fn, String bucketsPath);
     
-    Children minBucketFn(R name, Function<MinBucketPipelineAggregationBuilder, MinBucketPipelineAggregationBuilder> fn, String bucketsPath);
+    Children minBucket(R name, Function<MinBucketPipelineAggregationBuilder, MinBucketPipelineAggregationBuilder> fn, String bucketsPath);
     
-    Children avgBucketFn(R name, Function<AvgBucketPipelineAggregationBuilder, AvgBucketPipelineAggregationBuilder> fn, String bucketsPath);
+    Children avgBucket(R name, Function<AvgBucketPipelineAggregationBuilder, AvgBucketPipelineAggregationBuilder> fn, String bucketsPath);
     
-    Children sumBucketFn(R name, Function<SumBucketPipelineAggregationBuilder, SumBucketPipelineAggregationBuilder> fn, String bucketsPath);
+    Children sumBucket(R name, Function<SumBucketPipelineAggregationBuilder, SumBucketPipelineAggregationBuilder> fn, String bucketsPath);
     
-    Children statsBucketFn(R name, Function<StatsBucketPipelineAggregationBuilder, StatsBucketPipelineAggregationBuilder> fn, String bucketsPath);
+    Children statsBucket(R name, Function<StatsBucketPipelineAggregationBuilder, StatsBucketPipelineAggregationBuilder> fn, String bucketsPath);
     
-    Children extendedStatsBucketFn(R name, Function<ExtendedStatsBucketPipelineAggregationBuilder, ExtendedStatsBucketPipelineAggregationBuilder> fn, String bucketsPath);
+    Children extendedStatsBucket(R name, Function<ExtendedStatsBucketPipelineAggregationBuilder, ExtendedStatsBucketPipelineAggregationBuilder> fn, String bucketsPath);
     
-    Children percentilesBucketFn(R name, Function<PercentilesBucketPipelineAggregationBuilder, PercentilesBucketPipelineAggregationBuilder> fn, String bucketsPath);
+    Children percentilesBucket(R name, Function<PercentilesBucketPipelineAggregationBuilder, PercentilesBucketPipelineAggregationBuilder> fn, String bucketsPath);
     
-    Children bucketScriptFn(R name, Function<BucketScriptPipelineAggregationBuilder, BucketScriptPipelineAggregationBuilder> fn, Map<String, String>bucketsPathsMap, Script script);
+    Children bucketScript(R name, Function<BucketScriptPipelineAggregationBuilder, BucketScriptPipelineAggregationBuilder> fn, Map<String, String>bucketsPathsMap, Script script);
     
-    Children bucketScriptFn(R name, Function<BucketScriptPipelineAggregationBuilder, BucketScriptPipelineAggregationBuilder> fn, Script script, String... bucketsPaths);
+    Children bucketScript(R name, Function<BucketScriptPipelineAggregationBuilder, BucketScriptPipelineAggregationBuilder> fn, Script script, String... bucketsPaths);
     
-    Children bucketSelectorFn(R name, Function<BucketSelectorPipelineAggregationBuilder, BucketSelectorPipelineAggregationBuilder> fn, Map<String, String>bucketsPathsMap, Script script);
+    Children bucketSelector(R name, Function<BucketSelectorPipelineAggregationBuilder, BucketSelectorPipelineAggregationBuilder> fn, Map<String, String>bucketsPathsMap, Script script);
     
-    Children bucketSelectorFn(R name, Function<BucketSelectorPipelineAggregationBuilder, BucketSelectorPipelineAggregationBuilder> fn, Script script, String... bucketsPaths);
+    Children bucketSelector(R name, Function<BucketSelectorPipelineAggregationBuilder, BucketSelectorPipelineAggregationBuilder> fn, Script script, String... bucketsPaths);
     
-    Children bucketSortFn(R name, Function<BucketSortPipelineAggregationBuilder, BucketSortPipelineAggregationBuilder> fn, List<FieldSortBuilder>sorts);
+    Children bucketSort(R name, Function<BucketSortPipelineAggregationBuilder, BucketSortPipelineAggregationBuilder> fn, List<FieldSortBuilder>sorts);
     
-    Children cumulativeSumFn(R name, Function<CumulativeSumPipelineAggregationBuilder, CumulativeSumPipelineAggregationBuilder> fn, String bucketsPath);
+    Children cumulativeSum(R name, Function<CumulativeSumPipelineAggregationBuilder, CumulativeSumPipelineAggregationBuilder> fn, String bucketsPath);
     
-    Children diffFn(R name, Function<SerialDiffPipelineAggregationBuilder, SerialDiffPipelineAggregationBuilder> fn, String bucketsPath);
+    Children diff(R name, Function<SerialDiffPipelineAggregationBuilder, SerialDiffPipelineAggregationBuilder> fn, String bucketsPath);
     
-    Children movingFunctionFn(R name, Function<MovFnPipelineAggregationBuilder, MovFnPipelineAggregationBuilder> fn, Script script, String bucketsPaths, int window);
+    Children movingFunction(R name, Function<MovFnPipelineAggregationBuilder, MovFnPipelineAggregationBuilder> fn, Script script, String bucketsPaths, int window);
     
 }
