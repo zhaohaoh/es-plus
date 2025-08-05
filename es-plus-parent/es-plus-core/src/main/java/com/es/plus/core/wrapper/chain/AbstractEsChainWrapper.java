@@ -105,13 +105,13 @@ public abstract class AbstractEsChainWrapper<T, R, Children extends AbstractEsCh
 
     @Override
     public Children should(boolean condition, Consumer<QUERY> consumer) {
-        getWrapper().should(consumer);
+        getWrapper().should(condition,consumer);
         return this.children;
     }
 
     @Override
     public Children mustNot(boolean condition, Consumer<QUERY> consumer) {
-        getWrapper().mustNot(consumer);
+        getWrapper().mustNot(condition,consumer);
         return this.children;
     }
 
