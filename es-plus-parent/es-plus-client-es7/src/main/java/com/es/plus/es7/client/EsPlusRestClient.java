@@ -17,6 +17,12 @@ import com.es.plus.adapter.params.EsParamWrapper;
 import com.es.plus.adapter.params.EsQueryParamWrapper;
 import com.es.plus.adapter.params.EsResponse;
 import com.es.plus.adapter.params.EsSelect;
+import com.es.plus.es7.convert.EpAggregationConvert;
+import com.es.plus.adapter.pojo.es.EpAggBuilder;
+import com.es.plus.adapter.pojo.es.EpBoolQueryBuilder;
+import com.es.plus.adapter.pojo.es.EpNestedSortBuilder;
+import com.es.plus.es7.convert.EpNestedSortConverter;
+import com.es.plus.es7.convert.EpQueryConverter;
 import com.es.plus.adapter.properties.EsIndexParam;
 import com.es.plus.adapter.properties.GlobalParamHolder;
 import com.es.plus.adapter.util.BeanUtils;
@@ -43,6 +49,7 @@ import org.elasticsearch.action.search.ClearScrollResponse;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchScrollRequest;
+import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.action.support.IndicesOptions;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.action.update.UpdateResponse;
@@ -218,7 +225,6 @@ public class EsPlusRestClient implements EsPlusClient {
     /**
      * 批处理更新 返回失败数据
      *
-     * @param index 索引
      * @return {@link List}<{@link BulkItemResponse}>
      */
     @Override
@@ -430,7 +436,6 @@ public class EsPlusRestClient implements EsPlusClient {
     /**
      * 批处理更新 返回失败数据
      *
-     * @param index 索引
      * @return {@link List}<{@link BulkItemResponse}>
      */
     @Override
@@ -489,6 +494,10 @@ public class EsPlusRestClient implements EsPlusClient {
     @Override
     public <T> BulkByScrollResponse updateByWrapper(String type, EsParamWrapper<T> esParamWrapper,String... index) {
         EsQueryParamWrapper esQueryParamWrapper = esParamWrapper.getEsQueryParamWrapper();
+        //查询条件组合
+        EpBoolQueryBuilder boolQueryBuilder = esQueryParamWrapper.getBoolQueryBuilder();
+        BoolQueryBuilder queryBuilder = EpQueryConverter.toEsBoolQueryBuilder(boolQueryBuilder);
+        
         EsUpdateField esUpdateField = esParamWrapper.getEsUpdateField();
         List<EsUpdateField.Field> fields = esUpdateField.getFields();
         String scipt = esUpdateField.getScipt();
@@ -525,7 +534,7 @@ public class EsPlusRestClient implements EsPlusClient {
             UpdateByQueryRequest request = new UpdateByQueryRequest(index);
             //版本号不匹配更新失败不停止
             request.setConflicts(EsConstant.DEFAULT_CONFLICTS);
-            request.setQuery(esQueryParamWrapper.getQueryBuilder());
+            request.setQuery(queryBuilder);
             request.setBatchSize(GlobalConfigCache.GLOBAL_CONFIG.getBatchSize());
             //请求完成后立即刷新索引，保证读一致性
             request.setRefresh(true);
@@ -545,7 +554,7 @@ public class EsPlusRestClient implements EsPlusClient {
             
             long start = System.currentTimeMillis();
             printInfoLog("updateByWrapper index:{} requst: script:{},params={}  query:{}", index, scipt, params,
-                    esQueryParamWrapper.getQueryBuilder().toString());
+                    esQueryParamWrapper.getBoolQueryBuilder().toString());
             BulkByScrollResponse bulkResponse = restHighLevelClient.updateByQuery(request, RequestOptions.DEFAULT);
             long end = System.currentTimeMillis();
             long timeCost = end-start;
@@ -560,6 +569,10 @@ public class EsPlusRestClient implements EsPlusClient {
     @Override
     public <T> BulkByScrollResponse increment(String type, EsParamWrapper<T> esParamWrapper,String... index) {
         EsQueryParamWrapper esQueryParamWrapper = esParamWrapper.getEsQueryParamWrapper();
+        
+        //查询条件组合
+        EpBoolQueryBuilder boolQueryBuilder = esQueryParamWrapper.getBoolQueryBuilder();
+        BoolQueryBuilder queryBuilder = EpQueryConverter.toEsBoolQueryBuilder(boolQueryBuilder);
         List<EsUpdateField.Field> fields = esParamWrapper.getEsUpdateField().getIncrementFields();
         Map<String, Object> params = new HashMap<>();
         //构建scipt语句
@@ -575,7 +588,7 @@ public class EsPlusRestClient implements EsPlusClient {
             UpdateByQueryRequest request = new UpdateByQueryRequest(index);
             //版本号不匹配更新失败不停止
             request.setConflicts(EsConstant.DEFAULT_CONFLICTS);
-            request.setQuery(esQueryParamWrapper.getQueryBuilder());
+            request.setQuery(queryBuilder);
             // 一次批处理的大小.因为是滚动处理的 这里才是这是的批处理查询数据量
             request.setBatchSize(GlobalConfigCache.GLOBAL_CONFIG.getBatchSize());
             request.setIndicesOptions(IndicesOptions.LENIENT_EXPAND_OPEN);
@@ -624,7 +637,10 @@ public class EsPlusRestClient implements EsPlusClient {
     public <T> BulkByScrollResponse deleteByQuery(String type, EsParamWrapper<T> esParamWrapper, String... index) {
         EsQueryParamWrapper esQueryParamWrapper = esParamWrapper.getEsQueryParamWrapper();
         DeleteByQueryRequest request = new DeleteByQueryRequest(index);
-        request.setQuery(esQueryParamWrapper.getQueryBuilder());
+        //查询条件组合
+        EpBoolQueryBuilder boolQueryBuilder = esQueryParamWrapper.getBoolQueryBuilder();
+        BoolQueryBuilder queryBuilder = EpQueryConverter.toEsBoolQueryBuilder(boolQueryBuilder);
+        request.setQuery(queryBuilder);
         // 更新最大文档数
         //        request.setMaxDocs(GlobalConfigCache.GLOBAL_CONFIG.getMaxDocs());
         request.setMaxRetries(GlobalConfigCache.GLOBAL_CONFIG.getMaxRetries());
@@ -714,7 +730,10 @@ public class EsPlusRestClient implements EsPlusClient {
     public <T> long count(String type, EsParamWrapper<T> esParamWrapper, String... index) {
         EsQueryParamWrapper esQueryParamWrapper = esParamWrapper.getEsQueryParamWrapper();
         CountRequest countRequest = new CountRequest();
-        SearchSourceBuilder query = SearchSourceBuilder.searchSource().query(esQueryParamWrapper.getQueryBuilder());
+        //查询条件组合
+        EpBoolQueryBuilder boolQueryBuilder = esQueryParamWrapper.getBoolQueryBuilder();
+        BoolQueryBuilder queryBuilder = EpQueryConverter.toEsBoolQueryBuilder(boolQueryBuilder);
+        SearchSourceBuilder query = SearchSourceBuilder.searchSource().query(queryBuilder);
         countRequest.source(query);
         countRequest.indices(index);
         CountResponse count = null;
@@ -725,7 +744,7 @@ public class EsPlusRestClient implements EsPlusClient {
             long end = System.currentTimeMillis();
             long timeCost = end-start;
             printSearchInfoLog("count index=:{} timeCost:{}  \nDSL:{}", index,timeCost,
-                    JsonUtils.toJsonStr(esQueryParamWrapper.getQueryBuilder()));
+                    JsonUtils.toJsonStr(esQueryParamWrapper.getBoolQueryBuilder()));
         } catch (IOException e) {
             throw new EsException("es-plus count error ", e);
         }
@@ -747,7 +766,7 @@ public class EsPlusRestClient implements EsPlusClient {
         populateSearchRequest(type, searchRequest, esQueryParamWrapper, sourceBuilder, index);
         
         if (esQueryParamWrapper.getSearchType() != null) {
-            searchRequest.searchType();
+            searchRequest.searchType(SearchType.fromString(esQueryParamWrapper.getSearchType().name()));
         }
         
         //查询
@@ -823,8 +842,10 @@ public class EsPlusRestClient implements EsPlusClient {
     public <T> EsAggResponse<T> aggregations(String type, EsParamWrapper<T> esParamWrapper, String... index) {
         EsQueryParamWrapper esQueryParamWrapper = esParamWrapper.getEsQueryParamWrapper();
         SearchRequest searchRequest = new SearchRequest();
+     
         //查询条件组合
-        BoolQueryBuilder queryBuilder = esQueryParamWrapper.getQueryBuilder();
+        EpBoolQueryBuilder boolQueryBuilder = esQueryParamWrapper.getBoolQueryBuilder();
+        BoolQueryBuilder queryBuilder = EpQueryConverter.toEsBoolQueryBuilder(boolQueryBuilder);
         SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
         sourceBuilder.query(queryBuilder);
         sourceBuilder.size(0);
@@ -879,7 +900,7 @@ public class EsPlusRestClient implements EsPlusClient {
         searchRequest.preference(esQueryParamWrapper.getPreference());
         
         if (esQueryParamWrapper.getSearchType() != null) {
-            searchRequest.searchType();
+            searchRequest.searchType(SearchType.fromString(esQueryParamWrapper.getSearchType().name()));
         }
     }
     
@@ -1111,7 +1132,9 @@ public class EsPlusRestClient implements EsPlusClient {
         Integer page = esQueryParamWrapper.getPage();
         Integer size = esQueryParamWrapper.getSize();
         //查询条件组合
-        BoolQueryBuilder queryBuilder = esQueryParamWrapper.getQueryBuilder();
+        EpBoolQueryBuilder boolQueryBuilder = esQueryParamWrapper.getBoolQueryBuilder();
+        BoolQueryBuilder queryBuilder = EpQueryConverter.toEsBoolQueryBuilder(boolQueryBuilder);
+      
         SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
         sourceBuilder.query(queryBuilder);
         //超过1万条加了才能返回
@@ -1179,9 +1202,17 @@ public class EsPlusRestClient implements EsPlusClient {
         if (!CollectionUtils.isEmpty(esQueryParamWrapper.getEsOrderList())) {
             List<EsOrder> orderFields = esQueryParamWrapper.getEsOrderList();
             orderFields.forEach(order -> {
-                NestedSortBuilder nestedSortBuilder = order.getNestedSortBuilder();
-                sourceBuilder.sort(new FieldSortBuilder(order.getName()).order(
-                        SortOrder.valueOf(order.getSort().toUpperCase(Locale.ROOT))).setNestedSort(nestedSortBuilder));
+                EpNestedSortBuilder epNestedSortBuilder = order.getNestedSortBuilder();
+              
+                FieldSortBuilder fieldSortBuilder = new FieldSortBuilder(order.getName()).order(
+                        SortOrder.valueOf(order.getSort().toUpperCase(Locale.ROOT)));
+                if (epNestedSortBuilder != null) {
+                    NestedSortBuilder nestedSortBuilder = EpNestedSortConverter.convertToNestedSort(
+                            epNestedSortBuilder);
+                    fieldSortBuilder.setNestedSort(nestedSortBuilder);
+                }
+                sourceBuilder.sort(fieldSortBuilder);
+                
             });
         }
         populateGroupField(esParamWrapper, sourceBuilder);
@@ -1191,14 +1222,14 @@ public class EsPlusRestClient implements EsPlusClient {
     //填充分组字段
     private <T> void populateGroupField(EsParamWrapper<T> esParamWrapper, SearchSourceBuilder sourceBuilder) {
         EsQueryParamWrapper esQueryParamWrapper = esParamWrapper.getEsQueryParamWrapper();
-        List<BaseAggregationBuilder> aggregationBuilders = esQueryParamWrapper.getAggregationBuilder();
-        if (aggregationBuilders != null) {
-            for (BaseAggregationBuilder aggregation : aggregationBuilders) {
-                if (aggregation instanceof AggregationBuilder) {
-                    sourceBuilder.aggregation((AggregationBuilder) aggregation);
-                } else {
-                    sourceBuilder.aggregation((PipelineAggregationBuilder) aggregation);
-                }
+        
+        List<EpAggBuilder> aggregationBuilder = esQueryParamWrapper.getAggregationBuilder();
+        for (EpAggBuilder epAggBuilder : aggregationBuilder) {
+            BaseAggregationBuilder aggregation = EpAggregationConvert.toEsAggregationBuilder(epAggBuilder);
+            if (aggregation instanceof AggregationBuilder) {
+                sourceBuilder.aggregation((AggregationBuilder) aggregation);
+            } else {
+                sourceBuilder.aggregation((PipelineAggregationBuilder) aggregation);
             }
         }
     }

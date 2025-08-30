@@ -3,6 +3,7 @@ package com.es.plus.samples.test;
 import com.es.plus.adapter.EsPlusClientFacade;
 import com.es.plus.adapter.params.EsIndexResponse;
 import com.es.plus.adapter.params.EsResponse;
+import com.es.plus.adapter.pojo.es.EpBucketOrder;
 import com.es.plus.core.ClientContext;
 import com.es.plus.core.statics.Es;
 import com.es.plus.core.wrapper.aggregation.EsAggWrapper;
@@ -72,7 +73,7 @@ public class FastTest {
         EsChainLambdaQueryWrapper<FastTestDTO> fastTestDTOEsChainLambdaQueryWrapper = Es.chainLambdaQuery(FastTestDTO.class);
         EsAggWrapper<FastTestDTO> aggWrapper = fastTestDTOEsChainLambdaQueryWrapper.esAggWrapper();
         aggWrapper.terms("username",a->
-                   a.size(10000).order(BucketOrder.aggregation("id_max",true))
+                   a.size(10000).order(EpBucketOrder.aggregation("id_max",true))
                    
                 )
        .subAgg(es->es.max("id"));

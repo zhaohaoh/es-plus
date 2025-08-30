@@ -1,6 +1,7 @@
 package com.es.plus.samples.test;
 
 import com.es.plus.adapter.params.EsResponse;
+import com.es.plus.adapter.pojo.es.EpFuzziness;
 import com.es.plus.adapter.util.JsonUtils;
 import com.es.plus.core.statics.Es;
 import com.es.plus.samples.SamplesApplication;
@@ -135,7 +136,7 @@ public class DemoTest {
     public void fuzzy() throws ParseException {
 
         EsResponse<FastTestDTO> list = fastTestService.esChainQueryWrapper()
-                .fuzzy(FastTestDTO::getUsername,"苦苦的", Fuzziness.ONE).search();
+                .fuzzy(FastTestDTO::getUsername,"苦苦的", EpFuzziness.ONE).search();
         System.out.println(list);
     }
 

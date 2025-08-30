@@ -6,6 +6,10 @@ import com.es.plus.adapter.exception.EsException;
 import com.es.plus.adapter.params.EsAggResponse;
 import com.es.plus.adapter.params.EsIndexResponse;
 import com.es.plus.adapter.params.EsResponse;
+import com.es.plus.adapter.pojo.es.EpAggBuilder;
+import com.es.plus.adapter.pojo.es.EpBoolQueryBuilder;
+import com.es.plus.adapter.pojo.es.EpQueryBuilder;
+import com.es.plus.adapter.tools.EpDSLConverter;
 import com.es.plus.core.ClientContext;
 import com.es.plus.core.statics.Es;
 import com.es.plus.core.wrapper.aggregation.EsAggWrapper;
@@ -305,24 +309,22 @@ public class EsExecuteController {
             EsAggWrapper<Map> termsed = queryWrapper.esAggWrapper().terms(terms).subAgg(a->{
                 aggStr(a, trim);
             });
-            SearchSourceBuilder sourceBuilder = getSearchSourceBuilder(queryWrapper, termsed);
-            return sourceBuilder.toString();
+            
+            return getSearchSourceBuilder(queryWrapper, termsed);
         } else if (containsAgg(sql)) {
             EsChainQueryWrapper<Map> queryWrapper = Es.chainQuery(currentEsClient).index(tableName);
             setWhereSql(sql, queryWrapper);
             EsAggWrapper<Map> mapEsAggWrapper = queryWrapper.esAggWrapper();
             String trim = StringUtils.substringBetween(sql, "select", "from").trim();
             aggStr(mapEsAggWrapper, trim);
-            SearchSourceBuilder sourceBuilder = getSearchSourceBuilder(queryWrapper, mapEsAggWrapper);
-            return sourceBuilder.toString();
+            return getSearchSourceBuilder(queryWrapper, mapEsAggWrapper);
         } else if (sql.contains("group")) {
             String terms = StringUtils.substringAfterLast(sql, "by").trim();
             EsChainQueryWrapper<Map> queryWrapper = Es.chainQuery(currentEsClient).index(tableName);
             setWhereSql(sql, queryWrapper);
             EsAggWrapper<Map> mapEsAggWrapper = queryWrapper.esAggWrapper();
             mapEsAggWrapper.terms(terms);
-            SearchSourceBuilder sourceBuilder = getSearchSourceBuilder(queryWrapper, mapEsAggWrapper);
-            return sourceBuilder.toString();
+            return getSearchSourceBuilder(queryWrapper, mapEsAggWrapper);
         }
         
         String limit = StringUtils.substringAfterLast(sql, "limit");
@@ -339,23 +341,13 @@ public class EsExecuteController {
         return result;
     }
     
-    private static SearchSourceBuilder getSearchSourceBuilder(EsChainQueryWrapper<Map> queryWrapper,
+    private static String getSearchSourceBuilder(EsChainQueryWrapper<Map> queryWrapper,
             EsAggWrapper<Map> mapEsAggWrapper) {
-        BoolQueryBuilder queryBuilder = queryWrapper.getQueryBuilder();
-        SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
-        sourceBuilder.query(queryBuilder);
-        sourceBuilder.size(0);
-        List<BaseAggregationBuilder> aggregationBuilders = mapEsAggWrapper.getAggregationBuilder();
-        if (aggregationBuilders != null) {
-            for (BaseAggregationBuilder aggregation : aggregationBuilders) {
-                if (aggregation instanceof AggregationBuilder) {
-                    sourceBuilder.aggregation((AggregationBuilder) aggregation);
-                } else {
-                    sourceBuilder.aggregation((PipelineAggregationBuilder) aggregation);
-                }
-            }
-        }
-        return sourceBuilder;
+        EpBoolQueryBuilder queryBuilder = queryWrapper.getQueryBuilder();
+    
+        List<EpAggBuilder> epAggBuilders = mapEsAggWrapper.getAggregationBuilder();
+        String s = EpDSLConverter.convertToDSL(queryBuilder, epAggBuilders);
+        return s;
     }
     
     private static void aggStr(EsAggWrapper<Map> a, String trim) {

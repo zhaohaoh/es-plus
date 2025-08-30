@@ -8,6 +8,7 @@
         <groupId>io.github.zhaohaoh</groupId>
         <version>${revision}</version>
     </parent>
+    
     <groupId>io.github.zhaohaoh</groupId>
     <artifactId>es-plus-pom</artifactId>
     <version>${revision}</version>

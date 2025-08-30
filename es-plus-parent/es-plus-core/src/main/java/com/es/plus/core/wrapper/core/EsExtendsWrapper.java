@@ -1,10 +1,9 @@
 package com.es.plus.core.wrapper.core;
 
 
-import com.es.plus.adapter.params.EsResponse;
 import com.es.plus.adapter.params.EsSelect;
-import org.elasticsearch.action.search.SearchType;
-import org.elasticsearch.search.sort.NestedSortBuilder;
+import com.es.plus.adapter.pojo.es.EpNestedSortBuilder;
+import com.es.plus.adapter.pojo.es.EpSearchType;
 
 public interface EsExtendsWrapper<Children, R> {
 
@@ -117,7 +116,7 @@ public interface EsExtendsWrapper<Children, R> {
      */
     Children sortByAsc(String... columns);
   
-    Children sortBy(String order, NestedSortBuilder nestedSortBuilder,String... name);
+    Children sortBy(String order, EpNestedSortBuilder nestedSortBuilder,String... name);
     /**
      * 排序
      */
@@ -130,7 +129,7 @@ public interface EsExtendsWrapper<Children, R> {
     /**
      * es查询类型
      */
-    Children searchType(SearchType searchType);
+    Children searchType(EpSearchType searchType);
 
     /**
      * 高亮字段

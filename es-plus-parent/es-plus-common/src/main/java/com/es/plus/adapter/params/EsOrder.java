@@ -1,5 +1,6 @@
 package com.es.plus.adapter.params;
 
+import com.es.plus.adapter.pojo.es.EpNestedSortBuilder;
 import lombok.Data;
 import org.elasticsearch.search.sort.NestedSortBuilder;
 
@@ -10,7 +11,7 @@ public class EsOrder {
 
     private String sort = "DESC";
 
-    private NestedSortBuilder nestedSortBuilder;
+    private EpNestedSortBuilder nestedSortBuilder;
 
 
 }

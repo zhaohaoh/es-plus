@@ -1,25 +1,25 @@
 package com.es.plus.adapter.params;
 
+import com.es.plus.adapter.pojo.es.EpAggBuilder;
+import com.es.plus.adapter.pojo.es.EpBoolQueryBuilder;
+import com.es.plus.adapter.pojo.es.EpSearchType;
 import lombok.Data;
 import org.elasticsearch.action.search.SearchType;
-import org.elasticsearch.index.query.BoolQueryBuilder;
-import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.search.aggregations.BaseAggregationBuilder;
-
 import java.util.ArrayList;
 import java.util.List;
+
 
 @Data
 public class EsQueryParamWrapper {
     /**
      * 查询构建器
      */
-    protected BoolQueryBuilder queryBuilder = QueryBuilders.boolQuery();
+    protected EpBoolQueryBuilder boolQueryBuilder =  new EpBoolQueryBuilder();
     
     /*
      *聚合封装
      */
-    protected List<BaseAggregationBuilder> aggregationBuilder = new ArrayList<>();
+    protected List<EpAggBuilder> aggregationBuilder = new ArrayList<>();
     /**
      * es查询结果包含字段
      */
@@ -27,8 +27,8 @@ public class EsQueryParamWrapper {
     /**
      * 搜索类型
      */
-    private SearchType searchType;
-
+    private EpSearchType searchType;
+    
     /**
      * 路由分片
      */

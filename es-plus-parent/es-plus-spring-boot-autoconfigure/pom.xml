@@ -10,7 +10,7 @@
     <modelVersion>4.0.0</modelVersion>
     
     <artifactId>es-plus-spring-boot-autoconfigure</artifactId>
-    
+    <name>es-plus-spring-boot-autoconfigure</name>
     <properties>
         <maven.compiler.source>8</maven.compiler.source>
         <maven.compiler.target>8</maven.compiler.target>

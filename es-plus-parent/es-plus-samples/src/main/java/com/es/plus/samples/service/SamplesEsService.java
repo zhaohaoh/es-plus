@@ -3,6 +3,9 @@ package com.es.plus.samples.service;
 import com.es.plus.adapter.params.EsHit;
 import com.es.plus.adapter.params.EsHits;
 import com.es.plus.adapter.params.EsResponse;
+import com.es.plus.adapter.pojo.es.EpFetchSourceContext;
+import com.es.plus.adapter.pojo.es.EpInnerHitBuilder;
+import com.es.plus.adapter.pojo.es.EpScoreMode;
 import com.es.plus.core.service.EsServiceImpl;
 import com.es.plus.core.statics.Es;
 import com.es.plus.core.wrapper.aggregation.EsAggWrapper;
@@ -35,9 +38,9 @@ public class SamplesEsService extends EsServiceImpl<SamplesEsDTO> {
         //获取二级查询条件
         Consumer<EsLambdaQueryWrapper<SamplesNestedDTO>> innerConsumer = getSamplesNestedConsumer();
         // 声明语句嵌套关系是must
-        InnerHitBuilder innerHitBuilder = new InnerHitBuilder("test");
+        EpInnerHitBuilder innerHitBuilder = new EpInnerHitBuilder("test");
         innerHitBuilder.setSize(10);
-        innerHitBuilder.setFetchSourceContext(new FetchSourceContext(true));
+        innerHitBuilder.setFetchSourceContext(new EpFetchSourceContext(true));
 
  
         //一级查询条件
@@ -46,15 +49,15 @@ public class SamplesEsService extends EsServiceImpl<SamplesEsDTO> {
                 .nested("samplesNesteds",
                         (esQueryWrap) -> {
                             esQueryWrap.must().term("username", "3");
-                            InnerHitBuilder innerHitBuilder1 = new InnerHitBuilder();
+                            EpInnerHitBuilder innerHitBuilder1 = new EpInnerHitBuilder();
                             innerHitBuilder1.setSize(100);
                             //三级
                             esQueryWrap.must().nested("samplesNesteds.samplesNestedInner",
                                     (innerQuery) -> {
                                         innerQuery.must().term("username", "3");
 //                                        .term(SamplesNestedInnerDTO::getState,true);
-                                    }, ScoreMode.None, innerHitBuilder1);
-                        }, ScoreMode.None,innerHitBuilder);
+                                    }, EpScoreMode.None, innerHitBuilder1);
+                        }, EpScoreMode.None,innerHitBuilder);
 
 
         EsResponse<SamplesEsDTO> esResponse = queryWrapper.search();
@@ -81,11 +84,11 @@ public class SamplesEsService extends EsServiceImpl<SamplesEsDTO> {
     private Consumer<EsLambdaQueryWrapper<SamplesNestedDTO>> getSamplesNestedConsumer() {
         Consumer<EsLambdaQueryWrapper<SamplesNestedDTO>> innerConsumer = (esQueryWrap) -> {
             esQueryWrap.must().term(SamplesNestedDTO::getUsername, "3");
-            InnerHitBuilder innerHitBuilder1 = new InnerHitBuilder();
+            EpInnerHitBuilder innerHitBuilder1 = new EpInnerHitBuilder();
             innerHitBuilder1.setSize(100);
             Consumer<EsLambdaQueryWrapper<SamplesNestedInnerDTO>> innerInnerConsumer = skuQueryWrapper();
             esQueryWrap.must().nestedQuery(SamplesNestedDTO::getSamplesNestedInner, SamplesNestedInnerDTO.class,
-                    innerInnerConsumer, ScoreMode.None, innerHitBuilder1);
+                    innerInnerConsumer, EpScoreMode.None, innerHitBuilder1);
         };
         return innerConsumer;
     }

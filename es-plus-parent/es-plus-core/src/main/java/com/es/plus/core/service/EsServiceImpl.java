@@ -5,6 +5,7 @@ import com.es.plus.adapter.params.EsAggResponse;
 import com.es.plus.adapter.params.EsQueryParamWrapper;
 import com.es.plus.adapter.params.EsResponse;
 import com.es.plus.adapter.params.EsSettings;
+import com.es.plus.adapter.pojo.es.EpQueryBuilder;
 import com.es.plus.core.wrapper.chain.EsChainLambdaQueryWrapper;
 import com.es.plus.core.wrapper.chain.EsChainLambdaUpdateWrapper;
 import com.es.plus.core.wrapper.chain.EsChainUpdateWrapper;
@@ -12,6 +13,7 @@ import com.es.plus.core.wrapper.core.EsQueryWrapper;
 import com.es.plus.core.wrapper.core.EsWrapper;
 import org.apache.commons.lang3.ArrayUtils;
 import org.elasticsearch.action.bulk.BulkItemResponse;
+import org.elasticsearch.index.query.MatchAllQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.springframework.util.CollectionUtils;
@@ -422,7 +424,10 @@ public class EsServiceImpl<T> extends AbstractEsService<T> implements EsService<
      */
     private EsQueryWrapper<T> matchAll() {
         EsQueryWrapper<T> esQueryWrapper = new EsQueryWrapper<>(clazz);
-        esQueryWrapper.must().query(QueryBuilders.matchAllQuery());
+        EpQueryBuilder epQueryBuilder = new EpQueryBuilder();
+        epQueryBuilder.type("match_all");
+        epQueryBuilder.name("match_all");
+        esQueryWrapper.must().query(epQueryBuilder);
         return esQueryWrapper;
     }
 }

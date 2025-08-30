@@ -3,78 +3,10 @@ package com.es.plus.es7.client;
 import com.es.plus.adapter.config.GlobalConfigCache;
 import com.es.plus.adapter.core.EsAggClient;
 import com.es.plus.adapter.params.EsParamWrapper;
-import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.search.aggregations.BaseAggregationBuilder;
-import org.elasticsearch.search.aggregations.bucket.adjacency.AdjacencyMatrixAggregationBuilder;
-import org.elasticsearch.search.aggregations.bucket.filter.FilterAggregationBuilder;
-import org.elasticsearch.search.aggregations.bucket.filter.FiltersAggregationBuilder;
-import org.elasticsearch.search.aggregations.bucket.geogrid.InternalGeoHashGrid;
-import org.elasticsearch.search.aggregations.bucket.geogrid.InternalGeoTileGrid;
-import org.elasticsearch.search.aggregations.bucket.global.Global;
-import org.elasticsearch.search.aggregations.bucket.global.GlobalAggregationBuilder;
-import org.elasticsearch.search.aggregations.bucket.histogram.DateHistogramAggregationBuilder;
-import org.elasticsearch.search.aggregations.bucket.histogram.DateHistogramInterval;
-import org.elasticsearch.search.aggregations.bucket.histogram.Histogram;
-import org.elasticsearch.search.aggregations.bucket.histogram.HistogramAggregationBuilder;
-import org.elasticsearch.search.aggregations.bucket.missing.Missing;
-import org.elasticsearch.search.aggregations.bucket.missing.MissingAggregationBuilder;
-import org.elasticsearch.search.aggregations.bucket.nested.Nested;
-import org.elasticsearch.search.aggregations.bucket.nested.NestedAggregationBuilder;
-import org.elasticsearch.search.aggregations.bucket.nested.ReverseNestedAggregationBuilder;
-import org.elasticsearch.search.aggregations.bucket.range.DateRangeAggregationBuilder;
-import org.elasticsearch.search.aggregations.bucket.range.IpRangeAggregationBuilder;
-import org.elasticsearch.search.aggregations.bucket.range.RangeAggregationBuilder;
-import org.elasticsearch.search.aggregations.bucket.sampler.DiversifiedAggregationBuilder;
-import org.elasticsearch.search.aggregations.bucket.sampler.Sampler;
-import org.elasticsearch.search.aggregations.bucket.sampler.SamplerAggregationBuilder;
-import org.elasticsearch.search.aggregations.bucket.significant.SignificantTerms;
-import org.elasticsearch.search.aggregations.bucket.significant.SignificantTermsAggregationBuilder;
-import org.elasticsearch.search.aggregations.bucket.significant.SignificantTextAggregationBuilder;
-import org.elasticsearch.search.aggregations.bucket.terms.Terms;
-import org.elasticsearch.search.aggregations.bucket.terms.TermsAggregationBuilder;
-import org.elasticsearch.search.aggregations.metrics.Avg;
-import org.elasticsearch.search.aggregations.metrics.AvgAggregationBuilder;
-import org.elasticsearch.search.aggregations.metrics.Cardinality;
-import org.elasticsearch.search.aggregations.metrics.CardinalityAggregationBuilder;
-import org.elasticsearch.search.aggregations.metrics.ExtendedStats;
-import org.elasticsearch.search.aggregations.metrics.ExtendedStatsAggregationBuilder;
-import org.elasticsearch.search.aggregations.metrics.GeoBounds;
-import org.elasticsearch.search.aggregations.metrics.GeoBoundsAggregationBuilder;
-import org.elasticsearch.search.aggregations.metrics.GeoCentroid;
-import org.elasticsearch.search.aggregations.metrics.GeoCentroidAggregationBuilder;
-import org.elasticsearch.search.aggregations.metrics.Max;
-import org.elasticsearch.search.aggregations.metrics.MaxAggregationBuilder;
-import org.elasticsearch.search.aggregations.metrics.MedianAbsoluteDeviation;
-import org.elasticsearch.search.aggregations.metrics.MedianAbsoluteDeviationAggregationBuilder;
-import org.elasticsearch.search.aggregations.metrics.Min;
-import org.elasticsearch.search.aggregations.metrics.MinAggregationBuilder;
-import org.elasticsearch.search.aggregations.metrics.PercentileRanksAggregationBuilder;
-import org.elasticsearch.search.aggregations.metrics.Percentiles;
-import org.elasticsearch.search.aggregations.metrics.PercentilesAggregationBuilder;
-import org.elasticsearch.search.aggregations.metrics.ScriptedMetric;
-import org.elasticsearch.search.aggregations.metrics.ScriptedMetricAggregationBuilder;
-import org.elasticsearch.search.aggregations.metrics.Stats;
-import org.elasticsearch.search.aggregations.metrics.StatsAggregationBuilder;
-import org.elasticsearch.search.aggregations.metrics.Sum;
-import org.elasticsearch.search.aggregations.metrics.SumAggregationBuilder;
-import org.elasticsearch.search.aggregations.metrics.TopHits;
-import org.elasticsearch.search.aggregations.metrics.TopHitsAggregationBuilder;
-import org.elasticsearch.search.aggregations.metrics.ValueCountAggregationBuilder;
-import org.elasticsearch.search.aggregations.metrics.WeightedAvgAggregationBuilder;
-import org.elasticsearch.search.aggregations.pipeline.AvgBucketPipelineAggregationBuilder;
-import org.elasticsearch.search.aggregations.pipeline.CumulativeSumPipelineAggregationBuilder;
-import org.elasticsearch.search.aggregations.pipeline.DerivativePipelineAggregationBuilder;
-import org.elasticsearch.search.aggregations.pipeline.ExtendedStatsBucketPipelineAggregationBuilder;
-import org.elasticsearch.search.aggregations.pipeline.MaxBucketPipelineAggregationBuilder;
-import org.elasticsearch.search.aggregations.pipeline.MinBucketPipelineAggregationBuilder;
-import org.elasticsearch.search.aggregations.pipeline.PercentilesBucketPipelineAggregationBuilder;
-import org.elasticsearch.search.aggregations.pipeline.SerialDiffPipelineAggregationBuilder;
-import org.elasticsearch.search.aggregations.pipeline.StatsBucketPipelineAggregationBuilder;
-import org.elasticsearch.search.aggregations.pipeline.SumBucketPipelineAggregationBuilder;
+import com.es.plus.adapter.pojo.es.EpAggBuilder;
+import com.es.plus.adapter.pojo.es.EpDateHistogramInterval;
 
 import javax.naming.OperationNotSupportedException;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Map;
 
 import static com.es.plus.constant.EsConstant.AGG_DELIMITER;
@@ -82,455 +14,324 @@ import static com.es.plus.constant.EsConstant.AGG_DELIMITER;
 
 public class EsPlusAggsClient implements EsAggClient {
     @Override
-    public BaseAggregationBuilder count(String name,String field) {
-        String aggName = name!=null?name : field + AGG_DELIMITER + ValueCountAggregationBuilder.NAME;
-        ValueCountAggregationBuilder valueCountAggregationBuilder = new ValueCountAggregationBuilder(aggName);
-        valueCountAggregationBuilder.field(field);
-        return valueCountAggregationBuilder;
-    }
-
-    /**
-     * Create a new {@link Avg} aggregation with the given aggName.
-     */
-    @Override
-    public BaseAggregationBuilder avg(String name,String field) {
-        String aggName = name!=null?name : field + AGG_DELIMITER + AvgAggregationBuilder.NAME;
-        AvgAggregationBuilder avgAggregationBuilder = new AvgAggregationBuilder(aggName);
-        avgAggregationBuilder.field(field);
-        return avgAggregationBuilder;
-    }
-
-    /**
-     * Create a new {@link Avg} aggregation with the given aggName.
-     */
-    @Override
-    public BaseAggregationBuilder weightedAvg(String name,String field) {
-        String aggName = name!=null?name : field + AGG_DELIMITER + WeightedAvgAggregationBuilder.NAME;
-        WeightedAvgAggregationBuilder weightedAvgAggregationBuilder = new WeightedAvgAggregationBuilder(aggName);
-        
-        return weightedAvgAggregationBuilder;
-    }
-
-    /**
-     * Create a new {@link Max} aggregation with the given aggName.
-     */
-    @Override
-    public BaseAggregationBuilder max(String name,String field) {
-        String aggName = name!=null?name : field + AGG_DELIMITER + MaxAggregationBuilder.NAME;
-        MaxAggregationBuilder maxAggregationBuilder = new MaxAggregationBuilder(aggName);
-        maxAggregationBuilder.field(field);
-        return maxAggregationBuilder;
-    }
-
-    /**
-     * Create a new {@link Min} aggregation with the given aggName.
-     */
-    @Override
-    public BaseAggregationBuilder min(String name,String field) {
-        String aggName = name!=null?name : field + AGG_DELIMITER + MinAggregationBuilder.NAME;
-        MinAggregationBuilder minAggregationBuilder = new MinAggregationBuilder(aggName);
-        minAggregationBuilder.field(field);
-        return  minAggregationBuilder;
-    }
-
-    /**
-     * Create a new {@link Sum} aggregation with the given aggName.
-     */
-    @Override
-    public BaseAggregationBuilder sum(String name,String field) {
-        String aggName = name!=null?name : field + AGG_DELIMITER + SumAggregationBuilder.NAME;
-        SumAggregationBuilder sumAggregationBuilder = new SumAggregationBuilder(aggName);
-        sumAggregationBuilder.field(field);
-        return sumAggregationBuilder;
-    }
-
-    /**
-     * Create a new {@link Stats} aggregation with the given aggName.
-     */
-    @Override
-    public BaseAggregationBuilder stats(String name,String field) {
-        String aggName = name!=null?name : field + AGG_DELIMITER + StatsAggregationBuilder.NAME;
-        StatsAggregationBuilder statsAggregationBuilder = new StatsAggregationBuilder(aggName);
-        statsAggregationBuilder.field(field);
-        return statsAggregationBuilder;
-    }
-
-    /**
-     * Create a new {@link ExtendedStats} aggregation with the given aggName.
-     */
-    @Override
-    public BaseAggregationBuilder extendedStats(String name,String field) {
-        String aggName = name!=null?name : field + AGG_DELIMITER + ExtendedStatsAggregationBuilder.NAME;
-        ExtendedStatsAggregationBuilder extendedStatsAggregationBuilder = new ExtendedStatsAggregationBuilder(aggName);
-        extendedStatsAggregationBuilder.field(field);
-        return extendedStatsAggregationBuilder;
-    }
-
-    @Override
-    public BaseAggregationBuilder filter(String name,String field, EsParamWrapper<?> esParamWrapper) {
-        String aggName = name!=null?name : field + AGG_DELIMITER + FilterAggregationBuilder.NAME;
-        FilterAggregationBuilder filterAggregationBuilder = new FilterAggregationBuilder(aggName,esParamWrapper.getEsQueryParamWrapper().getQueryBuilder());
-        return filterAggregationBuilder;
-    }
-
-    @Override
-    public BaseAggregationBuilder filters(String name,String field, EsParamWrapper<?>... esParamWrapper) {
-        QueryBuilder[] boolQueryBuilders = Arrays.stream(esParamWrapper).map(e->e.getEsQueryParamWrapper().getQueryBuilder()).toArray(QueryBuilder[]::new);
-        String aggName = name!=null?name : field + AGG_DELIMITER + FiltersAggregationBuilder.NAME;
-        FiltersAggregationBuilder filterAggregationBuilder = new FiltersAggregationBuilder(aggName,boolQueryBuilders);
-        return filterAggregationBuilder;
-    }
-
-    @Override
-    public BaseAggregationBuilder adjacencyMatrix(String name,String field, Map<String, EsParamWrapper<?>> esParamWrapper) {
-        Map<String,QueryBuilder> queryBuilderMap=new HashMap<>();
-        esParamWrapper.forEach((k,v)->queryBuilderMap.put(k,v.getEsQueryParamWrapper().getQueryBuilder()));
-        String aggName = name!=null?name : field + AGG_DELIMITER + FiltersAggregationBuilder.NAME;
-        AdjacencyMatrixAggregationBuilder adjacencyMatrixAggregationBuilder = new AdjacencyMatrixAggregationBuilder(aggName,queryBuilderMap);
-        return adjacencyMatrixAggregationBuilder;
-    }
-
-    @Override
-    public BaseAggregationBuilder adjacencyMatrix(String name,String field, String separator, Map<String, EsParamWrapper<?>> esParamWrapper) {
-        Map<String,QueryBuilder> queryBuilderMap=new HashMap<>();
-        esParamWrapper.forEach((k,v)->queryBuilderMap.put(k,v.getEsQueryParamWrapper().getQueryBuilder()));
-        String aggName = name + AGG_DELIMITER + FiltersAggregationBuilder.NAME;
-        AdjacencyMatrixAggregationBuilder adjacencyMatrixAggregationBuilder = new AdjacencyMatrixAggregationBuilder(aggName,separator,queryBuilderMap);
-        return adjacencyMatrixAggregationBuilder;
-    }
-
-    /**
-     * Create a new {@link Sampler} aggregation with the given aggName.
-     */
-    @Override
-    public BaseAggregationBuilder sampler(String name,String field) {
-        String aggName = name!=null?name : field + AGG_DELIMITER + SamplerAggregationBuilder.NAME;
-        SamplerAggregationBuilder samplerAggregationBuilder = new SamplerAggregationBuilder(aggName);
-        return  samplerAggregationBuilder;
-    }
-
-    /**
-     * Create a new {@link Sampler} aggregation with the given aggName.
-     */
-    @Override
-    public BaseAggregationBuilder diversifiedSampler(String name,String field) {
-        String aggName = name!=null?name : field + AGG_DELIMITER + DiversifiedAggregationBuilder.NAME;
-        DiversifiedAggregationBuilder diversifiedAggregationBuilder = new DiversifiedAggregationBuilder(aggName);
-        diversifiedAggregationBuilder.field(field);
-        return diversifiedAggregationBuilder;
-    }
-
-    /**
-     * Create a new {@link Global} aggregation with the given aggName.
-     */
-    @Override
-    public BaseAggregationBuilder global(String name,String field) {
-        String aggName = name!=null?name : field + AGG_DELIMITER + GlobalAggregationBuilder.NAME;
-        GlobalAggregationBuilder globalAggregationBuilder = new GlobalAggregationBuilder(aggName);
-        return globalAggregationBuilder;
-    }
-
-    /**
-     * Create a new {@link Missing} aggregation with the given aggName.
-     */
-    @Override
-    public BaseAggregationBuilder missing(String name,String field) {
-        String aggName = name!=null?name : field + AGG_DELIMITER + MissingAggregationBuilder.NAME;
-        MissingAggregationBuilder missingAggregationBuilder = new MissingAggregationBuilder(aggName);
-        missingAggregationBuilder.field(field);
-        return missingAggregationBuilder;
-    }
-
-    /**
-     * Create a new {@link Nested} aggregation with the given aggName.
-     */
-    @Override
-    public BaseAggregationBuilder nested(String name,String field, String path) {
-        String aggName = name!=null?name : field + AGG_DELIMITER + NestedAggregationBuilder.NAME;
-        NestedAggregationBuilder nestedAggregationBuilder = new NestedAggregationBuilder(aggName, path);
-        return nestedAggregationBuilder;
-    }
-
-    /**
-     * Create a new {@link StringeverseNested} aggregation with the given aggName.
-     */
-    @Override
-    public BaseAggregationBuilder reverseNested(String name,String field) throws OperationNotSupportedException {
-        String aggName = name!=null?name : field + AGG_DELIMITER + ReverseNestedAggregationBuilder.NAME;
-        ReverseNestedAggregationBuilder reverseNestedAggregationBuilder = new ReverseNestedAggregationBuilder(aggName);
-        return reverseNestedAggregationBuilder;
-    }
-
-
-    /**
-     * Create a new {@link Histogram} aggregation with the given aggName.
-     */
-    @Override
-    public BaseAggregationBuilder histogram(String name,String field) {
-        String aggName = name!=null?name : field + AGG_DELIMITER + HistogramAggregationBuilder.NAME;
-        HistogramAggregationBuilder histogramAggregationBuilder = new HistogramAggregationBuilder(aggName);
-        histogramAggregationBuilder.field(field);
-        return  histogramAggregationBuilder;
-    }
-
-    /**
-     * Create a new {@link InternalGeoHashGrid} aggregation with the given aggName.
-     */
-    @Override
-    public BaseAggregationBuilder geohashGrid(String name,String field) throws OperationNotSupportedException {
-        throw new OperationNotSupportedException();
-    }
-
-    /**
-     * Create a new {@link InternalGeoTileGrid} aggregation with the given aggName.
-     */
-    @Override
-    public BaseAggregationBuilder geotileGrid(String name,String field) throws OperationNotSupportedException {
-        throw new OperationNotSupportedException();
-    }
-
-    /**
-     * Create a new {@link SignificantTerms} aggregation with the given aggName.
-     */
-    @Override
-    public BaseAggregationBuilder significantTerms(String name,String field) {
-        String aggName = name!=null?name : field + AGG_DELIMITER + SignificantTermsAggregationBuilder.NAME;
-        SignificantTermsAggregationBuilder significantTermsAggregationBuilder = new SignificantTermsAggregationBuilder(aggName);
-        significantTermsAggregationBuilder.field(field);
-        return significantTermsAggregationBuilder;
-    }
-
-
-    /**
-     * Create a new {@link SignificantTextAggregationBuilder} aggregation with the given aggName and text field aggName
-     */
-    @Override
-    public BaseAggregationBuilder significantText(String name,String field) {
-        String aggName = name!=null?name : field + AGG_DELIMITER + SignificantTextAggregationBuilder.NAME;
-        SignificantTextAggregationBuilder significantTextAggregationBuilder = new SignificantTextAggregationBuilder(aggName, field);
-        significantTextAggregationBuilder.fieldName(aggName);
-        return significantTextAggregationBuilder;
-    }
-
-
-    /**
-     * Create a new {@link DateHistogramAggregationBuilder} aggregation with the given
-     * aggName.
-     */
-    @Override
-    public BaseAggregationBuilder dateHistogram(String name,String field,DateHistogramInterval dateHistogramInterval) {
-        String aggName = name!=null?name : field + AGG_DELIMITER + DateHistogramAggregationBuilder.NAME;
-        DateHistogramAggregationBuilder dateHistogramAggregationBuilder = new DateHistogramAggregationBuilder(aggName);
-        dateHistogramAggregationBuilder.field(field);
-        dateHistogramAggregationBuilder.calendarInterval(dateHistogramInterval);
-        return  dateHistogramAggregationBuilder;
-    }
-
-    /**
-     *
-     */
-    @Override
-    public BaseAggregationBuilder range(String name,String field,String key ,Double from,Double to) {
-        String aggName = name!=null?name : field + AGG_DELIMITER + RangeAggregationBuilder.NAME;
-        RangeAggregationBuilder rangeAggregationBuilder = new RangeAggregationBuilder(aggName);
-        rangeAggregationBuilder.addRange(key,from,to);
-        return rangeAggregationBuilder;
-    }
-
-
-    @Override
-    public BaseAggregationBuilder dateRange(String name,String field,String key ,String from,String to) {
-        String aggName = name!=null?name : field + AGG_DELIMITER + DateRangeAggregationBuilder.NAME;
-        DateRangeAggregationBuilder dateRangeAggregationBuilder = new DateRangeAggregationBuilder(aggName);
-        dateRangeAggregationBuilder.addRange(key,from,to);
-        return dateRangeAggregationBuilder;
-    }
-
-
-    @Override
-    public BaseAggregationBuilder ipRange(String name,String field) {
-        String aggName = name!=null?name : field + AGG_DELIMITER + IpRangeAggregationBuilder.NAME;
-        IpRangeAggregationBuilder dateRangeAggregationBuilder = new IpRangeAggregationBuilder(aggName);
-        return dateRangeAggregationBuilder;
-    }
-
-    /**
-     * Create a new {@link Terms} aggregation with the given aggName.
-     */
-    @Override
-    public BaseAggregationBuilder terms(String name,String field) {
-        String aggName = name!=null?name : field + AGG_DELIMITER + TermsAggregationBuilder.NAME;
-        TermsAggregationBuilder termsAggregationBuilder = new TermsAggregationBuilder(aggName);
-        termsAggregationBuilder.field(field);
-        termsAggregationBuilder.size(GlobalConfigCache.GLOBAL_CONFIG.getAggSize());
-        return termsAggregationBuilder;
+    public EpAggBuilder count(String name,String field) {
+        return new EpAggBuilder(name!=null?name : field + AGG_DELIMITER + "count", "count")
+                .param("field", field);
     }
     
-   
+    @Override
+    public EpAggBuilder avg(String name,String field) {
+        return new EpAggBuilder(name!=null?name : field + AGG_DELIMITER + "avg", "avg")
+                .param("field", field);
+    }
     
-    /**
-     * Create a new {@link Percentiles} aggregation with the given aggName.
-     */
     @Override
-    public BaseAggregationBuilder percentiles(String name,String field) {
-        String aggName = name!=null?name : field + AGG_DELIMITER + PercentilesAggregationBuilder.NAME;
-        PercentilesAggregationBuilder percentilesAggregationBuilder = new PercentilesAggregationBuilder(aggName);
-        percentilesAggregationBuilder.field(field);
-        return percentilesAggregationBuilder;
+    public EpAggBuilder weightedAvg(String name,String field) {
+        return new EpAggBuilder(name!=null?name : field + AGG_DELIMITER + "weighted_avg", "weighted_avg")
+                .param("field", field);
     }
-
-    /**
-     * Create a new {@link PercentileStringanks} aggregation with the given aggName.
-     */
+    
     @Override
-    public BaseAggregationBuilder percentileStringanks(String name,String field, double[] values) {
-        String aggName = name!=null?name : field + AGG_DELIMITER + PercentileRanksAggregationBuilder.NAME;
-        PercentileRanksAggregationBuilder percentileRanksAggregationBuilder = new PercentileRanksAggregationBuilder(aggName, values);
-        percentileRanksAggregationBuilder.field(field);
-        return percentileRanksAggregationBuilder;
+    public EpAggBuilder max(String name,String field) {
+        return new EpAggBuilder(name!=null?name : field + AGG_DELIMITER + "max", "max")
+                .param("field", field);
     }
-
-    /**
-     * Create a new {@link MedianAbsoluteDeviation} aggregation with the given aggName
-     */
+    
     @Override
-    public BaseAggregationBuilder medianAbsoluteDeviation(String name,String field) {
-        String aggName = name!=null?name : field + AGG_DELIMITER + MedianAbsoluteDeviationAggregationBuilder.NAME;
-        MedianAbsoluteDeviationAggregationBuilder medianAbsoluteDeviationAggregationBuilder = new MedianAbsoluteDeviationAggregationBuilder(aggName);
-        medianAbsoluteDeviationAggregationBuilder.field(field);
-        return medianAbsoluteDeviationAggregationBuilder;
+    public EpAggBuilder min(String name,String field) {
+        return new EpAggBuilder(name!=null?name : field + AGG_DELIMITER + "min", "min")
+                .param("field", field);
     }
-
-    /**
-     * Create a new {@link Cardinality} aggregation with the given aggName.
-     */
+    
     @Override
-    public BaseAggregationBuilder cardinality(String name,String field) {
-        String aggName = name!=null?name : field + AGG_DELIMITER + CardinalityAggregationBuilder.NAME;
-        CardinalityAggregationBuilder cardinalityAggregationBuilder = new CardinalityAggregationBuilder(aggName);
-        cardinalityAggregationBuilder.field(field);
-        return cardinalityAggregationBuilder;
+    public EpAggBuilder sum(String name,String field) {
+        return new EpAggBuilder(name!=null?name : field + AGG_DELIMITER + "sum", "sum")
+                .param("field", field);
     }
-
-    /**
-     * Create a new {@link TopHits} aggregation with the given aggName.
-     */
+    
     @Override
-    public BaseAggregationBuilder topHits(String name,String field) {
-        String aggName = name!=null?name : field + AGG_DELIMITER + TopHitsAggregationBuilder.NAME;
-        TopHitsAggregationBuilder topHitsAggregationBuilder = new TopHitsAggregationBuilder(aggName);
-        return topHitsAggregationBuilder;
+    public EpAggBuilder stats(String name,String field) {
+        return new EpAggBuilder(name!=null?name : field + AGG_DELIMITER + "stats", "stats")
+                .param("field", field);
     }
-
-    /**
-     * Create a new {@link GeoBounds} aggregation with the given aggName.
-     */
+    
     @Override
-    public BaseAggregationBuilder geoBounds(String name,String field) {
-
-        String aggName = name!=null?name : field + AGG_DELIMITER + GeoBoundsAggregationBuilder.NAME;
-        GeoBoundsAggregationBuilder geoBoundsAggregationBuilder = new GeoBoundsAggregationBuilder(aggName);
-        geoBoundsAggregationBuilder.field(field);
-        return geoBoundsAggregationBuilder;
+    public EpAggBuilder extendedStats(String name,String field) {
+        return new EpAggBuilder(name!=null?name : field + AGG_DELIMITER + "extended_stats", "extended_stats")
+                .param("field", field);
     }
-
-    /**
-     * Create a new {@link GeoCentroid} aggregation with the given aggName.
-     */
+    
     @Override
-    public BaseAggregationBuilder geoCentroid(String name,String field) {
-        String aggName = name!=null?name : field + AGG_DELIMITER + GeoCentroidAggregationBuilder.NAME;
-        GeoCentroidAggregationBuilder geoCentroidAggregationBuilder = new GeoCentroidAggregationBuilder(aggName);
-        geoCentroidAggregationBuilder.field(field);
-        return geoCentroidAggregationBuilder;
+    public EpAggBuilder filter(String name,String field, EsParamWrapper<?> esParamWrapper) {
+        String aggName = name!=null?name : field + AGG_DELIMITER + "filter";
+        EpAggBuilder epAggBuilder = new EpAggBuilder(aggName, "filter");
+        // 注意：这里需要特殊处理，因为filter聚合需要查询条件
+        return epAggBuilder;
     }
-
-    /**
-     * Create a new {@link ScriptedMetric} aggregation with the given aggName.
-     */
+    
     @Override
-    public BaseAggregationBuilder scriptedMetric(String name,String field) {
-        String aggName = name!=null?name : field + AGG_DELIMITER + ScriptedMetricAggregationBuilder.NAME;
-        ScriptedMetricAggregationBuilder scriptedMetricAggregationBuilder = new ScriptedMetricAggregationBuilder(aggName);
-        return scriptedMetricAggregationBuilder;
+    public EpAggBuilder filters(String name,String field, EsParamWrapper<?>... esParamWrapper) {
+        String aggName = name!=null?name : field + AGG_DELIMITER + "filters";
+        EpAggBuilder epAggBuilder = new EpAggBuilder(aggName, "filters");
+        // 注意：这里需要特殊处理，因为filters聚合需要多个查询条件
+        return epAggBuilder;
     }
-
-
-    /**
-     * piple 管道聚合，就是对桶进行聚合， bucketsPath=A>B
-     */
+    
     @Override
-    public BaseAggregationBuilder derivative(String name,String field, String bucketsPath) {
-        String aggName = name!=null?name : field + AGG_DELIMITER + DerivativePipelineAggregationBuilder.NAME;
-        DerivativePipelineAggregationBuilder derivativePipelineAggregationBuilder = new DerivativePipelineAggregationBuilder(aggName, bucketsPath);
-        return derivativePipelineAggregationBuilder;
+    public EpAggBuilder adjacencyMatrix(String name,String field, Map<String, EsParamWrapper<?>> esParamWrapper) {
+        String aggName = name!=null?name : field + AGG_DELIMITER + "adjacency_matrix";
+        EpAggBuilder epAggBuilder = new EpAggBuilder(aggName, "adjacency_matrix");
+        // 注意：这里需要特殊处理，因为adjacency_matrix聚合需要查询条件映射
+        return epAggBuilder;
     }
-
+    
     @Override
-    public BaseAggregationBuilder maxBucket(String name,String field, String bucketsPath) {
-        String aggName = name!=null?name : field + AGG_DELIMITER + MaxBucketPipelineAggregationBuilder.NAME;
-        MaxBucketPipelineAggregationBuilder maxBucketPipelineAggregationBuilder = new MaxBucketPipelineAggregationBuilder(aggName, bucketsPath);
-        return maxBucketPipelineAggregationBuilder;
+    public EpAggBuilder adjacencyMatrix(String name,String field, String separator, Map<String, EsParamWrapper<?>> esParamWrapper) {
+        String aggName = name!=null?name : field + AGG_DELIMITER + "adjacency_matrix";
+        EpAggBuilder epAggBuilder = new EpAggBuilder(aggName, "adjacency_matrix")
+                .param("separator", separator);
+        // 注意：这里需要特殊处理，因为adjacency_matrix聚合需要查询条件映射
+        return epAggBuilder;
     }
-
+    
     @Override
-    public BaseAggregationBuilder minBucket(String name,String field , String bucketsPath) {
-        String aggName = name!=null?name : field + AGG_DELIMITER + MinBucketPipelineAggregationBuilder.NAME;
-        MinBucketPipelineAggregationBuilder minBucketPipelineAggregationBuilder = new MinBucketPipelineAggregationBuilder(aggName, bucketsPath);
-        return minBucketPipelineAggregationBuilder;
+    public EpAggBuilder sampler(String name,String field) {
+        String aggName = name!=null?name : field + AGG_DELIMITER + "sampler";
+        return new EpAggBuilder(aggName, "sampler");
     }
-
+    
     @Override
-    public final BaseAggregationBuilder avgBucket(String name,String field, String bucketsPath) {
-        String aggName = name!=null?name : field + AvgBucketPipelineAggregationBuilder.NAME;
-        AvgBucketPipelineAggregationBuilder avgBucketPipelineAggregationBuilder = new AvgBucketPipelineAggregationBuilder(aggName, bucketsPath);
-        return avgBucketPipelineAggregationBuilder;
+    public EpAggBuilder diversifiedSampler(String name,String field) {
+        String aggName = name!=null?name : field + AGG_DELIMITER + "diversified_sampler";
+        return new EpAggBuilder(aggName, "diversified_sampler")
+                .param("field", field);
     }
-
+    
     @Override
-    public BaseAggregationBuilder sumBucket(String name,String field, String bucketsPath) {
-        String aggName = name!=null?name : field + AGG_DELIMITER + SumBucketPipelineAggregationBuilder.NAME;
-        SumBucketPipelineAggregationBuilder sumBucketPipelineAggregationBuilder = new SumBucketPipelineAggregationBuilder(aggName, bucketsPath);
-        return sumBucketPipelineAggregationBuilder;
+    public EpAggBuilder global(String name,String field) {
+        String aggName = name!=null?name : field + AGG_DELIMITER + "global";
+        return new EpAggBuilder(aggName, "global");
     }
-
+    
     @Override
-    public BaseAggregationBuilder statsBucket(String name,String field, String bucketsPath) {
-        String aggName = name!=null?name : field + AGG_DELIMITER + StatsBucketPipelineAggregationBuilder.NAME;
-        StatsBucketPipelineAggregationBuilder statsBucketPipelineAggregationBuilder = new StatsBucketPipelineAggregationBuilder(aggName, bucketsPath);
-        return statsBucketPipelineAggregationBuilder;
+    public EpAggBuilder missing(String name,String field) {
+        String aggName = name!=null?name : field + AGG_DELIMITER + "missing";
+        return new EpAggBuilder(aggName, "missing")
+                .param("field", field);
     }
-
+    
     @Override
-    public BaseAggregationBuilder extendedStatsBucket(String name,String field, String bucketsPath) {
-        String aggName = name!=null?name : field + AGG_DELIMITER + ExtendedStatsBucketPipelineAggregationBuilder.NAME;
-        ExtendedStatsBucketPipelineAggregationBuilder extendedStatsBucketPipelineAggregationBuilder = new ExtendedStatsBucketPipelineAggregationBuilder(aggName, bucketsPath);
-        return extendedStatsBucketPipelineAggregationBuilder;
+    public EpAggBuilder nested(String name,String field, String path) {
+        String aggName = name!=null?name : field + AGG_DELIMITER + "nested";
+        return new EpAggBuilder(aggName, "nested")
+                .param("path", path);
     }
-
+    
     @Override
-    public BaseAggregationBuilder percentilesBucket(String name,String field, String bucketsPath) {
-        String aggName = name!=null?name : field + AGG_DELIMITER + PercentilesBucketPipelineAggregationBuilder.NAME;
-        PercentilesBucketPipelineAggregationBuilder percentilesBucketPipelineAggregationBuilder = new PercentilesBucketPipelineAggregationBuilder(aggName, bucketsPath);
-        return percentilesBucketPipelineAggregationBuilder;
+    public EpAggBuilder reverseNested(String name,String field) throws OperationNotSupportedException {
+        String aggName = name!=null?name : field + AGG_DELIMITER + "reverse_nested";
+        return new EpAggBuilder(aggName, "reverse_nested");
     }
-
-
-
+    
     @Override
-    public BaseAggregationBuilder cumulativeSum(String name,String field, String bucketsPath) {
-
-        String aggName = name!=null?name : field + AGG_DELIMITER + CumulativeSumPipelineAggregationBuilder.NAME;
-        CumulativeSumPipelineAggregationBuilder cumulativeSumPipelineAggregationBuilder = new CumulativeSumPipelineAggregationBuilder(aggName, bucketsPath);
-        return cumulativeSumPipelineAggregationBuilder;
+    public EpAggBuilder histogram(String name,String field) {
+        String aggName = name!=null?name : field + AGG_DELIMITER + "histogram";
+        return new EpAggBuilder(aggName, "histogram")
+                .param("field", field);
     }
-
+    
     @Override
-    public BaseAggregationBuilder diff(String name,String field, String bucketsPath) {
-        String aggName = name!=null?name : field + AGG_DELIMITER + SerialDiffPipelineAggregationBuilder.NAME;
-        SerialDiffPipelineAggregationBuilder serialDiffPipelineAggregationBuilder = new SerialDiffPipelineAggregationBuilder(aggName, bucketsPath);
-
-        return serialDiffPipelineAggregationBuilder;
+    public EpAggBuilder geohashGrid(String name,String field) throws OperationNotSupportedException {
+        String aggName = name!=null?name : field + AGG_DELIMITER + "geohash_grid";
+        return new EpAggBuilder(aggName, "geohash_grid")
+                .param("field", field);
     }
-
+    
+    @Override
+    public EpAggBuilder geotileGrid(String name,String field) throws OperationNotSupportedException {
+        String aggName = name!=null?name : field + AGG_DELIMITER + "geotile_grid";
+        return new EpAggBuilder(aggName, "geotile_grid")
+                .param("field", field);
+    }
+    
+    @Override
+    public EpAggBuilder significantTerms(String name,String field) {
+        String aggName = name!=null?name : field + AGG_DELIMITER + "significant_terms";
+        return new EpAggBuilder(aggName, "significant_terms")
+                .param("field", field);
+    }
+    
+    @Override
+    public EpAggBuilder significantText(String name,String field) {
+        String aggName = name!=null?name : field + AGG_DELIMITER + "significant_text";
+        return new EpAggBuilder(aggName, "significant_text")
+                .param("field", field);
+    }
+    
+    @Override
+    public EpAggBuilder dateHistogram(String name,String field, EpDateHistogramInterval dateHistogramInterval) {
+        String aggName = name!=null?name : field + AGG_DELIMITER + "date_histogram";
+        return new EpAggBuilder(aggName, "date_histogram")
+                .param("field", field)
+                .param("interval", dateHistogramInterval.toString());
+    }
+    
+    @Override
+    public EpAggBuilder range(String name,String field,String key ,Double from,Double to) {
+        String aggName = name!=null?name : field + AGG_DELIMITER + "range";
+        EpAggBuilder epAggBuilder = new EpAggBuilder(aggName, "range")
+                .param("field", field);
+        // 注意：range聚合的范围需要特殊处理
+        return epAggBuilder;
+    }
+    
+    @Override
+    public EpAggBuilder dateRange(String name,String field,String key ,String from,String to) {
+        String aggName = name!=null?name : field + AGG_DELIMITER + "date_range";
+        EpAggBuilder epAggBuilder = new EpAggBuilder(aggName, "date_range")
+                .param("field", field);
+        // 注意：date_range聚合的范围需要特殊处理
+        return epAggBuilder;
+    }
+    
+    @Override
+    public EpAggBuilder ipRange(String name,String field) {
+        String aggName = name!=null?name : field + AGG_DELIMITER + "ip_range";
+        return new EpAggBuilder(aggName, "ip_range")
+                .param("field", field);
+    }
+    
+    @Override
+    public EpAggBuilder terms(String name,String field) {
+        String aggName = name!=null?name : field + AGG_DELIMITER + "terms";
+        return new EpAggBuilder(aggName, "terms")
+                .param("field", field)
+                .param("size", GlobalConfigCache.GLOBAL_CONFIG.getAggSize());
+    }
+    
+    @Override
+    public EpAggBuilder percentiles(String name,String field) {
+        String aggName = name!=null?name : field + AGG_DELIMITER + "percentiles";
+        return new EpAggBuilder(aggName, "percentiles")
+                .param("field", field);
+    }
+    
+    @Override
+    public EpAggBuilder percentileStringanks(String name,String field, double[] values) {
+        String aggName = name!=null?name : field + AGG_DELIMITER + "percentile_ranks";
+        return new EpAggBuilder(aggName, "percentile_ranks")
+                .param("field", field)
+                .param("values", values);
+    }
+    
+    @Override
+    public EpAggBuilder medianAbsoluteDeviation(String name,String field) {
+        String aggName = name!=null?name : field + AGG_DELIMITER + "median_absolute_deviation";
+        return new EpAggBuilder(aggName, "median_absolute_deviation")
+                .param("field", field);
+    }
+    
+    @Override
+    public EpAggBuilder cardinality(String name,String field) {
+        String aggName = name!=null?name : field + AGG_DELIMITER + "cardinality";
+        return new EpAggBuilder(aggName, "cardinality")
+                .param("field", field);
+    }
+    
+    @Override
+    public EpAggBuilder topHits(String name,String field) {
+        String aggName = name!=null?name : field + AGG_DELIMITER + "top_hits";
+        return new EpAggBuilder(aggName, "top_hits");
+    }
+    
+    @Override
+    public EpAggBuilder geoBounds(String name,String field) {
+        String aggName = name!=null?name : field + AGG_DELIMITER + "geo_bounds";
+        return new EpAggBuilder(aggName, "geo_bounds")
+                .param("field", field);
+    }
+    
+    @Override
+    public EpAggBuilder geoCentroid(String name,String field) {
+        String aggName = name!=null?name : field + AGG_DELIMITER + "geo_centroid";
+        return new EpAggBuilder(aggName, "geo_centroid")
+                .param("field", field);
+    }
+    
+    @Override
+    public EpAggBuilder scriptedMetric(String name,String field) {
+        String aggName = name!=null?name : field + AGG_DELIMITER + "scripted_metric";
+        return new EpAggBuilder(aggName, "scripted_metric");
+    }
+    
+    @Override
+    public EpAggBuilder derivative(String name,String field, String bucketsPath) {
+        String aggName = name!=null?name : field + AGG_DELIMITER + "derivative";
+        return new EpAggBuilder(aggName, "derivative")
+                .param("bucketsPath", bucketsPath);
+    }
+    
+    @Override
+    public EpAggBuilder maxBucket(String name,String field, String bucketsPath) {
+        String aggName = name!=null?name : field + AGG_DELIMITER + "max_bucket";
+        return new EpAggBuilder(aggName, "max_bucket")
+                .param("bucketsPath", bucketsPath);
+    }
+    
+    @Override
+    public EpAggBuilder minBucket(String name,String field , String bucketsPath) {
+        String aggName = name!=null?name : field + AGG_DELIMITER + "min_bucket";
+        return new EpAggBuilder(aggName, "min_bucket")
+                .param("bucketsPath", bucketsPath);
+    }
+    
+    @Override
+    public final EpAggBuilder avgBucket(String name,String field, String bucketsPath) {
+        String aggName = name!=null?name : field + "avg_bucket";
+        return new EpAggBuilder(aggName, "avg_bucket")
+                .param("bucketsPath", bucketsPath);
+    }
+    
+    @Override
+    public EpAggBuilder sumBucket(String name,String field, String bucketsPath) {
+        String aggName = name!=null?name : field + AGG_DELIMITER + "sum_bucket";
+        return new EpAggBuilder(aggName, "sum_bucket")
+                .param("bucketsPath", bucketsPath);
+    }
+    
+    @Override
+    public EpAggBuilder statsBucket(String name,String field, String bucketsPath) {
+        String aggName = name!=null?name : field + AGG_DELIMITER + "stats_bucket";
+        return new EpAggBuilder(aggName, "stats_bucket")
+                .param("bucketsPath", bucketsPath);
+    }
+    
+    @Override
+    public EpAggBuilder extendedStatsBucket(String name,String field, String bucketsPath) {
+        String aggName = name!=null?name : field + AGG_DELIMITER + "extended_stats_bucket";
+        return new EpAggBuilder(aggName, "extended_stats_bucket")
+                .param("bucketsPath", bucketsPath);
+    }
+    
+    @Override
+    public EpAggBuilder percentilesBucket(String name,String field, String bucketsPath) {
+        String aggName = name!=null?name : field + AGG_DELIMITER + "percentiles_bucket";
+        return new EpAggBuilder(aggName, "percentiles_bucket")
+                .param("bucketsPath", bucketsPath);
+    }
+    
+    @Override
+    public EpAggBuilder cumulativeSum(String name,String field, String bucketsPath) {
+        String aggName = name!=null?name : field + AGG_DELIMITER + "cumulative_sum";
+        return new EpAggBuilder(aggName, "cumulative_sum")
+                .param("bucketsPath", bucketsPath);
+    }
+    
+    @Override
+    public EpAggBuilder diff(String name,String field, String bucketsPath) {
+        String aggName = name!=null?name : field + AGG_DELIMITER + "serial_diff";
+        return new EpAggBuilder(aggName, "serial_diff")
+                .param("bucketsPath", bucketsPath);
+    }
+    
 }

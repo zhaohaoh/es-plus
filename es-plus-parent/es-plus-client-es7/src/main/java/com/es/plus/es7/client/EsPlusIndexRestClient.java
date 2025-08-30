@@ -8,6 +8,8 @@ import com.es.plus.adapter.params.EsAliasResponse;
 import com.es.plus.adapter.params.EsIndexResponse;
 import com.es.plus.adapter.params.EsSettings;
 import com.es.plus.adapter.pojo.EsPlusGetTaskResponse;
+import com.es.plus.adapter.pojo.es.EpQueryBuilder;
+import com.es.plus.es7.convert.EpQueryConverter;
 import com.es.plus.adapter.properties.EsIndexParam;
 import com.es.plus.adapter.properties.GlobalParamHolder;
 import com.es.plus.adapter.util.JsonUtils;
@@ -502,7 +504,9 @@ public class EsPlusIndexRestClient implements EsPlusIndexClient {
      * @return
      */
     @Override
-    public boolean reindex(String oldIndexName, String reindexName, QueryBuilder queryBuilder) {
+    public boolean reindex(String oldIndexName, String reindexName, EpQueryBuilder queryBuilder) {
+        EpQueryBuilder builder = queryBuilder;
+        QueryBuilder esQueryBuilder = EpQueryConverter.toEsQueryBuilder(builder);
         ReindexRequest reindexRequest = new ReindexRequest();
         reindexRequest.setSourceIndices(oldIndexName);
         reindexRequest.setDestIndex(reindexName);
@@ -514,7 +518,7 @@ public class EsPlusIndexRestClient implements EsPlusIndexClient {
         //        if (currentTime != null) {
         //            reindexRequest.setSourceQuery(QueryBuilders.rangeQuery(EsConstant.REINDEX_TIME_FILED).gte(currentTime));
         //        }
-        reindexRequest.setSourceQuery(queryBuilder);
+        reindexRequest.setSourceQuery(esQueryBuilder);
         reindexRequest.setSourceBatchSize(GlobalConfigCache.GLOBAL_CONFIG.getBatchSize());
         reindexRequest.setTimeout(TimeValue.timeValueNanos(Long.MAX_VALUE));
         try {

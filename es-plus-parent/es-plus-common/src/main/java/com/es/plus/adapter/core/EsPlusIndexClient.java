@@ -4,6 +4,7 @@ import com.es.plus.adapter.params.EsAliasResponse;
 import com.es.plus.adapter.params.EsIndexResponse;
 import com.es.plus.adapter.params.EsSettings;
 import com.es.plus.adapter.pojo.EsPlusGetTaskResponse;
+import com.es.plus.adapter.pojo.es.EpQueryBuilder;
 import org.elasticsearch.action.admin.cluster.node.tasks.list.ListTasksResponse;
 import org.elasticsearch.client.GetAliasesResponse;
 import org.elasticsearch.client.indices.GetIndexResponse;
@@ -114,7 +115,7 @@ public interface EsPlusIndexClient {
      * @param reindexName
      * @return
      */
-    boolean reindex(String oldIndexName, String reindexName, QueryBuilder currentTime);
+    boolean reindex(String oldIndexName, String reindexName, EpQueryBuilder currentTime);
     /**
      * 迁移重建索引
      *

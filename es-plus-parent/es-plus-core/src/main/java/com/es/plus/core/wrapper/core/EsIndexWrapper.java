@@ -4,6 +4,7 @@ import com.es.plus.adapter.EsPlusClientFacade;
 import com.es.plus.adapter.params.EsAliasResponse;
 import com.es.plus.adapter.params.EsIndexResponse;
 import com.es.plus.adapter.params.EsSettings;
+import com.es.plus.adapter.pojo.es.EpBoolQueryBuilder;
 import com.es.plus.core.ClientContext;
 
 import java.util.Map;
@@ -109,7 +110,8 @@ public class EsIndexWrapper implements IEsIndexWrapper {
 
     @Override
     public boolean reindex(String oldIndexName, String reindexName, EsQueryWrapper esQueryWrapper) {
-        esPlusClientFacade.reindex(oldIndexName, reindexName, esQueryWrapper.getQueryBuilder());
+        EpBoolQueryBuilder queryBuilder = esQueryWrapper.getQueryBuilder();
+        esPlusClientFacade.reindex(oldIndexName, reindexName, queryBuilder);
         return true;
     }
     

@@ -1,12 +1,6 @@
 package com.es.plus.core.wrapper.core;
 
-import org.apache.lucene.search.join.ScoreMode;
-import org.elasticsearch.common.geo.GeoPoint;
-import org.elasticsearch.common.unit.DistanceUnit;
-import org.elasticsearch.common.unit.Fuzziness;
-import org.elasticsearch.index.query.InnerHitBuilder;
-import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.script.Script;
+import com.es.plus.adapter.pojo.es.*;
 
 import java.util.Collection;
 import java.util.List;
@@ -17,136 +11,141 @@ import java.util.function.Consumer;
  * @Date: 2022/1/21 11:10
  */
 public interface IEsQueryWrapper<Children, QUERY, R> {
-
+    
     Children matchAll();
-
+    
     Children boost(float boost);
-
+    
     default Children must(Consumer<QUERY> consumer) {
         return must(true, consumer);
     }
-
+    
     Children must(boolean condition, Consumer<QUERY> consumer);
-
+    
     default Children should(Consumer<QUERY> consumer) {
         return should(true, consumer);
     }
-
+    
     Children should(boolean condition, Consumer<QUERY> consumer);
-
+    
     default Children mustNot(Consumer<QUERY> consumer) {
         return mustNot(true, consumer);
     }
-
+    
     Children mustNot(boolean condition, Consumer<QUERY> consumer);
-
+    
     default Children filter(Consumer<QUERY> consumer) {
         return filter(true, consumer);
     }
-
+    
     Children filter(boolean condition, Consumer<QUERY> consumer);
-
-    default Children hasChild(String childType, ScoreMode scoreMode, Consumer<QUERY> consumer) {
+    
+    default Children hasChild(String childType, EpScoreMode scoreMode, Consumer<QUERY> consumer) {
         return hasChild(true, childType, scoreMode, consumer);
     }
-
-    Children hasChild(boolean condition, String childType, ScoreMode scoreMode, Consumer<QUERY> consumer);
-
+    
+    // 修改1: ScoreMode替换为EpScoreMode
+    Children hasChild(boolean condition, String childType, EpScoreMode scoreMode, Consumer<QUERY> consumer);
+    
     default Children hasParent(String parentType, Boolean scoreMod, Consumer<QUERY> consumer) {
         return hasParent(true, parentType, scoreMod, consumer);
     }
-
+    
+    // 修改2: ScoreMode替换为Boolean
     Children hasParent(boolean condition, String parentType, Boolean scoreMode, Consumer<QUERY> consumer);
-
+    
     default Children parentIdQuery(String childType, String id) {
         return parentIdQuery(true, childType, id);
     }
-
+    
     Children parentIdQuery(boolean condition, String childType, String id);
-
-    default Children query(QueryBuilder queryBuilder) {
+    
+    default Children query(EpQueryBuilder queryBuilder) {
         return query(true, queryBuilder);
     }
-
-    Children query(boolean condition, QueryBuilder queryBuilder);
-
+    
+    // 修改3: QueryBuilder替换为EpQueryBuilder
+    Children query(boolean condition, EpQueryBuilder queryBuilder);
+    
     default Children exists(R name) {
         return exists(true, name);
     }
-
+    
     Children exists(boolean condition, R name);
-
+    
     default Children term(R name, Object value) {
         return term(true, name, value);
     }
-
+    
     Children term(boolean condition, R name, Object value);
     
-    default Children script(Script script) {
+    // 修改4: Script替换为EpScript
+    default Children script(EpScript script) {
         return script(true, script);
     }
     
-    Children script(boolean condition, Script script);
-
+    // 修改5: Script替换为EpScript
+    Children script(boolean condition, EpScript script);
+    
     default Children terms(R name, Object... value) {
         return terms(true, name, value);
     }
-
+    
     Children terms(boolean condition, R name, Object... value);
-
+    
     default Children terms(R name, Collection<?> values) {
         return terms(true, name, values);
     }
-
+    
     Children terms(boolean condition, R name, Collection<?> values);
-
+    
     //
     default Children termKeyword(R name, Object value) {
         return termKeyword(true, name, value);
     }
-
+    
     Children termKeyword(boolean condition, R name, Object value);
-
+    
     default Children termsKeyword(R name, Object... value) {
         return termsKeyword(true, name, value);
     }
-
+    
     Children termsKeyword(boolean condition, R name, Object... value);
-
+    
     default Children termsKeyword(R name, Collection<?> values) {
         return termsKeyword(true, name, values);
     }
-
+    
     Children termsKeyword(boolean condition, R name, Collection<?> values);
-
+    
     default Children match(R name, Object value) {
         return match(true, name, value);
     }
-
+    
     Children match(boolean condition, R name, Object value);
-
+    
     default Children matchPhrase(R name, Object value) {
         return matchPhrase(true, name, value);
     }
-
+    
     Children matchPhrase(boolean condition, R name, Object value);
-
+    
     default Children multiMatch(Object value, R... name) {
         return multiMatch(true, value, name);
     }
-
+    
     Children multiMatch(boolean condition, Object value, R... name);
-
+    
     default Children matchPhrasePrefix(R name, Object value) {
         return matchPhrasePrefix(true, name, value);
     }
-
+    
     Children matchPhrasePrefix(boolean condition, R name, Object value);
-
+    
     default Children wildcard(R name, String value) {
         return wildcard(true, name, value);
     }
-
+    
     Children wildcard(boolean condition, R name, String value);
     
     default Children wildcardKeyword(R name, String value) {
@@ -154,26 +153,25 @@ public interface IEsQueryWrapper<Children, QUERY, R> {
     }
     
     Children wildcardKeyword(boolean condition, R name, String value);
-
-    default Children fuzzy(R name, String value, Fuzziness fuzziness) {
+    
+    default Children fuzzy(R name, String value, EpFuzziness fuzziness) {
         return fuzzy(true, name, value, fuzziness);
     }
-
-    //有纠错能力的模糊查询。
-    Children fuzzy(boolean condition, R name, String value, Fuzziness fuzziness);
-
-    default Children fuzzy(R name, String value, Fuzziness fuzziness, int prefixLength) {
+    
+    // 修改6: Fuzziness替换为EpFuzziness
+    Children fuzzy(boolean condition, R name, String value, EpFuzziness fuzziness);
+    
+    default Children fuzzy(R name, String value, EpFuzziness fuzziness, int prefixLength) {
         return fuzzy(true, name, value, fuzziness, prefixLength);
     }
-
-    //有纠错能力的模糊查询。
-    Children fuzzy(boolean condition, R name, String value, Fuzziness fuzziness, int prefixLength);
-
+    
+    // 修改7: Fuzziness替换为EpFuzziness
+    Children fuzzy(boolean condition, R name, String value, EpFuzziness fuzziness, int prefixLength);
+    
     default Children ids(Collection<String> ids) {
         return ids(true, ids);
     }
-
-    //TODO 迟点用 根据id查询
+    
     Children ids(boolean condition, Collection<String> ids);
     
     /**
@@ -234,7 +232,7 @@ public interface IEsQueryWrapper<Children, QUERY, R> {
      * @param mode     模式
      * @return {@link Children}
      */
-    default <S> Children nestedQuery(R path, Class<S> sClass, Consumer<EsLambdaQueryWrapper<S>> consumer, ScoreMode mode, InnerHitBuilder innerHitBuilder) {
+    default <S> Children nestedQuery(R path, Class<S> sClass, Consumer<EsLambdaQueryWrapper<S>> consumer, EpScoreMode mode, EpInnerHitBuilder innerHitBuilder) {
         return nestedQuery(true, path, sClass, consumer, mode, innerHitBuilder);
     }
     
@@ -248,7 +246,7 @@ public interface IEsQueryWrapper<Children, QUERY, R> {
      * @param mode      模式
      * @return {@link Children}
      */
-    <S> Children nestedQuery(boolean condition, R path, Class<S> sClass, Consumer<EsLambdaQueryWrapper<S>> consumer, ScoreMode mode, InnerHitBuilder innerHitBuilder);
+    <S> Children nestedQuery(boolean condition, R path, Class<S> sClass, Consumer<EsLambdaQueryWrapper<S>> consumer, EpScoreMode mode, EpInnerHitBuilder innerHitBuilder);
     
     /**
      * 嵌套查询
@@ -259,7 +257,7 @@ public interface IEsQueryWrapper<Children, QUERY, R> {
      * @param mode      模式
      * @return {@link Children}
      */
-    default <S> Children nestedQuery(R path, Consumer<EsQueryWrapper<S>> consumer, ScoreMode mode, InnerHitBuilder innerHitBuilder) {
+    default <S> Children nestedQuery(R path, Consumer<EsQueryWrapper<S>> consumer, EpScoreMode mode, EpInnerHitBuilder innerHitBuilder) {
         return nestedQuery(true, path, consumer, mode, innerHitBuilder);
     }
     
@@ -272,7 +270,7 @@ public interface IEsQueryWrapper<Children, QUERY, R> {
      * @param mode      模式
      * @return {@link Children}
      */
-    <S> Children nestedQuery(boolean condition, R path, Consumer<EsQueryWrapper<S>> consumer, ScoreMode mode, InnerHitBuilder innerHitBuilder);
+    <S> Children nestedQuery(boolean condition, R path, Consumer<EsQueryWrapper<S>> consumer, EpScoreMode mode, EpInnerHitBuilder innerHitBuilder);
     
     
     /**
@@ -299,7 +297,7 @@ public interface IEsQueryWrapper<Children, QUERY, R> {
      * @return {@link Children}
      */
     <S> Children nested(boolean condition, String path, Consumer<EsQueryWrapper<S>> consumer);
-   
+    
     
     /**
      * 嵌套查询
@@ -310,7 +308,7 @@ public interface IEsQueryWrapper<Children, QUERY, R> {
      * @param mode      模式
      * @return {@link Children}
      */
-    default <S> Children nested(String path, Consumer<EsQueryWrapper<S>> consumer, ScoreMode mode, InnerHitBuilder innerHitBuilder) {
+    default <S> Children nested(String path, Consumer<EsQueryWrapper<S>> consumer, EpScoreMode mode, EpInnerHitBuilder innerHitBuilder) {
         return nested(true, path, consumer, mode, innerHitBuilder);
     }
     
@@ -323,68 +321,69 @@ public interface IEsQueryWrapper<Children, QUERY, R> {
      * @param mode      模式
      * @return {@link Children}
      */
-    <S> Children nested(boolean condition, String path, Consumer<EsQueryWrapper<S>> consumer, ScoreMode mode, InnerHitBuilder innerHitBuilder);
-   
+    <S> Children nested(boolean condition, String path, Consumer<EsQueryWrapper<S>> consumer, EpScoreMode mode, EpInnerHitBuilder innerHitBuilder);
+    
     default Children gt(R name, Object from) {
         return gt(true, name, from);
     }
-
+    
     Children gt(boolean condition, R name, Object from);
-
+    
     default Children ge(R name, Object from) {
         return ge(true, name, from);
     }
-
+    
     Children ge(boolean condition, R name, Object from);
-
+    
     default Children lt(R name, Object to) {
         return lt(true, name, to);
     }
-
+    
     Children lt(boolean condition, R name, Object to);
-
+    
     default Children le(R name, Object to) {
         return le(true, name, to);
     }
-
+    
     Children le(boolean condition, R name, Object to);
-
+    
     default Children range(R name, Object from, Object to) {
         return range(true, name, from, to);
     }
-
+    
     Children range(boolean condition, R name, Object from, Object to);
-
+    
     default Children range(R name, Object from, Object to, String timeZone) {
         return range(true, name, from, to, timeZone);
     }
-
+    
     Children range(boolean condition, R name, Object from, Object to, String timeZone);
-
-
+    
+    
     default Children range(R name, Object from, Object to, boolean fromInclude, boolean toInclude) {
         return range(true, name, from, to, fromInclude, toInclude);
     }
-
+    
     Children range(boolean condition, R name, Object from, Object to, boolean fromInclude, boolean toInclude);
-
-    default Children geoBoundingBox(R name, GeoPoint topLeft, GeoPoint bottomRight) {
+    
+    default Children geoBoundingBox(R name, EpGeoPoint topLeft, EpGeoPoint bottomRight) {
         return geoBoundingBox(true, name, topLeft, bottomRight);
     }
-
-    Children geoBoundingBox(boolean condition, R name, GeoPoint topLeft, GeoPoint bottomRight);
-
-    default Children geoDistance(R name, String distance, DistanceUnit distanceUnit, GeoPoint centralGeoPoint) {
+    
+    // 修改8: GeoPoint替换为EpGeoPoint
+    Children geoBoundingBox(boolean condition, R name, EpGeoPoint topLeft, EpGeoPoint bottomRight);
+    
+    default Children geoDistance(R name, String distance, EpDistanceUnit distanceUnit, EpGeoPoint centralGeoPoint) {
         return geoDistance(true, name, distance, distanceUnit, centralGeoPoint);
     }
-
-    Children geoDistance(boolean condition, R name, String distance, DistanceUnit distanceUnit, GeoPoint centralGeoPoint);
-
-    default Children geoPolygon(R name, List<GeoPoint> geoPoints) {
+    
+    // 修改9: DistanceUnit和GeoPoint替换为EpDistanceUnit和EpGeoPoint
+    Children geoDistance(boolean condition, R name, String distance, EpDistanceUnit distanceUnit, EpGeoPoint centralGeoPoint);
+    
+    default Children geoPolygon(R name, List<EpGeoPoint> geoPoints) {
         return geoPolygon(true, name, geoPoints);
     }
-
-    Children geoPolygon(boolean condition, R name, List<GeoPoint> geoPoints);
     
-
+    // 修改10: GeoPoint替换为EpGeoPoint
+    Children geoPolygon(boolean condition, R name, List<EpGeoPoint> geoPoints);
 }

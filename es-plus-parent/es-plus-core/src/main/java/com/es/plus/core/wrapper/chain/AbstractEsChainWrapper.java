@@ -5,6 +5,16 @@ import com.es.plus.adapter.config.GlobalConfigCache;
 import com.es.plus.adapter.exception.EsException;
 import com.es.plus.adapter.params.EsParamWrapper;
 import com.es.plus.adapter.params.EsSelect;
+import com.es.plus.adapter.pojo.es.EpBoolQueryBuilder;
+import com.es.plus.adapter.pojo.es.EpDistanceUnit;
+import com.es.plus.adapter.pojo.es.EpFuzziness;
+import com.es.plus.adapter.pojo.es.EpGeoPoint;
+import com.es.plus.adapter.pojo.es.EpInnerHitBuilder;
+import com.es.plus.adapter.pojo.es.EpNestedSortBuilder;
+import com.es.plus.adapter.pojo.es.EpQueryBuilder;
+import com.es.plus.adapter.pojo.es.EpScoreMode;
+import com.es.plus.adapter.pojo.es.EpScript;
+import com.es.plus.adapter.pojo.es.EpSearchType;
 import com.es.plus.adapter.properties.GlobalParamHolder;
 import com.es.plus.core.wrapper.aggregation.EsAggWrapper;
 import com.es.plus.core.wrapper.aggregation.EsLambdaAggWrapper;
@@ -122,7 +132,7 @@ public abstract class AbstractEsChainWrapper<T, R, Children extends AbstractEsCh
     }
 
     @Override
-    public Children hasChild(boolean condition, String childType, ScoreMode scoreMode, Consumer<QUERY> consumer) {
+    public Children hasChild(boolean condition, String childType, EpScoreMode scoreMode, Consumer<QUERY> consumer) {
         getWrapper().hasChild(condition, childType, scoreMode, consumer);
         return this.children;
     }
@@ -177,7 +187,7 @@ public abstract class AbstractEsChainWrapper<T, R, Children extends AbstractEsCh
     
     
     @Override
-    public Children sortBy(String order, NestedSortBuilder nestedSortBuilder,String... name){
+    public Children sortBy(String order, EpNestedSortBuilder nestedSortBuilder,String... name){
         getWrapper().sortBy(order,nestedSortBuilder,name);
         return children;
     }
@@ -236,26 +246,26 @@ public abstract class AbstractEsChainWrapper<T, R, Children extends AbstractEsCh
     }
 
     @Override
-    public <S> Children nestedQuery(R path, Class<S> sClass, Consumer<EsLambdaQueryWrapper<S>> consumer, ScoreMode mode, InnerHitBuilder innerHitBuilder) {
+    public <S> Children nestedQuery(R path, Class<S> sClass, Consumer<EsLambdaQueryWrapper<S>> consumer, EpScoreMode mode, EpInnerHitBuilder innerHitBuilder) {
         getWrapper().nestedQuery(path, sClass, consumer, mode, innerHitBuilder);
         return this.children;
     }
 
     @Override
-    public <S> Children nestedQuery(R path, Consumer<EsQueryWrapper<S>> consumer, ScoreMode mode, InnerHitBuilder innerHitBuilder) {
+    public <S> Children nestedQuery(R path, Consumer<EsQueryWrapper<S>> consumer, EpScoreMode mode, EpInnerHitBuilder innerHitBuilder) {
         getWrapper().nestedQuery(path, consumer, mode, innerHitBuilder);
         return this.children;
     }
 
     @Override
-    public <S> Children nestedQuery(boolean condition, R path, Class<S> sClass, Consumer<EsLambdaQueryWrapper<S>> consumer, ScoreMode mode, InnerHitBuilder innerHitBuilder) {
+    public <S> Children nestedQuery(boolean condition, R path, Class<S> sClass, Consumer<EsLambdaQueryWrapper<S>> consumer, EpScoreMode mode, EpInnerHitBuilder innerHitBuilder) {
         getWrapper().nestedQuery(condition, path, sClass, consumer, mode, innerHitBuilder);
         return this.children;
     }
     
     @Override
     public <S> Children nestedQuery(boolean condition, R path, Consumer<EsQueryWrapper<S>> consumer,
-            ScoreMode mode, InnerHitBuilder innerHitBuilder) {
+            EpScoreMode mode, EpInnerHitBuilder innerHitBuilder) {
         getWrapper().nestedQuery(condition, path, consumer, mode, innerHitBuilder);
         return this.children;
     }
@@ -277,7 +287,7 @@ public abstract class AbstractEsChainWrapper<T, R, Children extends AbstractEsCh
     }
     
     @Override
-    public <S> Children nested(String path, Consumer<EsQueryWrapper<S>> consumer, ScoreMode mode, InnerHitBuilder innerHitBuilder) {
+    public <S> Children nested(String path, Consumer<EsQueryWrapper<S>> consumer, EpScoreMode mode, EpInnerHitBuilder innerHitBuilder) {
         getWrapper().nested(path, consumer, mode, innerHitBuilder);
         return this.children;
     }
@@ -285,14 +295,14 @@ public abstract class AbstractEsChainWrapper<T, R, Children extends AbstractEsCh
   
 
     @Override
-    public <S> Children nested(boolean condition, String path, Consumer<EsQueryWrapper<S>> consumer, ScoreMode mode, InnerHitBuilder innerHitBuilder) {
+    public <S> Children nested(boolean condition, String path, Consumer<EsQueryWrapper<S>> consumer, EpScoreMode mode, EpInnerHitBuilder innerHitBuilder) {
         getWrapper().nested(condition, path, consumer, mode, innerHitBuilder);
         return this.children;
     }
     
 
     @Override
-    public Children query(boolean condition, QueryBuilder queryBuilder) {
+    public Children query(boolean condition, EpQueryBuilder queryBuilder) {
         getWrapper().query(condition, queryBuilder);
         return children;
     }
@@ -310,7 +320,7 @@ public abstract class AbstractEsChainWrapper<T, R, Children extends AbstractEsCh
     }
     
     @Override
-    public Children script(boolean condition, Script script) {
+    public Children script(boolean condition, EpScript script) {
         getWrapper().script(condition, script);
         return children;
     }
@@ -384,12 +394,12 @@ public abstract class AbstractEsChainWrapper<T, R, Children extends AbstractEsCh
     }
     //有纠错能力的模糊查询。
     @Override
-    public Children fuzzy(boolean condition, R name, String value, Fuzziness fuzziness) {
+    public Children fuzzy(boolean condition, R name, String value, EpFuzziness fuzziness) {
         getWrapper().fuzzy(condition, name, value, fuzziness);
         return children;
     }
     @Override
-    public Children fuzzy(boolean condition, R name, String value,Fuzziness fuzziness,int prefixLength) {
+    public Children fuzzy(boolean condition, R name, String value, EpFuzziness fuzziness,int prefixLength) {
         getWrapper().fuzzy(condition, name, value, fuzziness,prefixLength);
         return children;
     }
@@ -445,24 +455,24 @@ public abstract class AbstractEsChainWrapper<T, R, Children extends AbstractEsCh
 
 
     @Override
-    public Children geoBoundingBox(boolean condition, R name, GeoPoint topLeft, GeoPoint bottomRight) {
+    public Children geoBoundingBox(boolean condition, R name, EpGeoPoint topLeft, EpGeoPoint bottomRight) {
         getWrapper().geoBoundingBox(condition, name, topLeft, bottomRight);
         return children;
     }
 
     @Override
-    public Children geoDistance(boolean condition, R name, String distance, DistanceUnit distanceUnit, GeoPoint centralGeoPoint) {
+    public Children geoDistance(boolean condition, R name, String distance, EpDistanceUnit distanceUnit, EpGeoPoint centralGeoPoint) {
         getWrapper().geoDistance(condition, name, distance, distanceUnit, centralGeoPoint);
         return children;
     }
 
     @Override
-    public Children geoPolygon(boolean condition, R name, List<GeoPoint> geoPoints) {
+    public Children geoPolygon(boolean condition, R name, List<EpGeoPoint> geoPoints) {
         getWrapper().geoPolygon(condition, name, geoPoints);
         return children;
     }
 
-    public BoolQueryBuilder getQueryBuilder() {
+    public EpBoolQueryBuilder getQueryBuilder() {
         return getWrapper().getQueryBuilder();
     }
     
@@ -512,7 +522,7 @@ public abstract class AbstractEsChainWrapper<T, R, Children extends AbstractEsCh
     }
 
     @Override
-    public Children searchType(SearchType searchType) {
+    public Children searchType(EpSearchType searchType) {
         getWrapper().searchType(searchType);
         return children;
     }

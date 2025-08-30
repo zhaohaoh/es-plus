@@ -8,7 +8,7 @@
         <version>${revision}</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-
+    <name>es-plus-samples</name>
     <description>es-plus简单案例</description>
 
     <artifactId>es-plus-samples</artifactId>

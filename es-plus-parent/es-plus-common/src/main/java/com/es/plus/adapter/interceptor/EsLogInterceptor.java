@@ -17,7 +17,7 @@ public class EsLogInterceptor implements EsInterceptor{
     @Override
     public void before(String index,String type, Method method, EsParamWrapper<?> esParamWrapper,EsPlusClient esPlusClient) {
         EsQueryParamWrapper esQueryParamWrapper = esParamWrapper.getEsQueryParamWrapper();
-        BoolQueryBuilder queryBuilder = esQueryParamWrapper.getQueryBuilder();
+       
     }
     
     @Override

@@ -8,7 +8,7 @@
         <version>${revision}</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-
+    <name>es-plus-common</name>
     <artifactId>es-plus-common</artifactId>
     <description>es-plus核心</description>
     <properties>

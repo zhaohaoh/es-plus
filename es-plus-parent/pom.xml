@@ -9,7 +9,7 @@
     </parent>
     <packaging>pom</packaging>
     <modelVersion>4.0.0</modelVersion>
-    
+    <name>es-plus-parent</name>
     <artifactId>es-plus-parent</artifactId>
     <modules>
         <module>es-plus-spring-boot-starter</module>

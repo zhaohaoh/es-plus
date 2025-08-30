@@ -15,6 +15,7 @@ import com.es.plus.adapter.params.EsParamWrapper;
 import com.es.plus.adapter.params.EsResponse;
 import com.es.plus.adapter.params.EsSettings;
 import com.es.plus.adapter.pojo.EsPlusGetTaskResponse;
+import com.es.plus.adapter.pojo.es.EpQueryBuilder;
 import com.es.plus.adapter.util.CollectionUtil;
 import org.elasticsearch.action.admin.cluster.node.tasks.list.ListTasksResponse;
 import org.elasticsearch.action.bulk.BulkItemResponse;
@@ -325,7 +326,7 @@ public class EsPlusClientFacade   {
      * @param reindexName
      * @return
      */
-    public boolean reindex(String oldIndexName, String reindexName, QueryBuilder queryBuilder) {
+    public boolean reindex(String oldIndexName, String reindexName, EpQueryBuilder queryBuilder) {
         return esPlusIndexClient.reindex(oldIndexName, reindexName, queryBuilder);
     }
     

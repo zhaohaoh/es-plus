@@ -7,6 +7,7 @@
         <groupId>io.github.zhaohaoh</groupId>
         <version>${revision}</version>
     </parent>
+    <name>es-plus-core</name>
     <modelVersion>4.0.0</modelVersion>
     <description>es-plus封装wrpper核心</description>
     <artifactId>es-plus-core</artifactId>

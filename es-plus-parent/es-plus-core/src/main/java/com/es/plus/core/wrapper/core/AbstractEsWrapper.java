@@ -1,6 +1,5 @@
 package com.es.plus.core.wrapper.core;
 
-
 import com.es.plus.adapter.config.GlobalConfigCache;
 import com.es.plus.adapter.exception.EsException;
 import com.es.plus.adapter.interceptor.EsUpdateField;
@@ -9,44 +8,25 @@ import com.es.plus.adapter.params.EsOrder;
 import com.es.plus.adapter.params.EsParamWrapper;
 import com.es.plus.adapter.params.EsQueryParamWrapper;
 import com.es.plus.adapter.params.EsSelect;
+import com.es.plus.adapter.pojo.es.EpBoolQueryBuilder;
+import com.es.plus.adapter.pojo.es.EpDistanceUnit;
+import com.es.plus.adapter.pojo.es.EpFuzziness;
+import com.es.plus.adapter.pojo.es.EpGeoPoint;
+import com.es.plus.adapter.pojo.es.EpInnerHitBuilder;
+import com.es.plus.adapter.pojo.es.EpNestedSortBuilder;
+import com.es.plus.adapter.pojo.es.EpQueryBuilder;
+import com.es.plus.adapter.pojo.es.EpScoreMode;
+import com.es.plus.adapter.pojo.es.EpScript;
+import com.es.plus.adapter.pojo.es.EpSearchType;
+import com.es.plus.adapter.pojo.es.EpSortOrder;
 import com.es.plus.adapter.properties.EsFieldInfo;
 import com.es.plus.adapter.properties.GlobalParamHolder;
 import com.es.plus.adapter.util.DateUtil;
 import com.es.plus.core.wrapper.aggregation.EsAggWrapper;
 import com.es.plus.core.wrapper.aggregation.EsLambdaAggWrapper;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.action.search.SearchType;
-import org.elasticsearch.common.geo.GeoPoint;
-import org.elasticsearch.common.unit.DistanceUnit;
-import org.elasticsearch.common.unit.Fuzziness;
-import org.elasticsearch.index.query.BoolQueryBuilder;
-import org.elasticsearch.index.query.ExistsQueryBuilder;
-import org.elasticsearch.index.query.FuzzyQueryBuilder;
-import org.elasticsearch.index.query.GeoBoundingBoxQueryBuilder;
-import org.elasticsearch.index.query.GeoDistanceQueryBuilder;
-import org.elasticsearch.index.query.GeoPolygonQueryBuilder;
-import org.elasticsearch.index.query.IdsQueryBuilder;
-import org.elasticsearch.index.query.InnerHitBuilder;
-import org.elasticsearch.index.query.MatchPhrasePrefixQueryBuilder;
-import org.elasticsearch.index.query.MatchPhraseQueryBuilder;
-import org.elasticsearch.index.query.MatchQueryBuilder;
-import org.elasticsearch.index.query.MultiMatchQueryBuilder;
-import org.elasticsearch.index.query.NestedQueryBuilder;
-import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.index.query.ScriptQueryBuilder;
-import org.elasticsearch.index.query.TermQueryBuilder;
-import org.elasticsearch.index.query.TermsQueryBuilder;
-import org.elasticsearch.index.query.WildcardQueryBuilder;
-import org.elasticsearch.join.query.HasChildQueryBuilder;
-import org.elasticsearch.join.query.HasParentQueryBuilder;
-import org.elasticsearch.join.query.ParentIdQueryBuilder;
-import org.elasticsearch.script.Script;
-import org.elasticsearch.search.sort.NestedSortBuilder;
-import org.elasticsearch.search.sort.SortOrder;
 import org.springframework.util.CollectionUtils;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -64,29 +44,29 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
         implements IEsQueryWrapper<Children, Children, R>, EsWrapper<T>, EsExtendsWrapper<Children, R>, EsStaitcsWrapper<Children> {
     protected AbstractEsWrapper() {
         //成员变量比构造方法更快执行
-        queryBuilders = esParamWrapper().getEsQueryParamWrapper().getQueryBuilder().must();
+        queryBuilders = esParamWrapper().getEsQueryParamWrapper().getBoolQueryBuilder().must();
     }
     protected AbstractEsWrapper(Class<T> tClass) {
         //成员变量比构造方法更快执行 所以在这里加载
         super.tClass=tClass;
-        queryBuilders = esParamWrapper().getEsQueryParamWrapper().getQueryBuilder().must();
+        queryBuilders = esParamWrapper().getEsQueryParamWrapper().getBoolQueryBuilder().must();
     }
-
+    
     protected Children children = (Children) this;
-
-    protected QueryBuilder currentBuilder;
+    
+    protected EpQueryBuilder currentBuilder;
     
     /*
      *实例
      */
     protected abstract Children instance();
-
+    
     private EsParamWrapper<T> esParamWrapper;
-
-    private List<QueryBuilder> queryBuilders;
-
+    
+    private List<EpQueryBuilder> queryBuilders;
+    
     protected EsLambdaAggWrapper<T> esLambdaAggWrapper;
-
+    
     protected EsAggWrapper<T> esAggWrapper;
     
     protected String[] indexs;
@@ -118,7 +98,7 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
         GlobalParamHolder.set_id(indexs,_id);
         return this.children;
     }
-
+    
     @Override
     public EsParamWrapper<T> esParamWrapper() {
         if (esParamWrapper == null) {
@@ -129,12 +109,12 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
         }
         return esParamWrapper;
     }
-
+    
     @Override
     public EsUpdateField getEsUpdateField() {
         return esParamWrapper().getEsUpdateField();
     }
-
+    
     @Override
     public EsLambdaAggWrapper<T> esLambdaAggWrapper() {
         if (esLambdaAggWrapper == null) {
@@ -144,7 +124,7 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
         }
         return esLambdaAggWrapper;
     }
-
+    
     @Override
     public EsAggWrapper<T> esAggWrapper() {
         if (esAggWrapper == null) {
@@ -154,8 +134,8 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
         }
         return esAggWrapper;
     }
-
-
+    
+    
     /**
      * 得到es param包装
      *
@@ -164,16 +144,16 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
     private EsQueryParamWrapper getEsQueryParamWrapper() {
         return esParamWrapper.getEsQueryParamWrapper();
     }
-
+    
     @Override
     protected String nameToString(R function) {
         return super.nameToString(function);
     }
-
-    public BoolQueryBuilder getQueryBuilder() {
-        return esParamWrapper().getEsQueryParamWrapper().getQueryBuilder();
+    
+    public EpBoolQueryBuilder getQueryBuilder() {
+        return   esParamWrapper().getEsQueryParamWrapper().getBoolQueryBuilder();
     }
-   
+    
     
     //获取select的字段
     @Override
@@ -184,20 +164,20 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
         }
         return getEsQueryParamWrapper().getEsSelect();
     }
-
-
+    
+    
     @Override
     public Children matchAll() {
-        getQueryBuilder().must(QueryBuilders.matchAllQuery());
+        getQueryBuilder().must(new EpQueryBuilder("match_all", "match_all"));
         return this.children;
     }
-
+    
     @Override
     public Children boost(float boost) {
         currentBuilder.boost(boost);
         return this.children;
     }
-
+    
     @Override
     public Children must(boolean condition, Consumer<Children> consumer) {
         if (!condition){
@@ -206,15 +186,15 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
         final Children children = instance();
         children.parentFieldName = super.parentFieldName;
         consumer.accept(children);
-        BoolQueryBuilder queryBuilder = children.getQueryBuilder();
-        if (CollectionUtils.isEmpty(queryBuilder.must())  &&CollectionUtils.isEmpty(queryBuilder.mustNot()) &&
-                CollectionUtils.isEmpty(queryBuilder.filter()) &&CollectionUtils.isEmpty(queryBuilder.should())){
+        EpBoolQueryBuilder queryBuilder = children.getQueryBuilder();
+        if (CollectionUtils.isEmpty(queryBuilder.getMustClauses())  &&CollectionUtils.isEmpty(queryBuilder.getMustNotClauses()) &&
+                CollectionUtils.isEmpty(queryBuilder.getFilterClauses()) &&CollectionUtils.isEmpty(queryBuilder.getShouldClauses())){
             return this.children;
         }
         this.children.getQueryBuilder().must(children.getQueryBuilder());
         return this.children;
     }
-
+    
     @Override
     public Children should(boolean condition, Consumer<Children> consumer) {
         if (!condition){
@@ -223,15 +203,15 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
         final Children children = instance();
         children.parentFieldName = super.parentFieldName;
         consumer.accept(children);
-        BoolQueryBuilder queryBuilder = children.getQueryBuilder();
-        if (CollectionUtils.isEmpty(queryBuilder.must())  &&CollectionUtils.isEmpty(queryBuilder.mustNot()) &&
-                CollectionUtils.isEmpty(queryBuilder.filter()) &&CollectionUtils.isEmpty(queryBuilder.should())){
+        EpBoolQueryBuilder queryBuilder = children.getQueryBuilder();
+        if (CollectionUtils.isEmpty(queryBuilder.getMustClauses())  &&CollectionUtils.isEmpty(queryBuilder.getMustNotClauses()) &&
+                CollectionUtils.isEmpty(queryBuilder.getFilterClauses()) &&CollectionUtils.isEmpty(queryBuilder.getShouldClauses())){
             return this.children;
         }
         this.children.getQueryBuilder().should(children.getQueryBuilder());
         return this.children;
     }
-
+    
     @Override
     public Children mustNot(boolean condition, Consumer<Children> consumer) {
         if (!condition){
@@ -240,15 +220,15 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
         final Children children = instance();
         children.parentFieldName = super.parentFieldName;
         consumer.accept(children);
-        BoolQueryBuilder queryBuilder = children.getQueryBuilder();
-        if (CollectionUtils.isEmpty(queryBuilder.must())  &&CollectionUtils.isEmpty(queryBuilder.mustNot()) &&
-                CollectionUtils.isEmpty(queryBuilder.filter()) &&CollectionUtils.isEmpty(queryBuilder.should())){
+        EpBoolQueryBuilder queryBuilder = children.getQueryBuilder();
+        if (CollectionUtils.isEmpty(queryBuilder.getMustClauses())  &&CollectionUtils.isEmpty(queryBuilder.getMustNotClauses()) &&
+                CollectionUtils.isEmpty(queryBuilder.getFilterClauses()) &&CollectionUtils.isEmpty(queryBuilder.getShouldClauses())){
             return this.children;
         }
         this.children.getQueryBuilder().mustNot(children.getQueryBuilder());
         return this.children;
     }
-
+    
     @Override
     public Children filter(boolean condition, Consumer<Children> consumer) {
         if (!condition){
@@ -257,101 +237,132 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
         final Children children = instance();
         children.parentFieldName = super.parentFieldName;
         consumer.accept(children);
-        BoolQueryBuilder queryBuilder = children.getQueryBuilder();
-        if (CollectionUtils.isEmpty(queryBuilder.must())  &&CollectionUtils.isEmpty(queryBuilder.mustNot()) &&
-                CollectionUtils.isEmpty(queryBuilder.filter()) &&CollectionUtils.isEmpty(queryBuilder.should())){
+        EpBoolQueryBuilder queryBuilder = children.getQueryBuilder();
+        if (CollectionUtils.isEmpty(queryBuilder.getMustClauses())  &&CollectionUtils.isEmpty(queryBuilder.getMustNotClauses()) &&
+                CollectionUtils.isEmpty(queryBuilder.getFilterClauses()) &&CollectionUtils.isEmpty(queryBuilder.getShouldClauses())){
             return this.children;
         }
         this.children.getQueryBuilder().filter(children.getQueryBuilder());
         return this.children;
     }
-
+    
     /**
      * 根据子文档条件查询父文档  待优化自动获取type
      */
     @Override
-    public Children hasChild(boolean condition, String childType, ScoreMode scoreMode, Consumer<Children> consumer) {
-        final Children children = instance();
-        children.parentFieldName = super.parentFieldName;
-        consumer.accept(children);
-        HasChildQueryBuilder hasParentQueryBuilder = new HasChildQueryBuilder(childType, children.getQueryBuilder(), scoreMode);
-        queryBuilders.add(hasParentQueryBuilder);
-        currentBuilder = hasParentQueryBuilder;
+    public Children hasChild(boolean condition, String childType, EpScoreMode scoreMode, Consumer<Children> consumer) {
+        if (condition) {
+            final Children children = instance();
+            children.parentFieldName = super.parentFieldName;
+            consumer.accept(children);
+            EpBoolQueryBuilder childQueryBuilder = children.getQueryBuilder();
+            if (!CollectionUtils.isEmpty(childQueryBuilder.getMustClauses()) || !CollectionUtils.isEmpty(childQueryBuilder.getMustNotClauses()) ||
+                    !CollectionUtils.isEmpty(childQueryBuilder.getFilterClauses()) || !CollectionUtils.isEmpty(childQueryBuilder.getShouldClauses())) {
+                EpQueryBuilder hasChildQuery = new EpQueryBuilder("has_child", "has_child")
+                        .param("type", childType)
+                        .param("query", childQueryBuilder)
+                        .param("score_mode", EpScoreMode.valueOf(scoreMode.name()));
+                queryBuilders.add(hasChildQuery);
+                currentBuilder = hasChildQuery;
+            }
+        }
         return this.children;
     }
-
+    
     /**
      * 根据父文档条件查询子文档 待优化自动获取type
      */
     @Override
     public Children hasParent(boolean condition, String parentType, Boolean scoreMode, Consumer<Children> consumer) {
-        final Children children = instance();
-        children.parentFieldName = super.parentFieldName;
-        consumer.accept(children);
-        HasParentQueryBuilder hasParentQueryBuilder = new HasParentQueryBuilder(parentType, children.getQueryBuilder(), scoreMode);
-        queryBuilders.add(hasParentQueryBuilder);
-        currentBuilder = hasParentQueryBuilder;
+        if (condition) {
+            final Children children = instance();
+            children.parentFieldName = super.parentFieldName;
+            consumer.accept(children);
+            EpBoolQueryBuilder parentQueryBuilder = children.getQueryBuilder();
+            if (!CollectionUtils.isEmpty(parentQueryBuilder.getMustClauses()) || !CollectionUtils.isEmpty(parentQueryBuilder.getMustNotClauses()) ||
+                    !CollectionUtils.isEmpty(parentQueryBuilder.getFilterClauses()) || !CollectionUtils.isEmpty(parentQueryBuilder.getShouldClauses())) {
+                EpQueryBuilder hasParentQuery = new EpQueryBuilder("has_parent", "has_parent")
+                        .param("type", parentType)
+                        .param("query", parentQueryBuilder)
+                        .param("score_mode", scoreMode);
+                queryBuilders.add(hasParentQuery);
+                currentBuilder = hasParentQuery;
+            }
+        }
         return this.children;
     }
-
+    
     @Override
     public Children parentIdQuery(boolean condition, String childType, String id) {
-        ParentIdQueryBuilder parentIdQueryBuilder = new ParentIdQueryBuilder(childType, id);
-        queryBuilders.add(parentIdQueryBuilder);
-        currentBuilder = parentIdQueryBuilder;
+        if (condition) {
+            EpQueryBuilder parentIdQuery = new EpQueryBuilder("parent_id", "parent_id")
+                    .param("type", childType)
+                    .param("id", id);
+            queryBuilders.add(parentIdQuery);
+            currentBuilder = parentIdQuery;
+        }
         return this.children;
     }
-
+    
     @Override
     public Children must() {
-        if (queryBuilders != getQueryBuilder().must()) {
-            queryBuilders = getQueryBuilder().must();
+        // 切换到must子句列表
+        if (!(queryBuilders instanceof ArrayList)) {
+            // 如果当前不是must列表，切换到must列表
+            queryBuilders = getQueryBuilder().getMustClauses();
         }
         return children;
     }
-
+    
     @Override
     public Children should() {
-        if (queryBuilders != getQueryBuilder().should()) {
-            queryBuilders = getQueryBuilder().should();
+        // 切换到should子句列表
+        if (!(queryBuilders instanceof ArrayList)) {
+            // 如果当前不是should列表，切换到should列表
+            queryBuilders = getQueryBuilder().getShouldClauses();
         }
         return children;
     }
-
+    
     @Override
     public Children filter() {
-        if (queryBuilders != getQueryBuilder().filter()) {
-            queryBuilders = getQueryBuilder().filter();
+        // 切换到filter子句列表
+        if (!(queryBuilders instanceof ArrayList)) {
+            // 如果当前不是filter列表，切换到filter列表
+            queryBuilders = getQueryBuilder().getFilterClauses();
         }
         return children;
     }
-
+    
     @Override
     public Children mustNot() {
-        if (queryBuilders != getQueryBuilder().mustNot()) {
-            queryBuilders = getQueryBuilder().mustNot();
+        // 切换到mustNot子句列表
+        if (!(queryBuilders instanceof ArrayList)) {
+            // 如果当前不是mustNot列表，切换到mustNot列表
+            queryBuilders = getQueryBuilder().getMustNotClauses();
         }
         return children;
     }
-
+    
     @Override
-    public Children query(boolean condition, QueryBuilder queryBuilder) {
+    public Children query(boolean condition, EpQueryBuilder queryBuilder) {
         if (condition) {
             queryBuilders.add(queryBuilder);
         }
         return children;
     }
-
+    
     @Override
     public Children exists(boolean condition, R name) {
         if (condition) {
-            ExistsQueryBuilder existsQueryBuilder = QueryBuilders.existsQuery(nameToString(name));
+            EpQueryBuilder existsQueryBuilder = new EpQueryBuilder(nameToString(name), "exists")
+                    .param("field", nameToString(name));
             currentBuilder = existsQueryBuilder;
             queryBuilders.add(existsQueryBuilder);
         }
         return children;
     }
-
+    
     @Override
     public Children term(boolean condition, R name, Object value) {
         if (condition) {
@@ -361,7 +372,9 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
             if (esFieldInfo != null) {
                 value = DateUtil.format(value, esFieldInfo.getDateFormat(),esFieldInfo.getTimeZone());
             }
-            TermQueryBuilder termQueryBuilder = QueryBuilders.termQuery(keyword, value);
+            EpQueryBuilder termQueryBuilder = new EpQueryBuilder(keyword, "term")
+                    .param("field", keyword)
+                    .param("value", value);
             currentBuilder = termQueryBuilder;
             queryBuilders.add(termQueryBuilder);
         }
@@ -369,35 +382,37 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
     }
     
     @Override
-    public Children script(boolean condition,Script script) {
+    public Children script(boolean condition, EpScript script) {
         if (condition) {
-            ScriptQueryBuilder scriptQueryBuilder = QueryBuilders.scriptQuery(script);
+            EpQueryBuilder scriptQueryBuilder = new EpQueryBuilder("script", "script")
+                    .param("script", script);
             currentBuilder = scriptQueryBuilder;
             queryBuilders.add(scriptQueryBuilder);
         }
         return children;
     }
-
-
+    
+    
     @Override
     public Children terms(boolean condition, R name, Object... values) {
         if (condition) {
             String keyword = nameToString(name);
             String fieldName = nameToFieldName(name);
             EsFieldInfo esFieldInfo = GlobalParamHolder.getIndexField(tClass, fieldName);
-            TermsQueryBuilder termsQueryBuilder;
             if (esFieldInfo != null) {
-                List<Object> list = Arrays.stream(values).map(v -> DateUtil.format(v, esFieldInfo.getDateFormat(),esFieldInfo.getTimeZone())).collect(Collectors.toList());
-                termsQueryBuilder = QueryBuilders.termsQuery(keyword, list);
-            } else {
-                termsQueryBuilder = QueryBuilders.termsQuery(keyword, values);
+                values = Arrays.stream(values)
+                        .map(v -> DateUtil.format(v, esFieldInfo.getDateFormat(), esFieldInfo.getTimeZone()))
+                        .toArray();
             }
+            EpQueryBuilder termsQueryBuilder = new EpQueryBuilder(keyword, "terms")
+                    .param("field", keyword)
+                    .param("values", values);
             currentBuilder = termsQueryBuilder;
             queryBuilders.add(termsQueryBuilder);
         }
         return children;
     }
-
+    
     @Override
     public Children terms(boolean condition, R name, Collection<?> values) {
         if (condition) {
@@ -405,87 +420,112 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
             String fieldName = nameToFieldName(name);
             EsFieldInfo esFieldInfo = GlobalParamHolder.getIndexField(tClass, fieldName);
             if (esFieldInfo != null) {
-                values = values.stream().map(v -> DateUtil.format(v, esFieldInfo.getDateFormat(),esFieldInfo.getTimeZone())).collect(Collectors.toList());
+                values = values.stream()
+                        .map(v -> DateUtil.format(v, esFieldInfo.getDateFormat(), esFieldInfo.getTimeZone()))
+                        .collect(Collectors.toList());
             }
-            TermsQueryBuilder termsQueryBuilder = QueryBuilders.termsQuery(column, values);
+            EpQueryBuilder termsQueryBuilder = new EpQueryBuilder(column, "terms")
+                    .param("field", column)
+                    .param("values", values.toArray());
             currentBuilder = termsQueryBuilder;
             queryBuilders.add(termsQueryBuilder);
         }
         return children;
     }
-
-
+    
+    
     @Override
     public Children termKeyword(boolean condition, R name, Object value) {
         if (condition) {
-            TermQueryBuilder termQueryBuilder = QueryBuilders.termQuery(nameToString(name) + ".keyword", value);
+            String keyword = nameToString(name) + ".keyword";
+            EpQueryBuilder termQueryBuilder = new EpQueryBuilder(keyword, "term")
+                    .param("field", keyword)
+                    .param("value", value);
             currentBuilder = termQueryBuilder;
             queryBuilders.add(termQueryBuilder);
         }
         return children;
     }
-
-
+    
+    
     @Override
     public Children termsKeyword(boolean condition, R name, Object... values) {
         if (condition) {
-            TermsQueryBuilder termsQueryBuilder = QueryBuilders.termsQuery(nameToString(name) + ".keyword", values);
+            String keyword = nameToString(name) + ".keyword";
+            EpQueryBuilder termsQueryBuilder = new EpQueryBuilder(keyword, "terms")
+                    .param("field", keyword)
+                    .param("values", values);
             currentBuilder = termsQueryBuilder;
             queryBuilders.add(termsQueryBuilder);
         }
         return children;
     }
-
+    
     @Override
     public Children termsKeyword(boolean condition, R name, Collection<?> values) {
         if (condition) {
-            TermsQueryBuilder termsQueryBuilder = QueryBuilders.termsQuery(nameToString(name) + ".keyword", values);
+            String keyword = nameToString(name) + ".keyword";
+            EpQueryBuilder termsQueryBuilder = new EpQueryBuilder(keyword, "terms")
+                    .param("field", keyword)
+                    .param("values", values.toArray());
             currentBuilder = termsQueryBuilder;
             queryBuilders.add(termsQueryBuilder);
         }
         return children;
     }
-
+    
     @Override
     public Children match(boolean condition, R name, Object value) {
         if (condition) {
-            MatchQueryBuilder matchQuery = QueryBuilders.matchQuery(nameToString(name), value);
+            String keyword = nameToString(name);
+            EpQueryBuilder matchQuery = new EpQueryBuilder(keyword, "match")
+                    .param("field", keyword)
+                    .param("value", value);
             currentBuilder = matchQuery;
             queryBuilders.add(matchQuery);
         }
         return children;
     }
-
+    
     @Override
     public Children matchPhrase(boolean condition, R name, Object value) {
         if (condition) {
-            MatchPhraseQueryBuilder matchPhraseQueryBuilder = QueryBuilders.matchPhraseQuery(nameToString(name), value);
+            String keyword = nameToString(name);
+            EpQueryBuilder matchPhraseQueryBuilder = new EpQueryBuilder(keyword, "match_phrase")
+                    .param("field", keyword)
+                    .param("value", value);
             currentBuilder = matchPhraseQueryBuilder;
             queryBuilders.add(matchPhraseQueryBuilder);
         }
         return children;
     }
-
+    
     @Override
     public Children multiMatch(boolean condition, Object value, R... name) {
         if (condition) {
-            MultiMatchQueryBuilder multiMatchQueryBuilder = QueryBuilders.multiMatchQuery(value, nameToString(name));
+            String[] fieldNames = nameToString(name);
+            EpQueryBuilder multiMatchQueryBuilder = new EpQueryBuilder("multi_match", "multi_match")
+                    .param("value", value)
+                    .param("fields", fieldNames);
             currentBuilder = multiMatchQueryBuilder;
             queryBuilders.add(multiMatchQueryBuilder);
         }
         return children;
     }
-
+    
     @Override
     public Children matchPhrasePrefix(boolean condition, R name, Object value) {
         if (condition) {
-            MatchPhrasePrefixQueryBuilder matchPhrasePrefixQueryBuilder = QueryBuilders.matchPhrasePrefixQuery(nameToString(name), value);
+            String keyword = nameToString(name);
+            EpQueryBuilder matchPhrasePrefixQueryBuilder = new EpQueryBuilder(keyword, "match_phrase_prefix")
+                    .param("field", keyword)
+                    .param("value", value);
             currentBuilder = matchPhrasePrefixQueryBuilder;
             queryBuilders.add(matchPhrasePrefixQueryBuilder);
         }
         return children;
     }
-
+    
     @Override
     public Children wildcard(boolean condition, R name, String value) {
         if (condition) {
@@ -496,7 +536,9 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
                 queryValue = StringUtils.substring(value,0,queryLimit);
             }
             queryValue = "*"+queryValue+"*";
-            WildcardQueryBuilder wildcardQueryBuilder = QueryBuilders.wildcardQuery(wildcardName , queryValue);
+            EpQueryBuilder wildcardQueryBuilder = new EpQueryBuilder(wildcardName, "wildcard")
+                    .param("field", wildcardName)
+                    .param("value", queryValue);
             currentBuilder = wildcardQueryBuilder;
             queryBuilders.add(wildcardQueryBuilder);
         }
@@ -513,51 +555,57 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
                 queryValue = StringUtils.substring(value,0,queryLimit);
             }
             queryValue = "*"+queryValue+"*";
-            WildcardQueryBuilder wildcardQueryBuilder = QueryBuilders.wildcardQuery(wildcardName , queryValue);
+            EpQueryBuilder wildcardQueryBuilder = new EpQueryBuilder(wildcardName, "wildcard")
+                    .param("field", wildcardName)
+                    .param("value", queryValue);
             currentBuilder = wildcardQueryBuilder;
             queryBuilders.add(wildcardQueryBuilder);
         }
         return children;
     }
-
+    
     //有纠错能力的模糊查询。
     @Override
-    public Children fuzzy(boolean condition, R name, String value,Fuzziness fuzziness) {
+    public Children fuzzy(boolean condition, R name, String value, EpFuzziness fuzziness) {
         if (condition) {
-            FuzzyQueryBuilder fuzzyQueryBuilder = QueryBuilders.fuzzyQuery(nameToString(name), value);
-            fuzzyQueryBuilder.fuzziness(fuzziness);
-            fuzzyQueryBuilder.prefixLength();
+            String keyword = nameToString(name);
+            EpQueryBuilder fuzzyQueryBuilder = new EpQueryBuilder(keyword, "fuzzy")
+                    .param("field", keyword)
+                    .param("value", value)
+                    .param("fuzziness", fuzziness.getFuzziness());
             currentBuilder = fuzzyQueryBuilder;
             queryBuilders.add(fuzzyQueryBuilder);
         }
         return children;
     }
-
+    
     @Override
-    public Children fuzzy(boolean condition, R name, String value,Fuzziness fuzziness,int prefixLength) {
+    public Children fuzzy(boolean condition, R name, String value, EpFuzziness fuzziness, int prefixLength) {
         if (condition) {
-            FuzzyQueryBuilder fuzzyQueryBuilder = QueryBuilders.fuzzyQuery(nameToString(name), value);
-            if (fuzziness!=null) {
-                fuzzyQueryBuilder.fuzziness(fuzziness);
-            }
-            fuzzyQueryBuilder.prefixLength(prefixLength);
+            String keyword = nameToString(name);
+            EpQueryBuilder fuzzyQueryBuilder = new EpQueryBuilder(keyword, "fuzzy")
+                    .param("field", keyword)
+                    .param("value", value)
+                    .param("fuzziness", fuzziness != null ? fuzziness.getFuzziness() : null)
+                    .param("prefix_length", prefixLength);
             currentBuilder = fuzzyQueryBuilder;
             queryBuilders.add(fuzzyQueryBuilder);
         }
         return children;
     }
-
-
+    
+    
     @Override
     public Children ids(boolean condition, Collection<String> ids) {
         if (condition) {
-            IdsQueryBuilder idsQueryBuilder = QueryBuilders.idsQuery().addIds(ids.toArray(new String[ids.size()]));
+            EpQueryBuilder idsQueryBuilder = new EpQueryBuilder("ids", "ids")
+                    .param("values", ids.toArray(new String[0]));
             currentBuilder = idsQueryBuilder;
             queryBuilders.add(idsQueryBuilder);
         }
         return children;
     }
-
+    
     @Override
     public <S> Children nestedQuery(boolean condition, R path, Class<S> sClass, Consumer<EsLambdaQueryWrapper<S>> consumer) {
         if (condition) {
@@ -567,18 +615,20 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
             //嵌套对象增加父字段名
             esQueryWrapper.parentFieldName = name;
             consumer.accept(esQueryWrapper);
-            BoolQueryBuilder queryBuilder = esQueryWrapper.getQueryBuilder();
-            if (CollectionUtils.isEmpty(queryBuilder.must())  &&CollectionUtils.isEmpty(queryBuilder.mustNot()) &&
-                CollectionUtils.isEmpty(queryBuilder.filter()) &&CollectionUtils.isEmpty(queryBuilder.should())){
-                return this.children;
+            EpBoolQueryBuilder queryBuilder = esQueryWrapper.getQueryBuilder();
+            if (!CollectionUtils.isEmpty(queryBuilder.getMustClauses()) || !CollectionUtils.isEmpty(queryBuilder.getMustNotClauses()) ||
+                    !CollectionUtils.isEmpty(queryBuilder.getFilterClauses()) || !CollectionUtils.isEmpty(queryBuilder.getShouldClauses())) {
+                EpQueryBuilder nestedQueryBuilder = new EpQueryBuilder(name, "nested")
+                        .param("path", name)
+                        .param("query", queryBuilder)
+                        .param("score_mode", EpScoreMode.None);
+                currentBuilder = nestedQueryBuilder;
+                this.queryBuilders.add(nestedQueryBuilder);
             }
-            NestedQueryBuilder nestedQueryBuilder = QueryBuilders.nestedQuery(name, esQueryWrapper.getQueryBuilder(), ScoreMode.None);
-            currentBuilder = nestedQueryBuilder;
-            this.queryBuilders.add(nestedQueryBuilder);
         }
         return this.children;
     }
-
+    
     @Override
     public <S> Children nestedQuery(boolean condition, R path, Consumer<EsQueryWrapper<S>> consumer) {
         if (condition) {
@@ -587,20 +637,22 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
             //嵌套对象增加父字段名
             esQueryWrapper.parentFieldName = name;
             consumer.accept(esQueryWrapper);
-            BoolQueryBuilder queryBuilder = esQueryWrapper.getQueryBuilder();
-            if (CollectionUtils.isEmpty(queryBuilder.must())  &&CollectionUtils.isEmpty(queryBuilder.mustNot()) &&
-                    CollectionUtils.isEmpty(queryBuilder.filter()) &&CollectionUtils.isEmpty(queryBuilder.should())){
-                return this.children;
+            EpBoolQueryBuilder queryBuilder = esQueryWrapper.getQueryBuilder();
+            if (!CollectionUtils.isEmpty(queryBuilder.getMustClauses()) || !CollectionUtils.isEmpty(queryBuilder.getMustNotClauses()) ||
+                    !CollectionUtils.isEmpty(queryBuilder.getFilterClauses()) || !CollectionUtils.isEmpty(queryBuilder.getShouldClauses())) {
+                EpQueryBuilder nestedQueryBuilder = new EpQueryBuilder(name, "nested")
+                        .param("path", name)
+                        .param("query", queryBuilder)
+                        .param("score_mode", EpScoreMode.None);
+                currentBuilder = nestedQueryBuilder;
+                this.queryBuilders.add(nestedQueryBuilder);
             }
-            NestedQueryBuilder nestedQueryBuilder = QueryBuilders.nestedQuery(name, esQueryWrapper.getQueryBuilder(), ScoreMode.None);
-            currentBuilder = nestedQueryBuilder;
-            this.queryBuilders.add(nestedQueryBuilder);
         }
         return this.children;
     }
-
+    
     @Override
-    public <S> Children nestedQuery(boolean condition, R path, Class<S> sClass, Consumer<EsLambdaQueryWrapper<S>> consumer, ScoreMode mode, InnerHitBuilder innerHitBuilder) {
+    public <S> Children nestedQuery(boolean condition, R path, Class<S> sClass, Consumer<EsLambdaQueryWrapper<S>> consumer, EpScoreMode mode,  EpInnerHitBuilder innerHitBuilder) {
         if (condition) {
             String name = nameToString(path);
             Function<Class<S>, EsLambdaQueryWrapper<S>> sp = a -> new EsLambdaQueryWrapper<>(sClass);
@@ -608,15 +660,18 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
             //嵌套对象增加父字段名
             esQueryWrapper.parentFieldName = name;
             consumer.accept(esQueryWrapper);
-            BoolQueryBuilder queryBuilder = esQueryWrapper.getQueryBuilder();
-            if (CollectionUtils.isEmpty(queryBuilder.must())  &&CollectionUtils.isEmpty(queryBuilder.mustNot()) &&
-                    CollectionUtils.isEmpty(queryBuilder.filter()) &&CollectionUtils.isEmpty(queryBuilder.should())){
-                return this.children;
+            EpBoolQueryBuilder queryBuilder = esQueryWrapper.getQueryBuilder();
+            if (!CollectionUtils.isEmpty(queryBuilder.getMustClauses()) || !CollectionUtils.isEmpty(queryBuilder.getMustNotClauses()) ||
+                    !CollectionUtils.isEmpty(queryBuilder.getFilterClauses()) || !CollectionUtils.isEmpty(queryBuilder.getShouldClauses())) {
+                EpQueryBuilder nestedQueryBuilder = new EpQueryBuilder(name, "nested")
+                        .param("path", name)
+                        .param("query", queryBuilder)
+                        .param("inner_hit", innerHitBuilder) // 添加这行来存储innerHitBuilder
+                        .param("score_mode", EpScoreMode.valueOf(mode.name()));
+                // innerHitBuilder无法直接处理，需要在转换时处理
+                currentBuilder = nestedQueryBuilder;
+                this.queryBuilders.add(nestedQueryBuilder);
             }
-            NestedQueryBuilder nestedQueryBuilder = QueryBuilders.nestedQuery(name, esQueryWrapper.getQueryBuilder(), mode);
-            currentBuilder = nestedQueryBuilder;
-            nestedQueryBuilder.innerHit(innerHitBuilder);
-            this.queryBuilders.add(nestedQueryBuilder);
         }
         return this.children;
     }
@@ -624,22 +679,25 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
     
     @Override
     public <S> Children nestedQuery(boolean condition, R path, Consumer<EsQueryWrapper<S>> consumer,
-            ScoreMode mode, InnerHitBuilder innerHitBuilder) {
+            EpScoreMode mode, EpInnerHitBuilder innerHitBuilder) {
         if (condition) {
             String name = nameToString(path);
             EsQueryWrapper<S> esQueryWrapper =  new EsQueryWrapper<>();
             //嵌套对象增加父字段名
             esQueryWrapper.parentFieldName = name;
             consumer.accept(esQueryWrapper);
-            BoolQueryBuilder queryBuilder = esQueryWrapper.getQueryBuilder();
-            if (CollectionUtils.isEmpty(queryBuilder.must())  &&CollectionUtils.isEmpty(queryBuilder.mustNot()) &&
-                    CollectionUtils.isEmpty(queryBuilder.filter()) &&CollectionUtils.isEmpty(queryBuilder.should())){
-                return this.children;
+            EpBoolQueryBuilder queryBuilder = esQueryWrapper.getQueryBuilder();
+            if (!CollectionUtils.isEmpty(queryBuilder.getMustClauses()) || !CollectionUtils.isEmpty(queryBuilder.getMustNotClauses()) ||
+                    !CollectionUtils.isEmpty(queryBuilder.getFilterClauses()) || !CollectionUtils.isEmpty(queryBuilder.getShouldClauses())) {
+                EpQueryBuilder nestedQueryBuilder = new EpQueryBuilder(name, "nested")
+                        .param("path", name)
+                        .param("query", queryBuilder)
+                        .param("inner_hit", innerHitBuilder) // 添加这行来存储innerHitBuilder
+                        .param("score_mode", EpScoreMode.valueOf(mode.name()));
+                // innerHitBuilder无法直接处理，需要在转换时处理
+                currentBuilder = nestedQueryBuilder;
+                this.queryBuilders.add(nestedQueryBuilder);
             }
-            NestedQueryBuilder nestedQueryBuilder = QueryBuilders.nestedQuery(name, esQueryWrapper.getQueryBuilder(), mode);
-            currentBuilder = nestedQueryBuilder;
-            nestedQueryBuilder.innerHit(innerHitBuilder);
-            this.queryBuilders.add(nestedQueryBuilder);
         }
         return this.children;
     }
@@ -651,38 +709,43 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
             //嵌套对象增加父字段名
             esQueryWrapper.parentFieldName = path;
             consumer.accept(esQueryWrapper);
-            BoolQueryBuilder queryBuilder = esQueryWrapper.getQueryBuilder();
-            if (CollectionUtils.isEmpty(queryBuilder.must())  &&CollectionUtils.isEmpty(queryBuilder.mustNot()) &&
-                    CollectionUtils.isEmpty(queryBuilder.filter()) &&CollectionUtils.isEmpty(queryBuilder.should())){
-                return this.children;
+            EpBoolQueryBuilder queryBuilder = esQueryWrapper.getQueryBuilder();
+            if (!CollectionUtils.isEmpty(queryBuilder.getMustClauses()) || !CollectionUtils.isEmpty(queryBuilder.getMustNotClauses()) ||
+                    !CollectionUtils.isEmpty(queryBuilder.getFilterClauses()) || !CollectionUtils.isEmpty(queryBuilder.getShouldClauses())) {
+                EpQueryBuilder nestedQueryBuilder = new EpQueryBuilder(path, "nested")
+                        .param("path", path)
+                        .param("query", queryBuilder)
+                        .param("score_mode", EpScoreMode.None);
+                currentBuilder = nestedQueryBuilder;
+                this.queryBuilders.add(nestedQueryBuilder);
             }
-            NestedQueryBuilder nestedQueryBuilder = QueryBuilders.nestedQuery(path, esQueryWrapper.getQueryBuilder(), ScoreMode.None);
-            currentBuilder = nestedQueryBuilder;
-            this.queryBuilders.add(nestedQueryBuilder);
         }
         return this.children;
     }
     
     @Override
-    public <S> Children nested(boolean condition, String path, Consumer<EsQueryWrapper<S>> consumer, ScoreMode mode, InnerHitBuilder innerHitBuilder) {
+    public <S> Children nested(boolean condition, String path, Consumer<EsQueryWrapper<S>> consumer, EpScoreMode mode, EpInnerHitBuilder innerHitBuilder) {
         if (condition) {
             EsQueryWrapper<S> esQueryWrapper = new EsQueryWrapper<>();
             //嵌套对象增加父字段名
             esQueryWrapper.parentFieldName = path;
             consumer.accept(esQueryWrapper);
-            BoolQueryBuilder queryBuilder = esQueryWrapper.getQueryBuilder();
-            if (CollectionUtils.isEmpty(queryBuilder.must())  &&CollectionUtils.isEmpty(queryBuilder.mustNot()) &&
-                    CollectionUtils.isEmpty(queryBuilder.filter()) &&CollectionUtils.isEmpty(queryBuilder.should())){
-                return this.children;
+            EpBoolQueryBuilder queryBuilder = esQueryWrapper.getQueryBuilder();
+            if (!CollectionUtils.isEmpty(queryBuilder.getMustClauses()) || !CollectionUtils.isEmpty(queryBuilder.getMustNotClauses()) ||
+                    !CollectionUtils.isEmpty(queryBuilder.getFilterClauses()) || !CollectionUtils.isEmpty(queryBuilder.getShouldClauses())) {
+                EpQueryBuilder nestedQueryBuilder = new EpQueryBuilder(path, "nested")
+                        .param("path", path)
+                        .param("query", queryBuilder)
+                        .param("inner_hit", innerHitBuilder) // 添加这行来存储innerHitBuilder
+                        .param("score_mode", EpScoreMode.valueOf(mode.name()));
+                // innerHitBuilder无法直接处理，需要在转换时处理
+                currentBuilder = nestedQueryBuilder;
+                this.queryBuilders.add(nestedQueryBuilder);
             }
-            NestedQueryBuilder nestedQueryBuilder = QueryBuilders.nestedQuery(path, esQueryWrapper.getQueryBuilder(), mode);
-            currentBuilder = nestedQueryBuilder;
-            nestedQueryBuilder.innerHit(innerHitBuilder);
-            this.queryBuilders.add(nestedQueryBuilder);
         }
         return this.children;
     }
-
+    
     @Override
     public Children gt(boolean condition, R name, Object from) {
         if (condition) {
@@ -692,11 +755,16 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
             if (esFieldInfo != null) {
                 from = DateUtil.format(from, esFieldInfo.getDateFormat(),esFieldInfo.getTimeZone());
             }
-            queryBuilders.add(QueryBuilders.rangeQuery(esName).gt(from));
+            EpQueryBuilder rangeQuery = new EpQueryBuilder(esName, "range")
+                    .param("field", esName)
+                    .param("from", from)
+                    .param("includeLower", false)
+                    .param("includeUpper", false);
+            queryBuilders.add(rangeQuery);
         }
         return children;
     }
-
+    
     @Override
     public Children ge(boolean condition, R name, Object from) {
         if (condition) {
@@ -706,11 +774,16 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
             if (esFieldInfo != null) {
                 from = DateUtil.format(from, esFieldInfo.getDateFormat(),esFieldInfo.getTimeZone());
             }
-            queryBuilders.add(QueryBuilders.rangeQuery(esName).gte(from));
+            EpQueryBuilder rangeQuery = new EpQueryBuilder(esName, "range")
+                    .param("field", esName)
+                    .param("from", from)
+                    .param("includeLower", true)
+                    .param("includeUpper", false);
+            queryBuilders.add(rangeQuery);
         }
         return children;
     }
-
+    
     @Override
     public Children lt(boolean condition, R name, Object to) {
         if (condition) {
@@ -720,11 +793,16 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
             if (esFieldInfo != null) {
                 to = DateUtil.format(to, esFieldInfo.getDateFormat(),esFieldInfo.getTimeZone());
             }
-            queryBuilders.add(QueryBuilders.rangeQuery(esName).lt(to));
+            EpQueryBuilder rangeQuery = new EpQueryBuilder(esName, "range")
+                    .param("field", esName)
+                    .param("to", to)
+                    .param("includeLower", false)
+                    .param("includeUpper", false);
+            queryBuilders.add(rangeQuery);
         }
         return children;
     }
-
+    
     @Override
     public Children le(boolean condition, R name, Object to) {
         if (condition) {
@@ -734,11 +812,16 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
             if (esFieldInfo != null) {
                 to = DateUtil.format(to, esFieldInfo.getDateFormat(),esFieldInfo.getTimeZone());
             }
-            queryBuilders.add(QueryBuilders.rangeQuery(esName).lte(to));
+            EpQueryBuilder rangeQuery = new EpQueryBuilder(esName, "range")
+                    .param("field", esName)
+                    .param("to", to)
+                    .param("includeLower", false)
+                    .param("includeUpper", true);
+            queryBuilders.add(rangeQuery);
         }
         return children;
     }
-
+    
     @Override
     public Children range(boolean condition, R name, Object from, Object to, boolean fromInclude, boolean toInclude) {
         if (condition) {
@@ -749,11 +832,17 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
                 from = DateUtil.format(from, esFieldInfo.getDateFormat(),esFieldInfo.getTimeZone());
                 to = DateUtil.format(to, esFieldInfo.getDateFormat(),esFieldInfo.getTimeZone());
             }
-            queryBuilders.add(QueryBuilders.rangeQuery(esName).from(from, fromInclude).to(to, toInclude));
+            EpQueryBuilder rangeQuery = new EpQueryBuilder(esName, "range")
+                    .param("field", esName)
+                    .param("from", from)
+                    .param("to", to)
+                    .param("includeLower", fromInclude)
+                    .param("includeUpper", toInclude);
+            queryBuilders.add(rangeQuery);
         }
         return children;
     }
-
+    
     @Override
     public Children range(boolean condition, R name, Object from, Object to) {
         if (condition) {
@@ -764,11 +853,17 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
                 from = DateUtil.format(from, esFieldInfo.getDateFormat(),esFieldInfo.getTimeZone());
                 to = DateUtil.format(to, esFieldInfo.getDateFormat(),esFieldInfo.getTimeZone());
             }
-            queryBuilders.add(QueryBuilders.rangeQuery(esName).from(from, true).to(to, true));
+            EpQueryBuilder rangeQuery = new EpQueryBuilder(esName, "range")
+                    .param("field", esName)
+                    .param("from", from)
+                    .param("to", to)
+                    .param("includeLower", true)
+                    .param("includeUpper", true);
+            queryBuilders.add(rangeQuery);
         }
         return children;
     }
-
+    
     @Override
     public Children range(boolean condition, R name, Object from, Object to, String timeZone) {
         if (condition) {
@@ -779,45 +874,64 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
                 from = DateUtil.format(from, esFieldInfo.getDateFormat(),esFieldInfo.getTimeZone());
                 to = DateUtil.format(to, esFieldInfo.getDateFormat(),esFieldInfo.getTimeZone());
             }
-            queryBuilders.add(QueryBuilders.rangeQuery(esName).from(from, true).to(to, true).timeZone(timeZone));
+            EpQueryBuilder rangeQuery = new EpQueryBuilder(esName, "range")
+                    .param("field", esName)
+                    .param("from", from)
+                    .param("to", to)
+                    .param("includeLower", true)
+                    .param("includeUpper", true)
+                    .param("time_zone", timeZone);
+            queryBuilders.add(rangeQuery);
         }
         return children;
     }
-
-
+    
+    
     @Override
-    public Children geoBoundingBox(boolean condition, R name, GeoPoint topLeft, GeoPoint bottomRight) {
+    public Children geoBoundingBox(boolean condition, R name, EpGeoPoint topLeft, EpGeoPoint bottomRight) {
         if (condition) {
-            GeoBoundingBoxQueryBuilder geoBoundingBox = new GeoBoundingBoxQueryBuilder(nameToString(name));
-            geoBoundingBox.setCorners(topLeft, bottomRight);
-            currentBuilder = geoBoundingBox;
-            queryBuilders.add(geoBoundingBox);
+            String fieldName = nameToString(name);
+            EpQueryBuilder geoBoundingBoxQuery = new EpQueryBuilder(fieldName, "geo_bounding_box")
+                    .param("field", fieldName)
+                    .param("top_left_lat", topLeft.getLat())
+                    .param("top_left_lon", topLeft.getLon())
+                    .param("bottom_right_lat", bottomRight.getLat())
+                    .param("bottom_right_lon", bottomRight.getLon());
+            currentBuilder = geoBoundingBoxQuery;
+            queryBuilders.add(geoBoundingBoxQuery);
         }
         return children;
     }
-
+    
     @Override
-    public Children geoDistance(boolean condition, R name, String distance, DistanceUnit distanceUnit, GeoPoint centralGeoPoint) {
+    public Children geoDistance(boolean condition, R name, String distance, EpDistanceUnit distanceUnit, EpGeoPoint centralGeoPoint) {
         if (condition) {
-            GeoDistanceQueryBuilder geoDistanceQueryBuilder = new GeoDistanceQueryBuilder(nameToString(name));
-            geoDistanceQueryBuilder.distance(distance, distanceUnit);
-            geoDistanceQueryBuilder.point(centralGeoPoint);
+            String fieldName = nameToString(name);
+            EpQueryBuilder geoDistanceQueryBuilder = new EpQueryBuilder(fieldName, "geo_distance")
+                    .param("field", fieldName)
+                    .param("distance", distance)
+                    .param("unit", distanceUnit.getUnit())
+                    .param("lat", centralGeoPoint.getLat())
+                    .param("lon", centralGeoPoint.getLon());
             currentBuilder = geoDistanceQueryBuilder;
             queryBuilders.add(geoDistanceQueryBuilder);
         }
         return children;
     }
-
+    
     @Override
-    public Children geoPolygon(boolean condition, R name, List<GeoPoint> geoPoints) {
+    public Children geoPolygon(boolean condition, R name, List<EpGeoPoint> geoPoints) {
         if (condition) {
-            GeoPolygonQueryBuilder geoDistanceQueryBuilder = new GeoPolygonQueryBuilder(nameToString(name), geoPoints);
-            currentBuilder = geoDistanceQueryBuilder;
-            queryBuilders.add(geoDistanceQueryBuilder);
+            String fieldName = nameToString(name);
+            EpQueryBuilder geoPolygonQueryBuilder = new EpQueryBuilder(fieldName, "geo_polygon")
+                    .param("field", fieldName)
+                    .param("points", geoPoints);
+            currentBuilder = geoPolygonQueryBuilder;
+            queryBuilders.add(geoPolygonQueryBuilder);
         }
         return children;
     }
-
+    
     @Override
     public Children includes(R... func) {
         String[] includes = nameToString(func);
@@ -825,15 +939,15 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
         esSelect.setIncludes(includes);
         return (Children) this;
     }
-
+    
     @Override
     public Children fetch(boolean fetch) {
         EsSelect esSelect = getSelect();
         esSelect.setFetch(fetch);
         return (Children) this;
     }
-
-
+    
+    
     @Override
     public Children excludes(R... func) {
         String[] includes = nameToString(func);
@@ -841,7 +955,7 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
         esSelect.setExcludes(includes);
         return (Children) this;
     }
-
+    
     @Override
     public Children minScope(float minScope) {
         EsSelect esSelect = getSelect();
@@ -878,7 +992,7 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
         }
         return children;
     }
-
+    
     @Override
     public Children sortBy(String order, R column) {
         if (getEsQueryParamWrapper().getEsOrderList() == null) {
@@ -891,11 +1005,11 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
         getEsQueryParamWrapper().getEsOrderList().add(esOrder);
         return children;
     }
-
-  
+    
+    
     
     @Override
-    public Children sortBy(String order, NestedSortBuilder nestedSortBuilder,String... name){
+    public Children sortBy(String order, EpNestedSortBuilder nestedSortBuilder,String... name){
         if (getEsQueryParamWrapper().getEsOrderList() == null) {
             getEsQueryParamWrapper().setEsOrderList(new ArrayList<>());
         }
@@ -915,11 +1029,11 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
         if (getEsQueryParamWrapper().getEsOrderList() == null) {
             getEsQueryParamWrapper().setEsOrderList(new ArrayList<>());
         }
-        NestedSortBuilder nestedSortBuilder = new NestedSortBuilder(path);
+        EpNestedSortBuilder nestedSortBuilder = new EpNestedSortBuilder(path);
         for (String name : columns) {
             EsOrder esOrder = new EsOrder();
             esOrder.setName(name);
-            esOrder.setSort(SortOrder.ASC.name());
+            esOrder.setSort(EpSortOrder.ASC.toString());
             esOrder.setNestedSortBuilder(nestedSortBuilder);
             getEsQueryParamWrapper().getEsOrderList().add(esOrder);
         }
@@ -931,17 +1045,17 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
         if (getEsQueryParamWrapper().getEsOrderList() == null) {
             getEsQueryParamWrapper().setEsOrderList(new ArrayList<>());
         }
-        NestedSortBuilder nestedSortBuilder = new NestedSortBuilder(path);
+        EpNestedSortBuilder nestedSortBuilder = new EpNestedSortBuilder(path);
         for (String name : columns) {
             EsOrder esOrder = new EsOrder();
             esOrder.setName(name);
-            esOrder.setSort(SortOrder.DESC.name());
+            esOrder.setSort(EpSortOrder.DESC.toString());
             esOrder.setNestedSortBuilder(nestedSortBuilder);
             getEsQueryParamWrapper().getEsOrderList().add(esOrder);
         }
         return children;
     }
-
+    
     @Override
     public Children sortByAsc(String... columns) {
         if (getEsQueryParamWrapper().getEsOrderList() == null) {
@@ -950,12 +1064,12 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
         for (String name : columns) {
             EsOrder esOrder = new EsOrder();
             esOrder.setName(name);
-            esOrder.setSort(SortOrder.ASC.name());
+            esOrder.setSort(EpSortOrder.ASC.toString());
             getEsQueryParamWrapper().getEsOrderList().add(esOrder);
         }
         return children;
     }
-
+    
     @Override
     public Children sortByDesc(String... columns) {
         if (getEsQueryParamWrapper().getEsOrderList() == null) {
@@ -964,18 +1078,18 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
         for (String name : columns) {
             EsOrder esOrder = new EsOrder();
             esOrder.setName(name);
-            esOrder.setSort(SortOrder.DESC.name());
+            esOrder.setSort(EpSortOrder.DESC.toString());
             getEsQueryParamWrapper().getEsOrderList().add(esOrder);
         }
         return children;
     }
-
+    
     @Override
-    public Children searchType(SearchType searchType) {
+    public Children searchType(EpSearchType searchType) {
         getEsQueryParamWrapper().setSearchType(searchType);
         return children;
     }
-
+    
     @Override
     public Children highLight(String field) {
         if (getEsQueryParamWrapper().getEsHighLights() == null) {
@@ -985,7 +1099,7 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
         getEsQueryParamWrapper().getEsHighLights().add(esHighLight);
         return children;
     }
-
+    
     @Override
     public Children highLight(String field, String preTag, String postTag) {
         if (getEsQueryParamWrapper().getEsHighLights() == null) {
@@ -995,30 +1109,31 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
         getEsQueryParamWrapper().getEsHighLights().add(esHighLight);
         return children;
     }
-
-
+    
+    
     //match方法中配合or使用，百分比匹配
     @Override
     public Children minimumShouldMatch(String minimumShouldMatch) {
-        if (currentBuilder instanceof MatchQueryBuilder) {
-            ((MatchQueryBuilder) currentBuilder).minimumShouldMatch(minimumShouldMatch);
+        if (currentBuilder instanceof EpQueryBuilder) {
+            // 添加minimum_should_match参数
+            currentBuilder.param("minimum_should_match", minimumShouldMatch);
         }
         return children;
     }
-
+    
     @Override
     public Children routings(String... routings) {
         getEsQueryParamWrapper().setRoutings(routings);
         return children;
     }
-
-
+    
+    
     @Override
     public Children preference(String preference) {
         getEsQueryParamWrapper().setPreference(preference);
         return children;
     }
-
+    
     @Override
     public Children searchAfterValues(Object[] searchAfterValues) {
         getEsQueryParamWrapper().setSearchAfterValues(searchAfterValues);

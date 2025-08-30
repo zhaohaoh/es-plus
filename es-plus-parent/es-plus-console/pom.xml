@@ -8,7 +8,7 @@
         <groupId>io.github.zhaohaoh</groupId>
         <version>${revision}</version>
     </parent>
-    
+    <name>es-plus-console</name>
     <artifactId>es-plus-console</artifactId>
     
     <properties>

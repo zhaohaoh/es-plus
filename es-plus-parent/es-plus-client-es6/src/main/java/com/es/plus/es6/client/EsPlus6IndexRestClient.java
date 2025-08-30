@@ -7,10 +7,12 @@ import com.es.plus.adapter.params.EsAliasResponse;
 import com.es.plus.adapter.params.EsIndexResponse;
 import com.es.plus.adapter.params.EsSettings;
 import com.es.plus.adapter.pojo.EsPlusGetTaskResponse;
+import com.es.plus.adapter.pojo.es.EpQueryBuilder;
 import com.es.plus.adapter.properties.EsIndexParam;
 import com.es.plus.adapter.properties.GlobalParamHolder;
 import com.es.plus.adapter.util.JsonUtils;
 import com.es.plus.constant.EsConstant;
+import com.es.plus.es6.convert.EpQueryConverter;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.util.EntityUtils;
@@ -553,7 +555,8 @@ public class EsPlus6IndexRestClient implements EsPlusIndexClient {
      * @return
      */
     @Override
-    public boolean reindex(String oldIndexName, String reindexName, QueryBuilder queryBuilder) {
+    public boolean reindex(String oldIndexName, String reindexName, EpQueryBuilder esQueryBuilder) {
+        QueryBuilder queryBuilder = EpQueryConverter.toEsQueryBuilder(esQueryBuilder);
         ReindexRequest reindexRequest = new ReindexRequest();
         reindexRequest.setSourceIndices(oldIndexName);
         reindexRequest.setDestIndex(reindexName);

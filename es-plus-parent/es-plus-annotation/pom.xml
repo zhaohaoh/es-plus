@@ -8,7 +8,7 @@
         <version>${revision}</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-
+    <name>es-plus-annotation</name> <!-- 添加项目名称 -->
     <artifactId>es-plus-annotation</artifactId>
     <description>es注解类</description>
     <properties>
