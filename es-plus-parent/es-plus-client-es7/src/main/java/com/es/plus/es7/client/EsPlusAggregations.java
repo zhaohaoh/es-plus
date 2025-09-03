@@ -61,13 +61,13 @@ public class EsPlusAggregations<T> implements EsAggResponse<T> {
     }
 
     @Override
-    public Aggregations getAggregations() {
+    public Object getAggregations() {
         return aggregations;
     }
 
     @Override
-    public void setAggregations(Aggregations aggregations) {
-        this.aggregations = aggregations;
+    public void setAggregations(Object aggregations) {
+        this.aggregations = (Aggregations) aggregations;
     }
 
 
@@ -115,7 +115,7 @@ public class EsPlusAggregations<T> implements EsAggResponse<T> {
         
         Map<String, List<T>> topHitsMap= null;
         
-        Map<String, Aggregation> aggMap = null;
+        Map<String, Object> aggMap = null;
         
         Map<String, EsAggStats> statsMap = null;
         

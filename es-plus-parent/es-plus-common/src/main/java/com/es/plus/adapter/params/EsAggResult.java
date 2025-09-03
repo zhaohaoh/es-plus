@@ -86,9 +86,9 @@ public class EsAggResult<T> {
     private Map<String, Tuple<Long,EsAggResult<T>>> singleBucketsMap;
     
     /**
-     * 框架暂未提供解析的agg
+     * 框架暂未提供解析的agg  value是原生的esAgg
      */
-    private Map<String, Aggregation> aggMap;
+    private Map<String, Object> aggMap;
     
     /**
      * 获取多桶数据多级嵌套

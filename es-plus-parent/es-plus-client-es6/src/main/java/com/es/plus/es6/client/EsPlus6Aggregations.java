@@ -9,8 +9,8 @@ import com.es.plus.adapter.properties.GlobalParamHolder;
 import com.es.plus.adapter.tools.LambdaUtils;
 import com.es.plus.adapter.tools.SFunction;
 import com.es.plus.adapter.util.JsonUtils;
-import com.es.plus.adapter.util.SearchHitsUtil;
 import com.es.plus.constant.EsConstant;
+import com.es.plus.es6.util.SearchHitsUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.aggregations.Aggregation;
@@ -62,13 +62,13 @@ public class EsPlus6Aggregations<T> implements EsAggResponse<T> {
     }
     
     @Override
-    public Aggregations getAggregations() {
+    public Object getAggregations() {
         return aggregations;
     }
     
     @Override
-    public void setAggregations(Aggregations aggregations) {
-        this.aggregations = aggregations;
+    public void setAggregations(Object aggregations) {
+        this.aggregations = (Aggregations) aggregations;
     }
     
     
@@ -117,7 +117,7 @@ public class EsPlus6Aggregations<T> implements EsAggResponse<T> {
         
         Map<String, List<T>> topHitsMap= null;
         
-        Map<String, Aggregation> aggMap = null;
+        Map<String, Object> aggMap = null;
         
         Map<String, EsAggStats> statsMap = null;
         

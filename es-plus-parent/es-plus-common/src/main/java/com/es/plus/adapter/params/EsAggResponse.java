@@ -1,20 +1,17 @@
 package com.es.plus.adapter.params;
 
-import org.elasticsearch.search.aggregations.Aggregations;
 
 public interface EsAggResponse<T> {
     
     /**
      * 获取聚合
      *
-     * @return {@link Aggregations}
      */
-    Aggregations getAggregations();
+    Object getAggregations();
     
     /**
      * 获取es-plus提供的聚合
      *
-     * @return {@link Aggregations}
      */
     EsAggResult<T> getEsAggResult();
 
@@ -23,7 +20,7 @@ public interface EsAggResponse<T> {
      *
      * @param aggregations 聚合
      */
-    void setAggregations(Aggregations aggregations);
+    void setAggregations(Object aggregations);
 
     /**
      * 洞穴类
