@@ -5,10 +5,6 @@ import com.es.plus.adapter.params.EsIndexResponse;
 import com.es.plus.adapter.params.EsSettings;
 import com.es.plus.adapter.pojo.EsPlusGetTaskResponse;
 import com.es.plus.adapter.pojo.es.EpQueryBuilder;
-import org.elasticsearch.action.admin.cluster.node.tasks.list.ListTasksResponse;
-import org.elasticsearch.client.GetAliasesResponse;
-import org.elasticsearch.client.indices.GetIndexResponse;
-import org.elasticsearch.index.query.QueryBuilder;
 
 import java.util.Map;
 
@@ -81,7 +77,6 @@ public interface EsPlusIndexClient {
      * 得到索引
      *
      * @param indexName 索引名称
-     * @return {@link GetIndexResponse}
      */
     EsIndexResponse getIndex(String indexName);
 
@@ -89,7 +84,6 @@ public interface EsPlusIndexClient {
      * 得到别名索引
      *
      * @param alias 别名
-     * @return {@link GetAliasesResponse}
      */
     EsAliasResponse getAliasIndex(String alias);
 
@@ -229,7 +223,7 @@ public interface EsPlusIndexClient {
      * 异步迁移任务列表
      * @return
      */
-    ListTasksResponse reindexTaskList();
+    String reindexTaskList();
     
     /**
      * 获取任务

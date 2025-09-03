@@ -1,4 +1,4 @@
-package com.es.plus.adapter.config;
+package com.es.plus.es6.util;
 
 import com.es.plus.adapter.params.BulkProcessorParam;
 import com.es.plus.adapter.util.JsonUtils;
@@ -14,6 +14,7 @@ import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.common.unit.ByteSizeUnit;
 import org.elasticsearch.common.unit.ByteSizeValue;
 import org.elasticsearch.common.unit.TimeValue;
 import org.springframework.util.CollectionUtils;
@@ -52,10 +53,6 @@ public class BulkProcessorConfig {
     
     /**
      *
-     * @param bulkActions 达到条数执行写入动作
-     * @param bulkSize  达到执行写入的数据大小
-     * @param timeValue  固定刷新的时间频率 达到这个时间执行刷新
-     * @param concurrent  写入并发度
      * @return
      */
     private static BulkProcessor doGetBulkProcessor(RestHighLevelClient restHighLevelClient,BulkProcessorParam param) {
@@ -65,8 +62,8 @@ public class BulkProcessorConfig {
                         restHighLevelClient.bulkAsync(request, RequestOptions.DEFAULT, bulkListener);
         
         int bulkActions = param.getBulkActions();
-        ByteSizeValue bulkSize = param.getBulkSize();
-        TimeValue flushInterval = param.getFlushInterval();
+        ByteSizeValue bulkSize = new ByteSizeValue(param.getBulkSize(), ByteSizeUnit.MB);
+        TimeValue flushInterval = new TimeValue(param.getFlushInterval());
         int concurrent = param.getConcurrent();
         int backoffPolicyRetryMax = param.getBackoffPolicyRetryMax();
         int backoffPolicyTime = param.getBackoffPolicyTime();
@@ -81,23 +78,23 @@ public class BulkProcessorConfig {
                             saves.add(info);
                         }
                         //下面这种方式看不出文档的执行顺序
-//                        List<String> saves = new ArrayList<>();
-//                        List<String> updates = new ArrayList<>();
-//                        List<String> deletes = new ArrayList<>();
-//                        for (DocWriteRequest<?> docWriteRequest : requests) {
-//                            String info = docWriteRequest.toString();
-//                            DocWriteRequest.OpType opType = docWriteRequest.opType();
-//                            if (opType.equals(DocWriteRequest.OpType.INDEX) || opType.equals(
-//                                    DocWriteRequest.OpType.CREATE)) {
-//                                saves.add(info);
-//                            }
-//                            if (opType.equals(DocWriteRequest.OpType.UPDATE)) {
-//                                updates.add(info);
-//                            }
-//                            if (opType.equals(DocWriteRequest.OpType.DELETE)) {
-//                                deletes.add(info);
-//                            }
-//                        }
+                        //                        List<String> saves = new ArrayList<>();
+                        //                        List<String> updates = new ArrayList<>();
+                        //                        List<String> deletes = new ArrayList<>();
+                        //                        for (DocWriteRequest<?> docWriteRequest : requests) {
+                        //                            String info = docWriteRequest.toString();
+                        //                            DocWriteRequest.OpType opType = docWriteRequest.opType();
+                        //                            if (opType.equals(DocWriteRequest.OpType.INDEX) || opType.equals(
+                        //                                    DocWriteRequest.OpType.CREATE)) {
+                        //                                saves.add(info);
+                        //                            }
+                        //                            if (opType.equals(DocWriteRequest.OpType.UPDATE)) {
+                        //                                updates.add(info);
+                        //                            }
+                        //                            if (opType.equals(DocWriteRequest.OpType.DELETE)) {
+                        //                                deletes.add(info);
+                        //                            }
+                        //                        }
                         int num = request.numberOfActions();
                         String data = LogUtil.logSubstring(saves.toString());
                         log.info("ES BulkProcessor Begin  executionId:{} batchNum:{} "
@@ -147,7 +144,7 @@ public class BulkProcessorConfig {
                         String data = LogUtil.logSubstring(saves.toString());
                         //写入失败后
                         log.error("ES BulkProcessor  executionId:{} "
-                                + "\n datas:{} \n ex:",executionId,
+                                        + "\n datas:{} \n ex:",executionId,
                                 data,
                                 failure);
                     }
@@ -161,6 +158,6 @@ public class BulkProcessorConfig {
                 .build();
         return bulkProcessor;
     }
-
-
+    
+    
 }

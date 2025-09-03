@@ -868,7 +868,7 @@ public class EsPlus6IndexRestClient implements EsPlusIndexClient {
     }
     
     @Override
-    public ListTasksResponse reindexTaskList() {
+    public String reindexTaskList() {
         ListTasksRequest listTasksRequest = new ListTasksRequest();
         listTasksRequest.setActions("reindex"); // 筛选Reindex任务
         ListTasksResponse listTasksResponse = null;
@@ -883,7 +883,7 @@ public class EsPlus6IndexRestClient implements EsPlusIndexClient {
                 
             }
         }
-        return listTasksResponse;
+        return listTasksResponse.toString();
     }
     
     @Override

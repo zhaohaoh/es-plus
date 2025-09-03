@@ -3,9 +3,9 @@ package com.es.plus.adapter.constants;
 
 
 import com.es.plus.adapter.config.ConnectFailHandleEnum;
+import com.es.plus.adapter.pojo.es.RefreshPolicy;
 import com.es.plus.constant.Analyzer;
 import lombok.Data;
-import org.elasticsearch.action.support.WriteRequest;
 
 /**
  * @Author: hzh
@@ -48,7 +48,7 @@ public class GlobalConfig {
     /**
      * data refresh policy 数据刷新策略,默认为WAIT_UNTIL
      */
-    private WriteRequest.RefreshPolicy refreshPolicy = WriteRequest.RefreshPolicy.WAIT_UNTIL;
+    private RefreshPolicy refreshPolicy =  RefreshPolicy.WAIT_UNTIL;
     /**
      * 最大更新文档数 默认10万
      */

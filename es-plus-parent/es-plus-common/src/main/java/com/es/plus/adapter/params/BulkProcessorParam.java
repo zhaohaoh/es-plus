@@ -2,19 +2,16 @@ package com.es.plus.adapter.params;
 
 import lombok.Data;
 import lombok.ToString;
-import org.elasticsearch.common.unit.ByteSizeUnit;
-import org.elasticsearch.common.unit.ByteSizeValue;
-import org.elasticsearch.common.unit.TimeValue;
 
 @Data
 @ToString
 public class BulkProcessorParam {
     
     private int bulkActions = 1000;
-    
-    private ByteSizeValue bulkSize = new ByteSizeValue(5, ByteSizeUnit.MB);
-    
-    private TimeValue flushInterval = TimeValue.timeValueSeconds(5);
+    //单位MB
+    private int bulkSize =5;
+    //刷新时间 单位秒
+    private int flushInterval = 5;
     
     private int concurrent = 1;
     

@@ -75,16 +75,9 @@ public class EsResponse<T> {
     private int skippedShards;
     
     /**
-     * 分片失败的信息
-     */
-    private ShardSearchFailure[] shardFailures;
-    
-    /**
      *  原始的返回信息
      */
-    private SearchResponse sourceResponse;
- 
-    
+    private String sourceResponse;
     
     public EsResponse(List<T> list, long count, EsAggResponse<T> esAggregationReponse) {
         this.list = list;

@@ -4,9 +4,7 @@ import com.es.plus.adapter.params.EsAggResponse;
 import com.es.plus.adapter.params.EsIndexResponse;
 import com.es.plus.adapter.params.EsParamWrapper;
 import com.es.plus.adapter.params.EsResponse;
-import org.elasticsearch.action.bulk.BulkItemResponse;
-import org.elasticsearch.client.RestHighLevelClient;
-import org.elasticsearch.index.reindex.BulkByScrollResponse;
+import com.es.plus.adapter.pojo.es.EpBulkResponse;
 
 import java.time.Duration;
 import java.util.Collection;
@@ -14,7 +12,7 @@ import java.util.List;
 
 public interface EsPlusClient {
 
-    RestHighLevelClient getRestHighLevelClient();
+    Object getEsClient();
     
     
     /**
@@ -37,18 +35,16 @@ public interface EsPlusClient {
      *
      * @param index      索引
      * @param esDataList 西文数据列表
-     * @return {@link List}<{@link BulkItemResponse}>
      */
-    List<BulkItemResponse> saveOrUpdateBatch(String type, Collection<?> esDataList,String... index);
+    List<String> saveOrUpdateBatch(String type, Collection<?> esDataList,String... index);
 
     /**
      * 保存批
      *
      * @param index      索引
      * @param esDataList 西文数据列表
-     * @return {@link List}<{@link BulkItemResponse}>
      */
-    List<BulkItemResponse> saveBatch(String type, Collection<?> esDataList,String... index);
+    List<String> saveBatch(String type, Collection<?> esDataList,String... index);
 
     /**
      * 保存
@@ -73,23 +69,22 @@ public interface EsPlusClient {
      * 批处理更新 返回失败数据
      *
      * @param index 索引
-     * @return {@link List}<{@link BulkItemResponse}>
      */
-    List<BulkItemResponse> updateBatch(String type, Collection<?> esDataList,String... index);
+    List<String> updateBatch(String type, Collection<?> esDataList,String... index);
 
     /**
      * 更新包装
      */
-    <T> BulkByScrollResponse updateByWrapper( String type, EsParamWrapper<T> esUpdateWrapper,String... index);
+    <T> EpBulkResponse updateByWrapper( String type, EsParamWrapper<T> esUpdateWrapper,String... index);
 
     /**
      * 增量
      *
      * @param index           索引
      * @param esUpdateWrapper es更新包装
-     * @return {@link BulkByScrollResponse}
+     * @return {@link EpBulkResponse}
      */
-    <T> BulkByScrollResponse increment(String type, EsParamWrapper<T> esUpdateWrapper,String... index);
+    <T> EpBulkResponse increment(String type, EsParamWrapper<T> esUpdateWrapper,String... index);
 
     /**
      * 删除
@@ -105,9 +100,9 @@ public interface EsPlusClient {
      *
      * @param index           指数
      * @param esUpdateWrapper es更新包装
-     * @return {@link BulkByScrollResponse}
+     * @return {@link EpBulkResponse}
      */
-    <T> BulkByScrollResponse deleteByQuery(String type, EsParamWrapper<T> esUpdateWrapper,String... index);
+    <T> EpBulkResponse deleteByQuery(String type, EsParamWrapper<T> esUpdateWrapper,String... index);
 
     /**
      * 删除批处理

@@ -9,7 +9,7 @@ import com.es.plus.adapter.properties.GlobalParamHolder;
 import com.es.plus.adapter.tools.LambdaUtils;
 import com.es.plus.adapter.tools.SFunction;
 import com.es.plus.adapter.util.JsonUtils;
-import com.es.plus.adapter.util.SearchHitsUtil;
+import com.es.plus.es7.util.SearchHitsUtil;
 import com.es.plus.constant.EsConstant;
 import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.search.SearchHits;

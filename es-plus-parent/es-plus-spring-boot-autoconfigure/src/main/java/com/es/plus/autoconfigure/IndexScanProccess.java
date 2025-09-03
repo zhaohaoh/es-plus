@@ -1,7 +1,7 @@
 package com.es.plus.autoconfigure;
 
 import com.es.plus.adapter.EsPlusClientFacade;
-import com.es.plus.adapter.config.BulkProcessorConfig;
+import com.es.plus.es7.util.BulkProcessorConfig;
 import com.es.plus.adapter.config.ConnectFailHandleEnum;
 import com.es.plus.adapter.exception.EsException;
 import com.es.plus.adapter.lock.ELock;
@@ -115,13 +115,13 @@ public class IndexScanProccess implements InitializingBean, ApplicationListener<
             if (bulkProcessor != null) {
                 BulkProcessorParam bulkProcessorParam = new BulkProcessorParam();
                 bulkProcessorParam.setBulkActions(bulkProcessor.bulkActions());
-                bulkProcessorParam.setBulkSize(new ByteSizeValue(bulkProcessor.bulkSize(), ByteSizeUnit.MB));
+                bulkProcessorParam.setBulkSize(bulkProcessor.bulkSize());
                 bulkProcessorParam.setConcurrent(bulkProcessor.concurrent());
-                bulkProcessorParam.setFlushInterval(TimeValue.timeValueSeconds(bulkProcessor.flushInterval()));
+                bulkProcessorParam.setFlushInterval(bulkProcessor.flushInterval());
                 bulkProcessorParam.setBackoffPolicyTime(bulkProcessor.BackoffPolicyTime());
                 bulkProcessorParam.setBackoffPolicyRetryMax(bulkProcessor.BackoffPolicyRetryMax());
                 for (String index : esIndexParam.getIndex()) {
-                    BulkProcessorConfig.getBulkProcessor(esPlusClientFacade.getEsPlusClient().getRestHighLevelClient(),
+                    BulkProcessorConfig.getBulkProcessor(esPlusClientFacade.getEsPlusClient().getEsClient(),
                             index );
                 }
             

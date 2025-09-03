@@ -307,7 +307,7 @@ public class EsPlusClientFacade   {
      * @return
      */
     public String reindexTaskList() {
-        ListTasksResponse listTasksResponse = esPlusIndexClient.reindexTaskList();
+        String listTasksResponse = esPlusIndexClient.reindexTaskList();
         return listTasksResponse.toString();
     }
     
