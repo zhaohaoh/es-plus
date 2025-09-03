@@ -106,6 +106,10 @@ public class EpAggregationConvert {
         Integer from = customAgg.getFrom();
         BaseAggregationBuilder esAgg = null;
         
+        Object esOrginalAgg = customAgg.getEsOrginalAgg();
+        if (esOrginalAgg instanceof BaseAggregationBuilder){
+            return (BaseAggregationBuilder) esOrginalAgg;
+        }
         switch (type) {
             case "terms":
                 TermsAggregationBuilder termsAgg = new TermsAggregationBuilder(name);

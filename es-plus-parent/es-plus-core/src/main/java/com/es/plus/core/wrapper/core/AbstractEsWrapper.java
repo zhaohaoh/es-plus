@@ -307,40 +307,29 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
     @Override
     public Children must() {
         // 切换到must子句列表
-        if (!(queryBuilders instanceof ArrayList)) {
-            // 如果当前不是must列表，切换到must列表
-            queryBuilders = getQueryBuilder().getMustClauses();
-        }
+        queryBuilders = getQueryBuilder().getMustClauses();
+        
         return children;
     }
     
     @Override
     public Children should() {
         // 切换到should子句列表
-        if (!(queryBuilders instanceof ArrayList)) {
-            // 如果当前不是should列表，切换到should列表
-            queryBuilders = getQueryBuilder().getShouldClauses();
-        }
+        queryBuilders = getQueryBuilder().getShouldClauses();
         return children;
     }
     
     @Override
     public Children filter() {
         // 切换到filter子句列表
-        if (!(queryBuilders instanceof ArrayList)) {
-            // 如果当前不是filter列表，切换到filter列表
-            queryBuilders = getQueryBuilder().getFilterClauses();
-        }
+        queryBuilders = getQueryBuilder().getFilterClauses();
         return children;
     }
     
     @Override
     public Children mustNot() {
         // 切换到mustNot子句列表
-        if (!(queryBuilders instanceof ArrayList)) {
-            // 如果当前不是mustNot列表，切换到mustNot列表
-            queryBuilders = getQueryBuilder().getMustNotClauses();
-        }
+        queryBuilders = getQueryBuilder().getMustNotClauses();
         return children;
     }
     
@@ -1114,7 +1103,7 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
     //match方法中配合or使用，百分比匹配
     @Override
     public Children minimumShouldMatch(String minimumShouldMatch) {
-        if (currentBuilder instanceof EpQueryBuilder) {
+        if (currentBuilder != null) {
             // 添加minimum_should_match参数
             currentBuilder.param("minimum_should_match", minimumShouldMatch);
         }

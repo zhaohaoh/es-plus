@@ -13,7 +13,7 @@ public class EpQueryBuilder {
     private float boost = 1.0f;
     private String queryName;
     private final Map<String, Object> parameters = new HashMap<>();
-    
+    private Object esOrginalQuery;
     public EpQueryBuilder() {
     }
     
@@ -49,6 +49,15 @@ public class EpQueryBuilder {
      */
     public EpQueryBuilder boost(float boost) {
         this.boost = boost;
+        return this;
+    }
+    /**
+     * 设置boost值
+     * @param boost boost值
+     * @return this
+     */
+    public EpQueryBuilder orginalQuery(Object orginalQuery) {
+        this.esOrginalQuery = orginalQuery;
         return this;
     }
     
@@ -113,5 +122,11 @@ public class EpQueryBuilder {
         return parameters;
     }
     
-  
+    public Object getEsOrginalQuery() {
+        return esOrginalQuery;
+    }
+    
+    public void setEsOrginalQuery(Object esOrginalQuery) {
+        this.esOrginalQuery = esOrginalQuery;
+    }
 }

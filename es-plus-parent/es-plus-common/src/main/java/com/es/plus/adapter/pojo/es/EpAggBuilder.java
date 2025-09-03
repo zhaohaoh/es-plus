@@ -22,6 +22,7 @@ public class EpAggBuilder {
     private Integer from;
     private EpSortBuilder epSortBuilder;
     private EpBucketOrder bucketOrder;
+    private Object esOrginalAgg;
     public EpAggBuilder() {
     }
     
@@ -37,6 +38,15 @@ public class EpAggBuilder {
      */
     public EpAggBuilder name(String name) {
         this.name = name;
+        return this;
+    }
+    /**
+     * 设置聚合
+     * @param name 聚合名称
+     * @return this
+     */
+    public EpAggBuilder esOrginalAgg(Object esOrginalAgg) {
+        this.esOrginalAgg = esOrginalAgg;
         return this;
     }
     

@@ -252,6 +252,10 @@ public class EpQueryConverter {
         if (epQuery == null) {
             return null;
         }
+        // 如果是
+        if (epQuery instanceof QueryBuilder) {
+            return (QueryBuilder) epQuery;
+        }
         
         // 如果是BoolQueryBuilder特殊处理
         if (epQuery instanceof EpBoolQueryBuilder) {
