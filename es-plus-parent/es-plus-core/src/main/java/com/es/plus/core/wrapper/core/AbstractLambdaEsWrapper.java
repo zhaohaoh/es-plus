@@ -1,11 +1,11 @@
 package com.es.plus.core.wrapper.core;
 
 
-import com.es.plus.adapter.properties.EsEntityInfo;
-import com.es.plus.adapter.properties.EsFieldInfo;
-import com.es.plus.adapter.properties.GlobalParamHolder;
-import com.es.plus.adapter.tools.LambdaUtils;
-import com.es.plus.adapter.tools.SFunction;
+import com.es.plus.common.properties.EsEntityInfo;
+import com.es.plus.common.properties.EsFieldInfo;
+import com.es.plus.common.properties.GlobalParamHolder;
+import com.es.plus.common.tools.LambdaUtils;
+import com.es.plus.common.tools.SFunction;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.Arrays;

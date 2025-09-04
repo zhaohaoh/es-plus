@@ -1,8 +1,8 @@
 package com.es.plus.core.wrapper.core;
 
-import com.es.plus.adapter.params.EsAliasResponse;
-import com.es.plus.adapter.params.EsIndexResponse;
-import com.es.plus.adapter.params.EsSettings;
+import com.es.plus.common.params.EsAliasResponse;
+import com.es.plus.common.params.EsIndexResponse;
+import com.es.plus.common.params.EsSettings;
 import org.elasticsearch.client.GetAliasesResponse;
 import org.elasticsearch.client.indices.GetIndexResponse;
 

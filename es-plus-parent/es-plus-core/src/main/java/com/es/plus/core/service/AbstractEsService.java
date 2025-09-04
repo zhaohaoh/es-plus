@@ -1,8 +1,8 @@
 package com.es.plus.core.service;
 
 
-import com.es.plus.adapter.EsPlusClientFacade;
-import com.es.plus.adapter.properties.EsIndexParam;
+import com.es.plus.common.EsPlusClientFacade;
+import com.es.plus.common.properties.EsIndexParam;
 import com.es.plus.core.ClientContext;
 import com.es.plus.core.IndexContext;
 import org.apache.commons.lang3.ArrayUtils;

@@ -1,10 +1,10 @@
 package com.es.plus.core.wrapper.chain;
 
-import com.es.plus.adapter.EsPlusClientFacade;
-import com.es.plus.adapter.params.EsAggResponse;
-import com.es.plus.adapter.params.EsQueryParamWrapper;
-import com.es.plus.adapter.params.EsResponse;
-import com.es.plus.adapter.properties.EsIndexParam;
+import com.es.plus.common.EsPlusClientFacade;
+import com.es.plus.common.params.EsAggResponse;
+import com.es.plus.common.params.EsQueryParamWrapper;
+import com.es.plus.common.params.EsResponse;
+import com.es.plus.common.properties.EsIndexParam;
 import com.es.plus.core.ClientContext;
 import com.es.plus.core.IndexContext;
 import com.es.plus.core.wrapper.core.EsQueryWrapper;

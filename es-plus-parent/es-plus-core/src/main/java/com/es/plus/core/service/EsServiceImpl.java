@@ -1,21 +1,18 @@
 package com.es.plus.core.service;
 
 
-import com.es.plus.adapter.params.EsAggResponse;
-import com.es.plus.adapter.params.EsQueryParamWrapper;
-import com.es.plus.adapter.params.EsResponse;
-import com.es.plus.adapter.params.EsSettings;
-import com.es.plus.adapter.pojo.es.EpQueryBuilder;
+import com.es.plus.common.params.EsAggResponse;
+import com.es.plus.common.params.EsQueryParamWrapper;
+import com.es.plus.common.params.EsResponse;
+import com.es.plus.common.params.EsSettings;
+import com.es.plus.common.pojo.es.EpBulkResponse;
+import com.es.plus.common.pojo.es.EpQueryBuilder;
 import com.es.plus.core.wrapper.chain.EsChainLambdaQueryWrapper;
 import com.es.plus.core.wrapper.chain.EsChainLambdaUpdateWrapper;
 import com.es.plus.core.wrapper.chain.EsChainUpdateWrapper;
 import com.es.plus.core.wrapper.core.EsQueryWrapper;
 import com.es.plus.core.wrapper.core.EsWrapper;
 import org.apache.commons.lang3.ArrayUtils;
-import org.elasticsearch.action.bulk.BulkItemResponse;
-import org.elasticsearch.index.query.MatchAllQueryBuilder;
-import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.springframework.util.CollectionUtils;
 
 import java.io.Serializable;
@@ -122,18 +119,16 @@ public class EsServiceImpl<T> extends AbstractEsService<T> implements EsService<
      * 批量保存或更新
      */
     @Override
-    public List<BulkItemResponse> saveOrUpdateBatch(Collection<T> entityList,String... indexs) {
+    public List<String> saveOrUpdateBatch(Collection<T> entityList,String... indexs) {
         return getEsPlusClientFacade().saveOrUpdateBatch(getType(), entityList, indexs);
     }
     
     /**
      * 批量保存
      *
-     * @param entityList 实体列表
-     * @return {@link List}<{@link BulkItemResponse}>
      */
     @Override
-    public List<BulkItemResponse> saveBatch(Collection<T> entityList,String... indexs) {
+    public List<String> saveBatch(Collection<T> entityList,String... indexs) {
         return getEsPlusClientFacade().saveBatch(getType(), entityList, indexs);
     }
     
@@ -149,7 +144,6 @@ public class EsServiceImpl<T> extends AbstractEsService<T> implements EsService<
      * 批量保存
      *
      * @param entityList 实体列表
-     * @return {@link List}<{@link BulkItemResponse}>
      */
     @Override
     public void saveBatchAsyncProcessor(Collection<T> entityList,String... indexs) {
@@ -159,8 +153,6 @@ public class EsServiceImpl<T> extends AbstractEsService<T> implements EsService<
     /**
      * 批量保存
      *
-     * @param entityList 实体列表
-     * @return {@link List}<{@link BulkItemResponse}>
      */
     @Override
     public void updateBatchAsyncProcessor(Collection<T> entityList,String... indexs) {
@@ -209,10 +201,9 @@ public class EsServiceImpl<T> extends AbstractEsService<T> implements EsService<
      * 批处理更新
      *
      * @param entityList 实体列表
-     * @return {@link List}<{@link BulkItemResponse}>
      */
     @Override
-    public List<BulkItemResponse> updateBatch(Collection<T> entityList,String... indexs) {
+    public List<String> updateBatch(Collection<T> entityList,String... indexs) {
         return getEsPlusClientFacade().updateBatch(getType(), entityList, getIndex());
     }
     
@@ -221,10 +212,9 @@ public class EsServiceImpl<T> extends AbstractEsService<T> implements EsService<
      * 更新包装
      *
      * @param esUpdateWrapper es更新包装
-     * @return {@link BulkByScrollResponse}
      */
     @Override
-    public BulkByScrollResponse updateByQuery(EsWrapper<T> esUpdateWrapper) {
+    public EpBulkResponse updateByQuery(EsWrapper<T> esUpdateWrapper) {
         return getEsPlusClientFacade().updateByWrapper(getType(), esUpdateWrapper.esParamWrapper(), ArrayUtils.isNotEmpty(esUpdateWrapper.getIndexs()) ? esUpdateWrapper.getIndexs() : getAlias());
     }
     
@@ -232,10 +222,9 @@ public class EsServiceImpl<T> extends AbstractEsService<T> implements EsService<
      * 增量
      *
      * @param esUpdateWrapper es更新包装器
-     * @return {@link BulkByScrollResponse}
      */
     @Override
-    public BulkByScrollResponse increment(EsWrapper<T> esUpdateWrapper) {
+    public EpBulkResponse increment(EsWrapper<T> esUpdateWrapper) {
         return getEsPlusClientFacade().increment(getType(), esUpdateWrapper.esParamWrapper(), ArrayUtils.isNotEmpty(esUpdateWrapper.getIndexs()) ? esUpdateWrapper.getIndexs() : getAlias());
     }
     
@@ -264,10 +253,9 @@ public class EsServiceImpl<T> extends AbstractEsService<T> implements EsService<
      * 删除
      *
      * @param esUpdateWrapper es更新包装
-     * @return {@link BulkByScrollResponse}
      */
     @Override
-    public BulkByScrollResponse remove(EsWrapper<T> esUpdateWrapper) {
+    public EpBulkResponse remove(EsWrapper<T> esUpdateWrapper) {
         return getEsPlusClientFacade().deleteByQuery(getType(), esUpdateWrapper.esParamWrapper(),
                 ArrayUtils.isNotEmpty(esUpdateWrapper.getIndexs()) ? esUpdateWrapper.getIndexs() : getAlias());
     }

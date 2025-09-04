@@ -1,10 +1,10 @@
 package com.es.plus.core.wrapper.core;
 
 
-import com.es.plus.adapter.interceptor.EsUpdateField;
-import com.es.plus.adapter.properties.EsFieldInfo;
-import com.es.plus.adapter.properties.GlobalParamHolder;
-import com.es.plus.adapter.tools.SFunction;
+import com.es.plus.common.interceptor.EsUpdateField;
+import com.es.plus.common.properties.EsFieldInfo;
+import com.es.plus.common.properties.GlobalParamHolder;
+import com.es.plus.common.tools.SFunction;
 
 import java.lang.reflect.Field;
 import java.util.List;

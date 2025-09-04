@@ -1,8 +1,8 @@
 package com.es.plus.autoconfigure.util;
 
-import com.es.plus.adapter.EsPlusClientFacade;
-import com.es.plus.adapter.exception.EsException;
-import com.es.plus.adapter.interceptor.EsInterceptor;
+import com.es.plus.common.EsPlusClientFacade;
+import com.es.plus.common.exception.EsException;
+import com.es.plus.common.interceptor.EsInterceptor;
 import com.es.plus.autoconfigure.properties.ClientProperties;
 import com.es.plus.core.ClientContext;
 import org.apache.commons.lang3.StringUtils;

@@ -1,11 +1,11 @@
 package com.es.plus.es7.convert;
 
-import com.es.plus.adapter.params.EsParamWrapper;
-import com.es.plus.adapter.pojo.es.EpAggBuilder;
-import com.es.plus.adapter.pojo.es.EpBoolQueryBuilder;
-import com.es.plus.adapter.pojo.es.EpBucketOrder;
-import com.es.plus.adapter.pojo.es.EpSortBuilder;
-import com.es.plus.adapter.pojo.es.EpSortOrder;
+import com.es.plus.common.params.EsParamWrapper;
+import com.es.plus.common.pojo.es.EpAggBuilder;
+import com.es.plus.common.pojo.es.EpBoolQueryBuilder;
+import com.es.plus.common.pojo.es.EpBucketOrder;
+import com.es.plus.common.pojo.es.EpSortBuilder;
+import com.es.plus.common.pojo.es.EpSortOrder;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.search.aggregations.AggregationBuilder;

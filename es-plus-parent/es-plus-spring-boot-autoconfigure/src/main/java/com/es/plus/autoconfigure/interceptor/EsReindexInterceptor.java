@@ -1,12 +1,12 @@
 package com.es.plus.autoconfigure.interceptor;
 
-import com.es.plus.adapter.core.EsPlusClient;
-import com.es.plus.adapter.interceptor.EsInterceptor;
-import com.es.plus.adapter.interceptor.EsInterceptors;
-import com.es.plus.adapter.interceptor.InterceptorElement;
-import com.es.plus.adapter.interceptor.MethodEnum;
-import com.es.plus.adapter.lock.ELock;
-import com.es.plus.adapter.lock.EsLockFactory;
+import com.es.plus.common.core.EsPlusClient;
+import com.es.plus.common.interceptor.EsInterceptor;
+import com.es.plus.common.interceptor.EsInterceptors;
+import com.es.plus.common.interceptor.InterceptorElement;
+import com.es.plus.common.interceptor.MethodEnum;
+import com.es.plus.common.lock.ELock;
+import com.es.plus.common.lock.EsLockFactory;
 import com.es.plus.constant.EsConstant;
 import lombok.extern.slf4j.Slf4j;
 

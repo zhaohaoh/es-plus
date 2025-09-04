@@ -1,11 +1,11 @@
 package com.es.plus.samples.service;
 
-import com.es.plus.adapter.params.EsHit;
-import com.es.plus.adapter.params.EsHits;
-import com.es.plus.adapter.params.EsResponse;
-import com.es.plus.adapter.pojo.es.EpFetchSourceContext;
-import com.es.plus.adapter.pojo.es.EpInnerHitBuilder;
-import com.es.plus.adapter.pojo.es.EpScoreMode;
+import com.es.plus.common.params.EsHit;
+import com.es.plus.common.params.EsHits;
+import com.es.plus.common.params.EsResponse;
+import com.es.plus.common.pojo.es.EpFetchSourceContext;
+import com.es.plus.common.pojo.es.EpInnerHitBuilder;
+import com.es.plus.common.pojo.es.EpScoreMode;
 import com.es.plus.core.service.EsServiceImpl;
 import com.es.plus.core.statics.Es;
 import com.es.plus.core.wrapper.aggregation.EsAggWrapper;
@@ -18,9 +18,6 @@ import com.es.plus.es7.client.EsPlusAggregations;
 import com.es.plus.samples.dto.SamplesEsDTO;
 import com.es.plus.samples.dto.SamplesNestedDTO;
 import com.es.plus.samples.dto.SamplesNestedInnerDTO;
-import org.apache.lucene.search.join.ScoreMode;
-import org.elasticsearch.index.query.InnerHitBuilder;
-import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;

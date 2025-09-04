@@ -1,17 +1,18 @@
 package com.es.plus.starter.auto;
 
-import com.es.plus.adapter.EsPlusClientFacade;
-import com.es.plus.adapter.config.EsObjectHandler;
-import com.es.plus.adapter.config.GlobalConfigCache;
-import com.es.plus.adapter.exception.EsException;
-import com.es.plus.adapter.interceptor.EsInterceptor;
-import com.es.plus.adapter.properties.GlobalParamHolder;
-import com.es.plus.adapter.util.XcontentBuildUtils;
+import com.es.plus.common.EsPlusClientFacade;
+import com.es.plus.common.config.EsObjectHandler;
+import com.es.plus.common.config.GlobalConfigCache;
+import com.es.plus.common.exception.EsException;
+import com.es.plus.common.interceptor.EsInterceptor;
+import com.es.plus.common.properties.GlobalParamHolder;
+import com.es.plus.common.util.JsonUtils;
 import com.es.plus.autoconfigure.properties.AnalysisProperties;
 import com.es.plus.autoconfigure.properties.ClientProperties;
 import com.es.plus.autoconfigure.properties.EsProperties;
 import com.es.plus.core.ClientContext;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpHost;
 import org.apache.http.auth.AuthScope;
@@ -21,6 +22,9 @@ import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestClientBuilder;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.common.bytes.BytesReference;
+import org.elasticsearch.common.xcontent.XContentBuilder;
+import org.elasticsearch.common.xcontent.XContentFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -30,6 +34,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.util.CollectionUtils;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -247,13 +252,13 @@ public class EsClientConfiguration implements InitializingBean {
 
 
         analysis.forEach((analyzerName, analyzer) -> {
-            Map<String, Object> analyzerMap = XcontentBuildUtils.buildAnalyzer(analyzer.getTokenizer(), analyzer.getFilters(), analyzer.getTokenizer());
+            Map<String, Object> analyzerMap =  buildAnalyzer(analyzer.getTokenizer(), analyzer.getFilters(), analyzer.getTokenizer());
             GlobalParamHolder.putAnalysis(analyzerName, analyzerMap);
         });
 
 
         normalizers.forEach((name, normalizer) -> {
-            Map<String, Object> map = XcontentBuildUtils.buildAnalyzer(normalizer.getTokenizer(), normalizer.getFilters(), normalizer.getTokenizer());
+            Map<String, Object> map =  buildAnalyzer(normalizer.getTokenizer(), normalizer.getFilters(), normalizer.getTokenizer());
             GlobalParamHolder.putAnalysis(name, map);
         });
     }
@@ -317,4 +322,22 @@ public class EsClientConfiguration implements InitializingBean {
 
         return new RestHighLevelClient(builder);
     }
+    public static Map<String, Object> buildAnalyzer(String type, String[] filters, String tokenizer) {
+        XContentBuilder xContentBuilder = null;
+        try {
+            xContentBuilder = XContentFactory.jsonBuilder()
+                    .startObject();
+            if (!ArrayUtils.isEmpty(filters)) {
+                xContentBuilder.field("filter", filters);
+            }
+            xContentBuilder.field("type", type)
+                    .field("tokenizer", tokenizer)
+                    .endObject();
+        } catch (IOException e) {
+            throw new EsException(e);
+        }
+        BytesReference.bytes(xContentBuilder);
+        return JsonUtils.toMap(xContentBuilder.getOutputStream().toString());
+    }
+    
 }

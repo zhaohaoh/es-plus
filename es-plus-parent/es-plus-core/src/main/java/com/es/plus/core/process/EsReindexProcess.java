@@ -1,13 +1,13 @@
 package com.es.plus.core.process;
 
-import com.es.plus.adapter.EsPlusClientFacade;
-import com.es.plus.adapter.config.GlobalConfigCache;
-import com.es.plus.adapter.exception.EsException;
-import com.es.plus.adapter.lock.ELock;
-import com.es.plus.adapter.params.EsIndexResponse;
-import com.es.plus.adapter.params.EsSettings;
-import com.es.plus.adapter.properties.EsIndexParam;
-import com.es.plus.adapter.util.JsonUtils;
+import com.es.plus.common.EsPlusClientFacade;
+import com.es.plus.common.config.GlobalConfigCache;
+import com.es.plus.common.exception.EsException;
+import com.es.plus.common.lock.ELock;
+import com.es.plus.common.params.EsIndexResponse;
+import com.es.plus.common.params.EsSettings;
+import com.es.plus.common.properties.EsIndexParam;
+import com.es.plus.common.util.JsonUtils;
 import com.es.plus.annotation.EsIndex;
 import com.es.plus.constant.Commend;
 import com.es.plus.constant.EsConstant;

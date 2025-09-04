@@ -1,13 +1,12 @@
 package com.es.plus.samples.test;
 
-import com.es.plus.adapter.params.EsResponse;
-import com.es.plus.adapter.pojo.es.EpFuzziness;
-import com.es.plus.adapter.util.JsonUtils;
+import com.es.plus.common.params.EsResponse;
+import com.es.plus.common.pojo.es.EpFuzziness;
+import com.es.plus.common.util.JsonUtils;
 import com.es.plus.core.statics.Es;
 import com.es.plus.samples.SamplesApplication;
 import com.es.plus.samples.dto.FastTestDTO;
 import com.es.plus.samples.service.FastTestService;
-import org.elasticsearch.common.unit.Fuzziness;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.TermQueryBuilder;

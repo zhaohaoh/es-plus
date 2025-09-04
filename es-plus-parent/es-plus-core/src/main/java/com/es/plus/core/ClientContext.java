@@ -1,17 +1,17 @@
 package com.es.plus.core;
 
-import com.es.plus.adapter.EsPlusClientFacade;
-import com.es.plus.adapter.config.GlobalConfigCache;
-import com.es.plus.adapter.core.EsPlusClient;
-import com.es.plus.adapter.core.EsPlusIndexClient;
-import com.es.plus.adapter.interceptor.EsInterceptor;
-import com.es.plus.adapter.interceptor.EsPlusClientProxy;
-import com.es.plus.adapter.lock.EsLockFactory;
+import com.es.plus.common.EsPlusClientFacade;
+import com.es.plus.common.config.GlobalConfigCache;
+import com.es.plus.common.core.EsPlusClient;
+import com.es.plus.common.core.EsPlusIndexClient;
+import com.es.plus.common.interceptor.EsInterceptor;
+import com.es.plus.common.interceptor.EsPlusClientProxy;
+import com.es.plus.common.lock.EsLockFactory;
 import com.es.plus.es6.client.EsPlus6IndexRestClient;
 import com.es.plus.es6.client.EsPlus6RestClient;
 import com.es.plus.es7.client.EsPlusIndexRestClient;
 import com.es.plus.es7.client.EsPlusRestClient;
-import com.es.plus.lock.EsLockClient;
+import com.es.plus.es6.client.EsLockClient;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

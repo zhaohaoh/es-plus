@@ -1,14 +1,14 @@
 package com.es.plus.es6.client;
 
-import com.es.plus.adapter.params.EsAggResponse;
-import com.es.plus.adapter.params.EsAggResult;
-import com.es.plus.adapter.params.EsAggStats;
-import com.es.plus.adapter.params.Tuple;
-import com.es.plus.adapter.properties.EsFieldInfo;
-import com.es.plus.adapter.properties.GlobalParamHolder;
-import com.es.plus.adapter.tools.LambdaUtils;
-import com.es.plus.adapter.tools.SFunction;
-import com.es.plus.adapter.util.JsonUtils;
+import com.es.plus.common.params.EsAggResponse;
+import com.es.plus.common.params.EsAggResult;
+import com.es.plus.common.params.EsAggStats;
+import com.es.plus.common.params.Tuple;
+import com.es.plus.common.properties.EsFieldInfo;
+import com.es.plus.common.properties.GlobalParamHolder;
+import com.es.plus.common.tools.LambdaUtils;
+import com.es.plus.common.tools.SFunction;
+import com.es.plus.common.util.JsonUtils;
 import com.es.plus.constant.EsConstant;
 import com.es.plus.es6.util.SearchHitsUtil;
 import org.apache.commons.lang3.StringUtils;

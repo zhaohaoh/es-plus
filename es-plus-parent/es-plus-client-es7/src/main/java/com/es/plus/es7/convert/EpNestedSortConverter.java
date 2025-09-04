@@ -1,7 +1,7 @@
 package com.es.plus.es7.convert;
 
-import com.es.plus.adapter.pojo.es.EpNestedSortBuilder;
-import com.es.plus.adapter.pojo.es.EpQueryBuilder;
+import com.es.plus.common.pojo.es.EpNestedSortBuilder;
+import com.es.plus.common.pojo.es.EpQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.search.sort.NestedSortBuilder;
 

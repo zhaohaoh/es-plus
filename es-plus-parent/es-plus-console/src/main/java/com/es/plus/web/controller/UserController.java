@@ -3,7 +3,7 @@ package com.es.plus.web.controller;
 
 import cn.dev33.satoken.stp.SaTokenInfo;
 import cn.dev33.satoken.stp.StpUtil;
-import com.es.plus.adapter.exception.EsException;
+import com.es.plus.common.exception.EsException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;

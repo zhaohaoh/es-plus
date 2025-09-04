@@ -1,6 +1,6 @@
 package com.es.plus.es7.convert;
 
-import com.es.plus.adapter.pojo.es.*;
+import com.es.plus.common.pojo.es.*;
 import org.elasticsearch.common.geo.GeoPoint;
 import org.elasticsearch.index.query.*;
 import org.elasticsearch.join.query.HasChildQueryBuilder;
@@ -242,6 +242,30 @@ public class EpQueryConverter {
         
         return innerHitBuilder;
     }
+    /**
+     * 将EpScript转换为Elasticsearch Script
+     * @param epScript 自定义EpScript
+     * @return Elasticsearch Script
+     */
+    public static org.elasticsearch.script.Script toEsScript(EpScript epScript) {
+        if (epScript == null) {
+            return null;
+        }
+        
+        // 根据EpScript的类型创建相应的Script
+        org.elasticsearch.script.ScriptType scriptType = org.elasticsearch.script.ScriptType.INLINE;
+        if (epScript.getScriptType() == EpScript.ScriptType.STORED) {
+            scriptType = org.elasticsearch.script.ScriptType.STORED;
+        }
+        
+        // 创建Script
+        return new org.elasticsearch.script.Script(
+                scriptType,
+                epScript.getLang(),
+                epScript.getScript(),
+                epScript.getParams()
+        );
+    }
     
     /**
      * 将EpQueryBuilder转换为Elasticsearch原生QueryBuilder
@@ -455,9 +479,10 @@ public class EpQueryConverter {
                 Object script = params.get("script");
                 if (script instanceof org.elasticsearch.script.Script) {
                     esQuery = QueryBuilders.scriptQuery((org.elasticsearch.script.Script) script);
+                } else if (script instanceof EpScript) {
+                    esQuery = QueryBuilders.scriptQuery(toEsScript((EpScript) script));
                 }
                 break;
-            
             case "has_child":
                 String childType = (String) params.get("type");
                 EpQueryBuilder childQuery = (EpQueryBuilder) params.get("query");

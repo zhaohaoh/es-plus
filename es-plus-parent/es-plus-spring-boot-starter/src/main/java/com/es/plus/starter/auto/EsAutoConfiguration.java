@@ -1,14 +1,14 @@
 package com.es.plus.starter.auto;
 
-import com.es.plus.adapter.EsPlusClientFacade;
-import com.es.plus.adapter.interceptor.EsInterceptor;
-import com.es.plus.adapter.lock.ELockClient;
-import com.es.plus.adapter.lock.EsLockFactory;
+import com.es.plus.common.EsPlusClientFacade;
+import com.es.plus.common.interceptor.EsInterceptor;
+import com.es.plus.common.lock.ELockClient;
+import com.es.plus.common.lock.EsLockFactory;
 import com.es.plus.autoconfigure.config.FileConfigMonitor;
 import com.es.plus.autoconfigure.config.NacosConfigMointor;
 import com.es.plus.autoconfigure.properties.EsProperties;
 import com.es.plus.core.ClientContext;
-import com.es.plus.lock.EsLockClient;
+import com.es.plus.es6.client.EsLockClient;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigureOrder;

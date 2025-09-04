@@ -2,7 +2,7 @@ package com.es.plus.web.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.es.plus.adapter.EsPlusClientFacade;
+import com.es.plus.common.EsPlusClientFacade;
 import com.es.plus.autoconfigure.properties.ClientProperties;
 import com.es.plus.autoconfigure.util.ClientUtil;
 import com.es.plus.core.ClientContext;

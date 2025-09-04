@@ -1,16 +1,15 @@
 package com.es.plus.core.wrapper.chain;
 
 
-import com.es.plus.adapter.EsPlusClientFacade;
-import com.es.plus.adapter.properties.EsIndexParam;
-import com.es.plus.adapter.tools.SFunction;
+import com.es.plus.common.EsPlusClientFacade;
+import com.es.plus.common.pojo.es.EpBulkResponse;
+import com.es.plus.common.properties.EsIndexParam;
+import com.es.plus.common.tools.SFunction;
 import com.es.plus.core.ClientContext;
 import com.es.plus.core.IndexContext;
 import com.es.plus.core.wrapper.core.EsLambdaUpdateWrapper;
 import com.es.plus.core.wrapper.core.Update;
 import com.es.plus.core.wrapper.core.UpdateOperation;
-import org.elasticsearch.action.bulk.BulkItemResponse;
-import org.elasticsearch.index.reindex.BulkByScrollResponse;
 
 import java.util.Collection;
 import java.util.List;
@@ -76,10 +75,9 @@ public class EsChainLambdaUpdateWrapper<T>
     /**
      * 增量根据
      *
-     * @return {@link BulkByScrollResponse}
      */
     @Override
-    public BulkByScrollResponse incrementByWapper() {
+    public EpBulkResponse incrementByWapper() {
         return esPlusClientFacade.increment(type, esWrapper.esParamWrapper(), indexs);
     }
     
@@ -87,22 +85,20 @@ public class EsChainLambdaUpdateWrapper<T>
     /**
      * 保存批处理
      *
-     * @return {@link List}<{@link BulkItemResponse}>
      */
     @Override
-    public List<BulkItemResponse> saveBatch(Collection<T> entityList) {
+    public List<String> saveBatch(Collection<T> entityList) {
         return esPlusClientFacade.saveBatch(type, entityList, indexs);
     }
     
     @Override
-    public List<BulkItemResponse> saveOrUpdateBatch(Collection<T> entityList) {
+    public List<String> saveOrUpdateBatch(Collection<T> entityList) {
         return esPlusClientFacade.saveBatch(type, entityList, indexs);
     }
     
     /**
      * 保存批处理异步
      *
-     * @return {@link List}<{@link BulkItemResponse}>
      */
     @Override
     public void saveBatchAsyncProcessor(Collection<T> entityList) {
@@ -112,7 +108,6 @@ public class EsChainLambdaUpdateWrapper<T>
     /**
      * 保存批处理异步
      *
-     * @return {@link List}<{@link BulkItemResponse}>
      */
     @Override
     public void saveOrUpdateBatchAsyncProcessor(Collection<T> entityList) {
@@ -122,7 +117,6 @@ public class EsChainLambdaUpdateWrapper<T>
     /**
      * 保存批处理异步
      *
-     * @return {@link List}<{@link BulkItemResponse}>
      */
     @Override
     public void updateBatchAsyncProcessor(Collection<T> entityList) {
@@ -140,30 +134,27 @@ public class EsChainLambdaUpdateWrapper<T>
      * 批处理更新
      *
      * @param t t
-     * @return {@link List}<{@link BulkItemResponse}>
      */
     @Override
-    public List<BulkItemResponse> updateBatch(Collection<T> t) {
+    public List<String> updateBatch(Collection<T> t) {
         return esPlusClientFacade.updateBatch(type, t, indexs);
     }
     
     /**
      * 更新
      *
-     * @return {@link BulkByScrollResponse}
      */
     @Override
-    public BulkByScrollResponse updateByQuery() {
+    public EpBulkResponse updateByQuery() {
         return esPlusClientFacade.updateByWrapper(type, esWrapper.esParamWrapper(), indexs);
     }
     
     /**
      * 删除
      *
-     * @return {@link BulkByScrollResponse}
      */
     @Override
-    public BulkByScrollResponse remove() {
+    public EpBulkResponse remove() {
         return esPlusClientFacade.deleteByQuery(type, esWrapper.esParamWrapper(), indexs);
     }
     

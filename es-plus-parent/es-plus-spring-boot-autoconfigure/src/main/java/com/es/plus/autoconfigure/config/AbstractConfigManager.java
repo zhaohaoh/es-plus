@@ -1,7 +1,7 @@
 package com.es.plus.autoconfigure.config;
 
-import com.es.plus.adapter.EsPlusClientFacade;
-import com.es.plus.adapter.config.GlobalConfigCache;
+import com.es.plus.common.EsPlusClientFacade;
+import com.es.plus.common.config.GlobalConfigCache;
 import com.es.plus.autoconfigure.interceptor.EsReindexInterceptor;
 import com.es.plus.core.ClientContext;
 import lombok.SneakyThrows;

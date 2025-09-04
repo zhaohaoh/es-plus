@@ -1,8 +1,8 @@
 package com.es.plus.es6.util;
 
-import com.es.plus.adapter.properties.EsIndexParam;
-import com.es.plus.adapter.properties.GlobalParamHolder;
-import com.es.plus.adapter.util.JsonUtils;
+import com.es.plus.common.properties.EsIndexParam;
+import com.es.plus.common.properties.GlobalParamHolder;
+import com.es.plus.common.util.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.common.text.Text;

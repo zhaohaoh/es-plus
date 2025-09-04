@@ -1,10 +1,10 @@
 package com.es.plus.core.wrapper.aggregation;
 
 
-import com.es.plus.adapter.properties.EsFieldInfo;
-import com.es.plus.adapter.properties.GlobalParamHolder;
-import com.es.plus.adapter.tools.LambdaUtils;
-import com.es.plus.adapter.tools.SFunction;
+import com.es.plus.common.properties.EsFieldInfo;
+import com.es.plus.common.properties.GlobalParamHolder;
+import com.es.plus.common.tools.LambdaUtils;
+import com.es.plus.common.tools.SFunction;
 import org.apache.commons.lang3.StringUtils;
 
 public abstract class AbstractLambdaAggWrapper<T, R> {

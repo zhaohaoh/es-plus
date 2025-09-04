@@ -1,7 +1,7 @@
 package com.es.plus.web.controller;
 
 
-import com.es.plus.adapter.EsPlusClientFacade;
+import com.es.plus.common.EsPlusClientFacade;
 import com.es.plus.core.ClientContext;
 import com.es.plus.core.statics.Es;
 import lombok.extern.slf4j.Slf4j;

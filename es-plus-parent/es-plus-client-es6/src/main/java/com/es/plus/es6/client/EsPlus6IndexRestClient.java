@@ -1,16 +1,16 @@
 package com.es.plus.es6.client;
 
-import com.es.plus.adapter.config.GlobalConfigCache;
-import com.es.plus.adapter.core.EsPlusIndexClient;
-import com.es.plus.adapter.exception.EsException;
-import com.es.plus.adapter.params.EsAliasResponse;
-import com.es.plus.adapter.params.EsIndexResponse;
-import com.es.plus.adapter.params.EsSettings;
-import com.es.plus.adapter.pojo.EsPlusGetTaskResponse;
-import com.es.plus.adapter.pojo.es.EpQueryBuilder;
-import com.es.plus.adapter.properties.EsIndexParam;
-import com.es.plus.adapter.properties.GlobalParamHolder;
-import com.es.plus.adapter.util.JsonUtils;
+import com.es.plus.common.config.GlobalConfigCache;
+import com.es.plus.common.core.EsPlusIndexClient;
+import com.es.plus.common.exception.EsException;
+import com.es.plus.common.params.EsAliasResponse;
+import com.es.plus.common.params.EsIndexResponse;
+import com.es.plus.common.params.EsSettings;
+import com.es.plus.common.pojo.EsPlusGetTaskResponse;
+import com.es.plus.common.pojo.es.EpQueryBuilder;
+import com.es.plus.common.properties.EsIndexParam;
+import com.es.plus.common.properties.GlobalParamHolder;
+import com.es.plus.common.util.JsonUtils;
 import com.es.plus.constant.EsConstant;
 import com.es.plus.es6.convert.EpQueryConverter;
 import org.apache.commons.lang3.ArrayUtils;

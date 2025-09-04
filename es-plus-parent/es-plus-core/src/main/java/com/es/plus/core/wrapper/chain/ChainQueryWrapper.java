@@ -1,7 +1,7 @@
 package com.es.plus.core.wrapper.chain;
 
-import com.es.plus.adapter.params.EsAggResponse;
-import com.es.plus.adapter.params.EsResponse;
+import com.es.plus.common.params.EsAggResponse;
+import com.es.plus.common.params.EsResponse;
 
 import java.time.Duration;
 

@@ -1,6 +1,6 @@
 package com.es.plus.web.pojo;
 
-import com.es.plus.adapter.params.EsOrder;
+import com.es.plus.common.params.EsOrder;
 import lombok.Data;
 
 @Data

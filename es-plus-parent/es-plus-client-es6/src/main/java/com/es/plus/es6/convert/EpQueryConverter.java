@@ -1,17 +1,16 @@
 package com.es.plus.es6.convert;
 
-import com.es.plus.adapter.pojo.es.EpBoolQueryBuilder;
-import com.es.plus.adapter.pojo.es.EpQueryBuilder;
-import com.es.plus.adapter.pojo.es.EpScoreMode;
+import com.es.plus.common.pojo.es.*;
 import org.elasticsearch.common.geo.GeoPoint;
-import org.elasticsearch.index.query.BoolQueryBuilder;
-import org.elasticsearch.index.query.GeoPolygonQueryBuilder;
-import org.elasticsearch.index.query.MatchPhrasePrefixQueryBuilder;
-import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.index.query.RangeQueryBuilder;
+import org.elasticsearch.index.query.*;
 import org.elasticsearch.join.query.HasChildQueryBuilder;
+import org.elasticsearch.join.query.HasParentQueryBuilder;
 import org.elasticsearch.join.query.ParentIdQueryBuilder;
+import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
+import org.elasticsearch.search.sort.FieldSortBuilder;
+import org.elasticsearch.search.sort.SortBuilder;
+import org.elasticsearch.search.sort.SortBuilders;
+import org.elasticsearch.search.sort.SortOrder;
 
 import java.util.List;
 import java.util.Map;
@@ -48,6 +47,227 @@ public class EpQueryConverter {
     }
     
     /**
+     * 将EpFetchSourceContext转换为FetchSourceContext
+     * @param epFetchSourceContext 自定义FetchSourceContext
+     * @return Elasticsearch FetchSourceContext
+     */
+    private static org.elasticsearch.search.fetch.subphase.FetchSourceContext toEsFetchSourceContext(EpFetchSourceContext epFetchSourceContext) {
+        if (epFetchSourceContext == null) {
+            return null;
+        }
+        
+        return new org.elasticsearch.search.fetch.subphase.FetchSourceContext(
+                epFetchSourceContext.fetchSource(),
+                epFetchSourceContext.includes(),
+                epFetchSourceContext.excludes()
+        );
+    }
+    
+    /**
+     * 将EpHighlightBuilder转换为HighlightBuilder
+     * @param epHighlightBuilder 自定义HighlightBuilder
+     * @return Elasticsearch HighlightBuilder
+     */
+    private static HighlightBuilder toEsHighlightBuilder(EpHighlightBuilder epHighlightBuilder) {
+        if (epHighlightBuilder == null) {
+            return null;
+        }
+        
+        HighlightBuilder highlightBuilder = new HighlightBuilder();
+        
+        // 设置字段
+        if (epHighlightBuilder.getFields() != null) {
+            for (String field : epHighlightBuilder.getFields()) {
+                highlightBuilder.field(field);
+            }
+        }
+        
+        // 设置标签
+        if (epHighlightBuilder.getPreTags() != null) {
+            highlightBuilder.preTags(epHighlightBuilder.getPreTags());
+        }
+        
+        if (epHighlightBuilder.getPostTags() != null) {
+            highlightBuilder.postTags(epHighlightBuilder.getPostTags());
+        }
+        
+        // 设置其他属性
+        if (epHighlightBuilder.getRequireFieldMatch() != null) {
+            highlightBuilder.requireFieldMatch(epHighlightBuilder.getRequireFieldMatch());
+        }
+        
+        if (epHighlightBuilder.getFragmentSize() != null) {
+            highlightBuilder.fragmentSize(Integer.parseInt(epHighlightBuilder.getFragmentSize()));
+        }
+        
+        if (epHighlightBuilder.getNumberOfFragments() != null) {
+            highlightBuilder.numOfFragments(epHighlightBuilder.getNumberOfFragments());
+        }
+        
+        return highlightBuilder;
+    }
+    
+    /**
+     * 将EpSortBuilder转换为SortBuilder
+     * @param epSortBuilder 自定义SortBuilder
+     * @return Elasticsearch SortBuilder
+     */
+    private static SortBuilder<?> toEsSortBuilder(EpSortBuilder epSortBuilder) {
+        if (epSortBuilder == null || epSortBuilder.getField() == null) {
+            return null;
+        }
+        
+        FieldSortBuilder  sortBuilder =  SortBuilders.fieldSort(epSortBuilder.getField());
+        
+        // 设置排序顺序
+        if (epSortBuilder.getOrder() != null) {
+            sortBuilder.order( SortOrder.valueOf(epSortBuilder.getOrder().name()));
+        }
+        
+        
+        // 设置嵌套排序
+        if (epSortBuilder.getNestedSort() != null) {
+            sortBuilder.setNestedSort(toEsNestedSortBuilder(epSortBuilder.getNestedSort()));
+        }
+        
+        return sortBuilder;
+    }
+    
+    /**
+     * 将EpNestedSortBuilder转换为NestedSortBuilder
+     * @param epNestedSortBuilder 自定义NestedSortBuilder
+     * @return Elasticsearch NestedSortBuilder
+     */
+    private static org.elasticsearch.search.sort.NestedSortBuilder toEsNestedSortBuilder(EpNestedSortBuilder epNestedSortBuilder) {
+        if (epNestedSortBuilder == null) {
+            return null;
+        }
+        
+        // 创建NestedSortBuilder并设置path
+        org.elasticsearch.search.sort.NestedSortBuilder nestedSortBuilder =
+                new org.elasticsearch.search.sort.NestedSortBuilder(epNestedSortBuilder.getPath());
+        
+        // 设置filter（如果EpNestedSortBuilder支持）
+        if (epNestedSortBuilder.getFilter() != null) {
+            // 注意：这里需要EpQueryBuilder到QueryBuilder的转换
+            nestedSortBuilder.setFilter(toEsQueryBuilder(epNestedSortBuilder.getFilter()));
+        }
+        
+        // 设置maxChildren（如果EpNestedSortBuilder支持）
+        if (epNestedSortBuilder.getMaxChildren() != null) {
+            nestedSortBuilder.setMaxChildren(epNestedSortBuilder.getMaxChildren());
+        }
+        
+        // 处理嵌套的NestedSortBuilder（递归调用）
+        if (epNestedSortBuilder.getNestedSort() != null) {
+            org.elasticsearch.search.sort.NestedSortBuilder nestedNestedSort =
+                    toEsNestedSortBuilder(epNestedSortBuilder.getNestedSort());
+            nestedSortBuilder.setNestedSort(nestedNestedSort);
+        }
+        
+        return nestedSortBuilder;
+    }
+    
+    /**
+     * 将EpInnerHitBuilder转换为InnerHitBuilder
+     * @param epInnerHitBuilder 自定义InnerHitBuilder
+     * @return Elasticsearch InnerHitBuilder
+     */
+    private static InnerHitBuilder toEsInnerHitBuilder(EpInnerHitBuilder epInnerHitBuilder) {
+        if (epInnerHitBuilder == null) {
+            return null;
+        }
+        
+        InnerHitBuilder innerHitBuilder =
+                new  InnerHitBuilder();
+        
+        // 设置名称
+        if (epInnerHitBuilder.getName() != null) {
+            innerHitBuilder.setName(epInnerHitBuilder.getName());
+        }
+        
+        
+        
+        // 设置文档值字段
+        if (epInnerHitBuilder.getDocValueFields() != null) {
+            for (String docValueField : epInnerHitBuilder.getDocValueFields()) {
+                innerHitBuilder.addDocValueField(docValueField);
+            }
+        }
+        
+        // 设置分页
+        if (epInnerHitBuilder.getFrom() != null) {
+            innerHitBuilder.setFrom(epInnerHitBuilder.getFrom());
+        }
+        
+        if (epInnerHitBuilder.getSize() != null) {
+            innerHitBuilder.setSize(epInnerHitBuilder.getSize());
+        }
+        
+        // 设置排序
+        if (epInnerHitBuilder.getSorts() != null) {
+            for (EpSortBuilder epSort : epInnerHitBuilder.getSorts()) {
+                SortBuilder<?> sortBuilder = toEsSortBuilder(epSort);
+                if (sortBuilder != null) {
+                    innerHitBuilder.addSort(sortBuilder);
+                }
+            }
+        }
+        
+        // 设置高亮
+        if (epInnerHitBuilder.getHighlightBuilder() != null) {
+            innerHitBuilder.setHighlightBuilder(toEsHighlightBuilder(epInnerHitBuilder.getHighlightBuilder()));
+        }
+        
+        // 设置其他属性
+        if (epInnerHitBuilder.getExplain() != null) {
+            innerHitBuilder.setExplain(epInnerHitBuilder.getExplain());
+        }
+        
+        if (epInnerHitBuilder.getVersion() != null) {
+            innerHitBuilder.setVersion(epInnerHitBuilder.getVersion());
+        }
+        
+        if (epInnerHitBuilder.getSeqNoAndPrimaryTerm() != null) {
+            innerHitBuilder.setSeqNoAndPrimaryTerm(epInnerHitBuilder.getSeqNoAndPrimaryTerm());
+        }
+        if (epInnerHitBuilder.getTrackScores() != null) {
+            innerHitBuilder.setTrackScores(epInnerHitBuilder.getTrackScores());
+        }
+        
+        // 设置源字段上下文
+        if (epInnerHitBuilder.getFetchSourceContext() != null) {
+            innerHitBuilder.setFetchSourceContext(toEsFetchSourceContext(epInnerHitBuilder.getFetchSourceContext()));
+        }
+        
+        return innerHitBuilder;
+    }
+    /**
+     * 将EpScript转换为Elasticsearch Script
+     * @param epScript 自定义EpScript
+     * @return Elasticsearch Script
+     */
+    public static org.elasticsearch.script.Script toEsScript(EpScript epScript) {
+        if (epScript == null) {
+            return null;
+        }
+        
+        // 根据EpScript的类型创建相应的Script
+        org.elasticsearch.script.ScriptType scriptType = org.elasticsearch.script.ScriptType.INLINE;
+        if (epScript.getScriptType() == EpScript.ScriptType.STORED) {
+            scriptType = org.elasticsearch.script.ScriptType.STORED;
+        }
+        
+        // 创建Script
+        return new org.elasticsearch.script.Script(
+                scriptType,
+                epScript.getLang(),
+                epScript.getScript(),
+                epScript.getParams()
+        );
+    }
+    
+    /**
      * 将EpQueryBuilder转换为Elasticsearch原生QueryBuilder
      * @param epQuery 自定义查询构建器
      * @return Elasticsearch原生QueryBuilder
@@ -60,6 +280,7 @@ public class EpQueryConverter {
         if (epQuery instanceof QueryBuilder) {
             return (QueryBuilder) epQuery;
         }
+        
         // 如果是BoolQueryBuilder特殊处理
         if (epQuery instanceof EpBoolQueryBuilder) {
             return toEsBoolQueryBuilder((EpBoolQueryBuilder) epQuery);
@@ -119,6 +340,10 @@ public class EpQueryConverter {
                     rangeQuery.includeUpper((Boolean) params.get("includeUpper"));
                 }
                 
+                if (params.containsKey("time_zone")) {
+                    rangeQuery.timeZone((String) params.get("time_zone"));
+                }
+                
                 esQuery = rangeQuery;
                 break;
             
@@ -142,7 +367,15 @@ public class EpQueryConverter {
             case "fuzzy":
                 String fuzzyField = (String) params.get("field");
                 Object fuzzyValue = params.get("value");
-                esQuery = QueryBuilders.fuzzyQuery(fuzzyField, fuzzyValue);
+                String fuzziness = (String) params.get("fuzziness");
+                FuzzyQueryBuilder fuzzyQueryBuilder = QueryBuilders.fuzzyQuery(fuzzyField, fuzzyValue);
+                if (fuzziness != null) {
+                    fuzzyQueryBuilder.fuzziness(org.elasticsearch.common.unit.Fuzziness.build(fuzziness));
+                }
+                if (params.containsKey("prefix_length")) {
+                    fuzzyQueryBuilder.prefixLength((Integer) params.get("prefix_length"));
+                }
+                esQuery = fuzzyQueryBuilder;
                 break;
             
             case "regexp":
@@ -161,7 +394,18 @@ public class EpQueryConverter {
                 } else if (scoreModeObj instanceof org.apache.lucene.search.join.ScoreMode) {
                     scoreMode = (org.apache.lucene.search.join.ScoreMode) scoreModeObj;
                 }
-                esQuery = QueryBuilders.nestedQuery(nestedPath, toEsQueryBuilder(nestedQuery), scoreMode);
+                
+                NestedQueryBuilder nestedQueryBuilder = QueryBuilders.nestedQuery(nestedPath, toEsQueryBuilder(nestedQuery), scoreMode);
+                
+                // 处理inner_hit参数
+                if (params.containsKey("inner_hit")) {
+                    Object innerHitObj = params.get("inner_hit");
+                    if (innerHitObj instanceof EpInnerHitBuilder) {
+                        nestedQueryBuilder.innerHit(toEsInnerHitBuilder((EpInnerHitBuilder) innerHitObj));
+                    }
+                }
+                
+                esQuery = nestedQueryBuilder;
                 break;
             
             case "ids":
@@ -207,7 +451,11 @@ public class EpQueryConverter {
                 Double lat = (Double) params.get("lat");
                 Double lon = (Double) params.get("lon");
                 String distance = (String) params.get("distance");
-                esQuery = QueryBuilders.geoDistanceQuery(geoDistanceField).point(lat, lon).distance(distance);
+                String unit = (String) params.get("unit");
+                GeoDistanceQueryBuilder geoDistanceQueryBuilder = QueryBuilders.geoDistanceQuery(geoDistanceField)
+                        .point(lat, lon)
+                        .distance(distance, org.elasticsearch.common.unit.DistanceUnit.fromString(unit));
+                esQuery = geoDistanceQueryBuilder;
                 break;
             
             case "geo_bounding_box":
@@ -222,11 +470,8 @@ public class EpQueryConverter {
             
             case "geo_polygon":
                 String geoPolygonField = (String) params.get("field");
-                
                 List<GeoPoint> points = (List<GeoPoint>)params.get("points");
-               
                 GeoPolygonQueryBuilder geoPolygonQueryBuilder = QueryBuilders.geoPolygonQuery(geoPolygonField,points);
-              
                 esQuery = geoPolygonQueryBuilder;
                 break;
             
@@ -234,9 +479,10 @@ public class EpQueryConverter {
                 Object script = params.get("script");
                 if (script instanceof org.elasticsearch.script.Script) {
                     esQuery = QueryBuilders.scriptQuery((org.elasticsearch.script.Script) script);
+                } else if (script instanceof EpScript) {
+                    esQuery = QueryBuilders.scriptQuery(toEsScript((EpScript) script));
                 }
                 break;
-            
             case "has_child":
                 String childType = (String) params.get("type");
                 EpQueryBuilder childQuery = (EpQueryBuilder) params.get("query");
@@ -254,13 +500,14 @@ public class EpQueryConverter {
                 String parentType = (String) params.get("type");
                 EpQueryBuilder parentQuery = (EpQueryBuilder) params.get("query");
                 Object parentScoreModeObj = params.get("score_mode");
+                Boolean parentScoreModeBool = (Boolean) params.get("score_mode");
                 org.apache.lucene.search.join.ScoreMode parentScoreMode = org.apache.lucene.search.join.ScoreMode.None;
                 if (parentScoreModeObj instanceof EpScoreMode) {
                     parentScoreMode = toEsScoreMode((EpScoreMode) parentScoreModeObj);
                 } else if (parentScoreModeObj instanceof org.apache.lucene.search.join.ScoreMode) {
                     parentScoreMode = (org.apache.lucene.search.join.ScoreMode) parentScoreModeObj;
                 }
-                esQuery =  new HasChildQueryBuilder(parentType, toEsQueryBuilder(parentQuery), parentScoreMode);
+                esQuery = new HasParentQueryBuilder(parentType, toEsQueryBuilder(parentQuery), parentScoreModeBool);
                 break;
             
             case "parent_id":

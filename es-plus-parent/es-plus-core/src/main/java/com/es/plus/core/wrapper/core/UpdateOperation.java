@@ -1,5 +1,6 @@
 package com.es.plus.core.wrapper.core;
 
+import com.es.plus.common.pojo.es.EpBulkResponse;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
 
@@ -30,7 +31,7 @@ public interface UpdateOperation<T> {
      * @param t t
      * @return {@link List}<{@link BulkItemResponse}>
      */
-    List<BulkItemResponse> saveBatch(Collection<T> t);
+    List<String> saveBatch(Collection<T> t);
     
     /**
      * 保存或更新批处理
@@ -38,7 +39,7 @@ public interface UpdateOperation<T> {
      * @param entityList 实体列表
      * @return {@link List}<{@link BulkItemResponse}>
      */
-    List<BulkItemResponse> saveOrUpdateBatch(Collection<T> entityList);
+    List<String> saveOrUpdateBatch(Collection<T> entityList);
     
     /**
      * 保存批处理异步
@@ -76,14 +77,14 @@ public interface UpdateOperation<T> {
      * @param t t
      * @return {@link List}<{@link BulkItemResponse}>
      */
-    List<BulkItemResponse> updateBatch(Collection<T> t);
+    List<String> updateBatch(Collection<T> t);
     
     /**
      * 更新
      *
      * @return {@link BulkByScrollResponse}
      */
-    BulkByScrollResponse updateByQuery();
+    EpBulkResponse updateByQuery();
     
     
     /**
@@ -91,7 +92,7 @@ public interface UpdateOperation<T> {
      *
      * @return {@link BulkByScrollResponse}
      */
-    BulkByScrollResponse incrementByWapper();
+    EpBulkResponse incrementByWapper();
     
     
     /**
@@ -106,7 +107,7 @@ public interface UpdateOperation<T> {
      *
      * @return {@link BulkByScrollResponse}
      */
-    BulkByScrollResponse remove();
+    EpBulkResponse remove();
     
     
 }

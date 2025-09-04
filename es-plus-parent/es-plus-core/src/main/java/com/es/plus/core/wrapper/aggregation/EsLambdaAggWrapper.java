@@ -1,7 +1,7 @@
 package com.es.plus.core.wrapper.aggregation;
 
 
-import com.es.plus.adapter.tools.SFunction;
+import com.es.plus.common.tools.SFunction;
 
 public class EsLambdaAggWrapper<T> extends AbstractEsAggWrapper<T, SFunction<T, ?>, EsLambdaAggWrapper<T>> {
 

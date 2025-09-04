@@ -1,10 +1,10 @@
 package com.es.plus.core;
 
 
-import com.es.plus.adapter.EsPlusClientFacade;
-import com.es.plus.adapter.lock.ELock;
-import com.es.plus.adapter.properties.EsIndexParam;
-import com.es.plus.adapter.properties.GlobalParamHolder;
+import com.es.plus.common.EsPlusClientFacade;
+import com.es.plus.common.lock.ELock;
+import com.es.plus.common.properties.EsIndexParam;
+import com.es.plus.common.properties.GlobalParamHolder;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Arrays;

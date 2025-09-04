@@ -1,6 +1,6 @@
 package com.es.plus.core.wrapper.core;
 
-import com.es.plus.adapter.pojo.es.*;
+import com.es.plus.common.pojo.es.*;
 
 import java.util.Collection;
 import java.util.List;

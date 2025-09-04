@@ -1,8 +1,8 @@
 package com.es.plus.es6.util;
 
-import com.es.plus.adapter.params.BulkProcessorParam;
-import com.es.plus.adapter.util.JsonUtils;
-import com.es.plus.adapter.util.LogUtil;
+import com.es.plus.common.params.BulkProcessorParam;
+import com.es.plus.common.util.JsonUtils;
+import com.es.plus.common.util.LogUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.action.ActionListener;

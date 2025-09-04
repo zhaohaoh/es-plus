@@ -1,15 +1,15 @@
 package com.es.plus.core.wrapper.aggregation;
 
-import com.es.plus.adapter.config.GlobalConfigCache;
-import com.es.plus.adapter.core.EsAggClient;
-import com.es.plus.adapter.params.EsParamWrapper;
-import com.es.plus.adapter.pojo.es.EpAggBuilder;
-import com.es.plus.adapter.pojo.es.EpCompositeValuesSourceBuilder;
-import com.es.plus.adapter.pojo.es.EpDateHistogramInterval;
-import com.es.plus.adapter.pojo.es.EpFieldSortBuilder;
-import com.es.plus.adapter.pojo.es.EpGeoPoint;
-import com.es.plus.adapter.pojo.es.EpScript;
-import com.es.plus.adapter.pojo.es.EpSortOrder;
+import com.es.plus.common.config.GlobalConfigCache;
+import com.es.plus.common.core.EsAggClient;
+import com.es.plus.common.params.EsParamWrapper;
+import com.es.plus.common.pojo.es.EpAggBuilder;
+import com.es.plus.common.pojo.es.EpCompositeValuesSourceBuilder;
+import com.es.plus.common.pojo.es.EpDateHistogramInterval;
+import com.es.plus.common.pojo.es.EpFieldSortBuilder;
+import com.es.plus.common.pojo.es.EpGeoPoint;
+import com.es.plus.common.pojo.es.EpScript;
+import com.es.plus.common.pojo.es.EpSortOrder;
 import com.es.plus.core.wrapper.core.EsWrapper;
 import com.es.plus.es6.client.EsPlus6AggsClient;
 import com.es.plus.es7.client.EsPlusAggsClient;

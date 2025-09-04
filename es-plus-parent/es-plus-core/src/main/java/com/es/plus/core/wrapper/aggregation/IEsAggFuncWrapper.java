@@ -1,13 +1,12 @@
 package com.es.plus.core.wrapper.aggregation;
 
-import com.es.plus.adapter.pojo.es.EpAggBuilder;
-import com.es.plus.adapter.pojo.es.EpCompositeValuesSourceBuilder;
-import com.es.plus.adapter.pojo.es.EpDateHistogramInterval;
-import com.es.plus.adapter.pojo.es.EpFieldSortBuilder;
-import com.es.plus.adapter.pojo.es.EpGeoPoint;
-import com.es.plus.adapter.pojo.es.EpScript;
+import com.es.plus.common.pojo.es.EpAggBuilder;
+import com.es.plus.common.pojo.es.EpCompositeValuesSourceBuilder;
+import com.es.plus.common.pojo.es.EpDateHistogramInterval;
+import com.es.plus.common.pojo.es.EpFieldSortBuilder;
+import com.es.plus.common.pojo.es.EpGeoPoint;
+import com.es.plus.common.pojo.es.EpScript;
 import com.es.plus.core.wrapper.core.EsWrapper;
-import org.elasticsearch.search.aggregations.bucket.composite.CompositeValuesSourceBuilder;
 import org.elasticsearch.search.aggregations.metrics.CardinalityAggregationBuilder;
 import org.elasticsearch.search.aggregations.metrics.GeoBoundsAggregationBuilder;
 import org.elasticsearch.search.aggregations.metrics.GeoCentroidAggregationBuilder;
@@ -30,7 +29,6 @@ import org.elasticsearch.search.aggregations.pipeline.PercentilesBucketPipelineA
 import org.elasticsearch.search.aggregations.pipeline.SerialDiffPipelineAggregationBuilder;
 import org.elasticsearch.search.aggregations.pipeline.StatsBucketPipelineAggregationBuilder;
 import org.elasticsearch.search.aggregations.pipeline.SumBucketPipelineAggregationBuilder;
-import org.elasticsearch.search.sort.FieldSortBuilder;
 
 import java.util.List;
 import java.util.Map;

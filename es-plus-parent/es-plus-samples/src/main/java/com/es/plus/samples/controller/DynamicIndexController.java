@@ -1,7 +1,7 @@
 package com.es.plus.samples.controller;
 
 
-import com.es.plus.adapter.params.EsResponse;
+import com.es.plus.common.params.EsResponse;
 import com.es.plus.core.statics.Es;
 import com.es.plus.samples.dto.DynamicIndexDTO;
 import com.es.plus.samples.service.DynamicIndexService;

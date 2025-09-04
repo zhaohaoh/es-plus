@@ -1,9 +1,9 @@
 package com.es.plus.samples.test;
 
-import com.es.plus.adapter.EsPlusClientFacade;
-import com.es.plus.adapter.params.EsIndexResponse;
-import com.es.plus.adapter.params.EsResponse;
-import com.es.plus.adapter.pojo.es.EpBucketOrder;
+import com.es.plus.common.EsPlusClientFacade;
+import com.es.plus.common.params.EsIndexResponse;
+import com.es.plus.common.params.EsResponse;
+import com.es.plus.common.pojo.es.EpBucketOrder;
 import com.es.plus.core.ClientContext;
 import com.es.plus.core.statics.Es;
 import com.es.plus.core.wrapper.aggregation.EsAggWrapper;
@@ -12,7 +12,6 @@ import com.es.plus.es6.client.EsPlus6Aggregations;
 import com.es.plus.samples.SamplesApplication;
 import com.es.plus.samples.dto.FastTestDTO;
 import com.es.plus.samples.service.FastTestService;
-import org.elasticsearch.search.aggregations.BucketOrder;
 import org.elasticsearch.search.aggregations.pipeline.BucketSortPipelineAggregationBuilder;
 import org.elasticsearch.search.sort.FieldSortBuilder;
 import org.elasticsearch.search.sort.SortBuilders;

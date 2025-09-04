@@ -1,17 +1,16 @@
 package com.es.plus.core.service;
 
 
-import com.es.plus.adapter.params.EsAggResponse;
-import com.es.plus.adapter.params.EsResponse;
-import com.es.plus.adapter.params.EsSettings;
+import com.es.plus.common.params.EsAggResponse;
+import com.es.plus.common.params.EsResponse;
+import com.es.plus.common.params.EsSettings;
+import com.es.plus.common.pojo.es.EpBulkResponse;
 import com.es.plus.core.wrapper.chain.EsChainLambdaQueryWrapper;
 import com.es.plus.core.wrapper.chain.EsChainLambdaUpdateWrapper;
 import com.es.plus.core.wrapper.chain.EsChainUpdateWrapper;
 import com.es.plus.core.wrapper.core.EsQueryWrapper;
 import com.es.plus.core.wrapper.core.EsUpdateWrapper;
 import com.es.plus.core.wrapper.core.EsWrapper;
-import org.elasticsearch.action.bulk.BulkItemResponse;
-import org.elasticsearch.index.reindex.BulkByScrollResponse;
 
 import java.io.Serializable;
 import java.time.Duration;
@@ -122,27 +121,25 @@ public interface EsService<T> {
      */
     boolean saveOrUpdate(T entity,String... indexs);
     
-    default List<BulkItemResponse> saveOrUpdateBatch(Collection<T> entityList){
+    default List<String> saveOrUpdateBatch(Collection<T> entityList){
         return  saveOrUpdateBatch(entityList,getIndex());
     }
     /**
      * 保存或更新批处理
      *
      * @param entityList 实体列表
-     * @return {@link List}<{@link BulkItemResponse}>
      */
-    List<BulkItemResponse> saveOrUpdateBatch(Collection<T> entityList,String... indexs);
+    List<String> saveOrUpdateBatch(Collection<T> entityList,String... indexs);
     
-    default List<BulkItemResponse> saveBatch(Collection<T> entityList){
+    default List<String> saveBatch(Collection<T> entityList){
         return  saveBatch(entityList,getIndex());
     }
     /**
      * 保存批处理
      *
      * @param entityList 实体列表
-     * @return {@link List}<{@link BulkItemResponse}>
      */
-    List<BulkItemResponse> saveBatch(Collection<T> entityList,String... indexs);
+    List<String> saveBatch(Collection<T> entityList,String... indexs);
     
     /**
      * 批量保存或更新
@@ -161,7 +158,6 @@ public interface EsService<T> {
      * 批量保存
      *
      * @param entityList 实体列表
-     * @return {@link List}<{@link BulkItemResponse}>
      */
 
      void saveBatchAsyncProcessor(Collection<T> entityList,String... indexs);
@@ -173,7 +169,6 @@ public interface EsService<T> {
      * 批量保存
      *
      * @param entityList 实体列表
-     * @return {@link List}<{@link BulkItemResponse}>
      */
 
      void updateBatchAsyncProcessor(Collection<T> entityList,String... indexs) ;
@@ -213,16 +208,15 @@ public interface EsService<T> {
     boolean updateById(T entity,String... indexs);
     
     
-    default List<BulkItemResponse> updateBatch(Collection<T> entityList) {
+    default List<String> updateBatch(Collection<T> entityList) {
        return updateBatch(entityList, getIndex());
     }
     /**
      * 批处理更新
      *
      * @param entityList 实体列表
-     * @return {@link List}<{@link BulkItemResponse}>
      */
-    List<BulkItemResponse> updateBatch(Collection<T> entityList,String... indexs);
+    List<String> updateBatch(Collection<T> entityList,String... indexs);
     
     default void deleteIndex() {
         deleteIndex(getIndex());
@@ -259,16 +253,14 @@ public interface EsService<T> {
      * 删除
      *
      * @param esUpdateWrapper es更新包装器
-     * @return {@link BulkByScrollResponse}
      */
-    BulkByScrollResponse remove(EsWrapper<T> esUpdateWrapper);
+    EpBulkResponse remove(EsWrapper<T> esUpdateWrapper);
     /**
      * 更新根据包装器
      *
      * @param esUpdateWrapper es更新包装器
-     * @return {@link BulkByScrollResponse}
      */
-    BulkByScrollResponse updateByQuery(EsWrapper<T> esUpdateWrapper);
+    EpBulkResponse updateByQuery(EsWrapper<T> esUpdateWrapper);
     
     /**
      * 获取根据id
@@ -375,7 +367,6 @@ public interface EsService<T> {
      * 自增
      *
      * @param esUpdateWrapper es更新包装器
-     * @return {@link BulkByScrollResponse}
      */
-    BulkByScrollResponse increment(EsWrapper<T> esUpdateWrapper);
+    EpBulkResponse increment(EsWrapper<T> esUpdateWrapper);
 }

@@ -1,9 +1,9 @@
 package com.es.plus.core.wrapper.core;
 
 
-import com.es.plus.adapter.params.EsSelect;
-import com.es.plus.adapter.pojo.es.EpNestedSortBuilder;
-import com.es.plus.adapter.pojo.es.EpSearchType;
+import com.es.plus.common.params.EsSelect;
+import com.es.plus.common.pojo.es.EpNestedSortBuilder;
+import com.es.plus.common.pojo.es.EpSearchType;
 
 public interface EsExtendsWrapper<Children, R> {
 

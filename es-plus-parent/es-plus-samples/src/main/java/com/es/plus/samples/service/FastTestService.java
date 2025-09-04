@@ -1,7 +1,8 @@
 package com.es.plus.samples.service;
 
-import com.es.plus.adapter.params.EsAggResponse;
-import com.es.plus.adapter.params.EsResponse;
+import com.es.plus.common.params.EsAggResponse;
+import com.es.plus.common.params.EsResponse;
+import com.es.plus.common.pojo.es.EpBulkResponse;
 import com.es.plus.core.service.EsServiceImpl;
 import com.es.plus.core.statics.Es;
 import com.es.plus.core.wrapper.aggregation.EsAggWrapper;
@@ -60,9 +61,9 @@ public class FastTestService extends EsServiceImpl<FastTestDTO> {
     
     public void updateBy() {
         
-        BulkByScrollResponse bulkByScrollResponse = Es.chainUpdate(FastTestDTO.class)
-                .terms("id", "800000005", "800000004").set("text", "新结果哦").updateByQuery();
-   
+        EpBulkResponse epBulkResponse = Es.chainUpdate(FastTestDTO.class).terms("id", "800000005", "800000004")
+                .set("text", "新结果哦").updateByQuery();
+        
         
     }
     

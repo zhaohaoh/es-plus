@@ -1,6 +1,6 @@
 package com.es.plus.autoconfigure.properties;
 
-import com.es.plus.adapter.constants.GlobalConfig;
+import com.es.plus.common.constants.GlobalConfig;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.NestedConfigurationProperty;

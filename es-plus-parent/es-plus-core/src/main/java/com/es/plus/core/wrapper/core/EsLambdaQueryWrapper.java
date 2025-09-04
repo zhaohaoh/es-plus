@@ -1,7 +1,7 @@
 package com.es.plus.core.wrapper.core;
 
 
-import com.es.plus.adapter.tools.SFunction;
+import com.es.plus.common.tools.SFunction;
 
 public class EsLambdaQueryWrapper<T> extends AbstractEsWrapper<T, SFunction<T,?>, EsLambdaQueryWrapper<T>> {
 

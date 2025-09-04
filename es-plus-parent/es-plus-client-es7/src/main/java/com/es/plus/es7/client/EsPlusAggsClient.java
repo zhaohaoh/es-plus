@@ -1,10 +1,10 @@
 package com.es.plus.es7.client;
 
-import com.es.plus.adapter.config.GlobalConfigCache;
-import com.es.plus.adapter.core.EsAggClient;
-import com.es.plus.adapter.params.EsParamWrapper;
-import com.es.plus.adapter.pojo.es.EpAggBuilder;
-import com.es.plus.adapter.pojo.es.EpDateHistogramInterval;
+import com.es.plus.common.config.GlobalConfigCache;
+import com.es.plus.common.core.EsAggClient;
+import com.es.plus.common.params.EsParamWrapper;
+import com.es.plus.common.pojo.es.EpAggBuilder;
+import com.es.plus.common.pojo.es.EpDateHistogramInterval;
 
 import javax.naming.OperationNotSupportedException;
 import java.util.Map;
