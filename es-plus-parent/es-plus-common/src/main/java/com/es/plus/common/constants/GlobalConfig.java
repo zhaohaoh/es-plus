@@ -46,6 +46,10 @@ public class GlobalConfig {
      */
     private boolean trackTotalHits = false;
     /**
+     * 是否开启查询全部数据 默认关闭
+     */
+    private Integer trackTotalCount = 10000000;
+    /**
      * data refresh policy 数据刷新策略,默认为WAIT_UNTIL
      */
     private RefreshPolicy refreshPolicy =  RefreshPolicy.WAIT_UNTIL;

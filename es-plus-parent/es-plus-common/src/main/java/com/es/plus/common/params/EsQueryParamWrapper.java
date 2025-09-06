@@ -60,4 +60,9 @@ public class EsQueryParamWrapper {
      * searchAfterValues
      */
     protected Object[] searchAfterValues;
+    
+    /**
+     *  会话保持时间 1m  1h
+     */
+    protected  String scrollTime;
 }

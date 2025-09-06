@@ -14,6 +14,8 @@ import org.elasticsearch.search.sort.SortOrder;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * EpQueryBuilder到Elasticsearch QueryBuilder的转换工厂类
@@ -470,8 +472,10 @@ public class EpQueryConverter {
             
             case "geo_polygon":
                 String geoPolygonField = (String) params.get("field");
-                List<GeoPoint> points = (List<GeoPoint>)params.get("points");
-                GeoPolygonQueryBuilder geoPolygonQueryBuilder = QueryBuilders.geoPolygonQuery(geoPolygonField,points);
+                List<EpGeoPoint> points = (List<EpGeoPoint>)params.get("points");
+                List<GeoPoint> collect = points.stream().map(p -> new GeoPoint(p.getLat(), p.getLon()))
+                        .collect(Collectors.toList());
+                GeoPolygonQueryBuilder geoPolygonQueryBuilder = QueryBuilders.geoPolygonQuery(geoPolygonField,collect);
                 esQuery = geoPolygonQueryBuilder;
                 break;
             

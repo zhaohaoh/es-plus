@@ -24,4 +24,8 @@ public class EsSelect {
      * 精确跟踪总命中数
      */
     private Boolean trackTotalHits ;
+    /**
+     * 精确跟踪总命中数
+     */
+    private Integer trackTotalHitsCount;
 }
