@@ -3,13 +3,20 @@ package io.github.zhaohaoh.esplus.client;
 import co.elastic.clients.elasticsearch._types.FieldValue;
 import co.elastic.clients.elasticsearch._types.GeoLocation;
 import co.elastic.clients.elasticsearch._types.LatLonGeoLocation;
+import co.elastic.clients.elasticsearch._types.SortOptions;
+import co.elastic.clients.elasticsearch._types.SortOrder;
 import co.elastic.clients.elasticsearch._types.mapping.GeoPointProperty;
 import co.elastic.clients.elasticsearch._types.query_dsl.*;
+import co.elastic.clients.elasticsearch.core.search.Highlight;
+import co.elastic.clients.elasticsearch.core.search.HighlightField;
 import co.elastic.clients.elasticsearch.core.search.ScoreMode;
 import co.elastic.clients.json.JsonData;
+import com.es.plus.common.params.EsHighLight;
+import com.es.plus.common.params.EsOrder;
 import com.es.plus.common.pojo.es.*;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -344,5 +351,106 @@ public class EpQueryConverter {
         }
         
         return Query.of(q -> q.bool(boolQueryBuilder.build()));
+    }
+    public static SortOptions toEsSort(EsOrder esOrder) {
+        if (esOrder == null) {
+            return null;
+        }
+        
+        SortOptions.Builder sortBuilder = new SortOptions.Builder();
+        
+        // 设置字段和排序顺序
+        SortOrder sortOrder;
+        if ("desc".equalsIgnoreCase(esOrder.getSort())) {
+            sortOrder = SortOrder.Desc;
+        } else {
+            sortOrder = SortOrder.Asc;
+        }
+        
+        sortBuilder.field(f -> f.field(esOrder.getName()).order(sortOrder));
+        
+        // 如果有嵌套排序设置
+        if (esOrder.getNestedSortBuilder() != null) {
+            EpNestedSortBuilder nestedSortBuilder = esOrder.getNestedSortBuilder();
+            // 处理嵌套排序，这里简化处理
+            if (nestedSortBuilder.getPath() != null) {
+                sortBuilder.field(f -> f.field(esOrder.getName())
+                        .order(sortOrder)
+                        .nested(n -> n.path(nestedSortBuilder.getPath())));
+            }
+        }
+        
+        return sortBuilder.build();
+    }
+    
+    /**
+     * 将EsOrder列表转换为Elasticsearch原生SortOptions列表
+     *
+     * @param esOrders 自定义排序设置列表
+     * @return Elasticsearch原生SortOptions列表
+     */
+    public static List<SortOptions> toEsSorts(List<EsOrder> esOrders) {
+        if (esOrders == null || esOrders.isEmpty()) {
+            return null;
+        }
+        
+        return esOrders.stream()
+                .map(EpQueryConverter::toEsSort)
+                .collect(Collectors.toList());
+    }
+    
+    
+    /**
+     * 将自定义EsHighLight列表转换为Elasticsearch原生Highlight
+     *
+     * @param esHighLights 自定义高亮设置列表
+     * @return Elasticsearch原生Highlight
+     */
+    public static Highlight toEsHighlight(List<EsHighLight> esHighLights) {
+        if (esHighLights == null || esHighLights.isEmpty()) {
+            return null;
+        }
+        
+        Highlight.Builder highlightBuilder = new Highlight.Builder();
+        
+        // 创建字段高亮映射
+        Map<String, HighlightField> fields = new HashMap<>();
+        
+        for (EsHighLight esHighLight : esHighLights) {
+            HighlightField.Builder fieldBuilder = new HighlightField.Builder();
+            
+            // 设置高亮标签
+            if (esHighLight.getPreTag() != null) {
+                fieldBuilder.preTags(esHighLight.getPreTag());
+            }
+            if (esHighLight.getPostTag() != null) {
+                fieldBuilder.postTags(esHighLight.getPostTag());
+            }
+            
+            // 设置片段大小
+            if (esHighLight.getFragmentSize() != null) {
+                fieldBuilder.fragmentSize(esHighLight.getFragmentSize());
+            }
+            
+            // 设置片段数量
+            if (esHighLight.getNumberOfFragments() != null) {
+                fieldBuilder.numberOfFragments(esHighLight.getNumberOfFragments());
+            }
+            
+            fields.put(esHighLight.getField(), fieldBuilder.build());
+        }
+        
+        highlightBuilder.fields(fields);
+        
+        // 设置全局高亮参数
+        EsHighLight firstHighLight = esHighLights.get(0);
+        if (firstHighLight.getPreTag() != null) {
+            highlightBuilder.preTags(firstHighLight.getPreTag());
+        }
+        if (firstHighLight.getPostTag() != null) {
+            highlightBuilder.postTags(firstHighLight.getPostTag());
+        }
+        
+        return highlightBuilder.build();
     }
 }

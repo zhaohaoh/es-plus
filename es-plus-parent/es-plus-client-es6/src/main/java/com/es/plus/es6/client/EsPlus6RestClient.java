@@ -744,9 +744,10 @@ public class EsPlus6RestClient implements EsPlusClient {
     }
     
     @Override
-    public boolean deleteBatch( String type, Collection<String> esDataList,String... indexs) {
+    public List<String> deleteBatch( String type, Collection<String> esDataList,String... indexs) {
+        List<String> failedIds = new ArrayList<>();
         if (CollectionUtils.isEmpty(esDataList)) {
-            return false;
+            return failedIds;
         }
         for (String index : indexs) {
             
@@ -768,13 +769,14 @@ public class EsPlus6RestClient implements EsPlusClient {
                     if (item.isFailed()) {
                         printErrorLog("deleteBatch index={} id={} FailureMessage=:{}", index, item.getId(),
                                 item.getFailureMessage());
+                        failedIds.add(item.getId());
                     }
                 }
             } catch (IOException e) {
                 throw new EsException("es delete error", e);
             }
         }
-        return true;
+        return failedIds;
     }
     
     //统计

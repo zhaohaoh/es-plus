@@ -11,7 +11,7 @@ import java.util.Collection;
 import java.util.List;
 
 public interface EsPlusClient {
-
+    
     Object getEsClient();
     
     
@@ -29,7 +29,7 @@ public interface EsPlusClient {
      * 异步定时批量保存接口
      */
     void updateBatchAsyncProcessor(String type, Collection<?> esDataList, String... indexs);
-   
+    
     /**
      * 保存或更新批
      *
@@ -37,7 +37,7 @@ public interface EsPlusClient {
      * @param esDataList 西文数据列表
      */
     List<String> saveOrUpdateBatch(String type, Collection<?> esDataList,String... index);
-
+    
     /**
      * 保存批
      *
@@ -45,7 +45,7 @@ public interface EsPlusClient {
      * @param esDataList 西文数据列表
      */
     List<String> saveBatch(String type, Collection<?> esDataList,String... index);
-
+    
     /**
      * 保存
      */
@@ -55,7 +55,7 @@ public interface EsPlusClient {
      * 保存或者更新
      */
     <T> boolean saveOrUpdate(String type, T entity, String... index);
-
+    
     /**
      * 更新Es数据
      *
@@ -64,19 +64,19 @@ public interface EsPlusClient {
      * @throws Exception
      */
     boolean update(String type, Object esData,String... index);
-
+    
     /**
      * 批处理更新 返回失败数据
      *
      * @param index 索引
      */
     List<String> updateBatch(String type, Collection<?> esDataList,String... index);
-
+    
     /**
      * 更新包装
      */
     <T> EpBulkResponse updateByWrapper( String type, EsParamWrapper<T> esUpdateWrapper,String... index);
-
+    
     /**
      * 增量
      *
@@ -85,7 +85,7 @@ public interface EsPlusClient {
      * @return {@link EpBulkResponse}
      */
     <T> EpBulkResponse increment(String type, EsParamWrapper<T> esUpdateWrapper,String... index);
-
+    
     /**
      * 删除
      *
@@ -94,7 +94,7 @@ public interface EsPlusClient {
      * @return boolean
      */
     boolean delete(String type, String id,String... index);
-
+    
     /**
      * 删除,查询
      *
@@ -103,7 +103,7 @@ public interface EsPlusClient {
      * @return {@link EpBulkResponse}
      */
     <T> EpBulkResponse deleteByQuery(String type, EsParamWrapper<T> esUpdateWrapper,String... index);
-
+    
     /**
      * 删除批处理
      *
@@ -111,8 +111,8 @@ public interface EsPlusClient {
      * @param esDataList 西文数据列表
      * @return boolean
      */
-    boolean deleteBatch(String type, Collection<String> esDataList,String... index);
-
+    List<String> deleteBatch(String type, Collection<String> esDataList,String... index);
+    
     /**
      * 统计数
      *
@@ -121,7 +121,7 @@ public interface EsPlusClient {
      * @return long
      */
     <T> long count(String type, EsParamWrapper<T> esParamWrapper,String... index);
-
+    
     /**
      * 搜索包装
      *
@@ -130,7 +130,7 @@ public interface EsPlusClient {
      * @return {@link EsResponse}<{@link T}>
      */
     <T> EsResponse<T> search(String type, EsParamWrapper<T> esParamWrapper,String... index);
-
+    
     /**
      * 滚动查询包装
      *
@@ -140,7 +140,7 @@ public interface EsPlusClient {
      * @return
      */
     <T> EsResponse<T> scroll(String type, EsParamWrapper<T> esParamWrapper, Duration keepTime, String scrollId,String... index);
-
+    
     /**
      * 聚合
      *
@@ -148,8 +148,8 @@ public interface EsPlusClient {
      * @param esParamWrapper es查询包装
      */
     <T> EsAggResponse<T> aggregations(String type, EsParamWrapper<T> esParamWrapper,String... index);
-
-
+    
+    
     /**
      * 执行dsl
      *

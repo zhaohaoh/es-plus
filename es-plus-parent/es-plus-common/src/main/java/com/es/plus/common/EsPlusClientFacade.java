@@ -38,7 +38,7 @@ public class EsPlusClientFacade   {
     private  EsLockFactory esLockFactory;
     private  EsPlusClientProxy esPlusClientProxy;
     private String host;
-
+    
     public EsPlusClientFacade() {
     }
     
@@ -70,7 +70,7 @@ public class EsPlusClientFacade   {
         }
         return null;
     }
-
+    
     /**
      * 得到内部索引es客户端
      *
@@ -79,7 +79,7 @@ public class EsPlusClientFacade   {
     public EsPlusIndexClient getEsPlusIndexClient() {
         return esPlusIndexClient;
     }
-
+    
     /**
      * 得到内部es客户端
      *
@@ -88,22 +88,22 @@ public class EsPlusClientFacade   {
     public EsPlusClient getEsPlusClient() {
         return esPlusClient;
     }
-
+    
     /**
      * 获取锁
      */
     public ELock getLock(String key) {
         return esLockFactory.getLock(key);
     }
-
+    
     /**
      * 获取读写锁
      */
     public EsReadWriteLock getReadWrtieLock(String key) {
         return esLockFactory.getReadWrtieLock(key);
     }
-
-
+    
+    
     /**
      * 初始化ping 如果设置为false启动时不创建索引
      */
@@ -114,14 +114,14 @@ public class EsPlusClientFacade   {
             GlobalConfigCache.GLOBAL_CONFIG.setStartInit(false);
         }
     }
-
+    
     /**
      * 创建索引
      *
      * @param index 索引
      */
     public boolean createIndex(String index) {
-       return esPlusIndexClient.createIndex(index);
+        return esPlusIndexClient.createIndex(index);
     }
     
     /**
@@ -140,7 +140,7 @@ public class EsPlusClientFacade   {
     public boolean createIndex(String index,String[] alias,Map<String,Object> esSettings,Map<String,Object> mappings) {
         return esPlusIndexClient.createIndex(index,alias,esSettings,mappings);
     }
-
+    
     /**
      * 创建索引
      *
@@ -150,8 +150,8 @@ public class EsPlusClientFacade   {
     public void createIndex(String index, Class<?> tClass) {
         esPlusIndexClient.createIndex(index, tClass);
     }
-
-
+    
+    
     /**
      * 映射
      *
@@ -159,10 +159,10 @@ public class EsPlusClientFacade   {
      * @param tClass t类
      */
     public boolean putMapping(String index, Class<?> tClass) {
-      return   esPlusIndexClient.putMapping(index, tClass);
+        return   esPlusIndexClient.putMapping(index, tClass);
     }
-
-
+    
+    
     /**
      * 映射
      *
@@ -172,8 +172,8 @@ public class EsPlusClientFacade   {
     public void putMapping(String index, Map<String, Object> mappingProperties) {
         esPlusIndexClient.putMapping(index, mappingProperties);
     }
-
-
+    
+    
     /**
      * 创建索引映射
      *
@@ -183,8 +183,8 @@ public class EsPlusClientFacade   {
     public void createIndexMapping(String index, Class<?> tClass) {
         esPlusIndexClient.createIndexMapping(index, tClass);
     }
-
-
+    
+    
     /**
      * 创建索引没有别名
      *
@@ -194,16 +194,16 @@ public class EsPlusClientFacade   {
     public void createIndexWithoutAlias(String index, Class<?> tClass) {
         esPlusIndexClient.createIndexWithoutAlias(index, tClass);
     }
-
-
+    
+    
     /**
      * 删除索引
      */
     public void deleteIndex(String index) {
         esPlusIndexClient.deleteIndex(index);
     }
-
-
+    
+    
     /**
      * 得到索引
      *
@@ -213,9 +213,9 @@ public class EsPlusClientFacade   {
         return esPlusIndexClient.getIndex(indexName);
     }
     
-  
-
-
+    
+    
+    
     /**
      * 得到别名索引
      *
@@ -224,16 +224,16 @@ public class EsPlusClientFacade   {
     public EsAliasResponse getAliasIndex(String alias) {
         return esPlusIndexClient.getAliasIndex(alias);
     }
-
-
+    
+    
     /**
      * 查询index是否存在
      */
     public boolean indexExists(String index) {
         return esPlusIndexClient.indexExists(index);
     }
-
-
+    
+    
     /**
      * 更新别名
      *
@@ -324,8 +324,8 @@ public class EsPlusClientFacade   {
     public boolean reindex(String oldIndexName, String reindexName, Map<String,Object> changeMapping) {
         return esPlusIndexClient.reindex(oldIndexName, reindexName, changeMapping);
     }
-
-
+    
+    
     /**
      * 更新设置
      *
@@ -336,7 +336,7 @@ public class EsPlusClientFacade   {
     public boolean updateSettings( EsSettings esSettings,String... index) {
         return esPlusIndexClient.updateSettings( esSettings,index);
     }
-
+    
     /**
      * 更新设置
      *
@@ -347,11 +347,11 @@ public class EsPlusClientFacade   {
     public boolean updateSettings( Map<String, Object> esSettings,String... index) {
         return esPlusIndexClient.updateSettings( esSettings,index);
     }
-
+    
     public boolean ping() {
         return esPlusIndexClient.ping();
     }
-
+    
     /**
      * ----------------------------------------------------------------------------------------------------------
      * 数据操作
@@ -362,7 +362,7 @@ public class EsPlusClientFacade   {
      * 异步定时批量保存接口
      */
     public void saveOrUpdateBatchAsyncProcessor(String type, Collection<?> esDataList, String... indexs){
-       esPlusClient.saveOrUpdateBatchAsyncProcessor(type, esDataList,indexs);
+        esPlusClient.saveOrUpdateBatchAsyncProcessor(type, esDataList,indexs);
     };
     
     /**
@@ -388,8 +388,8 @@ public class EsPlusClientFacade   {
         if (esDataList.size() > batchSize) {
             List<? extends Collection<?>> collections = CollectionUtil.splitList(esDataList, batchSize);
             collections.forEach(list -> {
-                List<String> strings = esPlusClient.saveOrUpdateBatch(type, list, index);
-                failBulkItemResponses.addAll(strings);
+                        List<String> strings = esPlusClient.saveOrUpdateBatch(type, list, index);
+                        failBulkItemResponses.addAll(strings);
                     }
             );
         } else {
@@ -398,7 +398,7 @@ public class EsPlusClientFacade   {
         }
         return failBulkItemResponses;
     }
-
+    
     /**
      * 保存
      *
@@ -424,14 +424,14 @@ public class EsPlusClientFacade   {
         }
         return failBulkItemResponses;
     }
-
+    
     /**
      * 保存
      */
     public boolean save(String type, Object esData,String... index) {
         return esPlusClient.save(type, esData, index);
     }
-
+    
     /**
      * 更新Es数据
      *
@@ -442,7 +442,7 @@ public class EsPlusClientFacade   {
     public boolean update( String type, Object esData,String... index) {
         return esPlusClient.update(type, esData,index);
     }
-
+    
     /**
      * 批处理更新 返回失败数据
      *
@@ -465,18 +465,18 @@ public class EsPlusClientFacade   {
             List<String> bulkItemResponses = esPlusClient.updateBatch( type, entityList,index);
             failBulkItemResponses.addAll(bulkItemResponses);
         }
-
+        
         return failBulkItemResponses;
     }
-
+    
     /**
      * 更新包装
      */
     public <T> EpBulkResponse updateByWrapper(String type, EsParamWrapper<T> esUpdateWrapper,String... index) {
         return esPlusClient.updateByWrapper( type, esUpdateWrapper,index);
     }
-
-
+    
+    
     /**
      * 增量
      *
@@ -486,7 +486,7 @@ public class EsPlusClientFacade   {
     public <T> EpBulkResponse increment(String type, EsParamWrapper<T> esUpdateWrapper,String... index) {
         return esPlusClient.increment( type, esUpdateWrapper,index);
     }
-
+    
     /**
      * 删除
      *
@@ -497,8 +497,8 @@ public class EsPlusClientFacade   {
     public boolean delete( String type, String id,String... index) {
         return esPlusClient.delete( type, id,index);
     }
-
-
+    
+    
     /**
      * 删除根据查询
      *
@@ -508,8 +508,8 @@ public class EsPlusClientFacade   {
     public <T> EpBulkResponse deleteByQuery( String type, EsParamWrapper<T> esUpdateWrapper,String... index) {
         return esPlusClient.deleteByQuery(type, esUpdateWrapper,index);
     }
-
-
+    
+    
     /**
      * 删除批处理
      *
@@ -517,11 +517,11 @@ public class EsPlusClientFacade   {
      * @param esDataList 数据列表
      * @return boolean
      */
-    public boolean deleteBatchByIds(String type, Collection<String> esDataList,String... index) {
+    public List<String> deleteBatchByIds(String type, Collection<String> esDataList,String... index) {
         return esPlusClient.deleteBatch(type, esDataList,index);
     }
-
-
+    
+    
     /**
      * 统计
      *
@@ -532,8 +532,8 @@ public class EsPlusClientFacade   {
     public <T> long count(String type, EsParamWrapper<T> esParamWrapper,String... index) {
         return esPlusClient.count(type, esParamWrapper,index);
     }
-
-
+    
+    
     /**
      * 搜索根据包装器
      *
@@ -544,8 +544,8 @@ public class EsPlusClientFacade   {
     public <T> EsResponse<T> search(String type, EsParamWrapper<T> esParamWrapper,String... index) {
         return esPlusClient.search(type, esParamWrapper,index);
     }
-
-
+    
+    
     /**
      * 滚动根据包装器
      *
@@ -557,8 +557,8 @@ public class EsPlusClientFacade   {
     public <T> EsResponse<T> scroll( String type, EsParamWrapper<T> esParamWrapper, Duration keepTime, String scollId,String... index) {
         return esPlusClient.scroll(type, esParamWrapper, keepTime, scollId,index);
     }
-
-
+    
+    
     /**
      * 聚合
      *
@@ -568,7 +568,7 @@ public class EsPlusClientFacade   {
     public <T> EsAggResponse<T> aggregations( String type, EsParamWrapper<T> esParamWrapper,String... index) {
         return esPlusClient.aggregations( type, esParamWrapper,index);
     }
-
+    
     /**
      * 创建别名
      *
@@ -579,7 +579,7 @@ public class EsPlusClientFacade   {
         esPlusIndexClient.createAlias(currentIndex, alias);
     }
     
-
+    
     /**
      * 删除别名
      *
@@ -589,18 +589,18 @@ public class EsPlusClientFacade   {
     public void removeAlias(String index, String alias) {
         esPlusIndexClient.removeAlias(index, alias);
     }
-
+    
     /**
      * forceMerge
      */
     public boolean forceMerge(int maxSegments, boolean onlyExpungeDeletes, boolean flush, String... index) {
         return esPlusIndexClient.forceMerge(maxSegments, onlyExpungeDeletes, flush, index);
     }
-
+    
     public boolean refresh(String... index) {
         return esPlusIndexClient.refresh(index);
     }
-
+    
     public String executeDSL(String dsl, String... index) {
         return esPlusClient.executeDSL(dsl,index);
     }
@@ -626,7 +626,7 @@ public class EsPlusClientFacade   {
     }
     
     public String getAliasByIndex(String index) {
-     return    esPlusIndexClient.getAliasByIndex(index);
+        return    esPlusIndexClient.getAliasByIndex(index);
     }
     
     public void removeInterceptor(Class<?> clazz) {

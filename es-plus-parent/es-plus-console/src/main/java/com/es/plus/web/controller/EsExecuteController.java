@@ -21,6 +21,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Triple;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.common.Strings;
+import org.elasticsearch.common.xcontent.ToXContent;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -78,14 +79,15 @@ public class EsExecuteController {
         Object result = "";
         if (invoke instanceof EsResponse) {
             EsResponse esResponse = (EsResponse) invoke;
-            SearchResponse sourceResponse = esResponse.getSourceResponse();
+            String sourceResponse = esResponse.getSourceResponse();
             result = sourceResponse.toString();
             ;
         }
         if (invoke instanceof EsAggResponse) {
             EsAggResponse esAggResponse = (EsAggResponse) invoke;
             esAggResponse.getAggregations();
-            result =  Strings.toString(esAggResponse.getAggregations());
+            //            result =  Strings.toString(esAggResponse.getAggregations());
+            return esAggResponse.getAggregations();
         }
         
         //        String jsonStr = JsonUtils.toJsonStr(result);
@@ -137,7 +139,7 @@ public class EsExecuteController {
                 aggStr(a, trim);
             });
             EsAggResponse<Map> aggregations = queryWrapper.aggregations();
-           return Strings.toString(aggregations.getAggregations());
+            return Strings.toString((ToXContent) aggregations.getAggregations());
         } else if (containsAgg(sql)) {
             EsChainQueryWrapper<Map> queryWrapper = Es.chainQuery(currentEsClient).index(tableName);
             setWhereSql(sql, queryWrapper);
@@ -145,18 +147,18 @@ public class EsExecuteController {
             String trim = StringUtils.substringBetween(sql, "select", "from").trim();
             aggStr(mapEsAggWrapper, trim);
             EsAggResponse<Map> aggregations = queryWrapper.aggregations();
-            return Strings.toString(aggregations.getAggregations());
+            return Strings.toString((ToXContent) aggregations.getAggregations());
         } else if (sql.contains("group")) {
             String terms = StringUtils.substringAfterLast(sql, "by").trim();
-        
-      
+            
+            
             EsChainQueryWrapper<Map> queryWrapper = Es.chainQuery(currentEsClient).index(tableName);
             
             setWhereSql(sql, queryWrapper);
             
             queryWrapper.esAggWrapper().terms(terms);
             EsAggResponse<Map> aggregations = queryWrapper.aggregations();
-            return Strings.toString(aggregations.getAggregations());
+            return Strings.toString((ToXContent) aggregations.getAggregations());
         }
         
         String limit = StringUtils.substringAfterLast(sql, "limit");
@@ -198,7 +200,7 @@ public class EsExecuteController {
                         queryWrapper.terms(t.getMiddle().equalsIgnoreCase("in"),k, Arrays.stream(split).collect(Collectors.toSet()));
                     }
             );
-           
+            
         }
     }
     
@@ -236,7 +238,7 @@ public class EsExecuteController {
                 aggStr(a, trim);
             });
             EsAggResponse<Map> aggregations = queryWrapper.aggregations();
-            return Strings.toString(aggregations.getAggregations());
+            return Strings.toString((ToXContent) aggregations.getAggregations());
         } else if (containsAgg(sql)) {
             EsChainQueryWrapper<Map> queryWrapper = Es.chainQuery(currentEsClient).index(tableName).profile();
             setWhereSql(sql, queryWrapper);
@@ -244,14 +246,14 @@ public class EsExecuteController {
             String trim = StringUtils.substringBetween(sql, "select", "from").trim();
             aggStr(mapEsAggWrapper, trim);
             EsAggResponse<Map> aggregations = queryWrapper.aggregations();
-            return Strings.toString(aggregations.getAggregations());
+            return Strings.toString((ToXContent) aggregations.getAggregations());
         } else if (sql.contains("group")) {
             String terms = StringUtils.substringAfterLast(sql, "by").trim();
             EsChainQueryWrapper<Map> queryWrapper = Es.chainQuery(currentEsClient).index(tableName).profile();
             setWhereSql(sql, queryWrapper);
             queryWrapper.esAggWrapper().terms(terms);
             EsAggResponse<Map> aggregations = queryWrapper.aggregations();
-            return Strings.toString(aggregations.getAggregations());
+            return Strings.toString((ToXContent) aggregations.getAggregations());
         }
         
         String limit = StringUtils.substringAfterLast(sql, "limit");
@@ -336,7 +338,7 @@ public class EsExecuteController {
     private static String getSearchSourceBuilder(EsChainQueryWrapper<Map> queryWrapper,
             EsAggWrapper<Map> mapEsAggWrapper) {
         EpBoolQueryBuilder queryBuilder = queryWrapper.getQueryBuilder();
-    
+        
         List<EpAggBuilder> epAggBuilders = mapEsAggWrapper.getAggregationBuilder();
         String s = EpDSLConverter.convertToDSL(queryBuilder, epAggBuilders);
         return s;
@@ -370,7 +372,7 @@ public class EsExecuteController {
     }
     
     public boolean containsAgg(String str){
-       if (str.contains("count")){
+        if (str.contains("count")){
             return true;
         }else if (str.contains("sum")){
             return true;
@@ -395,8 +397,8 @@ public class EsExecuteController {
             throw new RuntimeException("分页数量不能超过1000");
         }
         EsResponse<Map> esResponse = Es.chainQuery(currentEsClient).executeSQLep(esPageInfo.getSql());
-        SearchResponse sourceResponse = esResponse.getSourceResponse();
-        String result = sourceResponse.toString();
+        
+        String result = esResponse.getSourceResponse().toString();
         return result;
     }
     
@@ -447,7 +449,7 @@ public class EsExecuteController {
         int lastIndex = input.lastIndexOf(';');
         
         if (lastIndex == -1) {
-          return   "return "+input;
+            return   "return "+input;
         }
         
         int secondLastIndex = input.lastIndexOf(';', lastIndex );
@@ -528,10 +530,10 @@ public class EsExecuteController {
         if (whereMatcher.find()) {
             String whereClause = whereMatcher.group(1).trim();
             return whereClause;
-//            // 检查是否包含 IN 子句（可选）
-//            if (whereClause.toLowerCase().contains(" in ")) {
-//                return whereClause;
-//            }
+            //            // 检查是否包含 IN 子句（可选）
+            //            if (whereClause.toLowerCase().contains(" in ")) {
+            //                return whereClause;
+            //            }
         }
         
         return null;
