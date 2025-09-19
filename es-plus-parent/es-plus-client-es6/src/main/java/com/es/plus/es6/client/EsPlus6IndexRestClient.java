@@ -1,4 +1,4 @@
-package com.es.plus.es6.client;
+package com.es.plus.client;
 
 import com.es.plus.common.config.GlobalConfigCache;
 import com.es.plus.common.core.EsPlusIndexClient;
@@ -93,8 +93,8 @@ public class EsPlus6IndexRestClient implements EsPlusIndexClient {
     private final RestHighLevelClient restHighLevelClient;
     
     
-    public EsPlus6IndexRestClient(RestHighLevelClient restHighLevelClient) {
-        this.restHighLevelClient = restHighLevelClient;
+    public EsPlus6IndexRestClient(Object restHighLevelClient) {
+        this.restHighLevelClient = (RestHighLevelClient) restHighLevelClient;
     }
     
     /**

@@ -1,0 +1,3 @@
+#es-plus:
+#  global-config:
+#    reindex-scope: all

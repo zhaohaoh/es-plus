@@ -1,7 +1,6 @@
 package com.es.plus.autoconfigure;
 
 import com.es.plus.common.EsPlusClientFacade;
-import com.es.plus.es7.util.BulkProcessorConfig;
 import com.es.plus.common.config.ConnectFailHandleEnum;
 import com.es.plus.common.exception.EsException;
 import com.es.plus.common.lock.ELock;
@@ -118,8 +117,7 @@ public class IndexScanProccess implements InitializingBean, ApplicationListener<
                 bulkProcessorParam.setBackoffPolicyTime(bulkProcessor.BackoffPolicyTime());
                 bulkProcessorParam.setBackoffPolicyRetryMax(bulkProcessor.BackoffPolicyRetryMax());
                 for (String index : esIndexParam.getIndex()) {
-                    BulkProcessorConfig.getBulkProcessor(esPlusClientFacade.getEsPlusClient().getEsClient(),
-                            index );
+                    esPlusClientFacade.getEsPlusClient().addBulkProcessor(bulkProcessorParam, index);
                 }
             
             }
@@ -320,7 +318,6 @@ public class IndexScanProccess implements InitializingBean, ApplicationListener<
      * 构建es参数
      *
      * @param tClass   t类
-     * @param esSuffix es后缀
      * @return {@link EsIndexParam}
      */
     public EsIndexParam buildEsIndexParam(Class<?> tClass) {

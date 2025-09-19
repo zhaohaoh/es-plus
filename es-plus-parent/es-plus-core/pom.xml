@@ -19,15 +19,29 @@
         </dependency>
         <dependency>
             <groupId>io.github.zhaohaoh</groupId>
+            <artifactId>es-plus-common</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.github.zhaohaoh</groupId>
             <artifactId>es-plus-client-es7</artifactId>
             <version>${project.version}</version>
             <scope>compile</scope>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>io.github.zhaohaoh</groupId>
             <artifactId>es-plus-client-es6</artifactId>
             <version>${project.version}</version>
             <scope>compile</scope>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>io.github.zhaohaoh</groupId>
+            <artifactId>es-plus-client-es8</artifactId>
+            <version>${project.version}</version>
+            <scope>compile</scope>
+            <optional>true</optional>
         </dependency>
     </dependencies>
 

@@ -1,5 +1,6 @@
 package com.es.plus.common.core;
 
+import com.es.plus.common.params.BulkProcessorParam;
 import com.es.plus.common.params.EsAggResponse;
 import com.es.plus.common.params.EsIndexResponse;
 import com.es.plus.common.params.EsParamWrapper;
@@ -14,6 +15,7 @@ public interface EsPlusClient {
     
     Object getEsClient();
     
+    void addBulkProcessor(BulkProcessorParam bulkProcessorParam, String index);
     
     /**
      * 异步定时批量保存接口

@@ -1,6 +1,7 @@
 package com.es.plus.es7.client;
 
 
+import com.es.plus.common.params.BulkProcessorParam;
 import com.es.plus.es7.util.BulkProcessorConfig;
 import com.es.plus.common.config.EsObjectHandler;
 import com.es.plus.common.config.GlobalConfigCache;
@@ -131,9 +132,13 @@ public class EsPlusRestClient implements EsPlusClient {
         return restHighLevelClient;
     }
     
+    @Override
+    public void addBulkProcessor(BulkProcessorParam bulkProcessorParam, String index) {
+        BulkProcessorConfig.getBulkProcessor(restHighLevelClient, bulkProcessorParam, index);
+    }
     
-    public EsPlusRestClient(RestHighLevelClient restHighLevelClient) {
-        this.restHighLevelClient = restHighLevelClient;
+    public EsPlusRestClient(Object restHighLevelClient) {
+        this.restHighLevelClient = (RestHighLevelClient) restHighLevelClient;
     }
     
     

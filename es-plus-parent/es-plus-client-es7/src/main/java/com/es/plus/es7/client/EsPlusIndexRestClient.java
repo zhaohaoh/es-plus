@@ -94,8 +94,8 @@ public class EsPlusIndexRestClient implements EsPlusIndexClient {
     private final RestHighLevelClient restHighLevelClient;
     
     
-    public EsPlusIndexRestClient(RestHighLevelClient restHighLevelClient) {
-        this.restHighLevelClient = restHighLevelClient;
+    public EsPlusIndexRestClient(Object restHighLevelClient) {
+        this.restHighLevelClient = (RestHighLevelClient) restHighLevelClient;
     }
     
     /**
@@ -353,8 +353,8 @@ public class EsPlusIndexRestClient implements EsPlusIndexClient {
                 settingsMap.put(k, v.toString());
             });
             
-         
-        
+            
+            
             String[] indices = getIndexResponse.getIndices();
             Map<String, Object> mappingMap = new LinkedHashMap<>();
             
@@ -373,7 +373,7 @@ public class EsPlusIndexRestClient implements EsPlusIndexClient {
                             .collect(Collectors.toList());
                     aliasesMap.put(k,alias);
                 });
-             
+                
                 esIndexResponse.setAliases(aliasesMap);
             }
             
@@ -575,7 +575,7 @@ public class EsPlusIndexRestClient implements EsPlusIndexClient {
         reindexRequest.setSourceBatchSize(GlobalConfigCache.GLOBAL_CONFIG.getBatchSize());
         reindexRequest.setTimeout(TimeValue.timeValueNanos(Long.MAX_VALUE));
         try {
-           
+            
             TaskSubmissionResponse response = restHighLevelClient.submitReindexTask(reindexRequest, RequestOptions.DEFAULT );
             return response.getTask();
         } catch (Exception e) {
@@ -587,7 +587,7 @@ public class EsPlusIndexRestClient implements EsPlusIndexClient {
     @Override
     public String reindexTaskList() {
         ListTasksRequest listTasksRequest = new ListTasksRequest();
-//        listTasksRequest.setActions("indices:data/write/reindex");
+        //        listTasksRequest.setActions("indices:data/write/reindex");
         listTasksRequest.setDetailed(true);
         listTasksRequest.setWaitForCompletion(true);
         ListTasksResponse listTasksResponse = null;
@@ -610,7 +610,7 @@ public class EsPlusIndexRestClient implements EsPlusIndexClient {
     public EsPlusGetTaskResponse reindexTaskGet(String taskId) {
         String[] split = taskId.split(":");
         GetTaskRequest listTasksRequest = new GetTaskRequest(split[0],Long.parseLong(split[1]));
-     
+        
         try {
             Optional<GetTaskResponse> getTaskResponse = restHighLevelClient.tasks()
                     .get(listTasksRequest, RequestOptions.DEFAULT);
@@ -629,7 +629,7 @@ public class EsPlusIndexRestClient implements EsPlusIndexClient {
         } catch (IOException e) {
             throw new EsException("reindexTaskList exception oldIndexName:", e);
         }
-         return null;
+        return null;
     }
     
     /**
@@ -641,7 +641,7 @@ public class EsPlusIndexRestClient implements EsPlusIndexClient {
         CancelTasksRequest cancelTasksRequest =   new org.elasticsearch.client.tasks.CancelTasksRequest.Builder()
                 .withTaskId(new TaskId(taskId))
                 .build();
- 
+        
         try {
             // 执行取消操作
             CancelTasksResponse cancel = restHighLevelClient.tasks().cancel(cancelTasksRequest, RequestOptions.DEFAULT);
@@ -650,7 +650,7 @@ public class EsPlusIndexRestClient implements EsPlusIndexClient {
             throw new EsException("reindexTaskList exception oldIndexName:", e);
         }
     }
-   
+    
     @Override
     public boolean reindex(String oldIndexName, String reindexName, Map<String, Object> changeMapping) {
         boolean exists = indexExists(reindexName);

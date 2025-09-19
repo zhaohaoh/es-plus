@@ -21,125 +21,13 @@
         <revision>0.4.80</revision>
         <elasticsearch.version>7.8.0</elasticsearch.version>
         <reflections.version>0.10.2</reflections.version>
+        <elasticsearch-java.version>8.17.0</elasticsearch-java.version>
     </properties>
     
-<!--    <licenses>-->
-<!--        <license>-->
-<!--            <name>The Apache Software License, Version 2.0</name>-->
-<!--            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>-->
-<!--            <distribution>repo</distribution>-->
-<!--        </license>-->
-<!--    </licenses>-->
+ 
     <name>es-plus-pom</name>
     <description>es-plus包依赖管理</description>
-<!--    <url>https://github.com/zhaohaoh/es-plus</url>-->
-<!--    <scm>-->
-<!--        <connection>scm:git@github.com:zhaohaoh/es-plus.git</connection>-->
-<!--        <developerConnection>scm:git@github.com:zhaohaoh/es-plus.git</developerConnection>-->
-<!--        <url>https://github.com/zhaohaoh/es-plus</url>-->
-<!--    </scm>-->
-
-<!--    <developers>-->
-<!--        <developer>-->
-<!--            <name>ZhaohaoHuang</name>-->
-<!--            <email>727172424@qq.com</email>-->
-<!--            <timezone>+8</timezone>-->
-<!--            <roles>-->
-<!--                <role>Developer</role>-->
-<!--            </roles>-->
-<!--        </developer>-->
-<!--    </developers>-->
-
-<!--    <issueManagement>-->
-<!--        <system>Github Issue</system>-->
-<!--        <url>https://github.com/zhaohaoh/es-plus</url>-->
-<!--    </issueManagement>-->
-<!--    <distributionManagement>-->
-<!--        <snapshotRepository>-->
-<!--            <id>oss</id>-->
-<!--            <url>https://s01.oss.sonatype.org/content/repositories/snapshots</url>-->
-<!--        </snapshotRepository>-->
-<!--        <repository>-->
-<!--            <id>oss</id>-->
-<!--            <url>https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/</url>-->
-<!--        </repository>-->
-<!--    </distributionManagement>-->
-
-<!--    <build>-->
-<!--        <plugins>-->
-<!--            <plugin>-->
-<!--                <groupId>org.apache.maven.plugins</groupId>-->
-<!--                <artifactId>maven-compiler-plugin</artifactId>-->
-<!--                <configuration>-->
-<!--                    <encoding>utf-8</encoding>-->
-<!--                    <source>8</source>-->
-<!--                    <target>8</target>-->
-<!--                </configuration>-->
-<!--            </plugin>-->
-<!--            <plugin>-->
-<!--                <groupId>org.sonatype.plugins</groupId>-->
-<!--                <artifactId>nexus-staging-maven-plugin</artifactId>-->
-<!--                <version>1.6.8</version>-->
-<!--                <extensions>true</extensions>-->
-<!--                <configuration>-->
-<!--                    <serverId>oss</serverId>-->
-<!--                    <nexusUrl>https://s01.oss.sonatype.org/</nexusUrl>-->
-<!--                    <autoReleaseAfterClose>true</autoReleaseAfterClose>-->
-<!--                </configuration>-->
-<!--            </plugin>-->
-<!--            &lt;!&ndash; 生成java source.jar &ndash;&gt;-->
-<!--            <plugin>-->
-<!--                <groupId>org.apache.maven.plugins</groupId>-->
-<!--                <artifactId>maven-source-plugin</artifactId>-->
-<!--                <version>2.2.1</version>-->
-<!--                <executions>-->
-<!--                    <execution>-->
-<!--                        <id>attach-sources</id>-->
-<!--                        <goals>-->
-<!--                            <goal>jar-no-fork</goal>-->
-<!--                        </goals>-->
-<!--                    </execution>-->
-<!--                </executions>-->
-<!--            </plugin>-->
-<!--            <plugin>-->
-<!--                <groupId>org.apache.maven.plugins</groupId>-->
-<!--                <artifactId>maven-gpg-plugin</artifactId>-->
-<!--                <version>1.5</version>-->
-<!--                <executions>-->
-<!--                    <execution>-->
-<!--                        <id>sign-artifacts</id>-->
-<!--                        <phase>verify</phase>-->
-<!--                        <goals>-->
-<!--                            <goal>sign</goal>-->
-<!--                        </goals>-->
-<!--                    </execution>-->
-<!--                </executions>-->
-<!--            </plugin>-->
-<!--            <plugin>-->
-<!--                <groupId>org.apache.maven.plugins</groupId>-->
-<!--                <artifactId>maven-javadoc-plugin</artifactId>-->
-<!--                <version>2.9.1</version>-->
-<!--                <configuration>-->
-<!--                    <show>private</show>-->
-<!--                    <nohelp>true</nohelp>-->
-<!--                    <charset>UTF-8</charset>-->
-<!--                    <encoding>UTF-8</encoding>-->
-<!--                    <docencoding>UTF-8</docencoding>-->
-<!--                    &lt;!&ndash; TODO 临时解决不规范的javadoc生成报错,后面要规范化后把这行去掉 &ndash;&gt;-->
-<!--                    <additionalparam>-Xdoclint:none</additionalparam>-->
-<!--                </configuration>-->
-<!--                <executions>-->
-<!--                    <execution>-->
-<!--                        <phase>package</phase>-->
-<!--                        <goals>-->
-<!--                            <goal>jar</goal>-->
-<!--                        </goals>-->
-<!--                    </execution>-->
-<!--                </executions>-->
-<!--            </plugin>-->
-<!--        </plugins>-->
-<!--    </build>-->
-
+ 
     <dependencyManagement>
         <dependencies>
             <dependency>
@@ -166,6 +54,12 @@
                         <groupId>org.elasticsearch</groupId>
                     </exclusion>
                 </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>co.elastic.clients</groupId>
+                <artifactId>elasticsearch-java</artifactId>
+                <version>${elasticsearch-java.version}</version>
+                <optional>true</optional>
             </dependency>
             <dependency>
                 <groupId>org.apache.commons</groupId>

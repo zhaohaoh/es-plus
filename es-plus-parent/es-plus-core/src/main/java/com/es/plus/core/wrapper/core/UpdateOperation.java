@@ -100,7 +100,7 @@ public interface UpdateOperation<T> {
      *
      * @return {@link BulkByScrollResponse}
      */
-    boolean removeByIds(Collection<String> ids);
+    List<String>  removeByIds(Collection<String> ids);
     
     /**
      * 删除

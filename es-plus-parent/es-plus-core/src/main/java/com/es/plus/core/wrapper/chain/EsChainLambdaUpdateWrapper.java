@@ -159,7 +159,7 @@ public class EsChainLambdaUpdateWrapper<T>
     }
     
     @Override
-    public boolean removeByIds(Collection<String> ids) {
+    public List<String>  removeByIds(Collection<String> ids) {
         return esPlusClientFacade.deleteBatchByIds(type, ids, indexs);
     }
     

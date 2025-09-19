@@ -51,6 +51,15 @@ public class BulkProcessorConfig {
         return bulkProcessor;
     }
     
+    public static BulkProcessor getBulkProcessor(RestHighLevelClient restHighLevelClient,BulkProcessorParam param,String index) {
+        BulkProcessor bulkProcessor = bulkProcessorMap.computeIfAbsent(index,
+                a -> {
+                    BulkProcessor processor = doGetBulkProcessor(restHighLevelClient,param);
+                    return processor;
+                });
+        return bulkProcessor;
+    }
+    
     /**
      *
      * @return

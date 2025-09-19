@@ -7,7 +7,7 @@
     <modules>
         <module>es-plus-pom</module>
         <module>es-plus-parent</module>
-        <module>es-plus-parent/es-plus-client-es8</module>
+        <module>es-plus-samples</module>
     </modules>
     <groupId>io.github.zhaohaoh</groupId>
     <artifactId>es-plus</artifactId>

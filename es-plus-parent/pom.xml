@@ -13,12 +13,12 @@
     <artifactId>es-plus-parent</artifactId>
     <modules>
         <module>es-plus-spring-boot-starter</module>
+        <module>es-plus-common</module>
         <module>es-plus-annotation</module>
-        <module>es-plus-core</module>
-        <module>es-plus-samples</module>
         <module>es-plus-client-es6</module>
         <module>es-plus-client-es7</module>
-        <module>es-plus-common</module>
+        <module>es-plus-client-es8</module>
+        <module>es-plus-core</module>
         <module>es-plus-spring-boot-autoconfigure</module>
         <module>es-plus-console</module>
     </modules>

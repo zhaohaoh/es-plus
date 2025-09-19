@@ -17,6 +17,7 @@ import org.springframework.util.CollectionUtils;
 
 import java.io.Serializable;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -177,9 +178,9 @@ public class EsServiceImpl<T> extends AbstractEsService<T> implements EsService<
      * @return boolean
      */
     @Override
-    public boolean removeByIds(Collection<? extends Serializable> idList,String... indexs) {
+    public  List<String> removeByIds(Collection<? extends Serializable> idList,String... indexs) {
         if (CollectionUtils.isEmpty(idList)) {
-            return false;
+            return new ArrayList<>();
         }
         List<String> ids = idList.stream().map(Object::toString).collect(Collectors.toList());
         return getEsPlusClientFacade().deleteBatchByIds(getType(), ids, indexs);

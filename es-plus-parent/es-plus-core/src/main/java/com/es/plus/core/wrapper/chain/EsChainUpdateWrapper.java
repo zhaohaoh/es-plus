@@ -144,7 +144,7 @@ public class EsChainUpdateWrapper<T> extends AbstractEsChainWrapper<T, String, E
 
 
     @Override
-    public boolean removeByIds(Collection<String> ids) {
+    public List<String> removeByIds(Collection<String> ids) {
         return esPlusClientFacade.deleteBatchByIds(type, ids,indexs);
     }
 

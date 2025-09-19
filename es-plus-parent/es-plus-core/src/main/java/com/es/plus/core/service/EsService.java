@@ -184,7 +184,7 @@ public interface EsService<T> {
      */
     boolean removeById(Serializable id,String... indexs);
     
-    default boolean removeByIds(Collection<? extends Serializable> idList) {
+    default  List<String> removeByIds(Collection<? extends Serializable> idList) {
        return removeByIds(idList, getIndex());
     }
     /**
@@ -193,7 +193,7 @@ public interface EsService<T> {
      * @param idList id列表
      * @return boolean
      */
-    boolean removeByIds(Collection<? extends Serializable> idList,String... indexs);
+    List<String> removeByIds(Collection<? extends Serializable> idList,String... indexs);
     
     
     default boolean updateById(T entity) {

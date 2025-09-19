@@ -8,7 +8,9 @@
         <groupId>io.github.zhaohaoh</groupId>
         <version>${revision}</version>
     </parent>
+    <name>es-plus-client-es8</name>
     <artifactId>es-plus-client-es8</artifactId>
+    <description>es客户端适配8.17</description>
     
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
@@ -19,7 +21,6 @@
         <dependency>
             <groupId>co.elastic.clients</groupId>
             <artifactId>elasticsearch-java</artifactId>
-            <version>8.17.0</version>
         </dependency>
         <dependency>
             <groupId>io.github.zhaohaoh</groupId>
