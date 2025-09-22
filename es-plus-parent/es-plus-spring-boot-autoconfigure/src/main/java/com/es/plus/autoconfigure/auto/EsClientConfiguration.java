@@ -14,7 +14,6 @@ import com.es.plus.core.ClientContext;
 import com.es.plus.es6.client.Es6LockClient;
 import com.es.plus.es7.client.Es7LockClient;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.ArrayUtils;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.InitializingBean;
@@ -26,8 +25,6 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.util.CollectionUtils;
-
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;

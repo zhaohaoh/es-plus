@@ -69,80 +69,80 @@ public class BulkProcessorConfig {
         int concurrent = param.getConcurrent();
         int backoffPolicyRetryMax = param.getBackoffPolicyRetryMax();
         long backoffPolicyTime = param.getBackoffPolicyTime();
-
-        return BulkIngester.of(builder -> builder
-                .client(elasticsearchClient)
-                .maxOperations(bulkActions)
-                .maxSize(bulkSize)
-                .flushInterval(flushInterval.toMinutes(), TimeUnit.MINUTES)
-                .maxConcurrentRequests(concurrent)
-                .listener(new BulkListener<Void>() {
-                    @Override
-                    public void beforeBulk(long executionId, BulkRequest request, List<Void> contexts) {
-                        // 写入之前
-                        List<BulkOperation> operations = request.operations();
-                        List<String> saves = new ArrayList<>();
-                        for (BulkOperation operation : operations) {
-                            String info = operation.toString();
-                            saves.add(info);
+        
+        BulkIngester<Void> voidBulkIngester = BulkIngester.of(
+                builder -> {
+                    BulkListener<Void> listener = new BulkListener<Void>() {
+                        @Override
+                        public void beforeBulk(long executionId, BulkRequest request, List<Void> contexts) {
+                            // 写入之前
+                            List<BulkOperation> operations = request.operations();
+                            List<String> saves = new ArrayList<>();
+                            for (BulkOperation operation : operations) {
+                                String info = operation.toString();
+                                saves.add(info);
+                            }
+                            
+                            int num = operations.size();
+                            String data = LogUtil.logSubstring(saves.toString());
+                            log.info("ES BulkIngester Begin  executionId:{} batchNum:{} " + "\n datas:{}"
+                                            + "\nbulkActions:{} bulkSize:{} flushInterval:{} concurrent:{}", executionId, num,
+                                    data, bulkActions, bulkSize, flushInterval, concurrent);
                         }
-
-                        int num = operations.size();
-                        String data = LogUtil.logSubstring(saves.toString());
-                        log.info("ES BulkIngester Begin  executionId:{} batchNum:{} "
-                                        + "\n datas:{}"
-                                        + "\nbulkActions:{} bulkSize:{} flushInterval:{} concurrent:{}",
-                                executionId, num, data, bulkActions, bulkSize, flushInterval, concurrent);
-                    }
-
-                    @Override
-                    public void afterBulk(long executionId, BulkRequest request, List<Void> contexts, BulkResponse response) {
-                        // 写入之后执行
-                        List<BulkResponseItem> items = response.items();
-
-                        List<BulkResponseItem> failureList = items.stream()
-                                .filter(item -> item.error() != null)
-                                .collect(Collectors.toList());
-
-                        List<BulkResponseItem> successList = items.stream()
-                                .filter(item -> item.error() == null)
-                                .collect(Collectors.toList());
-
-                        long ingestTookInMillis = response.took();
-                        String jsonStr = JsonUtils.toJsonStr(successList);
-                        String res = LogUtil.logSubstring(jsonStr);
-
-                        if (CollectionUtils.isEmpty(failureList)) {
-                            log.info("ES BulkIngester Success executionId:{} timeCost:{} response:{}",
-                                    executionId, ingestTookInMillis, res);
-                        } else {
-                            log.info("ES BulkIngester Success executionId:{} timeCost:{} response:{}",
-                                    executionId, ingestTookInMillis, res);
-
-                            String failureMessages = failureList.stream()
-                                    .map(item -> item.error() != null ? item.error().toString() : "")
-                                    .filter(msg -> !msg.isEmpty())
-                                    .collect(Collectors.joining(", "));
-
-                            log.error("ES BulkIngester Fail executionId:{} timeCost:{} failures:{}",
-                                    executionId, ingestTookInMillis, failureMessages);
+                        
+                        @Override
+                        public void afterBulk(long executionId, BulkRequest request, List<Void> contexts,
+                                BulkResponse response) {
+                            // 写入之后执行
+                            List<BulkResponseItem> items = response.items();
+                            
+                            List<BulkResponseItem> failureList = items.stream().filter(item -> item.error() != null)
+                                    .collect(Collectors.toList());
+                            
+                            List<BulkResponseItem> successList = items.stream().filter(item -> item.error() == null)
+                                    .collect(Collectors.toList());
+                            
+                            long ingestTookInMillis = response.took();
+                            String jsonStr = JsonUtils.toJsonStr(successList);
+                            String res = LogUtil.logSubstring(jsonStr);
+                            
+                            if (CollectionUtils.isEmpty(failureList)) {
+                                log.info("ES BulkIngester Success executionId:{} timeCost:{} response:{}", executionId,
+                                        ingestTookInMillis, res);
+                            } else {
+                                log.info("ES BulkIngester Success executionId:{} timeCost:{} response:{}", executionId,
+                                        ingestTookInMillis, res);
+                                
+                                String failureMessages = failureList.stream()
+                                        .map(item -> item.error() != null ? item.error().toString() : "")
+                                        .filter(msg -> !msg.isEmpty()).collect(Collectors.joining(", "));
+                                
+                                log.error("ES BulkIngester Fail executionId:{} timeCost:{} failures:{}", executionId,
+                                        ingestTookInMillis, failureMessages);
+                            }
                         }
-                    }
-
-                    @Override
-                    public void afterBulk(long executionId, BulkRequest request, List<Void> contexts, Throwable failure) {
-                        List<BulkOperation> operations = request.operations();
-                        List<String> saves = new ArrayList<>();
-                        for (BulkOperation operation : operations) {
-                            String info = operation.toString();
-                            saves.add(info);
+                        
+                        @Override
+                        public void afterBulk(long executionId, BulkRequest request, List<Void> contexts,
+                                Throwable failure) {
+                            List<BulkOperation> operations = request.operations();
+                            List<String> saves = new ArrayList<>();
+                            for (BulkOperation operation : operations) {
+                                String info = operation.toString();
+                                saves.add(info);
+                            }
+                            String data = LogUtil.logSubstring(saves.toString());
+                            //写入失败后
+                            log.error("ES BulkIngester executionId:{} " + "\n datas:{} \n ex:", executionId, data,
+                                    failure);
                         }
-                        String data = LogUtil.logSubstring(saves.toString());
-                        //写入失败后
-                        log.error("ES BulkIngester executionId:{} "
-                                + "\n datas:{} \n ex:", executionId, data, failure);
-                    }
-                }));
+                    };
+                    long minutes = flushInterval.toMillis();
+                    return builder.client(elasticsearchClient).maxOperations(bulkActions).maxSize(bulkSize)
+                            .flushInterval(minutes, TimeUnit.MILLISECONDS).maxConcurrentRequests(concurrent)
+                            .listener(listener);
+                });
+        return voidBulkIngester;
     }
 
     /**

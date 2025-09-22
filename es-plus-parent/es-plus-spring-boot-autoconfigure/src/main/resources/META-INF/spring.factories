@@ -1,3 +1,4 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
  com.es.plus.autoconfigure.auto.EsAutoConfiguration,\
- com.es.plus.autoconfigure.auto.EsClientConfiguration
+ com.es.plus.autoconfigure.auto.EsClientConfiguration,\
+ com.es.plus.autoconfigure.auto.Es8ClientConfiguration

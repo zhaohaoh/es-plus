@@ -4,8 +4,7 @@ package com.es.plus.autoconfigure.auto;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import com.es.plus.autoconfigure.properties.ClientProperties;
 import com.es.plus.autoconfigure.properties.EsProperties;
-import com.es.plus.autoconfigure.util.ClientUtil;
-
+import com.es.plus.autoconfigure.util.Client8Util;
 import com.es.plus.client.Es8LockClient;
 import com.es.plus.common.EsPlusClientFacade;
 import com.es.plus.common.config.EsObjectHandler;
@@ -16,7 +15,6 @@ import com.es.plus.common.lock.ELockClient;
 import com.es.plus.common.pojo.es.client.EpClient;
 import com.es.plus.core.ClientContext;
 import lombok.extern.slf4j.Slf4j;
-import org.elasticsearch.client.RestHighLevelClient;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,7 +32,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Slf4j
-@Configuration
+@Configuration(value = "esClientConfiguration")
 @EnableConfigurationProperties(EsProperties.class)
 @ConditionalOnClass(ElasticsearchClient.class)
 public class Es8ClientConfiguration implements InitializingBean {
@@ -52,24 +50,24 @@ public class Es8ClientConfiguration implements InitializingBean {
      * 不存在才加载，存在的话以默认的为主
      */
     @Bean
-    @ConditionalOnMissingBean(RestHighLevelClient.class)
+    @ConditionalOnMissingBean(ElasticsearchClient.class)
     @ConditionalOnProperty(value = "es-plus.address")
-    public ElasticsearchClient restHighLevelClient() {
+    public ElasticsearchClient elasticsearchClient() {
         ClientProperties clientProperties = new ClientProperties();
         BeanUtils.copyProperties(esProperties,clientProperties);
-        ElasticsearchClient restHighLevelClient = ClientUtil.getElasticsearchClient(clientProperties);
+        ElasticsearchClient restHighLevelClient = Client8Util.getElasticsearchClient(clientProperties);
         return restHighLevelClient;
     }
     @Bean
-    public EpClient<RestHighLevelClient> epClient(RestHighLevelClient restHighLevelClient) {
-        EpClient<RestHighLevelClient> epClient = new EpClient<>(restHighLevelClient);
+    public EpClient<ElasticsearchClient> epClient(ElasticsearchClient elasticsearchClient) {
+        EpClient<ElasticsearchClient> epClient = new EpClient<>(elasticsearchClient);
         return epClient;
     }
     
     
     @Override
     public void afterPropertiesSet() throws Exception {
-      
+        
         
         if (esObjectHandlers !=null) {
             Map<String, EsObjectHandler> handlerMap = esObjectHandlers.stream()
@@ -83,13 +81,13 @@ public class Es8ClientConfiguration implements InitializingBean {
             return;
         }
         clientProperties.forEach((k, v) -> {
-            ElasticsearchClient elasticsearchClient = ClientUtil.getElasticsearchClient(v);
+            ElasticsearchClient elasticsearchClient = Client8Util.getElasticsearchClient(v);
             EsPlusClientFacade esPlusClientFacade = ClientContext.buildEsPlusClientFacade(v.getAddress(),elasticsearchClient,esInterceptors);
             ClientContext.addClient(k, esPlusClientFacade);
         });
     }
     
-   
+    
     
     
     

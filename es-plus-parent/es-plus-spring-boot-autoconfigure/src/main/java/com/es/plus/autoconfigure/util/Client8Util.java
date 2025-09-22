@@ -5,10 +5,7 @@ import co.elastic.clients.json.jackson.JacksonJsonpMapper;
 import co.elastic.clients.transport.ElasticsearchTransport;
 import co.elastic.clients.transport.rest_client.RestClientTransport;
 import com.es.plus.autoconfigure.properties.ClientProperties;
-import com.es.plus.common.EsPlusClientFacade;
 import com.es.plus.common.exception.EsException;
-import com.es.plus.common.interceptor.EsInterceptor;
-import com.es.plus.core.ClientContext;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpHost;
 import org.apache.http.auth.AuthScope;
@@ -17,38 +14,22 @@ import org.apache.http.client.CredentialsProvider;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestClientBuilder;
-import org.elasticsearch.client.RestHighLevelClient;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-public class ClientUtil {
+public class Client8Util {
+    
+    
     
     /**
-     * 初始化esplus连接
-     * @param key
-     * @param clientProperties
-     * @param esInterceptors
-     * @return
+     * 获取 Elasticsearch 8.x 客户端
+     * @param clientProperties 客户端配置属性
+     * @return ElasticsearchClient
      */
-    public  static EsPlusClientFacade initAndPutEsPlusClientFacade(String key, ClientProperties clientProperties,
-            List<EsInterceptor> esInterceptors){
-        String address = clientProperties.getAddress();
-        address = StringUtils.replace(address,"http://","");
-        address = StringUtils.replace(address,"https://","");
-        clientProperties.setAddress(address);
-        
-        RestHighLevelClient restHighLevelClient = ClientUtil.getRestHighLevelClient(clientProperties);
-        EsPlusClientFacade esPlusClientFacade = ClientContext.buildEsPlusClientFacade(clientProperties.getAddress(),
-                restHighLevelClient,
-                esInterceptors);
-        ClientContext.addClient(key, esPlusClientFacade);
-        return esPlusClientFacade;
-    }
-    
-    public static RestHighLevelClient getRestHighLevelClient(ClientProperties clientProperties) {
+    public static ElasticsearchClient getElasticsearchClient(ClientProperties clientProperties) {
         // 处理地址
         String address = clientProperties.getAddress();
         if (StringUtils.isEmpty(address)) {
@@ -104,8 +85,15 @@ public class ClientUtil {
                 return requestConfigBuilder;
             });
         }
-
-        return new RestHighLevelClient(builder);
+        
+        // 创建 RestClient
+        RestClient restClient = builder.build();
+        
+        // 创建 ElasticsearchTransport
+        ElasticsearchTransport transport = new RestClientTransport(
+                restClient, new JacksonJsonpMapper());
+        
+        // 创建并返回 ElasticsearchClient
+        return new ElasticsearchClient(transport);
     }
-    
 }

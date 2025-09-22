@@ -8,6 +8,8 @@
         <module>es-plus-pom</module>
         <module>es-plus-parent</module>
         <module>es-plus-samples</module>
+        <module>es-plus-console</module>
+        <module>es8-plus-samples</module>
     </modules>
     <groupId>io.github.zhaohaoh</groupId>
     <artifactId>es-plus</artifactId>

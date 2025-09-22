@@ -18,6 +18,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Configuration;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
 
 import static com.es.plus.constant.Analyzer.ASCIIFOLDING;
@@ -148,21 +149,13 @@ public class EpGlobalConfigCacheConfigration implements InitializingBean {
     }
     
     public static Map<String, Object> buildAnalyzer(String type, String[] filters, String tokenizer) {
-        XContentBuilder xContentBuilder = null;
-        try {
-            xContentBuilder = XContentFactory.jsonBuilder()
-                    .startObject();
-            if (!ArrayUtils.isEmpty(filters)) {
-                xContentBuilder.field("filter", filters);
-            }
-            xContentBuilder.field("type", type)
-                    .field("tokenizer", tokenizer)
-                    .endObject();
-        } catch (IOException e) {
-            throw new EsException(e);
+        Map<String, Object> analyzerMap = new HashMap<>();
+        if (!ArrayUtils.isEmpty(filters)) {
+            analyzerMap.put("filter", filters);
         }
-        BytesReference.bytes(xContentBuilder);
-        return JsonUtils.toMap(xContentBuilder.getOutputStream().toString());
+        analyzerMap.put("type", type);
+        analyzerMap.put("tokenizer", tokenizer);
+        return analyzerMap;
     }
     
 }

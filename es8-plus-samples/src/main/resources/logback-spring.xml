@@ -1,0 +1,322 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- scan:当此属性设置为true时，配置文件如果发生改变，将会被重新加载，默认值为true -->
+<!-- scanPeriod:设置监测配置文件是否有修改的时间间隔，如果没有给出时间单位，默认单位是毫秒。当scan为true时，此属性生效。默认的时间间隔为1分钟。 -->
+<!-- debug:当此属性设置为true时，将打印出logback内部日志信息，实时查看logback运行状态。默认值为false。 -->
+
+
+
+<!-- 我的核心项目日志文件-->
+<configuration scan="true" scanPeriod="30 seconds">
+    <!--定义日志文件的存储地址,使用绝对路径服务器起始路径下的logs-->
+    <springProperty scope="context" name="appname" source="spring.application.name"  />
+    <property name="log.path" value="${user.dir}/logs/${appname}" />
+<!--    &lt;!&ndash;应用名称&ndash;&gt;-->
+<!--    <springProperty scope="context" name="appname" source="spring.application.name" defaultValue="springBoot"/>-->
+<!--    &lt;!&ndash;LogStash访问host&ndash;&gt;-->
+<!--    <springProperty name="LOG_STASH_HOST" scope="context" source="logstash.host" defaultValue="localhost"/>-->
+    
+    <!-- 彩色日志 -->
+    <!-- 彩色日志依赖的渲染类 -->
+    <conversionRule conversionWord="clr" converterClass="org.springframework.boot.logging.logback.ColorConverter" />
+    <conversionRule conversionWord="wex" converterClass="org.springframework.boot.logging.logback.WhitespaceThrowableProxyConverter" />
+    <conversionRule conversionWord="wEx" converterClass="org.springframework.boot.logging.logback.ExtendedWhitespaceThrowableProxyConverter" />
+    <!--  控制台使用彩色日志格式 -->
+    <property name="CONSOLE_LOG_PATTERN"
+        value="${CONSOLE_LOG_PATTERN:-%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}) [traceId:%X{traceId}][requestIp:%X{requestIp}] %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}}" />
+
+    <!-- 文件输出普通日志    -->
+    <property name="log.file.pattern" value="%d{yyyy-MM-dd HH:mm:ss.SSS} [traceId:%X{traceId}][requestIp:%X{requestIp}] %5p ${PID} [%15.15t] %-40.40logger{39}: %msg%n" />
+    
+    <!--读取项目启动的环境是哪一个 -->
+    <springProperty scope="context" name="spring.env" source="spring.profiles.active"/>
+<!--    <springProperty scope="context" name="plumelog.redisHost" source="plumelog.redisHost"/>-->
+<!--    <springProperty scope="context" name="plumelog.redisAuth" source="plumelog.redisAuth"/>-->
+<!--    <springProperty scope="context" name="plumelog.redisDb" source="plumelog.redisDb"/>-->
+  
+<!-- elk 日志输入-->
+<!--    <appender name="LOGSTASH" class="net.logstash.logback.appender.LogstashTcpSocketAppender">-->
+<!--    <destination>192.168.195.195:4560</destination>-->
+<!--    <encoder charset="UTF-8" class="net.logstash.logback.encoder.LogstashEncoder">-->
+<!--        &lt;!&ndash; 增加自定义属性作为项目名，也作为Elasticsearch的index &ndash;&gt;-->
+<!--        <customFields>"appname":${appname}</customFields>-->
+<!--    </encoder>-->
+<!--    </appender>-->
+
+    <!-- Console 输出设置  输出到控制台-->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>${CONSOLE_LOG_PATTERN}</pattern>
+            <charset>utf8</charset>
+        </encoder>
+    </appender>
+
+    <!-- 时间滚动输出 level为 DEBUG 日志 -->
+    <appender name="DEBUG-OUT" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <!-- 正在记录的日志文件的路径及文件名 -->
+<!--        <file>${log.path}/${appname}/debug.log</file>-->
+        <!--日志文件输出格式-->
+        <encoder>
+            <pattern>${log.file.pattern}</pattern>
+            <charset>UTF-8</charset> <!-- 此处设置字符集 -->
+        </encoder>
+        <!-- 日志记录器的滚动策略，按日期，按大小记录 -->
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <!--日志文件输出的文件名   aux标记他不是主要的日期匹配模式。  这个会影响清除日志文件的策略-->
+            <fileNamePattern>${log.path}/%d{yyyy-MM,aux}/debug.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+                <maxFileSize>512MB</maxFileSize>
+            <!--日志文件保留天数-->
+            <maxHistory>10</maxHistory>
+            <!--该滚动策略日志的总大小，超过的日志会被清除-->
+            <totalSizeCap>3GB</totalSizeCap>
+        </rollingPolicy>
+        <!-- 此日志文件只记录DEBUG级别的 -->
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>DEBUG</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+    </appender>
+    
+    <!-- 时间滚动输出 level为 DEBUG 日志 -->
+    <appender name="INFO-OUT" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <!-- 正在记录的日志文件的路径及文件名 -->
+        <!--        <file>${log.path}/${appname}/debug.log</file>-->
+        <!--日志文件输出格式-->
+        <encoder>
+            <pattern>${log.file.pattern}</pattern>
+            <charset>UTF-8</charset> <!-- 此处设置字符集 -->
+        </encoder>
+        <!-- 日志记录器的滚动策略，按日期，按大小记录 -->
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${log.path}/%d{yyyy-MM,aux}/info.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+           
+                <maxFileSize>512MB</maxFileSize>
+            <!--日志文件保留天数-->
+            <maxHistory>10</maxHistory>
+            <!--该滚动策略日志的总大小，超过的日志会被清除-->
+            <totalSizeCap>5GB</totalSizeCap>
+        </rollingPolicy>
+        <!-- 此日志文件只记录INFO级别的 -->
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>INFO</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+    </appender>
+
+
+    <!-- 日志文件输出设置 -->
+    <appender name="ALL-OUT" class="ch.qos.logback.core.rolling.RollingFileAppender">
+<!--        配置了file那么下面的<fileNamePattern>输出无效-->
+<!--        <file>${log.path}/info.log</file>-->
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <!--日志文件输出的文件名-->
+            <fileNamePattern>${log.path}/%d{yyyy-MM,aux}/all.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+<!--           滚动日志 满了根据%i递增-->
+                <maxFileSize>512MB</maxFileSize>
+            <!--日志文件保留天数-->
+            <maxHistory>10</maxHistory>
+            <!--该滚动策略日志的总大小，超过的日志会被清除-->
+            <totalSizeCap>20GB</totalSizeCap>
+        </rollingPolicy>
+        <encoder>
+  <!--格式化输出：%d表示日期，%thread表示线程名，%-5level：级别从左显示5个字符宽度%msg：日志消息，%n是换行符-->
+<!--            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>-->
+            <pattern>${log.file.pattern}</pattern>
+            <charset>UTF-8</charset> <!-- 此处设置字符集 -->
+        </encoder>
+    </appender>
+
+    <!-- 时间滚动输出 level为 ERROR 日志 -->
+    <appender name="ERROR-OUT" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <!-- 正在记录的日志文件的路径及文件名 -->
+<!--        <file>${log.path}/error.log</file>-->
+        <!--日志文件输出格式-->
+        <encoder>
+            <pattern>${log.file.pattern}</pattern>
+            <charset>UTF-8</charset> <!-- 此处设置字符集 -->
+        </encoder>
+        <!-- 日志记录器的滚动策略，按日期，按大小记录 -->
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${log.path}/%d{yyyy-MM,aux}/error.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+                <maxFileSize>512MB</maxFileSize>
+            <!--日志文件保留天数-->
+            <maxHistory>10</maxHistory>
+            <totalSizeCap>5GB</totalSizeCap>
+        </rollingPolicy>
+        <!-- 此日志文件只记录ERROR级别的 -->
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>ERROR</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+    </appender>
+
+    <!-- 异步输出 -->
+    <appender name="ASYNC-ALL" class="ch.qos.logback.classic.AsyncAppender">
+        <!-- 不丢失日志.默认的,如果队列的80%已满,则会丢弃TRACT、DEBUG、INFO级别的日志 -->
+        <discardingThreshold>0</discardingThreshold>
+        <!-- 更改默认的队列的深度,该值会影响性能.默认值为256 -->
+        <queueSize>512</queueSize>
+        <!-- 添加附加的appender,最多只能添加一个 -->
+        <appender-ref ref="ALL-OUT"/>
+    </appender>
+    <!-- 异步输出 -->
+    <appender name="ASYNC-INFO" class="ch.qos.logback.classic.AsyncAppender">
+        <!-- 不丢失日志.默认的,如果队列的80%已满,则会丢弃TRACT、DEBUG、INFO级别的日志 -->
+        <discardingThreshold>0</discardingThreshold>
+        <!-- 更改默认的队列的深度,该值会影响性能.默认值为256 -->
+        <queueSize>512</queueSize>
+        <!-- 添加附加的appender,最多只能添加一个 -->
+        <appender-ref ref="INFO-OUT"/>
+    </appender>
+    <!-- 异步输出 -->
+    <appender name="ASYNC-ERROR" class="ch.qos.logback.classic.AsyncAppender">
+        <!-- 不丢失日志.默认的,如果队列的80%已满,则会丢弃TRACT、DEBUG、INFO级别的日志 -->
+        <discardingThreshold>0</discardingThreshold>
+        <!-- 更改默认的队列的深度,该值会影响性能.默认值为256 -->
+        <queueSize>512</queueSize>
+        <!-- 添加附加的appender,最多只能添加一个 -->
+        <appender-ref ref="ERROR-OUT"/>
+    </appender>
+    <appender name="ASYNC-DEBUG" class="ch.qos.logback.classic.AsyncAppender">
+        <!-- 不丢失日志.默认的,如果队列的80%已满,则会丢弃TRACT、DEBUG、INFO级别的日志 -->
+        <discardingThreshold>0</discardingThreshold>
+        <!-- 更改默认的队列的深度,该值会影响性能.默认值为256 -->
+        <queueSize>512</queueSize>
+        <!-- 添加附加的appender,最多只能添加一个 -->
+        <appender-ref ref="DEBUG-OUT"/>
+    </appender>
+    
+    <!--  es插件日志   此插件可将日志直接写入到es -->
+<!--    <appender name="ELASTIC" class="com.internetitem.logback.elasticsearch.core.LogAppender">-->
+<!--        &lt;!&ndash; 下面ES server， 。如果有用户名密码，用这个形式： http://username:password@yourserver/_bulk &ndash;&gt;-->
+<!--        <url>http://127.0.0.1:9200/_bulk</url>-->
+<!--&lt;!&ndash;        <writerClassName>com.framework.shop.admin.controller.test.ElasticsearchWriter1</writerClassName>&ndash;&gt;-->
+<!--        <index>eslog-%date{yyyy-MM}</index>-->
+<!--        &lt;!&ndash; type对应ES中的 _type, 可选  &ndash;&gt;-->
+<!--        <type>_doc</type>-->
+<!--&lt;!&ndash;       如果设置了这个，发送到es的请求体日志会输出到这个loggerName下。需要在下面配置. <logger name="es-logger"  如果不配置会有一个默认输出到控制台 &ndash;&gt;-->
+<!--&lt;!&ndash;         <loggerName>es-logger</loggerName>&ndash;&gt;-->
+<!--        <errorLoggerName>es-error-logger</errorLoggerName>-->
+<!--        &lt;!&ndash; 下面的配置基本不用动 &ndash;&gt;-->
+<!--        <connectTimeout>30000</connectTimeout> &lt;!&ndash; optional (in ms, default 30000) &ndash;&gt;-->
+<!--&lt;!&ndash;        <errorsToStderr>false</errorsToStderr> &lt;!&ndash; optional (default false) &ndash;&gt;&ndash;&gt;-->
+<!--        <includeCallerData>false</includeCallerData> &lt;!&ndash; optional (default false) &ndash;&gt;-->
+<!--&lt;!&ndash;        <logsToStderr>false</logsToStderr> &lt;!&ndash; optional (default false) &ndash;&gt;&ndash;&gt;-->
+<!--        <maxQueueSize>104857600</maxQueueSize> &lt;!&ndash; optional (default 104857600) &ndash;&gt;-->
+<!--        <maxRetries>2</maxRetries> &lt;!&ndash; optional (default 3) &ndash;&gt;-->
+<!--        <readTimeout>30000</readTimeout> &lt;!&ndash; optional (in ms, default 30000) &ndash;&gt;-->
+<!--        <sleepTime>250</sleepTime> &lt;!&ndash; optional (in ms, default 250) &ndash;&gt;-->
+<!--        <buffSize>300</buffSize>-->
+<!--        <rawJsonMessage>false</rawJsonMessage> &lt;!&ndash; optional (default false) &ndash;&gt;-->
+<!--        &lt;!&ndash;   是否写入MDC参数  所有都写&ndash;&gt;-->
+<!--        <includeMdc>true</includeMdc> &lt;!&ndash; optional (default false) &ndash;&gt;-->
+<!--        &lt;!&ndash; 最大消息数，超过会被截断    &ndash;&gt;-->
+<!--        <maxMessageSize>5999</maxMessageSize> &lt;!&ndash; optional (default -1 &ndash;&gt;-->
+<!--        <authentication class="com.internetitem.logback.elasticsearch.config.BasicAuthentication" /> &lt;!&ndash; optional &ndash;&gt;-->
+<!--        <properties>-->
+<!--            <property>-->
+<!--                <name>host</name>-->
+<!--                <value>${HOSTNAME}</value>-->
+<!--                <allowEmpty>false</allowEmpty>-->
+<!--            </property>-->
+<!--            <property>-->
+<!--                <name>level</name>-->
+<!--                <value>%level</value>-->
+<!--            </property>-->
+<!--            <property>-->
+<!--                <name>thread</name>-->
+<!--                <value>%thread</value>-->
+<!--            </property>-->
+<!--            <property>-->
+<!--                <name>stacktrace</name>-->
+<!--                <value>%ex</value>-->
+<!--            </property>-->
+<!--            <property>-->
+<!--                <name>logger</name>-->
+<!--                <value>%logger</value>-->
+<!--            </property>-->
+<!--            <property>-->
+<!--                <name>env</name>-->
+<!--                <value>${active}</value>-->
+<!--            </property>-->
+<!--        </properties>-->
+<!--        <headers>-->
+<!--            <header>-->
+<!--                <name>Content-Type</name>-->
+<!--                <value>application/json</value>-->
+<!--            </header>-->
+<!--        </headers>-->
+<!--    </appender>-->
+    
+    <!-- 使用kafka启用下面配置 -->
+<!--    <appender name="plumelog" class="com.plumelog.logback.appender.KafkaAppender">-->
+<!--        <appName>productCenter</appName>-->
+<!--        &lt;!&ndash;            47.92.126.0:30001 控制台&ndash;&gt;-->
+<!--        <kafkaHosts>47.92.126.0:30002</kafkaHosts>-->
+<!--    </appender>-->
+    <!--使用redis启用下面配置-->
+<!--    <appender name="plumelog" class="com.plumelog.logback.appender.RedisAppender">-->
+<!--        <appName>productCenter</appName>-->
+<!--        <redisHost>211.143.198.209:10637</redisHost>-->
+<!--        <env>${spring.env}</env>-->
+<!--    </appender>-->
+ 
+ 
+
+    <logger name="org.apache.ibatis.cache.decorators.LoggingCache" level="Info" additivity="false">
+        <appender-ref ref="CONSOLE"/>
+    </logger>
+    <logger name="org.springframework.boot" level="INFO"/>
+    <logger name="com.dz.jd.feign" level="DEBUG" additivity="false"><!-- 修改此处扫描包名 -->
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="ASYNC-ALL"/>
+    </logger>
+    
+    
+<!--  es插件日志   -->
+    <logger name="es-error-logger" level="INFO" additivity="false">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="ALL-OUT"/>
+        <appender-ref ref="ERROR-OUT" />
+    </logger>
+<!--    -->
+<!--&lt;!&ndash;    通过<logger>标签来改变具体某个包下打印日志的级别，否则默认使用root标签配置。 &ndash;&gt;-->
+<!--    <logger name="es-logger" level="INFO" additivity="false">-->
+<!--        <appender name="ES_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">-->
+<!--            &lt;!&ndash; ... &ndash;&gt;-->
+<!--            <encoder>-->
+<!--                <pattern>%msg</pattern> &lt;!&ndash; This pattern is important, otherwise it won't be the raw Elasticsearch format anyomre &ndash;&gt;-->
+<!--            </encoder>-->
+<!--        </appender>-->
+<!--    </logger>-->
+
+<!--   可以在代码中用这个日志插件直接只输出到es    Logger eslog = LoggerFactory.getLogger("es-log"); -->
+<!--    <logger name="es-log" level="INFO" additivity="false">-->
+<!--        <appender-ref ref="ELASTIC" />-->
+<!--    </logger>-->
+    
+<!--    指定包名输出       优先级高于root -->
+<!--    <logger name="com.framework" level="Info" additivity="false">-->
+<!--    <appender-ref ref="FILE"/>-->
+<!--    <appender-ref ref="ERROR_FILE" />-->
+<!--    <appender-ref ref="ELASTIC"/>-->
+<!--    <appender-ref ref="CONSOLE"/>-->
+<!--    </logger>-->
+
+<!--    <root>标签本质上也是logger元素，但是它是根logger, 是所有logger的上级-->
+<!--    设置日志打印级别是info  将上面两个aapender加载到这root-->
+    <root level="info" additivity="false">
+        <!--<appender-ref ref="ASYNC"/>-->
+        <appender-ref ref="ASYNC-ALL"/>
+        <appender-ref ref="CONSOLE"/>
+<!--        <appender-ref ref="ASYNC-INFO"/>-->
+<!--        <appender-ref ref="ASYNC-ERROR"/>-->
+<!--        <appender-ref ref="ASYNC-DEBUG" />-->
+<!--        <appender-ref ref="LOGSTASH"/>-->
+        <!--  es插件日志   -->
+<!--        <appender-ref ref="ELASTIC" />-->
+<!--        <appender-ref ref="plumelog"/>-->
+    </root>
+</configuration>

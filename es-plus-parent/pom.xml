@@ -20,7 +20,8 @@
         <module>es-plus-client-es8</module>
         <module>es-plus-core</module>
         <module>es-plus-spring-boot-autoconfigure</module>
-        <module>es-plus-console</module>
+        <module>es8-plus-spring-boot-starter</module>
+        <!--        <module>es-plus-console</module>-->
     </modules>
     <description>父工程</description>
     <properties>
