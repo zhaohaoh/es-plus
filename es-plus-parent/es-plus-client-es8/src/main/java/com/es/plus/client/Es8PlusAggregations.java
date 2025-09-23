@@ -126,21 +126,21 @@ public class Es8PlusAggregations<T> implements EsAggResponse<T> {
                 multiBucketMap.put(aggName,data);
                 Buckets<?> buckets = aggregation.buckets();
                 List<?> array = buckets.array();
-
+                
                 // 处理不同类型的bucket
                 for (Object bucketObj : array) {
                     if (bucketObj instanceof co.elastic.clients.elasticsearch._types.aggregations.StringTermsBucket) {
                         co.elastic.clients.elasticsearch._types.aggregations.StringTermsBucket bucket =
-                            (co.elastic.clients.elasticsearch._types.aggregations.StringTermsBucket) bucketObj;
+                                (co.elastic.clients.elasticsearch._types.aggregations.StringTermsBucket) bucketObj;
                         Map<String, Aggregate> bucketAggregations = bucket.aggregations();
                         EsAggResult<T> subAgg = getResult(bucketAggregations);
                         long docCount = bucket.docCount();
                         subAgg.setDocCount(docCount);
-                        String keyAsString = String.valueOf(bucket.key());
+                        String keyAsString = String.valueOf(bucket.key()._get());
                         data.put(keyAsString, subAgg);
                     } else if (bucketObj instanceof co.elastic.clients.elasticsearch._types.aggregations.LongTermsBucket) {
                         co.elastic.clients.elasticsearch._types.aggregations.LongTermsBucket bucket =
-                            (co.elastic.clients.elasticsearch._types.aggregations.LongTermsBucket) bucketObj;
+                                (co.elastic.clients.elasticsearch._types.aggregations.LongTermsBucket) bucketObj;
                         Map<String, Aggregate> bucketAggregations = bucket.aggregations();
                         EsAggResult<T> subAgg = getResult(bucketAggregations);
                         long docCount = bucket.docCount();
@@ -149,7 +149,7 @@ public class Es8PlusAggregations<T> implements EsAggResponse<T> {
                         data.put(keyAsString, subAgg);
                     } else if (bucketObj instanceof co.elastic.clients.elasticsearch._types.aggregations.DoubleTermsBucket) {
                         co.elastic.clients.elasticsearch._types.aggregations.DoubleTermsBucket bucket =
-                            (co.elastic.clients.elasticsearch._types.aggregations.DoubleTermsBucket) bucketObj;
+                                (co.elastic.clients.elasticsearch._types.aggregations.DoubleTermsBucket) bucketObj;
                         Map<String, Aggregate> bucketAggregations = bucket.aggregations();
                         EsAggResult<T> subAgg = getResult(bucketAggregations);
                         long docCount = bucket.docCount();
@@ -158,7 +158,7 @@ public class Es8PlusAggregations<T> implements EsAggResponse<T> {
                         data.put(keyAsString, subAgg);
                     } else if (bucketObj instanceof co.elastic.clients.elasticsearch._types.aggregations.HistogramBucket) {
                         co.elastic.clients.elasticsearch._types.aggregations.HistogramBucket bucket =
-                            (co.elastic.clients.elasticsearch._types.aggregations.HistogramBucket) bucketObj;
+                                (co.elastic.clients.elasticsearch._types.aggregations.HistogramBucket) bucketObj;
                         Map<String, Aggregate> bucketAggregations = bucket.aggregations();
                         EsAggResult<T> subAgg = getResult(bucketAggregations);
                         long docCount = bucket.docCount();
@@ -167,7 +167,7 @@ public class Es8PlusAggregations<T> implements EsAggResponse<T> {
                         data.put(keyAsString, subAgg);
                     } else if (bucketObj instanceof co.elastic.clients.elasticsearch._types.aggregations.DateHistogramBucket) {
                         co.elastic.clients.elasticsearch._types.aggregations.DateHistogramBucket bucket =
-                            (co.elastic.clients.elasticsearch._types.aggregations.DateHistogramBucket) bucketObj;
+                                (co.elastic.clients.elasticsearch._types.aggregations.DateHistogramBucket) bucketObj;
                         Map<String, Aggregate> bucketAggregations = bucket.aggregations();
                         EsAggResult<T> subAgg = getResult(bucketAggregations);
                         long docCount = bucket.docCount();
@@ -176,7 +176,7 @@ public class Es8PlusAggregations<T> implements EsAggResponse<T> {
                         data.put(keyAsString, subAgg);
                     } else if (bucketObj instanceof co.elastic.clients.elasticsearch._types.aggregations.MultiTermsBucket) {
                         co.elastic.clients.elasticsearch._types.aggregations.MultiTermsBucket bucket =
-                            (co.elastic.clients.elasticsearch._types.aggregations.MultiTermsBucket) bucketObj;
+                                (co.elastic.clients.elasticsearch._types.aggregations.MultiTermsBucket) bucketObj;
                         Map<String, Aggregate> bucketAggregations = bucket.aggregations();
                         EsAggResult<T> subAgg = getResult(bucketAggregations);
                         long docCount = bucket.docCount();
@@ -271,18 +271,18 @@ public class Es8PlusAggregations<T> implements EsAggResponse<T> {
                 }
                 docMap.put(aggName, agg.missing().docCount());
             }
-//            else if (agg.isPercentiles()) {
-//                if (aggMap==null){
-//                    aggMap=new HashMap<>();
-//                }
-//                aggMap.put(aggName, agg.percentiles());
-//            }
-//            else if (agg.isPercentileRanks()) {
-//                if (aggMap==null){
-//                    aggMap=new HashMap<>();
-//                }
-//                aggMap.put(aggName, agg.percentileRanks());
-//            }
+            //            else if (agg.isPercentiles()) {
+            //                if (aggMap==null){
+            //                    aggMap=new HashMap<>();
+            //                }
+            //                aggMap.put(aggName, agg.percentiles());
+            //            }
+            //            else if (agg.isPercentileRanks()) {
+            //                if (aggMap==null){
+            //                    aggMap=new HashMap<>();
+            //                }
+            //                aggMap.put(aggName, agg.percentileRanks());
+            //            }
             else if (agg.isHistogram()) {
                 if (multiBucketMap==null){
                     multiBucketMap=new LinkedHashMap<>();
@@ -290,7 +290,7 @@ public class Es8PlusAggregations<T> implements EsAggResponse<T> {
                 HistogramAggregate histogram = agg.histogram();
                 Map<String, EsAggResult<T>> data = new LinkedHashMap<>();
                 multiBucketMap.put(aggName, data);
-
+                
                 List<co.elastic.clients.elasticsearch._types.aggregations.HistogramBucket> buckets = histogram.buckets().array();
                 for (co.elastic.clients.elasticsearch._types.aggregations.HistogramBucket bucket : buckets) {
                     Map<String, Aggregate> bucketAggregations = bucket.aggregations();
@@ -308,7 +308,7 @@ public class Es8PlusAggregations<T> implements EsAggResponse<T> {
                 DateHistogramAggregate dateHistogram = agg.dateHistogram();
                 Map<String, EsAggResult<T>> data = new LinkedHashMap<>();
                 multiBucketMap.put(aggName, data);
-
+                
                 List<co.elastic.clients.elasticsearch._types.aggregations.DateHistogramBucket> buckets = dateHistogram.buckets().array();
                 for (co.elastic.clients.elasticsearch._types.aggregations.DateHistogramBucket bucket : buckets) {
                     Map<String, Aggregate> bucketAggregations = bucket.aggregations();
@@ -420,7 +420,7 @@ public class Es8PlusAggregations<T> implements EsAggResponse<T> {
             buckets = terms.buckets().array();
         }
         
-       
+        
         for (MultiTermsBucket multiBucket : multiBuckets) {
             String keyAsString = multiBucket.keyAsString();
             data.put(keyAsString, multiBucket.docCount());

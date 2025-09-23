@@ -9,6 +9,7 @@ import co.elastic.clients.elasticsearch._types.query_dsl.*;
 import co.elastic.clients.elasticsearch.core.search.Highlight;
 import co.elastic.clients.elasticsearch.core.search.HighlightField;
 import co.elastic.clients.json.JsonData;
+import co.elastic.clients.util.ObjectBuilder;
 import com.es.plus.common.params.EsHighLight;
 import com.es.plus.common.params.EsOrder;
 import com.es.plus.common.pojo.es.*;
@@ -58,6 +59,18 @@ public class Ep8QueryConverter {
     public static Query toEsQuery(EpQueryBuilder epQuery) {
         if (epQuery == null) {
             return null;
+        }
+        
+        Object esOrginalQuery = epQuery.getEsOrginalQuery();
+        if (esOrginalQuery !=null){
+            if (esOrginalQuery instanceof Query){
+                return (Query) esOrginalQuery;
+            }
+            else if (esOrginalQuery instanceof ObjectBuilder){
+                ObjectBuilder orginalQueryObjectBuilder = (ObjectBuilder) esOrginalQuery;
+                Query query = Query.of(a -> orginalQueryObjectBuilder);
+                return query;
+            }
         }
         
         // 如果是BoolQueryBuilder特殊处理

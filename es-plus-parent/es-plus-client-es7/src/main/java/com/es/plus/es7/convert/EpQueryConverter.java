@@ -279,7 +279,7 @@ public class EpQueryConverter {
             return null;
         }
         // 如果是
-        if (epQuery instanceof QueryBuilder) {
+        if (epQuery.getEsOrginalQuery() instanceof QueryBuilder) {
             return (QueryBuilder) epQuery;
         }
         

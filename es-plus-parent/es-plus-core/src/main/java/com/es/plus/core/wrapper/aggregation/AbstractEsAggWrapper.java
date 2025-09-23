@@ -11,8 +11,6 @@ import com.es.plus.common.pojo.es.EpGeoPoint;
 import com.es.plus.common.pojo.es.EpScript;
 import com.es.plus.common.pojo.es.EpSortOrder;
 import com.es.plus.core.wrapper.core.EsWrapper;
-import com.es.plus.es6.client.EsPlus6AggsClient;
-import com.es.plus.es7.client.EsPlusAggsClient;
 import lombok.SneakyThrows;
 import org.springframework.util.CollectionUtils;
 import java.util.ArrayList;
@@ -36,11 +34,7 @@ import static com.es.plus.constant.EsConstant.AGG_DELIMITER;
 public abstract class AbstractEsAggWrapper<T, R, Children extends AbstractEsAggWrapper<T, R, Children>> extends AbstractLambdaAggWrapper<T, R>
         implements IEsAggWrapper<Children, R, T>, IEsAggFuncWrapper<Children, R, T> {
     protected AbstractEsAggWrapper() {
-        if (GlobalConfigCache.GLOBAL_CONFIG.getVersion().equals(6)) {
-            esAggClient = new EsPlus6AggsClient();
-        } else {
-            esAggClient = new EsPlusAggsClient();
-        }
+    
     }
     
     protected abstract Children instance();
@@ -232,7 +226,7 @@ public abstract class AbstractEsAggWrapper<T, R, Children extends AbstractEsAggW
         aggregationBuilder.add(currentBuilder);
         return this.children;
     }
-   
+    
     /**
      * Create a new aggregation with the given name.
      */

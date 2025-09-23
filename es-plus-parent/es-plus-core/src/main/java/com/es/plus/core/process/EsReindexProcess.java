@@ -14,12 +14,12 @@ import com.es.plus.constant.EsConstant;
 import com.es.plus.core.IndexContext;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.elasticsearch.common.util.set.Sets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.StopWatch;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -163,9 +163,9 @@ public class EsReindexProcess {
         Object object = settings.get("index.refresh_interval");
         String remoteRefreshInterval =null;
         if (object!=null){
-              remoteRefreshInterval = object.toString();
+            remoteRefreshInterval = object.toString();
         }
-     
+        
         if (remoteShards != localSettings.get("number_of_shards")) {
             return true;
         }
@@ -277,7 +277,7 @@ public class EsReindexProcess {
      */
     private static void doReindex(EsPlusClientFacade esPlusClientFacade, Class<?> clazz, String alias,
             String currentIndex, String reindexName) {
-         
+        
         //创建没有别名的新索引
         esPlusClientFacade.createIndexWithoutAlias(reindexName, clazz);
         
@@ -311,7 +311,7 @@ public class EsReindexProcess {
         esPlusClientFacade.swapAlias(currentIndex, reindexName, alias);
         
         //切换当前索引名
-//        esIndexParam.setIndex(reindexName);
+        //        esIndexParam.setIndex(reindexName);
         
         // 不删除老索引 备份历史数据 用户手动删除
         //        esPlusClientFacade.deleteIndex(currentIndex);
@@ -328,7 +328,7 @@ public class EsReindexProcess {
         esPlusClientFacade.save("_doc",map ,"es_plus_reindex_record");
     }
     
- 
+    
     
     /**
      * 获取指令
@@ -343,58 +343,65 @@ public class EsReindexProcess {
     }
     
     private static String getCmd(Map<String, Object> esIndexMapping, Map<String, Object> localIndexMapping) {
-        boolean equals = localIndexMapping.equals(esIndexMapping);
-        // 如果需要更新
-        if (!equals) {
-            // 获取属性中相同的属性判断是否改变
-            Map<String, Object> localMappings = (Map<String, Object>) localIndexMapping.get(EsConstant.PROPERTIES);
-            Map<String, Object> esMappings = (Map<String, Object>) esIndexMapping.get(EsConstant.PROPERTIES);
-            
-            //排除reindexTime字段
-            esMappings.remove(REINDEX_TIME_FILED);
-            
-            // 如果减少字段.那么必然要reindex
-            if (localMappings.size() < esMappings.size()) {
-                return Commend.REINDEX;
-            }
-            // 如果减少字段.那么必然要reindex  针对有type的
-            if (esIndexMapping.size() != localIndexMapping.size()) {
-                return Commend.REINDEX;
-            }
-            
-            // 本地长度大于等于es长度的话. 需要查询嵌套对象判断子对象需要reindex还是update
-            // 取交集 取es中的映射
-            Set<String> set = Sets.intersection(localMappings.keySet(), esMappings.keySet());
-            //如果取交集的数量少于es的数量。本地和es的映射字段名发生了改变
-            if (set.size() < esMappings.size()) {
-                return Commend.REINDEX;
-            }
-            // 判断相同的字段是否改变.如果改了reindex.如果没有改变说明只是本地新增字段，只需要对新的映射进行新增
-            boolean isUpdate = set.stream().anyMatch(key -> {
-                Map<String, Object> localMapping = (Map) localMappings.get(key);
-                Map<String, Object> esMapping = (Map) esMappings.get(key);
-                Map<String, Object> localProperties = (Map) localMapping.get(EsConstant.PROPERTIES);
-                Map<String, Object> esProperties = (Map) esMapping.get(EsConstant.PROPERTIES);
-                boolean mappingChange = !localMapping.equals(esMapping);
-                if (localProperties != null && esProperties != null) {
-                    String cmd = getCmd(esMapping, localMapping);
-                    //如果返回reindex说明有嵌套对象的变更，否则嵌套对象也只是更新或者不处理
-                    boolean reindex = cmd.equals(Commend.REINDEX);
-                    return mappingChange && reindex;
+        try {
+            boolean equals = localIndexMapping.equals(esIndexMapping);
+            // 如果需要更新
+            if (!equals) {
+                // 获取属性中相同的属性判断是否改变
+                Map<String, Object> localMappings = (Map<String, Object>) localIndexMapping.get(EsConstant.PROPERTIES);
+                Map<String, Object> esMappings = (Map<String, Object>) esIndexMapping.get(EsConstant.PROPERTIES);
+                
+                //排除reindexTime字段
+                esMappings.remove(REINDEX_TIME_FILED);
+                
+                // 如果减少字段.那么必然要reindex
+                if (localMappings.size() < esMappings.size()) {
+                    return Commend.REINDEX;
                 }
-                //如果是本地的映射的数量大于远程的映射数量，可以进行添加 针对keyword的 ignore_above
-                if (localMapping.size()>esMapping.size()){
-                    return false;
+                // 如果减少字段.那么必然要reindex  针对有type的
+                if (esIndexMapping.size() != localIndexMapping.size()) {
+                    return Commend.REINDEX;
                 }
-                return mappingChange;
-            });
-            // 有字段改变REINDEX
-            if (isUpdate) {
-                return Commend.REINDEX;
-            } else {
-                return Commend.MAPPING_UPDATE;
+                
+                // 本地长度大于等于es长度的话. 需要查询嵌套对象判断子对象需要reindex还是update
+                // 取交集 取es中的映射
+                Set<String> set = new HashSet<>(localMappings.keySet());
+                set.retainAll(esMappings.keySet());
+                //如果取交集的数量少于es的数量。本地和es的映射字段名发生了改变
+                if (set.size() < esMappings.size()) {
+                    return Commend.REINDEX;
+                }
+                // 判断相同的字段是否改变.如果改了reindex.如果没有改变说明只是本地新增字段，只需要对新的映射进行新增
+                boolean isUpdate = set.stream().anyMatch(key -> {
+                    Map<String, Object> localMapping = (Map) localMappings.get(key);
+                    Map<String, Object> esMapping = (Map) esMappings.get(key);
+                    Map<String, Object> localProperties = (Map) localMapping.get(EsConstant.PROPERTIES);
+                    Map<String, Object> esProperties = (Map) esMapping.get(EsConstant.PROPERTIES);
+                    boolean mappingChange = !localMapping.equals(esMapping);
+                    if (localProperties != null && esProperties != null) {
+                        String cmd = getCmd(esMapping, localMapping);
+                        //如果返回reindex说明有嵌套对象的变更，否则嵌套对象也只是更新或者不处理
+                        boolean reindex = cmd.equals(Commend.REINDEX);
+                        return mappingChange && reindex;
+                    }
+                    //如果是本地的映射的数量大于远程的映射数量，可以进行添加 针对keyword的 ignore_above
+                    if (localMapping.size()>esMapping.size()){
+                        return false;
+                    }
+                    return mappingChange;
+                });
+                // 有字段改变REINDEX
+                if (isUpdate) {
+                    return Commend.REINDEX;
+                } else {
+                    return Commend.MAPPING_UPDATE;
+                }
             }
+        }catch (Exception e){
+            log.error("getMappingUpdateCommend CMD error ：",e);
+            return Commend.NO_EXECUTE;
         }
+        
         return Commend.NO_EXECUTE;
     }
     

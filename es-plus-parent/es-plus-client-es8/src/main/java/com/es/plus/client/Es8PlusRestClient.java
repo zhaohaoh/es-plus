@@ -2,6 +2,8 @@ package com.es.plus.client;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.Conflicts;
+import co.elastic.clients.elasticsearch._types.ElasticsearchException;
+import co.elastic.clients.elasticsearch._types.ErrorResponse;
 import co.elastic.clients.elasticsearch._types.FieldValue;
 import co.elastic.clients.elasticsearch._types.Refresh;
 import co.elastic.clients.elasticsearch._types.Result;
@@ -62,8 +64,8 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
- 
- public class Es8PlusRestClient implements EsPlusClient {
+
+public class Es8PlusRestClient implements EsPlusClient {
     
     private static final Logger log = LoggerFactory.getLogger(Es8PlusRestClient.class);
     
@@ -77,11 +79,11 @@ import java.util.stream.Collectors;
     public ElasticsearchClient getEsClient() {
         return elasticsearchClient;
     }
-     
-     @Override
-     public void addBulkProcessor(BulkProcessorParam bulkProcessorParam, String index) {
-         BulkProcessorConfig.getBulkProcessor(elasticsearchClient, bulkProcessorParam, index);
-     }
+    
+    @Override
+    public void addBulkProcessor(BulkProcessorParam bulkProcessorParam, String index) {
+        BulkProcessorConfig.getBulkProcessor(elasticsearchClient, bulkProcessorParam, index);
+    }
     /**
      * 异步定时批量保存接口
      */
@@ -192,7 +194,7 @@ import java.util.stream.Collectors;
                         .build());
         updateBuilder.retryOnConflict(GlobalConfigCache.GLOBAL_CONFIG.getMaxRetries());
         
-       
+        
         
         if (childIndex) {
             String routing = FieldUtils.getStrFieldValue(esData, "joinField", "parent");
@@ -200,7 +202,7 @@ import java.util.stream.Collectors;
         }
         
         handlerUpdateParamter(index, esData);
-   
+        
         return new BulkOperation.Builder().update(updateBuilder.build()).build();
     }
     
@@ -480,12 +482,12 @@ import java.util.stream.Collectors;
         UpdateOperation.Builder<Object, Object> updateBuilder = new UpdateOperation.Builder<>();
         updateBuilder.index(index);
         updateBuilder.id(docId);
-//        updateBuilder.doc(esData);
+        //        updateBuilder.doc(esData);
         updateBuilder.retryOnConflict(GlobalConfigCache.GLOBAL_CONFIG.getMaxRetries());
         updateBuilder.action(
                 new UpdateAction.Builder<>()
-                .doc(esData)
-//                        .docAsUpsert()
+                        .doc(esData)
+                        //                        .docAsUpsert()
                         .build());
         if (childIndex) {
             String routing = FieldUtils.getStrFieldValue(esData, "joinField", "parent");
@@ -494,7 +496,7 @@ import java.util.stream.Collectors;
         
         return new BulkOperation.Builder().update(updateBuilder.build()).build();
     }
-
+    
     
     private Refresh getRefreshPolicy() {
         switch (GlobalConfigCache.GLOBAL_CONFIG.getRefreshPolicy()) {
@@ -572,11 +574,11 @@ import java.util.stream.Collectors;
             // 查询到数据后
             builder.requestsPerSecond((float) GlobalConfigCache.GLOBAL_CONFIG.getBatchSize());
             
-//            builder.indicesOptions(IndicesOptions.LENIENT_EXPAND_OPEN);
+            //            builder.indicesOptions(IndicesOptions.LENIENT_EXPAND_OPEN);
             // 修复Script构建语法
             Map<String, JsonData> finalParams = new HashMap<>();
             params.forEach((k,v)->{
-                  finalParams.put(k, JsonData.of(v));
+                finalParams.put(k, JsonData.of(v));
             });
             String finalScriptStr = scriptStr;
             Script script = Script.of(s -> s.source(finalScriptStr).params(finalParams));
@@ -692,7 +694,7 @@ import java.util.stream.Collectors;
         
         //获取查询语句源数据
         SearchRequest searchRequest = getSearchSourceBuilder(esParamWrapper, index).build();
-       
+        
         //查询
         SearchResponse searchResponse = null;
         try {
@@ -702,49 +704,54 @@ import java.util.stream.Collectors;
             long mills = end - start;
             printSearchInfoLog("search index={} timeCost={} \nDSL:{} ", index,  mills,searchRequest);
         } catch (Exception e) {
+            if (e instanceof ElasticsearchException){
+                ElasticsearchException exception = (ElasticsearchException) e;
+                ErrorResponse response = exception.response();
+                log.error("es-plus search error :{}", response);
+            }
             throw new EsException("es-plus search body=" + searchRequest, e);
         }
-//        if (searchResponse. != 200) {
-//            throw new EsException("es-plus search error:" + searchResponse.status().getStatus());
-//        }
+        //        if (searchResponse. != 200) {
+        //            throw new EsException("es-plus search error:" + searchResponse.status().getStatus());
+        //        }
         EsResponse<T> esResponse = getEsResponse(esParamWrapper.getTClass(), searchResponse);
         return esResponse;
     }
-     
-     @Override
-     public <T> EsResponse<T> scroll(String type, EsParamWrapper<T> esParamWrapper, Duration keepTime, String scrollId,
-             String... index) {
-         try {
-             SearchRequest searchRequest;
-             ResponseBody responseBody ;
-             if (scrollId == null) {
-                 // 首次滚动查询
-                 SearchRequest.Builder searchSourceBuilder = getSearchSourceBuilder(esParamWrapper, index);
-                 searchSourceBuilder.scroll(Time.of(t -> t.time(keepTime.toString())));
-                 searchRequest = searchSourceBuilder.build();
-                 SearchResponse<T> searchResponse = elasticsearchClient.search(searchRequest, esParamWrapper.getTClass());
-                 responseBody = searchResponse;
-             } else {
-                 // 继续滚动查询
-                 ScrollRequest scrollRequest = ScrollRequest.of(s -> s.scrollId(scrollId)
-                         .scroll(Time.of(t -> t.time(keepTime.toString()))));
-                 ScrollResponse<T> scrollResponse = elasticsearchClient.scroll(scrollRequest, esParamWrapper.getTClass());
-                 
-                 responseBody = scrollResponse;
-             }
-             HitsMetadata hits = responseBody.hits();
-             if (hits == null || hits.total().value() <= 0) {
-                 ClearScrollRequest clearScrollRequest = new ClearScrollRequest.Builder().scrollId(scrollId).build();
-                 ClearScrollResponse clearScrollResponse = elasticsearchClient.clearScroll(clearScrollRequest);
-                 boolean succeeded = clearScrollResponse.succeeded();
-             }
-             return getEsResponse(esParamWrapper.getTClass(), responseBody);
-         } catch (Exception e) {
-             throw new EsException("es-plus scroll search error", e);
-         }
-     }
-     
-     private <T> EsResponse<T> getEsResponse(Class<T> tClass, ResponseBody searchResponse) {
+    
+    @Override
+    public <T> EsResponse<T> scroll(String type, EsParamWrapper<T> esParamWrapper, Duration keepTime, String scrollId,
+            String... index) {
+        try {
+            SearchRequest searchRequest;
+            ResponseBody responseBody ;
+            if (scrollId == null) {
+                // 首次滚动查询
+                SearchRequest.Builder searchSourceBuilder = getSearchSourceBuilder(esParamWrapper, index);
+                searchSourceBuilder.scroll(Time.of(t -> t.time(keepTime.toString())));
+                searchRequest = searchSourceBuilder.build();
+                SearchResponse<T> searchResponse = elasticsearchClient.search(searchRequest, esParamWrapper.getTClass());
+                responseBody = searchResponse;
+            } else {
+                // 继续滚动查询
+                ScrollRequest scrollRequest = ScrollRequest.of(s -> s.scrollId(scrollId)
+                        .scroll(Time.of(t -> t.time(keepTime.toString()))));
+                ScrollResponse<T> scrollResponse = elasticsearchClient.scroll(scrollRequest, esParamWrapper.getTClass());
+                
+                responseBody = scrollResponse;
+            }
+            HitsMetadata hits = responseBody.hits();
+            if (hits == null || hits.total().value() <= 0) {
+                ClearScrollRequest clearScrollRequest = new ClearScrollRequest.Builder().scrollId(scrollId).build();
+                ClearScrollResponse clearScrollResponse = elasticsearchClient.clearScroll(clearScrollRequest);
+                boolean succeeded = clearScrollResponse.succeeded();
+            }
+            return getEsResponse(esParamWrapper.getTClass(), responseBody);
+        } catch (Exception e) {
+            throw new EsException("es-plus scroll search error", e);
+        }
+    }
+    
+    private <T> EsResponse<T> getEsResponse(Class<T> tClass, ResponseBody searchResponse) {
         //获取结果集
         HitsMetadata<T> hits = searchResponse.hits();
         List<Hit<T>> hitList = hits.hits();
@@ -917,12 +924,12 @@ import java.util.stream.Collectors;
         if (esSelect != null) {
             if (ArrayUtils.isNotEmpty(esSelect.getIncludes())
                     || ArrayUtils.isNotEmpty(esSelect.getExcludes())
-            ||esSelect.getFetch() != null) {
+                    ||esSelect.getFetch() != null) {
                 sourceBuilder.source(
                         a-> {
                             SourceConfig.Builder fetch = new SourceConfig.Builder();
                             if (esSelect.getFetch() != null) {
-                              fetch = (SourceConfig.Builder) a.fetch(true);
+                                fetch = (SourceConfig.Builder) a.fetch(true);
                             }
                             fetch.filter(b-> {
                                 SourceFilter.Builder builder=b;
@@ -978,7 +985,7 @@ import java.util.stream.Collectors;
         } else {
             sourceBuilder.size(GlobalConfigCache.GLOBAL_CONFIG.getSearchSize());
         }
-       
+        
         //设置高亮
         if (esQueryParamWrapper.getEsHighLights() != null) {
             List<EsHighLight> esHighLight = esQueryParamWrapper.getEsHighLights();
@@ -1002,244 +1009,255 @@ import java.util.stream.Collectors;
             }
             sourceBuilder.aggregations(aggregations);
         }
-
+        
         return sourceBuilder;
     }
-     
-     @Override
-     public <T> EsAggResponse<T> aggregations(String type, EsParamWrapper<T> esParamWrapper, String... indexs) {
-         try {
-             EsQueryParamWrapper esQueryParamWrapper = esParamWrapper.getEsQueryParamWrapper();
-             
-             // 创建搜索请求构建器
-             SearchRequest.Builder searchBuilder = new SearchRequest.Builder();
-             
-             // 设置索引
-             searchBuilder.index(Arrays.asList(indexs));
-             
-             // 设置查询条件
-             if (esQueryParamWrapper.getBoolQueryBuilder() != null) {
-                 Query query = Ep8QueryConverter.toEsQuery(esQueryParamWrapper.getBoolQueryBuilder());
-                 searchBuilder.query(query);
-             }
-             
-             // 设置聚合
-             List<EpAggBuilder> aggregationBuilders = esQueryParamWrapper.getAggregationBuilder();
-             if (aggregationBuilders != null && !aggregationBuilders.isEmpty()) {
-                 Map<String, Aggregation> aggregations = new HashMap<>();
-                 for (EpAggBuilder epAggBuilder : aggregationBuilders) {
-                     Aggregation aggregation = Ep8AggregationConvert.toEsAggregation(epAggBuilder);
-                     aggregations.put(epAggBuilder.getName(), aggregation);
-                 }
-                 searchBuilder.aggregations(aggregations);
-             }
-             
-             // 设置size为0，因为我们只关心聚合结果，不关心具体文档
-             searchBuilder.size(0);
-             
-             // 设置路由等其他参数
-             String[] routings = esQueryParamWrapper.getRoutings();
-             if (routings != null && routings.length > 0) {
-                 searchBuilder.routing(routings[0]);
-             }
-             
-             if (esQueryParamWrapper.getPreference() != null) {
-                 searchBuilder.preference(esQueryParamWrapper.getPreference());
-             }
-             
-             // 执行搜索
-             long start = System.currentTimeMillis();
-             SearchResponse<T> searchResponse = elasticsearchClient.search(searchBuilder.build(), esParamWrapper.getTClass());
-             long end = System.currentTimeMillis();
-             long timeCost = end - start;
-             
-             printSearchInfoLog("aggregations index={} timeCost={} \nDSL:{} ", indexs, timeCost, searchBuilder);
-             
-             // 处理聚合结果
-             Map<String, Aggregate> responseAggregations = searchResponse.aggregations();
-             Es8PlusAggregations<T> esAggregations = new Es8PlusAggregations<>();
-             esAggregations.setAggregations(responseAggregations);
-             esAggregations.settClass(esParamWrapper.getTClass());
-             
-             return esAggregations;
-         } catch (Exception e) {
-             throw new EsException("es-plus aggregations error", e);
-         }
-     }
-     
-     @Override
-     public String executeDSL(String dsl, String... index) {
-         String indexs = String.join(",", index);
-         try {
-             // ES8使用低级客户端来执行DSL查询
-             co.elastic.clients.transport.TransportOptions transportOptions =
-                 elasticsearchClient._transport().options();
-             co.elastic.clients.elasticsearch.core.SearchRequest.Builder searchBuilder =
-                 new co.elastic.clients.elasticsearch.core.SearchRequest.Builder();
-
-             // 设置索引
-             searchBuilder.index(Arrays.asList(index));
-
-             // 使用withJson方法解析DSL字符串
-             java.io.StringReader dslReader = new java.io.StringReader(dsl);
-             searchBuilder.withJson(dslReader);
-
-             // 执行搜索
-             SearchResponse<?> response = elasticsearchClient.search(searchBuilder.build(), Object.class);
- 
-             return response.toString();
-         } catch (Exception e) {
-             log.error("executeDSL error", e);
-             throw new EsException("executeDSL failed", e);
-         }
-     }
-     
-     @Override
-     public String translateSql(String sql) {
-         Map<String, Object> jsonRequest = new HashMap<>();
-         jsonRequest.put("query", sql);
-         try {
-             // ES8使用SQL API进行翻译
-             co.elastic.clients.elasticsearch.sql.TranslateRequest.Builder translateBuilder =
-                 new co.elastic.clients.elasticsearch.sql.TranslateRequest.Builder();
-             translateBuilder.query(sql);
-
-             co.elastic.clients.elasticsearch.sql.TranslateResponse response =
-                 elasticsearchClient.sql().translate(translateBuilder.build());
-
-             // 将响应转换为JSON字符串
-             return response.toString();
-         } catch (IOException e) {
-             log.error("translateSql error", e);
-         }
-         return null;
-     }
-     
-     @Override
-     public <T> EsResponse<T> executeSQL(String sql, Class<T> tClass) {
-         String rs = executeSQL(sql);
-         if (rs == null) {
-             return null;
-         }
-         try {
-             SearchResponse.Builder<T> builder = new SearchResponse.Builder<>();
-             java.io.StringReader jsonReader = new java.io.StringReader(rs);
-             builder.withJson(jsonReader);
-             SearchResponse<T> searchResponse = builder.build();
-
-             // 使用现有的getEsResponse方法来处理响应
-             return getEsResponse(tClass, searchResponse);
-         } catch (Exception e) {
-             throw new EsException("executeSQL result parse error", e);
-         }
-     }
-     
-     @Override
-     public String executeSQL(String sql) {
-         String dsl = sql2Dsl(sql, false);
-         if (dsl == null) {
-             return null;
-         }
-         // 匹配 SQL 语句中的表名
-         String tableName = getTableName(sql);
-         return executeDSL(dsl, tableName);
-     }
-     
-     @Override
-     public String sql2Dsl(String sql, boolean explain) {
-         String limit = StringUtils.substringAfterLast(sql, "limit");
-         Integer from = null;
-         Integer size = null;
-         if (limit != null && limit.contains(",")) {
-             String[] split = limit.split(",");
-             from = Integer.parseInt(split[0].trim());
-             size = Integer.parseInt(split[1].trim());
-             sql = sql.replace(limit, "");
-         }
-         if (sql.contains("group")) {
-             sql = StringUtils.substringBeforeLast(sql, "limit");
-         }
-         String dsl = translateSql(sql);
-         if (dsl == null) {
-             throw new EsException("sql无法转换成dsl");
-         }
-
-         Map<String, Object> map = JsonUtils.toMap(dsl);
-         if (from != null) {
-             map.put("from", from);
-         }
-         if (size != null) {
-             map.put("size", size);
-         }
-
-         List docvalueList = (List) map.get("docvalue_fields");
-         if (docvalueList != null && !docvalueList.isEmpty() && !map.get("_source").equals(Boolean.FALSE)) {
-             Map source = (Map) map.get("_source");
-             List includes = source.get("includes") != null ? (List) source.get("includes") : new ArrayList();
-             List fields = (List) docvalueList.stream().map(a -> ((Map) a).get("field")).collect(Collectors.toList());
-             includes.addAll(fields);
-         }
-         if (explain) {
-             map.put("profile", true);
-         }
-         dsl = JsonUtils.toJsonStr(map);
-         return dsl;
-     }
-     
-     @Override
-     public EsIndexResponse getMappings(String indexName) {
-         try {
-             GetMappingRequest request = GetMappingRequest.of(r -> r.index(indexName));
-             GetMappingResponse response = elasticsearchClient.indices().getMapping(request);
-
-             // 构建EsIndexResponse对象
-             EsIndexResponse esIndexResponse = new EsIndexResponse();
-
-             // ES8中GetMappingResponse.result()返回的是Map<String, IndexMappingRecord>
-             // IndexMappingRecord包含mappings信息
-             Map<String, IndexMappingRecord> mappings = response.result();
-
-             // 设置索引名称
-             esIndexResponse.setIndices(new String[]{indexName});
-
-             // 转换mappings信息
-             Map<String, Object> mappingsMap = new HashMap<>();
-             for (Map.Entry<String, IndexMappingRecord> entry : mappings.entrySet()) {
-                 String index = entry.getKey();
-                 IndexMappingRecord record = entry.getValue();
-
-                 // 获取mappings内容并转换为Map
-                 if (record.mappings() != null) {
-                     String mappingJson = record.mappings().toString();
-                     Map<String, Object> mappingMap = JsonUtils.toMap(mappingJson);
-                     mappingsMap.put(index, mappingMap);
-                 }
-             }
-             esIndexResponse.setMappings(mappingsMap);
-
-             // 初始化其他字段为空
-             esIndexResponse.setAliases(new HashMap<>());
-             esIndexResponse.setSettings(new HashMap<>());
-             esIndexResponse.setSettingsObj(new HashMap<>());
-
-             return esIndexResponse;
-         } catch (Exception e) {
-             throw new EsException("getMappings error", e);
-         }
-     }
-     
-     @Override
-     public String explain(String sql) {
-         String dsl = sql2Dsl(sql, true);
-         if (dsl == null) {
-             return null;
-         }
-         // 匹配 SQL 语句中的表名
-         String tableName = getTableName(sql);
-         return executeDSL(dsl, tableName);
-     }
-     
-     @Override
+    
+    @Override
+    public <T> EsAggResponse<T> aggregations(String type, EsParamWrapper<T> esParamWrapper, String... indexs) {
+        try {
+            EsQueryParamWrapper esQueryParamWrapper = esParamWrapper.getEsQueryParamWrapper();
+            
+            // 创建搜索请求构建器
+            SearchRequest.Builder searchBuilder = new SearchRequest.Builder();
+            
+            // 设置索引
+            searchBuilder.index(Arrays.asList(indexs));
+            
+            // 设置查询条件
+            if (esQueryParamWrapper.getBoolQueryBuilder() != null) {
+                Query query = Ep8QueryConverter.toEsQuery(esQueryParamWrapper.getBoolQueryBuilder());
+                searchBuilder.query(query);
+            }
+            
+            // 设置聚合
+            List<EpAggBuilder> aggregationBuilders = esQueryParamWrapper.getAggregationBuilder();
+            if (aggregationBuilders != null && !aggregationBuilders.isEmpty()) {
+                Map<String, Aggregation> aggregations = new HashMap<>();
+                for (EpAggBuilder epAggBuilder : aggregationBuilders) {
+                    Aggregation aggregation = Ep8AggregationConvert.toEsAggregation(epAggBuilder);
+                    aggregations.put(epAggBuilder.getName(), aggregation);
+                }
+                searchBuilder.aggregations(aggregations);
+            }
+            
+            // 设置size为0，因为我们只关心聚合结果，不关心具体文档
+            searchBuilder.size(0);
+            
+            // 设置路由等其他参数
+            String[] routings = esQueryParamWrapper.getRoutings();
+            if (routings != null && routings.length > 0) {
+                searchBuilder.routing(routings[0]);
+            }
+            
+            if (esQueryParamWrapper.getPreference() != null) {
+                searchBuilder.preference(esQueryParamWrapper.getPreference());
+            }
+            
+            // 执行搜索
+            long start = System.currentTimeMillis();
+            SearchResponse<T> searchResponse = elasticsearchClient.search(searchBuilder.build(), esParamWrapper.getTClass());
+            long end = System.currentTimeMillis();
+            long timeCost = end - start;
+            
+            printSearchInfoLog("aggregations index={} timeCost={} \nDSL:{} ", indexs, timeCost, searchBuilder);
+            
+            // 处理聚合结果
+            Map<String, Aggregate> responseAggregations = searchResponse.aggregations();
+            Es8PlusAggregations<T> esAggregations = new Es8PlusAggregations<>();
+            esAggregations.setAggregations(responseAggregations);
+            esAggregations.settClass(esParamWrapper.getTClass());
+            
+            return esAggregations;
+        } catch (Exception e) {
+            if (e instanceof ElasticsearchException){
+                ElasticsearchException exception = (ElasticsearchException) e;
+                ErrorResponse response = exception.response();
+                log.error("es-plus aggregations error :{}", response);
+            }
+            throw new EsException("es-plus aggregations error", e);
+        }
+    }
+    
+    @Override
+    public String executeDSL(String dsl, String... index) {
+        String indexs = String.join(",", index);
+        try {
+            // ES8使用低级客户端来执行DSL查询
+            co.elastic.clients.transport.TransportOptions transportOptions =
+                    elasticsearchClient._transport().options();
+            co.elastic.clients.elasticsearch.core.SearchRequest.Builder searchBuilder =
+                    new co.elastic.clients.elasticsearch.core.SearchRequest.Builder();
+            
+            // 设置索引
+            searchBuilder.index(Arrays.asList(index));
+            
+            // 使用withJson方法解析DSL字符串
+            java.io.StringReader dslReader = new java.io.StringReader(dsl);
+            searchBuilder.withJson(dslReader);
+            
+            // 执行搜索
+            SearchResponse<?> response = elasticsearchClient.search(searchBuilder.build(), Object.class);
+            
+            return response.toString();
+        } catch (Exception e) {
+            if (e instanceof ElasticsearchException){
+                ElasticsearchException exception = (ElasticsearchException) e;
+                ErrorResponse response = exception.response();
+                log.error("es-plus aggregations error :{}", response);
+            }else{
+                log.error("executeDSL error", e);
+            }
+            throw new EsException("executeDSL failed", e);
+        }
+    }
+    
+    @Override
+    public String translateSql(String sql) {
+        Map<String, Object> jsonRequest = new HashMap<>();
+        jsonRequest.put("query", sql);
+        try {
+            // ES8使用SQL API进行翻译
+            co.elastic.clients.elasticsearch.sql.TranslateRequest.Builder translateBuilder =
+                    new co.elastic.clients.elasticsearch.sql.TranslateRequest.Builder();
+            translateBuilder.query(sql);
+            
+            co.elastic.clients.elasticsearch.sql.TranslateResponse response =
+                    elasticsearchClient.sql().translate(translateBuilder.build());
+            
+            // 将响应转换为JSON字符串
+            return response.toString();
+        } catch (IOException e) {
+            log.error("translateSql error", e);
+        }
+        return null;
+    }
+    
+    @Override
+    public <T> EsResponse<T> executeSQL(String sql, Class<T> tClass) {
+        String rs = executeSQL(sql);
+        if (rs == null) {
+            return null;
+        }
+        try {
+            SearchResponse.Builder<T> builder = new SearchResponse.Builder<>();
+            java.io.StringReader jsonReader = new java.io.StringReader(rs);
+            builder.withJson(jsonReader);
+            SearchResponse<T> searchResponse = builder.build();
+            
+            // 使用现有的getEsResponse方法来处理响应
+            return getEsResponse(tClass, searchResponse);
+        } catch (Exception e) {
+            throw new EsException("executeSQL result parse error", e);
+        }
+    }
+    
+    @Override
+    public String executeSQL(String sql) {
+        String dsl = sql2Dsl(sql, false);
+        if (dsl == null) {
+            return null;
+        }
+        // 匹配 SQL 语句中的表名
+        String tableName = getTableName(sql);
+        return executeDSL(dsl, tableName);
+    }
+    
+    @Override
+    public String sql2Dsl(String sql, boolean explain) {
+        String limit = StringUtils.substringAfterLast(sql, "limit");
+        Integer from = null;
+        Integer size = null;
+        if (limit != null && limit.contains(",")) {
+            String[] split = limit.split(",");
+            from = Integer.parseInt(split[0].trim());
+            size = Integer.parseInt(split[1].trim());
+            sql = sql.replace(limit, "");
+        }
+        if (sql.contains("group")) {
+            sql = StringUtils.substringBeforeLast(sql, "limit");
+        }
+        String dsl = translateSql(sql);
+        if (dsl == null) {
+            throw new EsException("sql无法转换成dsl");
+        }
+        
+        Map<String, Object> map = JsonUtils.toMap(dsl);
+        if (from != null) {
+            map.put("from", from);
+        }
+        if (size != null) {
+            map.put("size", size);
+        }
+        
+        List docvalueList = (List) map.get("docvalue_fields");
+        if (docvalueList != null && !docvalueList.isEmpty() && !map.get("_source").equals(Boolean.FALSE)) {
+            Map source = (Map) map.get("_source");
+            List includes = source.get("includes") != null ? (List) source.get("includes") : new ArrayList();
+            List fields = (List) docvalueList.stream().map(a -> ((Map) a).get("field")).collect(Collectors.toList());
+            includes.addAll(fields);
+        }
+        if (explain) {
+            map.put("profile", true);
+        }
+        dsl = JsonUtils.toJsonStr(map);
+        return dsl;
+    }
+    
+    @Override
+    public EsIndexResponse getMappings(String indexName) {
+        try {
+            GetMappingRequest request = GetMappingRequest.of(r -> r.index(indexName));
+            GetMappingResponse response = elasticsearchClient.indices().getMapping(request);
+            
+            // 构建EsIndexResponse对象
+            EsIndexResponse esIndexResponse = new EsIndexResponse();
+            
+            // ES8中GetMappingResponse.result()返回的是Map<String, IndexMappingRecord>
+            // IndexMappingRecord包含mappings信息
+            Map<String, IndexMappingRecord> mappings = response.result();
+            
+            // 设置索引名称
+            esIndexResponse.setIndices(new String[]{indexName});
+            
+            // 转换mappings信息
+            Map<String, Object> mappingsMap = new HashMap<>();
+            for (Map.Entry<String, IndexMappingRecord> entry : mappings.entrySet()) {
+                String index = entry.getKey();
+                IndexMappingRecord record = entry.getValue();
+                
+                // 获取mappings内容并转换为Map
+                if (record.mappings() != null) {
+                    String mappingJson = record.mappings().toString();
+                    Map<String, Object> mappingMap = JsonUtils.toMap(mappingJson);
+                    mappingsMap.put(index, mappingMap);
+                }
+            }
+            esIndexResponse.setMappings(mappingsMap);
+            
+            // 初始化其他字段为空
+            esIndexResponse.setAliases(new HashMap<>());
+            esIndexResponse.setSettings(new HashMap<>());
+            esIndexResponse.setSettingsObj(new HashMap<>());
+            
+            return esIndexResponse;
+        } catch (Exception e) {
+            throw new EsException("getMappings error", e);
+        }
+    }
+    
+    @Override
+    public String explain(String sql) {
+        String dsl = sql2Dsl(sql, true);
+        if (dsl == null) {
+            return null;
+        }
+        // 匹配 SQL 语句中的表名
+        String tableName = getTableName(sql);
+        return executeDSL(dsl, tableName);
+    }
+    
+    @Override
     public boolean delete(String type, String id, String... indexs) {
         for (String index : indexs) {
             try {
@@ -1333,7 +1351,7 @@ import java.util.stream.Collectors;
         
         return failedIds;
     }
-   
+    
     
     @Override
     public long count(String type, EsParamWrapper esParamWrapper, String... indexs) {
@@ -1412,7 +1430,7 @@ import java.util.stream.Collectors;
     private void printErrorLog(String format, Object... params) {
         log.error("es-plus " + format, params);
     }
-
+    
     private String getTableName(String sql) {
         // 匹配 SQL 语句中的表名
         java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("(?i)FROM\\s+([\\w.]+)");
