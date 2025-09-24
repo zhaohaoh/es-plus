@@ -6,7 +6,7 @@
     <parent>
         <groupId>io.github.zhaohaoh</groupId>
         <artifactId>es-plus</artifactId>
-        <version>0.4.9</version>
+        <version>${revision}</version>
     </parent>
     
     <artifactId>es8-plus-samples</artifactId>
