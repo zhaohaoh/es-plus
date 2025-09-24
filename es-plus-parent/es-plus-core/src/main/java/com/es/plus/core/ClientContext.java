@@ -1,5 +1,6 @@
 package com.es.plus.core;
 
+import com.es.plus.client.Es8LockClient;
 import com.es.plus.client.Es8PlusIndexRestClient;
 import com.es.plus.client.Es8PlusRestClient;
 import com.es.plus.client.EsPlus6IndexRestClient;
@@ -71,23 +72,23 @@ public class ClientContext {
      *
      * @return {@link EsPlusClientFacade}
      */
-    public static EsPlusClientFacade buildEsPlusClientFacade(String host,Object restHighLevelClient, EsLockFactory esLockFactory, List<EsInterceptor> esInterceptors) {
+    public static EsPlusClientFacade buildEsPlusClientFacade(String host,Object esClient, EsLockFactory esLockFactory, List<EsInterceptor> esInterceptors) {
         EsPlusClient esPlusClient;
         EsPlusIndexClient esPlusIndexRestClient;
         
         //        String version = getVersion(restHighLevelClient);
         if (GlobalConfigCache.GLOBAL_CONFIG.getVersion().equals(6)) {
-            esPlusClient = new EsPlus6RestClient(restHighLevelClient);
-            esPlusIndexRestClient = new EsPlus6IndexRestClient(restHighLevelClient);
+            esPlusClient = new EsPlus6RestClient(esClient);
+            esPlusIndexRestClient = new EsPlus6IndexRestClient(esClient);
         }else if (GlobalConfigCache.GLOBAL_CONFIG.getVersion().equals(7)){
-            esPlusClient = new EsPlusRestClient(restHighLevelClient);
-            esPlusIndexRestClient = new EsPlusIndexRestClient(restHighLevelClient);
+            esPlusClient = new EsPlusRestClient(esClient);
+            esPlusIndexRestClient = new EsPlusIndexRestClient(esClient);
         }else if (GlobalConfigCache.GLOBAL_CONFIG.getVersion().equals(8)){
-            esPlusClient = new Es8PlusRestClient(restHighLevelClient);
-            esPlusIndexRestClient = new Es8PlusIndexRestClient(restHighLevelClient);
+            esPlusClient = new Es8PlusRestClient(esClient);
+            esPlusIndexRestClient = new Es8PlusIndexRestClient(esClient);
         }else {
-            esPlusClient = new EsPlusRestClient(restHighLevelClient);
-            esPlusIndexRestClient = new EsPlusIndexRestClient(restHighLevelClient);
+            esPlusClient = new EsPlusRestClient(esClient);
+            esPlusIndexRestClient = new EsPlusIndexRestClient(esClient);
         }
         
         EsPlusClientProxy esPlusClientProxy = new EsPlusClientProxy(esPlusClient,esInterceptors);
@@ -98,18 +99,24 @@ public class ClientContext {
         return esPlusClientFacade;
     }
     
-    public static EsPlusClientFacade buildEsPlusClientFacade(String host,Object restHighLevelClient,List<EsInterceptor> esInterceptors) {
+    public static EsPlusClientFacade buildEsPlusClientFacade(String host,Object lockClient,List<EsInterceptor> esInterceptors) {
         
         //        String version = getVersion(restHighLevelClient);
         EsLockFactory esLockFactory = null;
         if (GlobalConfigCache.GLOBAL_CONFIG.getVersion().equals(6)) {
-            Es6LockClient esLockClient = new Es6LockClient(restHighLevelClient);
+            Es6LockClient esLockClient = new Es6LockClient(lockClient);
             esLockFactory = new EsLockFactory(esLockClient);
-        }else{
-            Es7LockClient esLockClient = new Es7LockClient(restHighLevelClient);
+        }else if (GlobalConfigCache.GLOBAL_CONFIG.getVersion().equals(7)){
+            Es7LockClient esLockClient = new Es7LockClient(lockClient);
+            esLockFactory = new EsLockFactory(esLockClient);
+        }else if (GlobalConfigCache.GLOBAL_CONFIG.getVersion().equals(8)){
+            Es8LockClient esLockClient = new Es8LockClient(lockClient);
+            esLockFactory = new EsLockFactory(esLockClient);
+        }else {
+            Es7LockClient esLockClient = new Es7LockClient(lockClient);
             esLockFactory = new EsLockFactory(esLockClient);
         }
-        return buildEsPlusClientFacade(host,restHighLevelClient,esLockFactory,esInterceptors);
+        return buildEsPlusClientFacade(host,lockClient,esLockFactory,esInterceptors);
     }
     
     //    public static String getVersion(RestHighLevelClient restHighLevelClient) {

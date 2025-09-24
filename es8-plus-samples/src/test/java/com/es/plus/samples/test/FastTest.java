@@ -1,6 +1,7 @@
 package com.es.plus.samples.test;
 
 import co.elastic.clients.elasticsearch._types.FieldValue;
+import co.elastic.clients.elasticsearch._types.aggregations.TermsAggregation;
 import co.elastic.clients.elasticsearch._types.query_dsl.TermsQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.TermsQueryField;
 import com.es.plus.common.EsPlusClientFacade;
@@ -8,11 +9,13 @@ import com.es.plus.common.params.EsAggResponse;
 import com.es.plus.common.params.EsAggResult;
 import com.es.plus.common.params.EsIndexResponse;
 import com.es.plus.common.params.EsResponse;
+import com.es.plus.common.pojo.es.EpAggBuilder;
 import com.es.plus.common.pojo.es.EpBucketOrder;
 import com.es.plus.common.pojo.es.EpQueryBuilder;
 import com.es.plus.core.ClientContext;
 import com.es.plus.core.statics.Es;
 import com.es.plus.core.wrapper.aggregation.EsAggWrapper;
+import com.es.plus.core.wrapper.aggregation.EsLambdaAggWrapper;
 import com.es.plus.core.wrapper.chain.EsChainLambdaQueryWrapper;
 import com.es.plus.samples.SamplesApplication;
 import com.es.plus.samples.dto.FastTestDTO;
@@ -106,17 +109,43 @@ public class FastTest {
     }
     
     @org.junit.jupiter.api.Test
-    public void bbb11() {
+    public void searchQuery() {
         TermsQuery.Builder builder = new TermsQuery.Builder();
         List<FieldValue> a = List.of("a", "新来的朋友们").stream().map(FieldValue::of).collect(Collectors.toList());
         builder.field("username").terms(b->b.value(a));
-        TermsQuery termsQuery = builder.build();
-        EpQueryBuilder queryBuilder = new EpQueryBuilder().orginalQuery(termsQuery);
+        
+        EpQueryBuilder queryBuilder = new EpQueryBuilder()
+                .orginalQuery(builder);
         EsResponse<FastTestDTO> test = Es.chainLambdaQuery(FastTestDTO.class)
                 .sortByAsc("id")
                 .query(queryBuilder)
+                .term(FastTestDTO::getAge,111L)
+                .must(b->b.match(FastTestDTO::getText,"新来的朋友们啊"))
                 .search();
         System.out.println(test);
+    }
+    
+    @org.junit.jupiter.api.Test
+    public void searchAggQuery() {
+        TermsQuery.Builder builder = new TermsQuery.Builder();
+        List<FieldValue> a = List.of("a", "新来的朋友们").stream().map(FieldValue::of).collect(Collectors.toList());
+        builder.field("username").terms(b->b.value(a));
+        
+        
+        EsChainLambdaQueryWrapper<FastTestDTO> fastTestDTOEsChainLambdaQueryWrapper = Es.chainLambdaQuery(
+                FastTestDTO.class);
+        EsLambdaAggWrapper<FastTestDTO> fastTestDTOEsLambdaAggWrapper = fastTestDTOEsChainLambdaQueryWrapper.esLambdaAggWrapper();
+        fastTestDTOEsLambdaAggWrapper.terms(FastTestDTO::getUsername).terms(FastTestDTO::getId)
+                .subAgg(b-> {
+                            TermsAggregation.Builder username1 = new TermsAggregation.Builder().field("username");
+                            TermsAggregation username = username1.build();
+                            b.avg(FastTestDTO::getAge)
+                                    .add(new EpAggBuilder() .esOrginalAgg(username));
+                        }
+                );
+        EsResponse<FastTestDTO> test = fastTestDTOEsChainLambdaQueryWrapper.sortBy("ASC",FastTestDTO::getCreateTime)
+                .search();
+        System.out.println( );
     }
     
     @org.junit.jupiter.api.Test

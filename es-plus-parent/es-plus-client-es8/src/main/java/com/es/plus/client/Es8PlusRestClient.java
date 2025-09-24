@@ -708,8 +708,11 @@ public class Es8PlusRestClient implements EsPlusClient {
                 ElasticsearchException exception = (ElasticsearchException) e;
                 ErrorResponse response = exception.response();
                 log.error("es-plus search error :{}", response);
+                throw new EsException("es-plus search body={} " + response.toString() , e);
+            }else{
+                log.error("es-plus search error : ", e);
+                throw new EsException("es-plus search" , e);
             }
-            throw new EsException("es-plus search body=" + searchRequest, e);
         }
         //        if (searchResponse. != 200) {
         //            throw new EsException("es-plus search error:" + searchResponse.status().getStatus());
@@ -747,7 +750,15 @@ public class Es8PlusRestClient implements EsPlusClient {
             }
             return getEsResponse(esParamWrapper.getTClass(), responseBody);
         } catch (Exception e) {
-            throw new EsException("es-plus scroll search error", e);
+            if (e instanceof ElasticsearchException){
+                ElasticsearchException exception = (ElasticsearchException) e;
+                ErrorResponse response = exception.response();
+                log.error("es-plus search error :{}", response);
+                throw new EsException("es-plus search body={} " + response.toString() , e);
+            }else{
+                log.error("es-plus search error : ", e);
+                throw new EsException("es-plus search" , e);
+            }
         }
     }
     

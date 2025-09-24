@@ -2,6 +2,8 @@ package com.es.plus.autoconfigure.properties;
 
 import lombok.Data;
 
+import java.util.Map;
+
 /**
  * @Author: hzh
  * @Date: 2023/2/1 16:54
@@ -12,7 +14,7 @@ public class ClientProperties {
      * 集群地址，多个用,隔开
      */
     private String address;
-
+    
     /**
      * 模式
      */
@@ -26,13 +28,13 @@ public class ClientProperties {
     /**
      * 用户名称
      */
-
+    
     private String username;
-
+    
     /**
      * 密码
      */
-
+    
     private String password;
     /**
      * maxConnectTotal 最大连接数
@@ -45,19 +47,19 @@ public class ClientProperties {
     /**
      * 连接超时时间
      */
-
+    
     private Integer connectTimeOut = 60;
     /**
      * 连接超时时间
      */
-
+    
     private Integer socketTimeOut = Integer.MIN_VALUE;
     /**
      * 获取连接的超时时间
      */
-
+    
     private Integer connectionRequestTimeOut;
-
+    
     /**
      * 最大连接数
      */
@@ -66,4 +68,9 @@ public class ClientProperties {
      * 最大路由连接数
      */
     private Integer maxConnectPerRoute;
+    
+    /**
+     * 额外的请求头信息
+     */
+    private Map<String,String> headers;
 }

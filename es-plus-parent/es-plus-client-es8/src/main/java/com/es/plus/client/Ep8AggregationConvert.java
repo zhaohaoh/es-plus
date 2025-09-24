@@ -2,6 +2,7 @@ package com.es.plus.client;
 
 import co.elastic.clients.elasticsearch._types.aggregations.*;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
+import com.es.plus.common.exception.EsException;
 import com.es.plus.common.params.EsParamWrapper;
 import com.es.plus.common.pojo.es.EpAggBuilder;
 import com.es.plus.common.pojo.es.EpBoolQueryBuilder;
@@ -76,12 +77,23 @@ public class Ep8AggregationConvert {
         
         String type = customAgg.getType();
         String name = customAgg.getName();
+        if (name == null){
+            throw new EsException("agg need name");
+        }
         Map<String, Object> params = customAgg.getParameters();
         Aggregation esAgg = null;
         
         Object esOrginalAgg = customAgg.getEsOrginalAgg();
-        if (esOrginalAgg instanceof Aggregation) {
-            return (Aggregation) esOrginalAgg;
+        if (esOrginalAgg!=null) {
+            if (esOrginalAgg instanceof Aggregation) {
+                return (Aggregation) esOrginalAgg;
+            } else if (esOrginalAgg instanceof co.elastic.clients.util.ObjectBuilder) {
+                co.elastic.clients.util.ObjectBuilder<? extends AggregationVariant> orginalAggObjectBuilder = (co.elastic.clients.util.ObjectBuilder<? extends AggregationVariant>) esOrginalAgg;
+                return orginalAggObjectBuilder.build()._toAggregation();
+            } else if (esOrginalAgg instanceof AggregationVariant) {
+                // 如果是 AggregationBase 实例，直接转换为 Aggregation
+                return ((AggregationVariant) esOrginalAgg)._toAggregation();
+            }
         }
         
         // 预处理子聚合

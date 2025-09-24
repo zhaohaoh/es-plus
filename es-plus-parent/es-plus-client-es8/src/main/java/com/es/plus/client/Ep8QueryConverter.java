@@ -67,9 +67,9 @@ public class Ep8QueryConverter {
                 return (Query) esOrginalQuery;
             }
             else if (esOrginalQuery instanceof ObjectBuilder){
-                ObjectBuilder orginalQueryObjectBuilder = (ObjectBuilder) esOrginalQuery;
-                Query query = Query.of(a -> orginalQueryObjectBuilder);
-                return query;
+                ObjectBuilder<? extends QueryVariant> orginalQueryObjectBuilder = (ObjectBuilder<? extends QueryVariant>) esOrginalQuery;
+                return orginalQueryObjectBuilder.build()._toQuery();
+                
             }
         }
         

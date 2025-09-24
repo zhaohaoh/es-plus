@@ -31,8 +31,8 @@ public class Es8LockClient implements ELockClient {
 
     private final ElasticsearchClient elasticsearchClient;
 
-    public Es8LockClient(ElasticsearchClient elasticsearchClient) {
-        this.elasticsearchClient = elasticsearchClient;
+    public Es8LockClient(Object elasticsearchClient) {
+        this.elasticsearchClient = (ElasticsearchClient) elasticsearchClient;
     }
 
     @Override
