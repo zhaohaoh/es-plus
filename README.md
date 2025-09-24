@@ -9,15 +9,13 @@ Es-Plus 是Elasticsearch Api增强工具 - 只做增强不做改变，简化`CRU
 - **优雅的聚合封装**：让es的聚合操作变得更简易
 - **内置es所有分词器**：提供es所有的分词器和可配置定义filters
 - **自动reindex功能**：es索引库属性的改变会导致es需要重建索引.重建索引的数据迁移由框架自动完成.使用了读写锁,确保reindex过程中额外生成的数据也能同步(但会有删除数据的冗余)
-- **兼容es多版本**: 同时支持es6.7和es7.8双版本
+- **兼容es多版本**: 同时支持es6.7和es7.8双版本  支持最新版es 8.17
 - **优雅的nested嵌套查询**: 使用lambda表达式封装实现更优雅的嵌套查询
 - **静态链式es编程**: 支持使用静态类，无需指定对应实体类即可执行。可以简单快速对es的索引进行增删改查。
 - **多数据源es**: 通用@EsIndex指定默认数据源
 - **自定义es执行前后拦截器**: @EsInterceptors 具体用法见下面的例子
 - **提供Es控制台页面**: 新功能-提供es多数据源增删改查的控制台 详见下方例子
-
 ## 引入
-目前使用版本0.4.72
 本次更新
 - **多数据源es**: 通用@EsIndex指定默认数据源
 - **自定义es执行前后拦截器**: @EsInterceptors 具体用法见下面的例子
@@ -58,7 +56,7 @@ es-plus.global-config.global-es-id=id
 es-plus.username=
 es-plus.password=
 
-# es多版本  
+# es多版本  如果是8的话需要指定为8  否则会报错
 es-plus.global-config.version=7
 
 
