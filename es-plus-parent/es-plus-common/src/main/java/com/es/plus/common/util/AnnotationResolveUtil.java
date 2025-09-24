@@ -42,7 +42,7 @@ public class AnnotationResolveUtil {
         return esFieldInfo;
     }
 
-    public  static EsFieldInfo resolveEsId(EsId esId){
+    public  static EsFieldInfo resolveEsId(EsId esId,String fieldType){
         if (esId == null) {
             return null;
         }
@@ -50,7 +50,7 @@ public class AnnotationResolveUtil {
         esFieldInfo.setEsId(true);
         esFieldInfo.setName(esId.name());
         esFieldInfo.setExist(true);
-        esFieldInfo.setType(EsFieldType.KEYWORD);
+        esFieldInfo.setType(EsFieldType.valueOf(fieldType));
         return esFieldInfo;
     }
 
