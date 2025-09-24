@@ -8,9 +8,9 @@
         <artifactId>es-plus</artifactId>
         <version>${revision}</version>
     </parent>
-    
+    <name>es8-plus-samples</name>
     <artifactId>es8-plus-samples</artifactId>
-    
+    <description>es8的Plus示例</description>
     <properties>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>

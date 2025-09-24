@@ -1,9 +1,9 @@
 package com.es.plus.web.config;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.es.plus.autoconfigure.auto.EsClientConfiguration;
 import com.es.plus.autoconfigure.properties.ClientProperties;
 import com.es.plus.autoconfigure.util.ClientUtil;
-import com.es.plus.starter.auto.EsClientConfiguration;
 import com.es.plus.web.mapper.EsClientMapper;
 import com.es.plus.web.pojo.EsClientProperties;
 import org.springframework.beans.BeanUtils;
@@ -25,8 +25,7 @@ public class CommondInitTable {
     private EsClientMapper esClientMapper;
     @Autowired
     private JdbcTemplate jdbcTemplate;
-    @Autowired
-    private EsClientConfiguration esClientConfiguration;
+ 
  
     @PostConstruct
     public void init() throws SQLException, IOException {

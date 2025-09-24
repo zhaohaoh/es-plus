@@ -11,11 +11,11 @@
     
     <artifactId>es8-plus-spring-boot-starter</artifactId>
     <version>${revision}</version>
-    <name>es-plus-spring-boot-starter</name>
+    <name>es8-plus-spring-boot-starter</name>
     
     <properties>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
     </properties>
     
     <description>es-plus启动类</description>
