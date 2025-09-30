@@ -74,11 +74,11 @@ jobs:
         exit 1
 
     - name: Build Parent Project
-      run: mvn clean install -B -DskipTests -f es-plus-parent/pom.xml
+      run: mvn clean install -B -DskipTests -Dgpg.skip=true -f es-plus-parent/pom.xml
 
     - name: Test ${{ matrix.test-module }}
       run: |
         cd ${{ matrix.test-module }}
-        mvn test -B
+        mvn test -B -Dgpg.skip=true
       env:
         ES_ADDRESS: localhost:9200

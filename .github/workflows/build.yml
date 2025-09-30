@@ -27,10 +27,10 @@ jobs:
         cache: 'maven'
 
     - name: Build Parent Project
-      run: mvn clean install -B -DskipTests -f es-plus-parent/pom.xml
+      run: mvn clean install -B -DskipTests -Dgpg.skip=true -f es-plus-parent/pom.xml
 
     - name: Build ES 7 Samples
-      run: cd es-plus-samples && mvn compile -B
+      run: cd es-plus-samples && mvn compile -B -Dgpg.skip=true
 
     - name: Build ES 8 Samples
-      run: cd es8-plus-samples && mvn compile -B
+      run: cd es8-plus-samples && mvn compile -B -Dgpg.skip=true
