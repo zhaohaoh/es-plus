@@ -1,0 +1,84 @@
+name: Full Test with Multi-ES Versions
+
+on:
+  # 手动触发
+  workflow_dispatch:
+  # 打 tag 时自动触发
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        java: [8, 11, 17]
+        es-version: [6.8.0, 7.8.0, 8.17.0]
+        include:
+          # ES 6.x 配置
+          - es-version: 6.8.0
+            es-image: docker.elastic.co/elasticsearch/elasticsearch:6.8.0
+            test-module: es-plus-samples
+          # ES 7.x 配置
+          - es-version: 7.8.0
+            es-image: docker.elastic.co/elasticsearch/elasticsearch:7.8.0
+            test-module: es-plus-samples
+          # ES 8.x 配置
+          - es-version: 8.17.0
+            es-image: docker.elastic.co/elasticsearch/elasticsearch:8.17.0
+            test-module: es8-plus-samples
+
+    # 启动 ES 容器
+    services:
+      elasticsearch:
+        image: ${{ matrix.es-image }}
+        env:
+          discovery.type: single-node
+          xpack.security.enabled: false
+          ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+        ports:
+          - 9200:9200
+        options: >-
+          --health-cmd "curl -f http://localhost:9200/_cluster/health || exit 1"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
+    name: Test Java ${{ matrix.java }} with ES ${{ matrix.es-version }}
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up JDK ${{ matrix.java }}
+      uses: actions/setup-java@v3
+      with:
+        java-version: ${{ matrix.java }}
+        distribution: 'temurin'
+        cache: 'maven'
+
+    - name: Wait for Elasticsearch
+      run: |
+        echo "Waiting for Elasticsearch ${{ matrix.es-version }}..."
+        for i in {1..30}; do
+          if curl -s http://localhost:9200 > /dev/null; then
+            echo "Elasticsearch is up!"
+            curl http://localhost:9200
+            exit 0
+          fi
+          echo "Waiting... ($i/30)"
+          sleep 10
+        done
+        echo "Elasticsearch failed to start"
+        exit 1
+
+    - name: Build Parent Project
+      run: mvn clean install -B -DskipTests -f es-plus-parent/pom.xml
+
+    - name: Test ${{ matrix.test-module }}
+      run: |
+        cd ${{ matrix.test-module }}
+        mvn test -B
+      env:
+        ES_ADDRESS: localhost:9200

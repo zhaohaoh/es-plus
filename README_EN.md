@@ -1,6 +1,9 @@
 # Es-Plus - Elasticsearch Java Client Enhancement Tool | MyBatis-Plus Style API
 
 <p align="center">
+  <a href="https://github.com/zhaohaoh/es-plus/actions/workflows/build.yml">
+    <img src="https://github.com/zhaohaoh/es-plus/actions/workflows/build.yml/badge.svg" alt="Build Status">
+  </a>
   <a href="https://search.maven.org/artifact/io.github.zhaohaoh/es-plus-spring-boot-starter">
     <img src="https://img.shields.io/maven-central/v/io.github.zhaohaoh/es-plus-spring-boot-starter.svg?label=Maven%20Central" alt="Maven Central">
   </a>

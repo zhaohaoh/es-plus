@@ -1,0 +1,36 @@
+name: Build
+
+on:
+  push:
+    branches: [ master, develop ]
+  pull_request:
+    branches: [ master, develop ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        java: [8, 11, 17]
+
+    name: Build with Java ${{ matrix.java }}
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up JDK ${{ matrix.java }}
+      uses: actions/setup-java@v3
+      with:
+        java-version: ${{ matrix.java }}
+        distribution: 'temurin'
+        cache: 'maven'
+
+    - name: Build Parent Project
+      run: mvn clean install -B -DskipTests -f es-plus-parent/pom.xml
+
+    - name: Build ES 7 Samples
+      run: cd es-plus-samples && mvn compile -B
+
+    - name: Build ES 8 Samples
+      run: cd es8-plus-samples && mvn compile -B
