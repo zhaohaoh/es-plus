@@ -8,7 +8,6 @@ Es-Plus 是Elasticsearch Api增强工具 - 只做增强不做改变，简化`CRU
 - **融合mybatis-plus语法和ES-Rest-Api**: 适用于习惯mybatis-plus语法和会原生es语句操作的人群
 - **优雅的聚合封装**：让es的聚合操作变得更简易
 - **内置es所有分词器**：提供es所有的分词器和可配置定义filters
-- **自动reindex功能**：es索引库属性的改变会导致es需要重建索引.重建索引的数据迁移由框架自动完成.使用了读写锁,确保reindex过程中额外生成的数据也能同步(但会有删除数据的冗余)
 - **兼容es多版本**: 同时支持es6.7和es7.8双版本  支持最新版es 8.17
 - **优雅的nested嵌套查询**: 使用lambda表达式封装实现更优雅的嵌套查询
 - **静态链式es编程**: 支持使用静态类，无需指定对应实体类即可执行。可以简单快速对es的索引进行增删改查。
@@ -39,10 +38,6 @@ Es-Plus 是Elasticsearch Api增强工具 - 只做增强不做改变，简化`CRU
 ```properties
 # es地址 多个逗号分隔   默认数据源 master
 es-plus.address=xxx.xxx.xxx.xxx:9200
-# 是否异步reindex
-es-plus.global-config.reindex-async=false
-# 是否开启自动reindex. 如果没有开启也会自动对新增的字段添加映射
-es-plus.global-config.index-auto-move=false
 # 查询最大数量的限制
 es-plus.global-config.search-size=5000
 # 索引添加统一的环境后缀 测试环境
@@ -60,13 +55,35 @@ es-plus.password=
 es-plus.global-config.version=7
 
 
-##es多数据源   local是数据源名称，可自定义 
+##es多数据源   local是数据源名称，可自定义
 
 es-plus.client-properties.local.address=localhost:9100
 
 ```
 
-### 第二步 静态链式编程
+### 第二步 添加 @EsIndexScan 注解
+
+在 Spring Boot 启动类上添加 `@EsIndexScan` 注解：
+
+```java
+@SpringBootApplication
+@EsIndexScan  // 必须添加：扫描并注册 ES 实体类索引
+public class Application {
+    public static void main(String[] args) {
+        SpringApplication.run(Application.class, args);
+    }
+}
+```
+
+**作用**：
+- 扫描带有 `@EsIndex` 注解的实体类
+- 用于自动创建或更新索引字段
+
+**注意**：
+- 此注解仅用于索引管理（创建/更新）
+- 不影响已有索引的查询操作
+
+### 第三步 静态链式编程
 ```java
 public class SamplesEsService extends EsServiceImpl<SamplesEsDTO> {
     // 无实体类使用指定index索引直接保存 查询同理
@@ -84,38 +101,102 @@ public class SamplesEsService extends EsServiceImpl<SamplesEsDTO> {
 }
 ```
 
+## 💡 查询对比：es-plus vs 原生 ES
+
+### es-plus 方式（10 行）
+```java
+EsResponse<User> response = userService.esChainQueryWrapper()
+    .must()
+    .term(User::getUsername, "admin")
+    .ge(User::getAge, 18)
+    .match(User::getText, "关键词")
+    .sortByDesc(User::getCreateTime)
+    .searchPage(1, 10);
+List<User> list = response.getList();
+```
+
+### 原生 ES 方式（25 行）
+```java
+SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
+BoolQueryBuilder boolQuery = QueryBuilders.boolQuery();
+boolQuery.must(QueryBuilders.termQuery("username", "admin"));
+boolQuery.must(QueryBuilders.rangeQuery("age").gte(18));
+boolQuery.must(QueryBuilders.matchQuery("text", "关键词"));
+sourceBuilder.query(boolQuery);
+sourceBuilder.sort("createTime", SortOrder.DESC);
+sourceBuilder.from(0);
+sourceBuilder.size(10);
+
+SearchRequest request = new SearchRequest("user");
+request.source(sourceBuilder);
+SearchResponse response = client.search(request, RequestOptions.DEFAULT);
+
+List<User> list = new ArrayList<>();
+for (SearchHit hit : response.getHits().getHits()) {
+    list.add(JSON.parseObject(hit.getSourceAsString(), User.class));
+}
+```
+
+**💡 代码量减少 60%，链式调用更简洁直观**
+
+---
+
+## 💡 聚合对比：es-plus vs 原生 ES
+
+### es-plus 方式（10 行）
+```java
+EsResponse<User> response = userService.esChainQueryWrapper()
+    .esLambdaAggWrapper()
+    .terms(User::getUsername, e -> e.size(100))
+        .subAgg(t -> t.sum(User::getId))
+        .subAgg(t -> t.avg(User::getAge))
+    .search();
+
+Map<String, EsAggResult<User>> result = response.getEsAggsResponse()
+    .getEsAggResult().getMultiBucketNestedMap("username_terms");
+```
+
+### 原生 ES 方式（26 行）
+```java
+SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
+TermsAggregationBuilder termsAgg = AggregationBuilders
+    .terms("username_terms").field("username").size(100);
+termsAgg.subAggregation(AggregationBuilders.sum("id_sum").field("id"));
+termsAgg.subAggregation(AggregationBuilders.avg("age_avg").field("age"));
+sourceBuilder.aggregation(termsAgg);
+
+SearchRequest request = new SearchRequest("user");
+request.source(sourceBuilder);
+SearchResponse response = client.search(request, RequestOptions.DEFAULT);
+
+Terms usernameTerms = response.getAggregations().get("username_terms");
+Map<String, Object> result = new HashMap<>();
+for (Terms.Bucket bucket : usernameTerms.getBuckets()) {
+    Sum sumAgg = bucket.getAggregations().get("id_sum");
+    Avg avgAgg = bucket.getAggregations().get("age_avg");
+    // 手动组装...
+}
+```
+
+**💡 代码量减少 62%，自动封装结果无需手动解析**
+
+---
+
 ## ORM映射方式
 
-### 实体类 没有配置@EsField会根据java自动映射.获取不到映射则设置为Object
+### 实体类定义
 ```java
 @Data
-@EsIndex(index = "sys_user1")
-public class SysUser  {
+@EsIndex(index = "sys_user")
+public class SysUser {
     @EsId
     private Long id;
-    @EsField(type = EsFieldType.STRING) 
+    @EsField(type = EsFieldType.KEYWORD)
     private String username;
-    
-    /**
-     * 昵称
-     */ 
     private String nickName;
-
-    private String phone;
-    
-    /**
-     * 真实姓名
-     */ 
-    private String realName;
-    
-    /**
-     * 是否锁定
-     */  
-    private Integer lockState; 
+    private Integer lockState;
     @EsField(type = EsFieldType.NESTED)
-    private SysRole  sysRole; 
-    
-    private List<Long> ids;
+    private SysRole sysRole;
 }
 ```
 
@@ -167,163 +248,28 @@ public class SysUserEsService extends EsServiceImpl<SysUser>{
         Terms terms = esAggregationsReponse.getTerms(SysUser::getUsername);
         Map<String, Long> termsAsMap = esAggregationsReponse.getTermsAsMap(SysUser::getUsername);
     }
-    //嵌套对象的查询
+    // 嵌套对象查询（二级嵌套）
     public void nested() {
-        EsChainLambdaQueryWrapper<SamplesNestedDTO> asChainQueryWrap = new EsChainLambdaQueryWrapper<>(SamplesNestedDTO.class);
-        asChainQueryWrap.should().term(SamplesNestedDTO::getUsername, "hzh");
-        asChainQueryWrap.terms(SamplesNestedDTO::getUsername, "term");
-        // 声明语句嵌套关系是must
-        EsChainLambdaQueryWrapper<SamplesEsDTO> queryWrapper = esChainQueryWrapper().must()
-                .nestedQuery( SamplesEsDTO::getSamplesNesteds, (esQueryWrap) -> {
-                    esQueryWrap.mustNot().term("state", false);
-                    esQueryWrap.mustNot().term("id", 2L);
-                });
-        EsResponse<SamplesEsDTO> esResponse = queryWrapper.list();
-        //lambda写法
-        EsChainLambdaQueryWrapper<SamplesEsDTO> queryWrapper = esChainQueryWrapper().must()
-                .nestedQuery( SamplesEsDTO::getSamplesNesteds,SamplesNestedDTO.class, (esQueryWrap) -> {
-                    esQueryWrap.mustNot().term(SamplesNestedDTO::getState, false);
-                    esQueryWrap.mustNot().term(SamplesNestedDTO::getId, 2L);
-                });
-        EsResponse<SamplesEsDTO> esResponse = queryWrapper.list();
-
-        // 查询
+        // Lambda 写法（推荐）
+        EsResponse<SamplesEsDTO> esResponse = esChainQueryWrapper().must()
+                .nestedQuery(SamplesEsDTO::getSamplesNesteds, SamplesNestedDTO.class, (esQueryWrap) -> {
+                    esQueryWrap.mustNot()
+                        .term(SamplesNestedDTO::getState, false)
+                        .term(SamplesNestedDTO::getId, 2L);
+                })
+                .list();
         List<SamplesEsDTO> list = esResponse.getList();
     }
-    
-    
-    //优雅的nested嵌套查询
-    //三级嵌套对象附加innerHits查询方法  一级对象SamplesEsDTO 二级对象SamplesNestedDTO 三级对象 SamplesNestedInnerDTO
-    public void nested() {
-        //获取二级查询条件
-        Consumer<EsLambdaQueryWrapper<SamplesNestedDTO>> innerConsumer = getSamplesNestedConsumer();
-        //   InnerHit
-        InnerHitBuilder innerHitBuilder = new InnerHitBuilder("test");
-        innerHitBuilder.setSize(10);
-        //一级查询条件
-        EsChainLambdaQueryWrapper<SamplesEsDTO> queryWrapper = esChainQueryWrapper().must()
-                .nestedQuery(SamplesEsDTO::getSamplesNesteds, SamplesNestedDTO.class,
-                        innerConsumer, ScoreMode.None,innerHitBuilder);
-
-        EsResponse<SamplesEsDTO> esResponse = queryWrapper.list();
-        // 查询
-        List<SamplesEsDTO> list = esResponse.getList();
-    }
-
-    /**
-     *  获取二级嵌套查询对象
-     */
-    private Consumer<EsLambdaQueryWrapper<SamplesNestedDTO>> getSamplesNestedConsumer() {
-        Consumer<EsLambdaQueryWrapper<SamplesNestedDTO>> innerConsumer = (esQueryWrap) -> {
-            esQueryWrap.must().term(SamplesNestedDTO::getUsername, "3");
-            InnerHitBuilder innerHitBuilder1 = new InnerHitBuilder();
-            innerHitBuilder1.setSize(100);
-            Consumer<EsLambdaQueryWrapper<SamplesNestedInnerDTO>> innerInnerConsumer = getSamplesNestedInnerConsumer();
-            esQueryWrap.must().nestedQuery(SamplesNestedDTO::getSamplesNestedInner, SamplesNestedInnerDTO.class,
-                    innerInnerConsumer, ScoreMode.None, innerHitBuilder1);
-        };
-        return innerConsumer;
-    }
-
-    /**
-     *  获取三级嵌套查询对象
-     */
-    private Consumer<EsLambdaQueryWrapper<SamplesNestedInnerDTO>> getSamplesNestedInnerConsumer() {
-        Consumer<EsLambdaQueryWrapper<SamplesNestedInnerDTO>> innerInnerConsumer = (innerQuery) -> {
-            innerQuery.must().term(SamplesNestedInnerDTO::getUsername, 3);
-        };
-        return innerInnerConsumer;
-    }
-    
-    
 }
-```
-
-## 最新拦截器案例
-```java
-
-@Component
-@EsInterceptors(value = {
-        //需要拦截的类名和方法。 类EsPlusClient和EsPlusIndexClient。增删改查数据类,索引增删改类。参数中还可以指定索引名。
-        @InterceptorElement(type = EsPlusClient.class, methodName = "search")
-})
-public class EsSearchAfterInterceptor implements EsInterceptor {
-
-    @Override
-    public void before(String index, Method method, Object[] args) {
-        Integer page = null;
-        Integer size = null;
-        EsParamWrapper esParamWrapper = null;
-        EsQueryParamWrapper esQueryParamWrapper = null; 
-        for (Object arg : args) {
-            if (arg instanceof EsParamWrapper) {
-                esParamWrapper = (EsParamWrapper) arg; 
-                esQueryParamWrapper = esParamWrapper.getEsQueryParamWrapper();
-                page = esQueryParamWrapper.getPage();
-                size = esQueryParamWrapper.getSize();
-                if (esQueryParamWrapper.getEsSelect()!= null && !esQueryParamWrapper.getEsSelect().getFetch()){
-                    return;
-                }
-                if (esQueryParamWrapper.getSearchAfterValues()!=null){
-                    return;
-                }
-                break;
-            }
-        }
-        if (esParamWrapper == null || page == null | size == null) {
-            return;
-        } 
-        
-        //执行你的逻辑 
-    }
-
-    @Override
-    public void after(String index, Method method, Object[] args, Object result) {
-        Integer page = null;
-        Integer size = null; 
-        for (Object arg : args) {
-            if (arg instanceof EsParamWrapper) {
-                EsParamWrapper  esParamWrapper = (EsParamWrapper) arg;
-                EsQueryParamWrapper esQueryParamWrapper = esParamWrapper.getEsQueryParamWrapper(); 
-                page = esQueryParamWrapper.getPage();
-                size = esQueryParamWrapper.getSize();
-                if (esQueryParamWrapper.getEsSelect()!= null && !esQueryParamWrapper.getEsSelect().getFetch()){
-                    return;
-                }
-                break;
-            }
-        }
-        int endIndex = page * size;
-        EsResponse response = (EsResponse) result;
-
-
-        //执行你的逻辑
-         
-    }
- 
-
-}
-```
 
 
 ## Es版本
 遇到版本冲突使用6.7.0和7.8.0
 
-## 自动Reindex   reindex功能默认关闭，暂不建议生产开启。
-#### 如何开启:
-es-plus.global-config.auto-reindex=true
-#### 开启异步reindex
-es-plus.global-config.reindex-async=true
-#### 注意事项
-reindex会有部分删除数据的冗余.但是通过锁保证了新增和更新数据的错误.但是依然建议在业务低峰期执行.
-
-- [流程图](https://github.com/zhaohaoh/es-plus/blob/master/reindex%E6%B5%81%E7%A8%8B%E5%9B%BE.md)
-
 ## 作者
  微信:huangzhaohao1995
-
+![wx.png](wx.png)
 # 版权 | License
 
 [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)
-
 
