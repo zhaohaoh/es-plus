@@ -17,6 +17,15 @@ Es-Plus 是一个强大的 Elasticsearch API 增强工具，旨在简化 Elastic
 - **多数据源**：支持多个 ES 集群连接
 - **拦截器支持**：自定义 ES 执行前后的拦截逻辑
 
+## 新-es控制台类似navicat es-head的es查询编辑工具
+
+下载 es-plus-console 的 jar 包，使用 `java -jar` 启动后会自动打开网站：
+
+![img.png](img.png)
+![img_1.png](img_1.png)
+
+---
+
 ## 快速开始提醒
 
 ⚠️ **重要**：使用 es-plus 前，请确保：
