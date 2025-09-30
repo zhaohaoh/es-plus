@@ -1,4 +1,4 @@
-# Es-Plus 
+# Es-Plus - Elasticsearch Java Client 增强工具 | MyBatis-Plus 风格的 ES 操作库
 
 <p align="center">
   <a href="https://search.maven.org/artifact/io.github.zhaohaoh/es-plus-spring-boot-starter">
@@ -12,12 +12,46 @@
   </a>
 </p>
 
+<p align="center">
+  <img src="https://img.shields.io/badge/Elasticsearch-6.x%20%7C%207.x%20%7C%208.x-blue" alt="ES Version">
+  <img src="https://img.shields.io/badge/Java-8%2B-orange" alt="Java">
+  <img src="https://img.shields.io/badge/Spring%20Boot-2.x%20%7C%203.x-green" alt="Spring Boot">
+  <img src="https://img.shields.io/badge/Style-MyBatis--Plus-yellowgreen" alt="Style">
+</p>
+
 ![微信图片_20250930220753_82_239.png](%E5%BE%AE%E4%BF%A1%E5%9B%BE%E7%89%87_20250930220753_82_239.png)
 
+<p align="center">
+  <strong>简化 Elasticsearch 开发 | Lambda 链式查询 | 零侵入集成 | 代码量减少 60%</strong>
+</p>
+
+**关键词**: Elasticsearch Java Client, ES ORM, MyBatis-Plus 风格, Lambda 查询, Spring Boot 集成, 链式调用, Elasticsearch 封装
+
+---
 
 ## 📖 简介
 
-Es-Plus 是 Elasticsearch API 增强工具 - 只做增强不做改变，简化 `CRUD` 操作。
+Es-Plus 是一款 **Elasticsearch Java Client 增强工具**，采用 **MyBatis-Plus** 风格的 API 设计，为 Java 开发者提供简洁优雅的 Elasticsearch 操作体验。
+
+- 🎯 **面向对象**: MyBatis-Plus 风格的 Lambda 链式查询
+- 🚀 **零侵入**: 基于 RestHighLevelClient 和 Elasticsearch Java Client 扩展
+- 🔧 **开箱即用**: Spring Boot Starter 一键集成
+- 📦 **多版本支持**: 兼容 Elasticsearch 6.7 / 7.8 / 8.17
+- 💡 **简化开发**: 代码量减少 60%，告别繁琐的原生 API
+
+适合正在使用 **Elasticsearch + Spring Boot** 的 Java 开发者，特别是熟悉 **MyBatis-Plus** 的团队。
+
+## 🔍 为什么选择 Es-Plus?
+
+如果你正在搜索:
+- ✅ Elasticsearch Java 封装库
+- ✅ Elasticsearch ORM 框架
+- ✅ MyBatis-Plus 风格的 ES 客户端
+- ✅ Elasticsearch Lambda 查询工具
+- ✅ Spring Boot Elasticsearch 简化工具
+- ✅ Elasticsearch RestHighLevelClient 增强
+
+**那么 Es-Plus 就是你需要的!**
 
 ## ✨ 特性
 
