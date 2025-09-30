@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        java: [8, 11, 17]
+        java: [8, 17, 21]
 
     name: Build with Java ${{ matrix.java }}
 
@@ -32,5 +32,6 @@ jobs:
     - name: Build ES 7 Samples
       run: cd es-plus-samples && mvn compile -B -Dgpg.skip=true
 
-    - name: Build ES 8 Samples
+    - name: Build ES 8 Samples (requires Java 17+)
+      if: matrix.java != '8'
       run: cd es8-plus-samples && mvn compile -B -Dgpg.skip=true

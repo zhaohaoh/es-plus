@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        java: [8, 11, 17]
+        java: [8, 17, 21]
         es-version: [6.8.0, 7.8.0, 8.17.0]
         include:
           # ES 6.x 配置
@@ -28,6 +28,11 @@ jobs:
           - es-version: 8.17.0
             es-image: docker.elastic.co/elasticsearch/elasticsearch:8.17.0
             test-module: es8-plus-samples
+        # 排除不兼容的组合
+        exclude:
+          # ES 8.x requires Java 17+
+          - java: 8
+            es-version: 8.17.0
 
     # 启动 ES 容器
     services:

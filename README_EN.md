@@ -17,7 +17,7 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/Elasticsearch-6.x%20%7C%207.x%20%7C%208.x-blue" alt="ES Version">
-  <img src="https://img.shields.io/badge/Java-8%2B-orange" alt="Java">
+  <img src="https://img.shields.io/badge/Java-8%20%7C%2017%20%7C%2021-orange" alt="Java">
   <img src="https://img.shields.io/badge/Spring%20Boot-2.x%20%7C%203.x-green" alt="Spring Boot">
   <img src="https://img.shields.io/badge/Style-MyBatis--Plus-yellowgreen" alt="Style">
 </p>
