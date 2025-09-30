@@ -60,12 +60,12 @@ public interface IEsQueryWrapper<Children, QUERY, R> {
     
     Children parentIdQuery(boolean condition, String childType, String id);
     
-    default Children query(EpQueryBuilder queryBuilder) {
-        return query(true, queryBuilder);
+    default Children esQuery(EpQueryBuilder queryBuilder) {
+        return esQuery(true, queryBuilder);
     }
     
     // 修改3: QueryBuilder替换为EpQueryBuilder
-    Children query(boolean condition, EpQueryBuilder queryBuilder);
+    Children esQuery(boolean condition, EpQueryBuilder queryBuilder);
     
     default Children exists(R name) {
         return exists(true, name);

@@ -3,9 +3,7 @@ package com.es.plus.samples.test;
 import co.elastic.clients.elasticsearch._types.FieldValue;
 import co.elastic.clients.elasticsearch._types.aggregations.TermsAggregation;
 import co.elastic.clients.elasticsearch._types.query_dsl.TermsQuery;
-import co.elastic.clients.elasticsearch._types.query_dsl.TermsQueryField;
 import com.es.plus.common.EsPlusClientFacade;
-import com.es.plus.common.params.EsAggResponse;
 import com.es.plus.common.params.EsAggResult;
 import com.es.plus.common.params.EsIndexResponse;
 import com.es.plus.common.params.EsResponse;
@@ -106,7 +104,7 @@ public class FastTest {
                 .orginalQuery(builder);
         EsResponse<FastTestDTO> test = Es.chainLambdaQuery(FastTestDTO.class)
                 .sortByAsc("id")
-                .query(queryBuilder)
+                .esQuery(queryBuilder)
                 .term(FastTestDTO::getAge,111L)
                 .must(b->b.match(FastTestDTO::getText,"新来的朋友们啊"))
                 .search();
@@ -128,7 +126,7 @@ public class FastTest {
                             TermsAggregation.Builder username1 = new TermsAggregation.Builder().field("username");
                             TermsAggregation username = username1.build();
                             b.avg(FastTestDTO::getAge)
-                                    .add(new EpAggBuilder() .esOrginalAgg(username));
+                                    .esAgg(new EpAggBuilder().esOrginalAgg(username));
                         }
                 );
         EsResponse<FastTestDTO> test = fastTestDTOEsChainLambdaQueryWrapper.sortBy("ASC",FastTestDTO::getCreateTime)

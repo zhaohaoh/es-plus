@@ -292,8 +292,8 @@ public abstract class AbstractEsChainWrapper<T, R, Children extends AbstractEsCh
     
 
     @Override
-    public Children query(boolean condition, EpQueryBuilder queryBuilder) {
-        getWrapper().query(condition, queryBuilder);
+    public Children esQuery(boolean condition, EpQueryBuilder queryBuilder) {
+        getWrapper().esQuery(condition, queryBuilder);
         return children;
     }
 

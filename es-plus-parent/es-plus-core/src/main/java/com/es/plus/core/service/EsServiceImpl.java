@@ -416,7 +416,7 @@ public class EsServiceImpl<T> extends AbstractEsService<T> implements EsService<
         EpQueryBuilder epQueryBuilder = new EpQueryBuilder();
         epQueryBuilder.type("match_all");
         epQueryBuilder.name("match_all");
-        esQueryWrapper.must().query(epQueryBuilder);
+        esQueryWrapper.must().esQuery(epQueryBuilder);
         return esQueryWrapper;
     }
 }

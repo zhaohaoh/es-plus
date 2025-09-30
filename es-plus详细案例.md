@@ -741,7 +741,83 @@ public void paginationQuery() {
 }
 ```
 
-### 5.9 其他常用操作
+### 5.9 混用原生 ES 查询和聚合
+
+**适用场景**: es-plus 支持与原生 ES 查询混用,可在需要时使用原生 API
+
+#### 5.9.1 原生查询混用
+
+**ES 8.x 原生查询**:
+```java
+// 构建原生 ES8 查询
+TermsQuery.Builder builder = new TermsQuery.Builder();
+List<FieldValue> values = List.of("a", "新来的朋友们")
+    .stream().map(FieldValue::of).collect(Collectors.toList());
+builder.field("username").terms(b -> b.value(values));
+
+// 混用: 原生 + es-plus
+EsResponse<FastTestDTO> test = Es.chainLambdaQuery(FastTestDTO.class)
+    .sortByAsc("id")
+    .esQuery(new EpQueryBuilder().orginalQuery(builder))  // 原生查询
+    .term(FastTestDTO::getAge, 111L)  // es-plus 查询
+    .must(b -> b.match(FastTestDTO::getText, "新来的朋友们啊"))
+    .search();
+```
+
+**ES 7.x 原生查询**:
+```java
+// 构建原生 ES7 查询
+TermsQueryBuilder termsQuery = QueryBuilders.termsQuery("username", "a", "新来的朋友们");
+
+// 混用: 原生 + es-plus
+EsResponse<FastTestDTO> test = Es.chainLambdaQuery(FastTestDTO.class)
+    .sortByAsc("id")
+    .esQuery(new EpQueryBuilder().orginalQuery(termsQuery))  // 原生查询
+    .term(FastTestDTO::getAge, 111L)  // es-plus 查询
+    .must(b -> b.match(FastTestDTO::getText, "新来的朋友们啊"))
+    .search();
+```
+
+#### 5.9.2 原生聚合混用
+
+**ES 8.x 原生聚合**:
+```java
+// 构建原生 ES8 聚合
+TermsAggregation termsAgg = new TermsAggregation.Builder()
+    .field("username").build();
+
+// 混用: es-plus + 原生聚合
+Es.chainLambdaQuery(FastTestDTO.class)
+    .esLambdaAggWrapper()
+    .terms(FastTestDTO::getUsername)
+    .subAgg(b -> b.avg(FastTestDTO::getAge)
+                  .esAgg(new EpAggBuilder().esOrginalAgg(termsAgg)))
+    .search();
+```
+
+**ES 7.x 原生聚合**:
+```java
+// 构建原生 ES7 聚合
+TermsAggregationBuilder termsAgg = AggregationBuilders
+    .terms("username_agg").field("username");
+
+// 混用: es-plus + 原生聚合
+Es.chainLambdaQuery(FastTestDTO.class)
+    .esLambdaAggWrapper()
+    .terms(FastTestDTO::getUsername)
+    .subAgg(b -> b.avg(FastTestDTO::getAge)
+                  .esAgg(new EpAggBuilder().esOrginalAgg(termsAgg)))
+    .search();
+```
+
+**核心要点**:
+- 查询: `EpQueryBuilder().orginalQuery()` + `.esQuery()`
+- 聚合: `EpAggBuilder().esOrginalAgg()` + `.esAgg()`
+- ES8 用 Builder API, ES7 用 QueryBuilders/AggregationBuilders
+
+---
+
+### 5.10 其他常用操作
 
 ```java
 /**

@@ -354,6 +354,33 @@ public class SysUserEsService extends EsServiceImpl<SysUser> {
 
 ---
 
+## 💡 混用原生 ES API
+
+框架支持 es-plus 混搭原生 ES 写法。
+
+```java
+// ES 8.x: 使用原生 Builder API
+TermsQuery.Builder builder = new TermsQuery.Builder()
+    .field("username").terms(b -> b.value(List.of(FieldValue.of("admin"))));
+
+Es.chainLambdaQuery(User.class)
+    .esQuery(new EpQueryBuilder().orginalQuery(builder))
+    .term(User::getAge, 18)
+    .search();
+
+// ES 7.x: 使用 QueryBuilders
+TermsQueryBuilder query = QueryBuilders.termsQuery("username", "admin");
+
+Es.chainLambdaQuery(User.class)
+    .esQuery(new EpQueryBuilder().orginalQuery(query))
+    .term(User::getAge, 18)
+    .search();
+```
+
+**💡 查询用 `EpQueryBuilder().orginalQuery()`, 聚合用 `EpAggBuilder().esOrginalAgg()`**
+
+---
+
 ## 📌 版本说明
 
 遇到版本冲突时，建议使用以下版本：

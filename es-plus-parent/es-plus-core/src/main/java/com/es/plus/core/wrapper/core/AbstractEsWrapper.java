@@ -333,7 +333,7 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
     }
     
     @Override
-    public Children query(boolean condition, EpQueryBuilder queryBuilder) {
+    public Children esQuery(boolean condition, EpQueryBuilder queryBuilder) {
         if (condition) {
             queryBuilders.add(queryBuilder);
         }

@@ -60,7 +60,7 @@ public abstract class AbstractEsAggWrapper<T, R, Children extends AbstractEsAggW
     }
     
     @Override
-    public Children add(EpAggBuilder aggBuilder) {
+    public Children esAgg(EpAggBuilder aggBuilder) {
         currentBuilder = aggBuilder;
         aggregationBuilder.add(aggBuilder);
         return this.children;

@@ -27,8 +27,8 @@ public interface IEsAggWrapper<Children, R,T>  {
      *
      * @return {@link Children}
      */
-    default  Children add(EpAggBuilder epAggBuilder){
-        return add(epAggBuilder);
+    default  Children esAgg(EpAggBuilder epAggBuilder){
+        return esAgg(epAggBuilder);
     };
     /**
      * 统计
