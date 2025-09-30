@@ -21,11 +21,14 @@ Es-Plus 是Elasticsearch Api增强工具 - 只做增强不做改变，简化`CRU
 优化了查询api的使用，更贴近es的查询语法
 
 ``` xml
+      es6或7
       <dependency>
             <groupId>io.github.zhaohaoh</groupId>
             <artifactId>es-plus-spring-boot-starter</artifactId>
             <version>Latest Version</version>
         </dependency>
+         
+         es8版本
          <dependency>
             <groupId>io.github.zhaohaoh</groupId>
             <artifactId>es8-plus-spring-boot-starter</artifactId>
