@@ -81,19 +81,7 @@ public class FastTest {
                 
                 )
                 .subAgg(es->es.max("age"));
-        //例子
-        //        aggWrapper.filter("a",()-> this.fastTestService.esQueryWrapper().term("",""));
-        
-        //            List<FieldSortBuilder> fieldSortBuilders=new ArrayList<>();
-        //        FieldSortBuilder id_max = SortBuilders.fieldSort("id_max").order(SortOrder.ASC);
-        //        fieldSortBuilders.add(id_max);
-        //        BucketSortPipelineAggregationBuilder bucketSortPipelineAggregationBuilder = new BucketSortPipelineAggregationBuilder("username_terms",fieldSortBuilders);
-        //        bucketSortPipelineAggregationBuilder.from(0);
-        //        bucketSortPipelineAggregationBuilder.size(10);
-        //
-        //        EsPlus6Aggregations<FastTestDTO> aggregations = (EsPlus6Aggregations<FastTestDTO>) fastTestDTOEsChainLambdaQueryWrapper.aggregations();
-        //
-        //        System.out.println(aggregations);
+  
         EsAggResult<FastTestDTO> esAggResult = fastTestDTOEsChainLambdaQueryWrapper.aggregations().getEsAggResult();
         Map<String, EsAggResult<FastTestDTO>> usernameTerms = esAggResult.getMultiBucketNestedMap("username_terms");
         usernameTerms.forEach((k, v) -> {
