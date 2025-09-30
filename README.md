@@ -26,6 +26,11 @@ Es-Plus 是Elasticsearch Api增强工具 - 只做增强不做改变，简化`CRU
             <artifactId>es-plus-spring-boot-starter</artifactId>
             <version>Latest Version</version>
         </dependency>
+         <dependency>
+            <groupId>io.github.zhaohaoh</groupId>
+            <artifactId>es8-plus-spring-boot-starter</artifactId>
+            <version>Latest Version</version>
+        </dependency>
 ```
 ## 新-es控制台类似navicat es-head的es查询编辑工具。
 ### 下载es-plus-console的jar包 java -jar启动后 自动打开网站
