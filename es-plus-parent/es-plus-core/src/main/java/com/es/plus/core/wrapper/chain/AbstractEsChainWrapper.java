@@ -158,23 +158,35 @@ public abstract class AbstractEsChainWrapper<T, R, Children extends AbstractEsCh
     }
 
     @Override
+    public Children sortByAsc(R column) {
+        getWrapper().sortByAsc(column);
+        return children;
+    }
+
+    @Override
     public Children sortByDesc(String... columns) {
         getWrapper().sortByDesc(columns);
         return children;
     }
-    
+
+    @Override
+    public Children sortByDesc(R column) {
+        getWrapper().sortByDesc(column);
+        return children;
+    }
+
     @Override
     public Children sortByAsc(String path,String[] columns) {
         getWrapper().sortByAsc(path,columns);
         return children;
     }
-    
+
     @Override
     public Children sortByDesc(String path,String[] columns) {
         getWrapper().sortByDesc(path,columns);
         return children;
     }
-    
+
     
     @Override
     public Children sortBy(String order, EpNestedSortBuilder nestedSortBuilder,String... name){

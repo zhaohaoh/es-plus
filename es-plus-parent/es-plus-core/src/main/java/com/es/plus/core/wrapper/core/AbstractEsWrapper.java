@@ -1077,7 +1077,7 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
         }
         return children;
     }
-    
+
     @Override
     public Children sortByAsc(String... columns) {
         if (getEsQueryParamWrapper().getEsOrderList() == null) {
@@ -1091,7 +1091,20 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
         }
         return children;
     }
-    
+
+    @Override
+    public Children sortByAsc(R column) {
+        if (getEsQueryParamWrapper().getEsOrderList() == null) {
+            getEsQueryParamWrapper().setEsOrderList(new ArrayList<>());
+        }
+        String name = nameToString(column);
+        EsOrder esOrder = new EsOrder();
+        esOrder.setName(name);
+        esOrder.setSort(EpSortOrder.ASC.toString());
+        getEsQueryParamWrapper().getEsOrderList().add(esOrder);
+        return children;
+    }
+
     @Override
     public Children sortByDesc(String... columns) {
         if (getEsQueryParamWrapper().getEsOrderList() == null) {
@@ -1103,6 +1116,19 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
             esOrder.setSort(EpSortOrder.DESC.toString());
             getEsQueryParamWrapper().getEsOrderList().add(esOrder);
         }
+        return children;
+    }
+
+    @Override
+    public Children sortByDesc(R column) {
+        if (getEsQueryParamWrapper().getEsOrderList() == null) {
+            getEsQueryParamWrapper().setEsOrderList(new ArrayList<>());
+        }
+        String name = nameToString(column);
+        EsOrder esOrder = new EsOrder();
+        esOrder.setName(name);
+        esOrder.setSort(EpSortOrder.DESC.toString());
+        getEsQueryParamWrapper().getEsOrderList().add(esOrder);
         return children;
     }
     

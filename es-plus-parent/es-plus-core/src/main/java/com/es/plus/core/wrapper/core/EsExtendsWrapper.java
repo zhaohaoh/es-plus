@@ -115,13 +115,17 @@ public interface EsExtendsWrapper<Children, R> {
      * 排序
      */
     Children sortByAsc(String... columns);
-  
+
+    Children sortByAsc(R column);
+
     Children sortBy(String order, EpNestedSortBuilder nestedSortBuilder,String... name);
     /**
      * 排序
      */
     Children sortByDesc(String... columns);
- 
+
+    Children sortByDesc(R column);
+
     Children sortByAsc(String path,String[] columns);
 
     Children sortByDesc(String path,String[] columns);

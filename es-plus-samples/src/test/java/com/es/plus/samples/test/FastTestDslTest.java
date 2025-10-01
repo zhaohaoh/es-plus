@@ -137,24 +137,53 @@ public class FastTestDslTest {
         String dsl = Es.chainLambdaQuery(FastTestDTO.class)
                 .ge(FastTestDTO::getAge, 18L)
                 .le(FastTestDTO::getAge, 60L)
+                .sortByAsc(FastTestDTO::getAge)
+                .sortByDesc(FastTestDTO::getCreateTime)
                 .toDsl();
 
-        System.out.println("=== range 查询 DSL ===\n" + dsl);
+        System.out.println("=== range 查询 DSL (含排序) ===\n" + dsl);
 
         assertDslStructure(dsl, root -> {
             JsonNode must = root.path("query").path("bool").path("must");
             assertTrue(must.isArray());
 
-            boolean hasRange = false;
+            boolean hasGte = false;
+            boolean hasLte = false;
             for (JsonNode item : must) {
                 if (item.has("range") && item.path("range").has("age")) {
-                    hasRange = true;
                     JsonNode age = item.path("range").path("age");
-                    assertTrue(age.has("gte") || age.toString().contains("18"));
-                    assertTrue(age.has("lte") || age.toString().contains("60"));
+                    if (age.has("gte")) {
+                        hasGte = true;
+                        assertEquals(18, age.path("gte").asInt());
+                    }
+                    if (age.has("lte")) {
+                        hasLte = true;
+                        assertEquals(60, age.path("lte").asInt());
+                    }
                 }
             }
-            assertTrue(hasRange, "应该包含 range 查询");
+            assertTrue(hasGte, "应该包含 age >= 18 的 range 查询");
+            assertTrue(hasLte, "应该包含 age <= 60 的 range 查询");
+
+            // 验证排序
+            assertTrue(root.has("sort"), "应该包含 sort 字段");
+            JsonNode sort = root.path("sort");
+            assertTrue(sort.isArray(), "sort 应该是数组");
+            assertTrue(sort.size() >= 2, "应该至少有 2 个排序字段");
+
+            // 验证第一个排序是 age asc
+            JsonNode firstSort = sort.get(0);
+            assertTrue(firstSort.has("age"), "第一个排序字段应该是 age");
+            JsonNode ageSort = firstSort.path("age");
+            assertTrue(ageSort.has("order"), "age 排序应该有 order 字段");
+            assertEquals("asc", ageSort.path("order").asText(), "age 应该是升序排序");
+
+            // 验证第二个排序是 createTime desc
+            JsonNode secondSort = sort.get(1);
+            assertTrue(secondSort.has("createTime"), "第二个排序字段应该是 createTime");
+            JsonNode createTimeSort = secondSort.path("createTime");
+            assertTrue(createTimeSort.has("order"), "createTime 排序应该有 order 字段");
+            assertEquals("desc", createTimeSort.path("order").asText(), "createTime 应该是降序排序");
         });
     }
 
