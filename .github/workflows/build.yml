@@ -32,6 +32,13 @@ jobs:
     - name: Build ES 7 Samples
       run: cd es-plus-samples && mvn compile -B -Dgpg.skip=true
 
+    - name: Run FastTestDslTest (ES 7)
+      run: cd es-plus-samples && mvn test -B -Dtest=FastTestDslTest -Dgpg.skip=true
+
     - name: Build ES 8 Samples (requires Java 17+)
       if: matrix.java != '8'
       run: cd es8-plus-samples && mvn compile -B -Dgpg.skip=true
+
+    - name: Run FastTestDslTest (ES 8, requires Java 17+)
+      if: matrix.java != '8'
+      run: cd es8-plus-samples && mvn test -B -Dtest=FastTestDslTest -Dgpg.skip=true

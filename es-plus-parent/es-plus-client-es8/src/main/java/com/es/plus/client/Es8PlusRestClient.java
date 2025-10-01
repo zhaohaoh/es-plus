@@ -1267,7 +1267,27 @@ public class Es8PlusRestClient implements EsPlusClient {
         String tableName = getTableName(sql);
         return executeDSL(dsl, tableName);
     }
-    
+
+    @Override
+    public String toDsl(EsParamWrapper<?> esParamWrapper, String... index) {
+        SearchRequest.Builder searchBuilder = getSearchSourceBuilder(esParamWrapper, index);
+        try {
+            SearchRequest searchRequest = searchBuilder.build();
+            String fullString = searchRequest.toString();
+
+            // ES8 的 toString() 返回格式如: "SearchRequest: POST /index/_search {...}"
+            // 需要提取 JSON 部分
+            int jsonStart = fullString.indexOf('{');
+            if (jsonStart > 0) {
+                return fullString.substring(jsonStart);
+            }
+
+            return fullString;
+        } catch (Exception e) {
+            throw new EsException("toDsl error", e);
+        }
+    }
+
     @Override
     public boolean delete(String type, String id, String... indexs) {
         for (String index : indexs) {

@@ -523,7 +523,10 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
             if (queryLimit!=null && queryLimit >=0){
                 queryValue = StringUtils.substring(value,0,queryLimit);
             }
-            queryValue = "*"+queryValue+"*";
+            // 只有当值不包含通配符时才自动添加 *
+            if (!queryValue.contains("*") && !queryValue.contains("?")) {
+                queryValue = "*"+queryValue+"*";
+            }
             EpQueryBuilder wildcardQueryBuilder = new EpQueryBuilder(wildcardName, "wildcard")
                     .param("field", wildcardName)
                     .param("value", queryValue);
@@ -542,7 +545,10 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
             if (queryLimit!=null && queryLimit >=0){
                 queryValue = StringUtils.substring(value,0,queryLimit);
             }
-            queryValue = "*"+queryValue+"*";
+            // 只有当值不包含通配符时才自动添加 *
+            if (!queryValue.contains("*") && !queryValue.contains("?")) {
+                queryValue = "*"+queryValue+"*";
+            }
             EpQueryBuilder wildcardQueryBuilder = new EpQueryBuilder(wildcardName, "wildcard")
                     .param("field", wildcardName)
                     .param("value", queryValue);
@@ -551,7 +557,33 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
         }
         return children;
     }
-    
+
+    @Override
+    public Children prefix(boolean condition, R name, String value) {
+        if (condition) {
+            String prefixName = nameToString(name);
+            EpQueryBuilder prefixQueryBuilder = new EpQueryBuilder(prefixName, "prefix")
+                    .param("field", prefixName)
+                    .param("value", value);
+            currentBuilder = prefixQueryBuilder;
+            queryBuilders.add(prefixQueryBuilder);
+        }
+        return children;
+    }
+
+    @Override
+    public Children prefixKeyword(boolean condition, R name, String value) {
+        if (condition) {
+            String prefixName = nameToString(name) + ".keyword";
+            EpQueryBuilder prefixQueryBuilder = new EpQueryBuilder(prefixName, "prefix")
+                    .param("field", prefixName)
+                    .param("value", value);
+            currentBuilder = prefixQueryBuilder;
+            queryBuilders.add(prefixQueryBuilder);
+        }
+        return children;
+    }
+
     //有纠错能力的模糊查询。
     @Override
     public Children fuzzy(boolean condition, R name, String value, EpFuzziness fuzziness) {
@@ -559,8 +591,10 @@ public abstract class AbstractEsWrapper<T, R, Children extends AbstractEsWrapper
             String keyword = nameToString(name);
             EpQueryBuilder fuzzyQueryBuilder = new EpQueryBuilder(keyword, "fuzzy")
                     .param("field", keyword)
-                    .param("value", value)
-                    .param("fuzziness", fuzziness.getFuzziness());
+                    .param("value", value);
+            if (fuzziness!=null){
+                fuzzyQueryBuilder.param("fuzziness", fuzziness.getFuzziness());
+            }
             currentBuilder = fuzzyQueryBuilder;
             queryBuilders.add(fuzzyQueryBuilder);
         }

@@ -167,5 +167,15 @@ public class EsChainLambdaQueryWrapper<T> extends AbstractEsChainWrapper<T, SFun
     public String explainSQL(String sql) {
         return esPlusClientFacade.explain(sql);
     }
-    
+
+    /**
+     * 转换为DSL字符串（不执行查询）
+     *
+     * @return DSL JSON字符串
+     */
+    @Override
+    public String toDsl() {
+        return esPlusClientFacade.toDsl(esWrapper.esParamWrapper(), indexs);
+    }
+
 }

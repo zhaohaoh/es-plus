@@ -186,4 +186,13 @@ public interface EsPlusClient {
     EsIndexResponse getMappings(String indexName);
     
     String explain(String sql);
+
+    /**
+     * 转换为DSL字符串
+     *
+     * @param esParamWrapper es查询包装
+     * @param index          索引
+     * @return DSL JSON字符串
+     */
+    String toDsl(EsParamWrapper<?> esParamWrapper, String... index);
 }

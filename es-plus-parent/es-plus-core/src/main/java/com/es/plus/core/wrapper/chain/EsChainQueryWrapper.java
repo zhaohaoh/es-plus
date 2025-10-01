@@ -165,4 +165,8 @@ public class EsChainQueryWrapper<T> extends AbstractEsChainWrapper<T, String, Es
     public String sql2Dsl(String sql) {
         return esPlusClientFacade.sql2Dsl(sql);
     }
+    @Override
+    public String toDsl() {
+        return esPlusClientFacade.toDsl(esWrapper.esParamWrapper(), indexs);
+    }
 }

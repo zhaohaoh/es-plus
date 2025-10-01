@@ -654,8 +654,19 @@ public class EsPlusClientFacade   {
     public String getNodes() {
         return esPlusIndexClient.getNodes();
     }
-    
+
     public String getCmd(String cmd) {
         return esPlusIndexClient.cmdGet(cmd);
+    }
+
+    /**
+     * 转换为DSL字符串
+     *
+     * @param esParamWrapper es查询包装
+     * @param index          索引
+     * @return DSL JSON字符串
+     */
+    public String toDsl(EsParamWrapper<?> esParamWrapper, String... index) {
+        return esPlusClient.toDsl(esParamWrapper, index);
     }
 }

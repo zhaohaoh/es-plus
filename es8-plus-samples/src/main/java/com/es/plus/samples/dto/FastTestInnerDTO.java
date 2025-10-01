@@ -16,20 +16,15 @@ import java.util.List;
  * 举例4种类型索引
  */
 @Data
-@EsIndex(index = "fast_test_new_v6",alias = "fast_test_new_alias",tryReindex = true)
-@BulkProcessor
-public class FastTestDTO {
-    @EsId
-    private Long id;
+public class FastTestInnerDTO {
+  
     @EsField(type = EsFieldType.KEYWORD,ignoreAbove= 512)
     private String username;
     @EsField(type = EsFieldType.TEXT)
     private String text;
     @EsField(type = EsFieldType.LONG)
     private Long age;
-    
-    @EsField(type = EsFieldType.KEYWORD)
-    private List<String> testList;
+ 
     @EsField(type = EsFieldType.DATE, esFormat = "yyyy-MM-dd HH:mm:ss||strict_date_optional_time||epoch_millis",dateFormat = "yyyy-MM-dd HH:mm:ss",timeZone = "+0")
     private Date createTime;
 
@@ -39,9 +34,4 @@ public class FastTestDTO {
     private String username_test1;
     @EsField(type = EsFieldType.KEYWORD,name = "usernameTest13")
     private String username_test13;
-    @Score
-    private Float score;
-    
-    @EsField(type = EsFieldType.NESTED)
-    private FastTestInnerDTO fastTestInner;
 }

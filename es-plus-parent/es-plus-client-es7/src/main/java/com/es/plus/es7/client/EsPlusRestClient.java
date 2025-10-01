@@ -1019,7 +1019,13 @@ public class EsPlusRestClient implements EsPlusClient {
         String tableName = getTableName(sql);
         return executeDSL(dsl, tableName);
     }
-    
+
+    @Override
+    public String toDsl(EsParamWrapper<?> esParamWrapper, String... index) {
+        SearchSourceBuilder sourceBuilder = getSearchSourceBuilder(esParamWrapper);
+        return sourceBuilder.toString();
+    }
+
     @Override
     public String executeSQL(String sql) {
         String dsl = sql2Dsl(sql,false);

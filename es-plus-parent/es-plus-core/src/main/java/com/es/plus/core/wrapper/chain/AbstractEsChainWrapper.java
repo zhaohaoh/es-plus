@@ -333,8 +333,18 @@ public abstract class AbstractEsChainWrapper<T, R, Children extends AbstractEsCh
         getWrapper().termKeyword(condition, name, value);
         return children;
     }
-
-
+    
+    @Override
+    public Children prefix(boolean condition, R name, String value) {
+        getWrapper().prefix(condition, name, value);
+        return children;
+    }
+    
+    @Override
+    public Children prefixKeyword(boolean condition, R name, String value) {
+        getWrapper().prefix(condition, name, value);
+        return children;
+    }
     @Override
     public Children termsKeyword(boolean condition, R name, Object... values) {
         getWrapper().termsKeyword(condition, name, values);

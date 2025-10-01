@@ -367,10 +367,14 @@ public class EpQueryConverter {
             case "fuzzy":
                 String fuzzyField = (String) params.get("field");
                 Object fuzzyValue = params.get("value");
-                String fuzziness = (String) params.get("fuzziness");
+                Object fuzziness = params.get("fuzziness");
                 FuzzyQueryBuilder fuzzyQueryBuilder = QueryBuilders.fuzzyQuery(fuzzyField, fuzzyValue);
                 if (fuzziness != null) {
-                    fuzzyQueryBuilder.fuzziness(org.elasticsearch.common.unit.Fuzziness.build(fuzziness));
+                    if (fuzziness instanceof EpFuzziness) {
+                        fuzzyQueryBuilder.fuzziness(org.elasticsearch.common.unit.Fuzziness.build(((EpFuzziness) fuzziness).getFuzziness()));
+                    } else {
+                        fuzzyQueryBuilder.fuzziness(org.elasticsearch.common.unit.Fuzziness.build(fuzziness));
+                    }
                 }
                 if (params.containsKey("prefix_length")) {
                     fuzzyQueryBuilder.prefixLength((Integer) params.get("prefix_length"));

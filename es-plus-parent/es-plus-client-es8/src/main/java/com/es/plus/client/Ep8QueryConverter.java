@@ -121,16 +121,16 @@ public class Ep8QueryConverter {
                         if (from != null) {
                             field.gte(JsonData.of(from));
                         }
-                        if (params.containsKey("to")) {
-                            Object to = params.get("to");
-                            if (to != null) {
-                                field.lte(JsonData.of(to));
-                            }
+                    }
+                    if (params.containsKey("to")) {
+                        Object to = params.get("to");
+                        if (to != null) {
+                            field.lte(JsonData.of(to));
                         }
                     }
                     return field;
                 });
-                
+
                 esQuery = Query.of(q -> q.range(rangeQueryBuilder.build()));
                 break;
             
@@ -154,11 +154,15 @@ public class Ep8QueryConverter {
             case "fuzzy":
                 String fuzzyField = (String) params.get("field");
                 Object fuzzyValue = params.get("value");
-                String fuzziness = (String) params.get("fuzziness");
+                Object fuzziness = params.get("fuzziness");
                 FuzzyQuery.Builder fuzzyQueryBuilder = new FuzzyQuery.Builder();
                 fuzzyQueryBuilder.field(fuzzyField).value(fuzzyValue.toString());
                 if (fuzziness != null) {
-                    fuzzyQueryBuilder.fuzziness(fuzziness);
+                    if (fuzziness instanceof EpFuzziness) {
+                        fuzzyQueryBuilder.fuzziness(((EpFuzziness) fuzziness).getFuzziness());
+                    } else {
+                        fuzzyQueryBuilder.fuzziness(fuzziness.toString());
+                    }
                 }
                 if (params.containsKey("prefix_length")) {
                     fuzzyQueryBuilder.prefixLength((Integer) params.get("prefix_length"));

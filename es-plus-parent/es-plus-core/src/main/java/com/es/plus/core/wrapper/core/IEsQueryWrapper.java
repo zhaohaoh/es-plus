@@ -145,15 +145,27 @@ public interface IEsQueryWrapper<Children, QUERY, R> {
     default Children wildcard(R name, String value) {
         return wildcard(true, name, value);
     }
-    
+
     Children wildcard(boolean condition, R name, String value);
-    
+
     default Children wildcardKeyword(R name, String value) {
         return wildcardKeyword(true, name, value);
     }
-    
+
     Children wildcardKeyword(boolean condition, R name, String value);
-    
+
+    default Children prefix(R name, String value) {
+        return prefix(true, name, value);
+    }
+
+    Children prefix(boolean condition, R name, String value);
+
+    default Children prefixKeyword(R name, String value) {
+        return prefixKeyword(true, name, value);
+    }
+
+    Children prefixKeyword(boolean condition, R name, String value);
+
     default Children fuzzy(R name, String value, EpFuzziness fuzziness) {
         return fuzzy(true, name, value, fuzziness);
     }

@@ -41,4 +41,6 @@ public class FastTestDTO {
     private String username_test13;
     @Score
     private Float score;
+    @EsField(type = EsFieldType.NESTED)
+    private FastTestInnerDTO fastTestInner;
 }

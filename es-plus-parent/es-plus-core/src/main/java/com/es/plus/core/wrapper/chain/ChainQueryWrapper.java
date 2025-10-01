@@ -80,6 +80,13 @@ interface ChainQueryWrapper<T> {
     String executeSQL(String sql);
     
     String sql2Dsl(String sql);
-    
+
     String explainSQL(String sql);
+
+    /**
+     * 转换为DSL字符串（不执行查询）
+     *
+     * @return DSL JSON字符串
+     */
+    String toDsl();
 }

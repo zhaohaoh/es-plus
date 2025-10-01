@@ -7,6 +7,7 @@ import com.es.plus.constant.EsFieldType;
 import org.apache.commons.lang3.StringUtils;
 
 import java.lang.reflect.Field;
+import java.util.Locale;
 
 /**
  * 注释解析工具
@@ -50,7 +51,7 @@ public class AnnotationResolveUtil {
         esFieldInfo.setEsId(true);
         esFieldInfo.setName(esId.name());
         esFieldInfo.setExist(true);
-        esFieldInfo.setType(EsFieldType.valueOf(fieldType));
+        esFieldInfo.setType(EsFieldType.valueOf(fieldType.toUpperCase(Locale.ROOT)));
         return esFieldInfo;
     }
 
