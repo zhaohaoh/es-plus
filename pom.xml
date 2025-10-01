@@ -22,7 +22,7 @@
         <!-- 打包跳过单元测试 -->
         <skipTests>true</skipTests>
 <!--   SNAPSHOT  -->
-        <revision>0.4.90</revision>
+        <revision>0.4.91</revision>
         <elasticsearch.version>7.8.0</elasticsearch.version>
         <!-- 解决编译时，编码警告乱码 -->
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
