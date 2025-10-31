@@ -25,25 +25,18 @@ import java.util.Objects;
 import java.util.Optional;
 
 public class ClientUtil {
-    
-    /**
-     * 初始化esplus连接
-     * @param key
-     * @param clientProperties
-     * @param esInterceptors
-     * @return
-     */
-    public  static EsPlusClientFacade initAndPutEsPlusClientFacade(String key, ClientProperties clientProperties,
-            List<EsInterceptor> esInterceptors){
+    public  static EsPlusClientFacade initAndPutEsPlusClientFacade(String key, ClientProperties clientProperties){
         String address = clientProperties.getAddress();
         address = StringUtils.replace(address,"http://","");
         address = StringUtils.replace(address,"https://","");
         clientProperties.setAddress(address);
         
+        
         RestHighLevelClient restHighLevelClient = ClientUtil.getRestHighLevelClient(clientProperties);
+        String version = ClientContext.getVersion(restHighLevelClient);
         EsPlusClientFacade esPlusClientFacade = ClientContext.buildEsPlusClientFacade(clientProperties.getAddress(),
                 restHighLevelClient,
-                esInterceptors);
+                null,Integer.parseInt(version));
         ClientContext.addClient(key, esPlusClientFacade);
         return esPlusClientFacade;
     }
@@ -104,7 +97,7 @@ public class ClientUtil {
                 return requestConfigBuilder;
             });
         }
-
+        
         return new RestHighLevelClient(builder);
     }
     

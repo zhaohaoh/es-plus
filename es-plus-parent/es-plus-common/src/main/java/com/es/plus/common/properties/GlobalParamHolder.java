@@ -21,26 +21,47 @@ import java.util.concurrent.ConcurrentHashMap;
 @SuppressWarnings("all")
 public class GlobalParamHolder {
     private static final Logger logger = LoggerFactory.getLogger(GlobalParamHolder.class);
- 
+    
     // id的线程本地变量
     private static final  Map<String,String> _ID = new ConcurrentHashMap<>();
-
+    
     // 分词处理器
     private static final Map<String, Map> ANALYSIS_MAP = new ConcurrentHashMap<>();
-
+    
     // 实体类对象存储
     private static final Map<String, EsEntityInfo> ES_ENTITY_INFO_MAP = new ConcurrentHashMap<>();
-
-
-    public static EsEntityInfo getEsEntityInfo(Class<?> clazzName) {
-        return ES_ENTITY_INFO_MAP.computeIfAbsent(clazzName.getName(),a->new EsEntityInfo());
+    
+    // 索引为key的实体类对象存储
+    private static final Map<String, EsEntityInfo> ES_INDEX_ENTITY_INFO_MAP = new ConcurrentHashMap<>();
+    
+    public static EsEntityInfo getEsEntityInfoByIndex(String index) {
+        EsEntityInfo esEntityInfo = ES_INDEX_ENTITY_INFO_MAP.get(index);
+        if (esEntityInfo != null){
+            return esEntityInfo;
+        }else {
+            for (EsEntityInfo value : ES_ENTITY_INFO_MAP.values()) {
+                String[] idxArr = value.getEsIndexParam().getIndex();
+                for (String idx : idxArr) {
+                    if (idx.equals(index)) {
+                        ES_INDEX_ENTITY_INFO_MAP.put(idx,value);
+                        return value;
+                    }
+                }
+            }
+        }
+        return esEntityInfo;
     }
-
+    
+    public static EsEntityInfo getEsEntityInfo(Class<?> clazzName) {
+        EsEntityInfo esEntityInfo = ES_ENTITY_INFO_MAP.computeIfAbsent(clazzName.getName(), a -> new EsEntityInfo());
+        return esEntityInfo;
+    }
+    
     public static <T> String getDocId(String index,T obj) {
         Class<T> clazz = (Class<T>) ClassUtils.getClass(obj.getClass());
         try {
             EsEntityInfo esEntityInfo = ES_ENTITY_INFO_MAP.get(clazz.getName());
-    
+            
             String idFeildName = null;
             //对象字段
             if (esEntityInfo != null) {
@@ -54,8 +75,8 @@ public class GlobalParamHolder {
             if (idFeildName == null) {
                 idFeildName = GlobalConfigCache.GLOBAL_CONFIG.getGlobalEsId();
             }
-        
-          
+            
+            
             //如果map字段获取不到id走自动生成
             if (obj instanceof Map) {
                 Object _id = ((Map<?, ?>) obj).get("_id");
@@ -89,21 +110,21 @@ public class GlobalParamHolder {
         // es自动生成id
         return UUID.randomUUID().toString().replace("-", "");
     }
-
-
+    
+    
     public static String _id(String index) {
         String _id = _ID.get(index);
         return _id;
     }
-
+    
     public static void set_id(String[] indexs,String _id) {
         for (String index : indexs) {
             _ID.put(index,_id);
         }
-       
+        
     }
-
-
+    
+    
     /**
      * 得到es索引参数  初始化EsEntityInfo的入口
      *
@@ -118,19 +139,19 @@ public class GlobalParamHolder {
         }
         EsEntityInfo esEntityInfo = getEsEntityInfo(clazz);
         EsIndexParam indexParam = esEntityInfo.getEsIndexParam();
-         return indexParam;
+        return indexParam;
     }
-
-
+    
+    
     public static String getStringKeyword(Class<?> clazz, String name) {
         EsEntityInfo esEntityInfo = ES_ENTITY_INFO_MAP.computeIfAbsent(clazz.getName(), e -> new EsEntityInfo());
         return esEntityInfo.getConvertKeywordMap().get(name);
     }
-
+    
     public static Map getAnalysis(String name) {
         return ANALYSIS_MAP.get(name);
     }
-
+    
     public static void putAnalysis(String name, Map map) {
         Map value = ANALYSIS_MAP.get(name);
         if (value != null) {
@@ -138,7 +159,7 @@ public class GlobalParamHolder {
         }
         ANALYSIS_MAP.put(name, map);
     }
-
+    
     /**
      * 取索引字段信息
      *
@@ -156,5 +177,5 @@ public class GlobalParamHolder {
         return esEntityInfo.getFieldsInfoMap().get(name);
     }
     
-
+    
 }

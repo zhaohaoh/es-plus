@@ -27,7 +27,7 @@ public class EsClientProperties {
      * 集群地址，多个用,隔开
      */
     private String address;
-
+    
     /**
      * 模式
      */
@@ -36,12 +36,16 @@ public class EsClientProperties {
     /**
      * 用户名称
      */
-
+    
     private String username;
-
+    
     /**
      * 密码
      */
     private String password;
- 
+    
+    /**
+     * 密码
+     */
+    private String version;
 }

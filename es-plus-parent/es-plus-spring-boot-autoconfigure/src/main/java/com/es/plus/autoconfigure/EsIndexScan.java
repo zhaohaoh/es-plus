@@ -1,17 +1,14 @@
 package com.es.plus.autoconfigure;
 
+import com.es.plus.autoconfigure.auto.EsAutoConfiguration;
 import org.springframework.context.annotation.Import;
 
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import java.lang.annotation.*;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 @Documented
-@Import(EsIndexScanRegister.class)
+@Import({EsAutoConfiguration.class, EsIndexScanRegister.class})
 public @interface EsIndexScan {
     
     /**

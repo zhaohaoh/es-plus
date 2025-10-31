@@ -147,7 +147,7 @@ public class EsReindexProcess {
         return false;
     }
     
-    //有事临时编写的代码
+    
     private static boolean settingsUpdate(EsIndexResponse indexResponse, String currentIndex, Class<?> clazz,
             EsPlusClientFacade esPlusClientFacade) {
         EsIndexParam esIndexParam = IndexContext.getIndex(clazz);
@@ -160,7 +160,7 @@ public class EsReindexProcess {
                 settings.get(NUMBER_OF_SHARDS) != null ? Integer.parseInt(settings.get(NUMBER_OF_SHARDS).toString()) : 5;
         Integer remoteMaxResultWindow =
                 settings.get(MAX_RESULT_WINDOW) != null ? Integer.parseInt(settings.get(MAX_RESULT_WINDOW).toString()) : 10000;
-        Object object = settings.get("index.refresh_interval");
+        Object object = settings.get("refresh_interval");
         String remoteRefreshInterval =null;
         if (object!=null){
             remoteRefreshInterval = object.toString();
@@ -198,9 +198,9 @@ public class EsReindexProcess {
     
     private static boolean analysisChange(Map<String, Object> settings, Map<String, Object> analysis) {
         Map<StringBuilder, Object> analysisList = new LinkedHashMap<>();
-        buildAnalysis(analysis, analysisList, new StringBuilder("index.analysis."));
+        buildAnalysis(analysis, analysisList, new StringBuilder("analysis."));
         
-        long count = settings.keySet().stream().filter(a -> a.startsWith("index.analysis.")).count();
+        long count = settings.keySet().stream().filter(a -> a.startsWith("analysis.")).count();
         
         //如果es的配置比本地的多的话要reindex
         if (count > analysisList.size()) {

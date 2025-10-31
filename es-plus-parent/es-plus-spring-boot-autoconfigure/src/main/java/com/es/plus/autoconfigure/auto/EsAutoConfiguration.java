@@ -29,7 +29,7 @@ import static com.es.plus.constant.EsConstant.MASTER;
  */
 @AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
 @Configuration
-@DependsOn("esClientConfiguration")
+@DependsOn({"esClientConfiguration","epGlobalConfigCacheConfigration"})
 @ComponentScan(basePackages = "com.es.plus")
 public class EsAutoConfiguration {
     

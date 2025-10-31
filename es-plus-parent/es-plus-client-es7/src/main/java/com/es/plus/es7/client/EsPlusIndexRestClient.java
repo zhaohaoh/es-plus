@@ -350,7 +350,9 @@ public class EsPlusIndexRestClient implements EsPlusIndexClient {
             Map<String, Settings> settings = getIndexResponse.getSettings();
             
             settings.forEach((k, v) -> {
-                settingsMap.put(k, v.toString());
+                String string = v.toString();
+                string = string.replace("index.","");
+                settingsMap.put(k, string);
             });
             
             

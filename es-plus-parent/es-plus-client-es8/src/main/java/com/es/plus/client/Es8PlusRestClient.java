@@ -565,7 +565,7 @@ public class Es8PlusRestClient implements EsPlusClient {
             builder.refresh(true);
             String[] routings = esQueryParamWrapper.getRoutings();
             if (routings != null) {
-                builder.routing(routings[0]);
+                builder.routing(StringUtils.join(routings, ","));
             }
             if (esQueryParamWrapper.getPreference()!=null) {
                 builder.preference(esQueryParamWrapper.getPreference());
@@ -649,7 +649,7 @@ public class Es8PlusRestClient implements EsPlusClient {
             builder.query(queryBuilder);
             String[] routings = esQueryParamWrapper.getRoutings();
             if (routings != null) {
-                builder.routing(routings[0]);
+                builder.routing(StringUtils.join(routings, ","));
             }
             builder.scrollSize((long) GlobalConfigCache.GLOBAL_CONFIG.getBatchSize());
             // 一般需要加上requests_per_second来控制.若不加可能执行时间比较长，造成es瞬间io巨大，属于危险操作.此参数用于限流。真实查询数据是batchsize控制
@@ -1058,7 +1058,7 @@ public class Es8PlusRestClient implements EsPlusClient {
             // 设置路由等其他参数
             String[] routings = esQueryParamWrapper.getRoutings();
             if (routings != null && routings.length > 0) {
-                searchBuilder.routing(routings[0]);
+                searchBuilder.routing(StringUtils.join(routings, ","));
             }
             
             if (esQueryParamWrapper.getPreference() != null) {
@@ -1267,27 +1267,27 @@ public class Es8PlusRestClient implements EsPlusClient {
         String tableName = getTableName(sql);
         return executeDSL(dsl, tableName);
     }
-
+    
     @Override
     public String toDsl(EsParamWrapper<?> esParamWrapper, String... index) {
         SearchRequest.Builder searchBuilder = getSearchSourceBuilder(esParamWrapper, index);
         try {
             SearchRequest searchRequest = searchBuilder.build();
             String fullString = searchRequest.toString();
-
+            
             // ES8 的 toString() 返回格式如: "SearchRequest: POST /index/_search {...}"
             // 需要提取 JSON 部分
             int jsonStart = fullString.indexOf('{');
             if (jsonStart > 0) {
                 return fullString.substring(jsonStart);
             }
-
+            
             return fullString;
         } catch (Exception e) {
             throw new EsException("toDsl error", e);
         }
     }
-
+    
     @Override
     public boolean delete(String type, String id, String... indexs) {
         for (String index : indexs) {

@@ -1,12 +1,11 @@
 package com.es.plus.web;
 
-import com.es.plus.autoconfigure.EsIndexScan;
+
 import com.es.plus.web.compile.core.DynamicCodeCompiler;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-@EsIndexScan
 public class WebApplication {
     
     public static void main(String[] args) {
@@ -15,5 +14,5 @@ public class WebApplication {
         SpringApplication.run(WebApplication.class, args);
     }
     
-   
+    
 }
