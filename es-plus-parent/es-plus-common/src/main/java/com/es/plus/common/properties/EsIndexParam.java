@@ -7,12 +7,7 @@ import com.es.plus.common.util.SpelUtil;
 import lombok.Data;
 import org.apache.commons.lang3.StringUtils;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Data
@@ -63,6 +58,15 @@ public class EsIndexParam {
      */
     private String clientInstance;
     
+    /**
+     * 路由字段
+     */
+    private String routing;
+    
+    /**
+     * 路由字段
+     */
+    private Boolean routingRequired;
     /**
      * 是否使用了动态索引名
      */

@@ -1,5 +1,7 @@
 package com.es.plus.autoconfigure;
 
+import com.es.plus.annotation.*;
+import com.es.plus.autoconfigure.interceptor.EsReindexInterceptor;
 import com.es.plus.common.EsPlusClientFacade;
 import com.es.plus.common.config.ConnectFailHandleEnum;
 import com.es.plus.common.exception.EsException;
@@ -13,17 +15,7 @@ import com.es.plus.common.properties.EsIndexParam;
 import com.es.plus.common.properties.GlobalParamHolder;
 import com.es.plus.common.util.AnnotationResolveUtil;
 import com.es.plus.common.util.ClassUtils;
-import com.es.plus.annotation.BulkProcessor;
-import com.es.plus.annotation.EsField;
-import com.es.plus.annotation.EsId;
-import com.es.plus.annotation.EsIndex;
-import com.es.plus.annotation.Score;
-import com.es.plus.autoconfigure.interceptor.EsReindexInterceptor;
-import com.es.plus.constant.Analyzer;
-import com.es.plus.constant.DefaultClass;
-import com.es.plus.constant.EsConstant;
-import com.es.plus.constant.EsFieldType;
-import com.es.plus.constant.JavaTypeEnum;
+import com.es.plus.constant.*;
 import com.es.plus.core.ClientContext;
 import com.es.plus.core.process.EsReindexProcess;
 import com.es.plus.core.statics.Es;
@@ -41,13 +33,7 @@ import org.springframework.util.CollectionUtils;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
@@ -119,7 +105,7 @@ public class IndexScanProccess implements InitializingBean, ApplicationListener<
                 for (String index : esIndexParam.getIndex()) {
                     esPlusClientFacade.getEsPlusClient().addBulkProcessor(bulkProcessorParam, index);
                 }
-            
+                
             }
             
             // 参数设置
@@ -206,9 +192,9 @@ public class IndexScanProccess implements InitializingBean, ApplicationListener<
                     } else {
                         esPlusClientFacade.createIndexMapping(index, indexClass);
                         exists = true;
+                        log.info("init es-plus index={}", index);
                     }
                     esIndexParam.setExists(exists);
-                    log.info("init es-plus index={}", index);
                 } else {
                     //异步更新reindex后的index的任务
                     reindexTask(esPlusClientFacade, esIndexParam, index);
@@ -228,7 +214,7 @@ public class IndexScanProccess implements InitializingBean, ApplicationListener<
             EsReindexResult record;
             try {
                 boolean exists = Es.chainIndex().index("es_plus_reindex_record").indexExists();
-                if (!exists){
+                if (!exists) {
                     return index;
                 }
                 record = Es.chainQuery(EsReindexResult.class).index("es_plus_reindex_record")._id(currentIndex).search()
@@ -281,13 +267,13 @@ public class IndexScanProccess implements InitializingBean, ApplicationListener<
                         ELock eLock = esPlusClientFacade.getLock(annotationIndex + EsConstant.REINDEX_LOCK_SUFFIX);
                         eLock.unlock();
                         break;
-                    }else{
+                    } else {
                         try {
                             Thread.sleep(10000);
                         } catch (InterruptedException e) {
                         }
                     }
-                }else{
+                } else {
                     break;
                 }
             }
@@ -310,6 +296,13 @@ public class IndexScanProccess implements InitializingBean, ApplicationListener<
             childProperties.forEach(mappingProperties::putIfAbsent);
         }
         mapping.put(EsConstant.PROPERTIES, mappingProperties);
+        String routing = esIndexParam.getRouting();
+        
+        if (StringUtils.isNotBlank(routing) && esIndexParam.getRoutingRequired()) {
+            Map<String, Object> routingMap = new LinkedHashMap<>(2);
+            routingMap.put("required", true);
+            mapping.put(EsConstant.ROUTING, routingMap);
+        }
         return mapping;
     }
     
@@ -317,7 +310,7 @@ public class IndexScanProccess implements InitializingBean, ApplicationListener<
     /**
      * 构建es参数
      *
-     * @param tClass   t类
+     * @param tClass t类
      * @return {@link EsIndexParam}
      */
     public EsIndexParam buildEsIndexParam(Class<?> tClass) {
@@ -353,7 +346,7 @@ public class IndexScanProccess implements InitializingBean, ApplicationListener<
         }
         String[] index = esIndexParam.getIndex();
         for (String idx : index) {
-            getReindexNewIndexName(idx,esIndexParam);
+            getReindexNewIndexName(idx, esIndexParam);
         }
         
         
@@ -455,6 +448,12 @@ public class IndexScanProccess implements InitializingBean, ApplicationListener<
             // 解析自定义注解
             EsField esField = field.getAnnotation(EsField.class);
             
+            Routing routing = field.getAnnotation(Routing.class);
+            if (routing != null) {
+                indexParam.setRouting(StringUtils.isNotBlank(esField.name()) ? esField.name() : field.getName());
+                indexParam.setRoutingRequired(routing.required());
+            }
+            
             // 获取es字段类型
             String fieldType = processNestedObjects(field, esField, properties, indexParam);
             
@@ -462,7 +461,7 @@ public class IndexScanProccess implements InitializingBean, ApplicationListener<
             processAnnotationEsField(properties, esField);
             
             if (esId != null) {
-                esFieldInfo = AnnotationResolveUtil.resolveEsId(esId,fieldType);
+                esFieldInfo = AnnotationResolveUtil.resolveEsId(esId, fieldType);
                 entityInfo.setIdName(
                         StringUtils.isNotBlank(esFieldInfo.getName()) ? esFieldInfo.getName() : field.getName());
             }
@@ -705,7 +704,7 @@ public class IndexScanProccess implements InitializingBean, ApplicationListener<
                 middle = "#{" + middle + "}";
             }
             // 返回结果数组
-            return new String[] {prefix, middle, suffix};
+            return new String[]{prefix, middle, suffix};
         } else {
             return null;
         }

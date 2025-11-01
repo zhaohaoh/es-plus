@@ -23,42 +23,42 @@ public class EsFieldInfo {
      * @return {@link String}
      */
     private String name;
-
+    
     /**
      * 类型
      *
      * @return {@link EsFieldType}
      */
     private EsFieldType type;
-
+    
     /**
      * 是否被索引
      *
      * @return boolean
      */
     private boolean index;
-
+    
     /**
      * 搜索分析仪
      *
      * @return {@link String}
      */
     private String searchAnalyzer;
-
+    
     /**
      * 分析仪
      *
      * @return {@link String}
      */
     private String analyzer;
-
+    
     /**
      * 是否存储
      *
      * @return boolean
      */
     private boolean store;
-
+    
     /**
      * 设置text可以进行聚合操作 会有性能问题。会把text数据加载到内存中。  默认keyword类型使用的是Doc Values
      * 默认建立doc_values,即字段类型为keyword，他不会创建分词，就会默认建立doc_value，如果我们不想该字段参与聚合排序，我们可以设置doc_values=false
@@ -66,13 +66,13 @@ public class EsFieldInfo {
      * @return 是否设置可聚合
      */
     private boolean fieldData;
-
+    
     /**
      * 设置keyword字段处理器 只会设置keyword类型字段
      * 全局目前已配置自带的转小写normalizer
      */
     private String normalizer;
-
+    
     /**
      * 把字段复制到某一个字段。搜索的时候根据这个字段搜索。无需合并倒排链
      * 类似联合索引
@@ -81,23 +81,22 @@ public class EsFieldInfo {
      * 对整合后的字段聚合的话，会得到多个字段的聚合结果  目标对象text和keyword类型都能使用
      */
     private String[] copyTo;
-
+    
     /**
      * 存在
      *
      * @return boolean
      */
     private boolean exist;
-
-
-
+    
+    
     /**
      * es的日期支持的存储格式。 || 可以指定多个   但不是正反序列化使用的格式  但是date转换成string的序列化不归此参数管理
      *
      * @return {@link String}
      */
     private String esFormat;
-
+    
     /**
      * 指定时间类型序列化存储的格式
      */
@@ -126,25 +125,25 @@ public class EsFieldInfo {
     private boolean eagerGlobalOrdinals;
     
     /**
-     *  keyword字段设置可以用来检索的长度，默认256 如果不设置，es对keyword字段的存储长度有限制 默认3XXXX
-     *  且默认字段全长都会用来检索
+     * keyword字段设置可以用来检索的长度，默认256 如果不设置，es对keyword字段的存储长度有限制 默认3XXXX
+     * 且默认字段全长都会用来检索
      */
     private Integer ignoreAbove;
-
+    
+    
     /**
      * 父
      *
      * @return {@link String}
      */
     private String parent;
-
+    
     /**
      * 子
      *
      * @return {@link String}
      */
     private String child;
-
-
+    
+    
 }
-

@@ -1,34 +1,13 @@
 package com.es.plus.client;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
-import co.elastic.clients.elasticsearch._types.Conflicts;
-import co.elastic.clients.elasticsearch._types.ElasticsearchException;
-import co.elastic.clients.elasticsearch._types.ErrorResponse;
-import co.elastic.clients.elasticsearch._types.FieldValue;
-import co.elastic.clients.elasticsearch._types.Refresh;
-import co.elastic.clients.elasticsearch._types.Result;
-import co.elastic.clients.elasticsearch._types.Script;
-import co.elastic.clients.elasticsearch._types.SearchType;
-import co.elastic.clients.elasticsearch._types.SortOptions;
-import co.elastic.clients.elasticsearch._types.Time;
+import co.elastic.clients.elasticsearch._types.*;
 import co.elastic.clients.elasticsearch._types.aggregations.Aggregate;
 import co.elastic.clients.elasticsearch._types.aggregations.Aggregation;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import co.elastic.clients.elasticsearch.core.*;
-import co.elastic.clients.elasticsearch.core.bulk.BulkOperation;
-import co.elastic.clients.elasticsearch.core.bulk.BulkResponseItem;
-import co.elastic.clients.elasticsearch.core.bulk.DeleteOperation;
-import co.elastic.clients.elasticsearch.core.bulk.IndexOperation;
-import co.elastic.clients.elasticsearch.core.bulk.UpdateAction;
-import co.elastic.clients.elasticsearch.core.bulk.UpdateOperation;
-import co.elastic.clients.elasticsearch.core.search.Highlight;
-import co.elastic.clients.elasticsearch.core.search.Hit;
-import co.elastic.clients.elasticsearch.core.search.HitsMetadata;
-import co.elastic.clients.elasticsearch.core.search.InnerHitsResult;
-import co.elastic.clients.elasticsearch.core.search.ResponseBody;
-import co.elastic.clients.elasticsearch.core.search.SourceConfig;
-import co.elastic.clients.elasticsearch.core.search.SourceFilter;
-import co.elastic.clients.elasticsearch.core.search.TrackHits;
+import co.elastic.clients.elasticsearch.core.bulk.*;
+import co.elastic.clients.elasticsearch.core.search.*;
 import co.elastic.clients.elasticsearch.indices.GetMappingRequest;
 import co.elastic.clients.elasticsearch.indices.GetMappingResponse;
 import co.elastic.clients.elasticsearch.indices.get_mapping.IndexMappingRecord;
@@ -44,10 +23,7 @@ import com.es.plus.common.pojo.es.EpBoolQueryBuilder;
 import com.es.plus.common.pojo.es.EpBulkResponse;
 import com.es.plus.common.properties.EsIndexParam;
 import com.es.plus.common.properties.GlobalParamHolder;
-import com.es.plus.common.util.BeanUtils;
-import com.es.plus.common.util.FieldUtils;
-import com.es.plus.common.util.JsonUtils;
-import com.es.plus.common.util.ResolveUtils;
+import com.es.plus.common.util.*;
 import com.es.plus.util.BulkProcessorConfig;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -63,6 +39,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class Es8PlusRestClient implements EsPlusClient {
@@ -84,6 +61,7 @@ public class Es8PlusRestClient implements EsPlusClient {
     public void addBulkProcessor(BulkProcessorParam bulkProcessorParam, String index) {
         BulkProcessorConfig.getBulkProcessor(elasticsearchClient, bulkProcessorParam, index);
     }
+    
     /**
      * 异步定时批量保存接口
      */
@@ -171,39 +149,25 @@ public class Es8PlusRestClient implements EsPlusClient {
         }
     }
     
-    /**
-     * saveOrUpdate
-     */
-    private BulkOperation getUpsertOperation(String type, String index, Object esData, boolean childIndex) {
-        // 这里提前序列化了
-        handlerUpdateParamter(index, esData);
-        String docId = GlobalParamHolder.getDocId(index, esData);
-        // 获取id的动作要前置，因为里面会修改对象
-        String jsonStr = JsonUtils.toJsonStr(esData);
-        
-        UpdateOperation.Builder<Object, Object> updateBuilder = new UpdateOperation.Builder<>();
-        updateBuilder.index(index);
-        updateBuilder.id(docId);
-        UpdateAction.Builder<Object, Object> upsert = new UpdateAction.Builder<>().doc(esData);
-        // 这里会改变对象的数据 如果文档不存在则处理新增桉树并且插入
-        handlerSaveParamter(index, esData);
-        upsert.upsert(esData);
-        
-        updateBuilder.action(
-                upsert
-                        .build());
-        updateBuilder.retryOnConflict(GlobalConfigCache.GLOBAL_CONFIG.getMaxRetries());
-        
-        
-        
-        if (childIndex) {
-            String routing = FieldUtils.getStrFieldValue(esData, "joinField", "parent");
-            updateBuilder.routing(routing);
+    
+    private String getRouting(String index, Object esData) {
+        Object value = null;
+        try {
+            EsIndexParam esIndexParam = GlobalParamHolder.getEsEntityInfoByIndex(index).getEsIndexParam();
+            String route = esIndexParam.getRouting();
+            List<Field> fieldList = ClassUtils.getFieldList(esData.getClass());
+            Map<String, Field> fieldMap = fieldList.stream()
+                    .collect(Collectors.toMap(Field::getName, Function.identity()));
+            Field field = fieldMap.get(route);
+            field.setAccessible(true);
+            value = field.get(esData);
+        } catch (Exception e) {
+            return null;
         }
-        
-        handlerUpdateParamter(index, esData);
-        
-        return new BulkOperation.Builder().update(updateBuilder.build()).build();
+        if (value == null) {
+            return null;
+        }
+        return value.toString();
     }
     
     /**
@@ -313,22 +277,6 @@ public class Es8PlusRestClient implements EsPlusClient {
         return response;
     }
     
-    private BulkOperation getIndexOperation(String index, String type, Object esData, boolean childIndex) {
-        IndexOperation.Builder<Object> indexBuilder = new IndexOperation.Builder<>();
-        handlerSaveParamter(index, esData);
-        String docId = GlobalParamHolder.getDocId(index, esData);
-        // 获取id的动作要前置，因为里面会修改对象
-        indexBuilder.index(index);
-        indexBuilder.id(docId);
-        indexBuilder.document(esData);
-        
-        if (childIndex) {
-            String routing = FieldUtils.getStrFieldValue(esData, "joinField", "parent");
-            indexBuilder.routing(routing);
-        }
-        
-        return new BulkOperation.Builder().index(indexBuilder.build()).build();
-    }
     
     /**
      * 保存
@@ -385,44 +333,7 @@ public class Es8PlusRestClient implements EsPlusClient {
      */
     @Override
     public boolean update(String type, Object esData, String... indexs) {
-        boolean childIndex = isChildIndex(esData);
-        
-        for (String index : indexs) {
-            try {
-                UpdateRequest.Builder<Object, Object> updateBuilder = new UpdateRequest.Builder<>();
-                updateBuilder.index(index);
-                updateBuilder.id(GlobalParamHolder.getDocId(index, esData));
-                updateBuilder.doc(esData);
-                // 乐观锁重试次数
-                updateBuilder.retryOnConflict(GlobalConfigCache.GLOBAL_CONFIG.getMaxRetries());
-                updateBuilder.refresh(getRefreshPolicy());
-                
-                if (childIndex) {
-                    String routing = FieldUtils.getStrFieldValue(esData, "joinField", "parent");
-                    updateBuilder.routing(routing);
-                }
-                
-                long start = System.currentTimeMillis();
-                UpdateResponse<Object> updateResponse = elasticsearchClient.update(updateBuilder.build(), Object.class);
-                long end = System.currentTimeMillis();
-                long timeCost = end - start;
-                
-                if (updateResponse.result() == Result.Deleted) {
-                    printErrorLog(" {} update data={}  error reason: doc  deleted", index, JsonUtils.toJsonStr(esData));
-                    return false;
-                } else if (updateResponse.result() == Result.NoOp) {
-                    // noop标识没有数据改变。前后的值相同
-                    return false;
-                } else {
-                    printInfoLog(" {} update success timeCost:{} data={}", index, timeCost, JsonUtils.toJsonStr(esData));
-                }
-            } catch (IOException e) {
-                throw new EsException("elasticsearch update io error", e);
-            } catch (Exception e) {
-                throw new EsException("update error", e);
-            }
-        }
-        
+        updateBatch(type, Collections.singletonList(esData), indexs);
         return true;
     }
     
@@ -475,6 +386,65 @@ public class Es8PlusRestClient implements EsPlusClient {
         return responses;
     }
     
+    /**
+     * saveOrUpdate
+     */
+    private BulkOperation getUpsertOperation(String type, String index, Object esData, boolean childIndex) {
+        // 这里提前序列化了
+        handlerUpdateParamter(index, esData);
+        String docId = GlobalParamHolder.getDocId(index, esData);
+        
+        
+        UpdateOperation.Builder<Object, Object> updateBuilder = new UpdateOperation.Builder<>();
+        updateBuilder.index(index);
+        updateBuilder.id(docId);
+        String route = getRouting(index, esData);
+        if (StringUtils.isNotBlank(route)) {
+            updateBuilder.routing(route);
+        }
+        UpdateAction.Builder<Object, Object> upsert = new UpdateAction.Builder<>().doc(esData);
+        // 这里会改变对象的数据 如果文档不存在则处理新增桉树并且插入
+        handlerSaveParamter(index, esData);
+        JsonData jsonData = JsonData.fromJson(JsonUtils.toJsonStr(esData));
+        upsert.upsert(jsonData);
+        
+        updateBuilder.action(
+                upsert
+                        .build());
+        updateBuilder.retryOnConflict(GlobalConfigCache.GLOBAL_CONFIG.getMaxRetries());
+        
+        
+        if (childIndex) {
+            String routing = FieldUtils.getStrFieldValue(esData, "joinField", "parent");
+            updateBuilder.routing(routing);
+        }
+        
+        handlerUpdateParamter(index, esData);
+        
+        return new BulkOperation.Builder().update(updateBuilder.build()).build();
+    }
+    
+    private BulkOperation getIndexOperation(String index, String type, Object esData, boolean childIndex) {
+        IndexOperation.Builder<Object> indexBuilder = new IndexOperation.Builder<>();
+        handlerSaveParamter(index, esData);
+        String docId = GlobalParamHolder.getDocId(index, esData);
+        // 获取id的动作要前置，因为里面会修改对象
+        indexBuilder.index(index);
+        indexBuilder.id(docId);
+        JsonData jsonData = JsonData.fromJson(JsonUtils.toJsonStr(esData));
+        indexBuilder.document(jsonData);
+        String route = getRouting(index, esData);
+        if (StringUtils.isNotBlank(route)) {
+            indexBuilder.routing(route);
+        }
+        if (childIndex) {
+            String routing = FieldUtils.getStrFieldValue(esData, "joinField", "parent");
+            indexBuilder.routing(routing);
+        }
+        
+        return new BulkOperation.Builder().index(indexBuilder.build()).build();
+    }
+    
     private BulkOperation getUpdateOperation(String type, String index, Object esData, boolean childIndex) {
         handlerUpdateParamter(index, esData);
         String docId = GlobalParamHolder.getDocId(index, esData);
@@ -484,11 +454,16 @@ public class Es8PlusRestClient implements EsPlusClient {
         updateBuilder.id(docId);
         //        updateBuilder.doc(esData);
         updateBuilder.retryOnConflict(GlobalConfigCache.GLOBAL_CONFIG.getMaxRetries());
+        JsonData jsonData = JsonData.fromJson(JsonUtils.toJsonStr(esData));
         updateBuilder.action(
                 new UpdateAction.Builder<>()
-                        .doc(esData)
+                        .doc(jsonData)
                         //                        .docAsUpsert()
                         .build());
+        String route = getRouting(index, esData);
+        if (StringUtils.isNotBlank(route)) {
+            updateBuilder.routing(route);
+        }
         if (childIndex) {
             String routing = FieldUtils.getStrFieldValue(esData, "joinField", "parent");
             updateBuilder.routing(routing);
@@ -563,11 +538,12 @@ public class Es8PlusRestClient implements EsPlusClient {
             builder.scroll(Time.of(t -> t.time("1m")));
             // 请求完成后立即刷新索引，保证读一致性
             builder.refresh(true);
+            
             String[] routings = esQueryParamWrapper.getRoutings();
             if (routings != null) {
                 builder.routing(StringUtils.join(routings, ","));
             }
-            if (esQueryParamWrapper.getPreference()!=null) {
+            if (esQueryParamWrapper.getPreference() != null) {
                 builder.preference(esQueryParamWrapper.getPreference());
             }
             // 一般需要加上requests_per_second来控制.若不加可能执行时间比较长，造成es瞬间io巨大，属于危险操作.此参数用于限流。真实查询数据是batchsize控制
@@ -577,7 +553,7 @@ public class Es8PlusRestClient implements EsPlusClient {
             //            builder.indicesOptions(IndicesOptions.LENIENT_EXPAND_OPEN);
             // 修复Script构建语法
             Map<String, JsonData> finalParams = new HashMap<>();
-            params.forEach((k,v)->{
+            params.forEach((k, v) -> {
                 finalParams.put(k, JsonData.of(v));
             });
             String finalScriptStr = scriptStr;
@@ -658,7 +634,7 @@ public class Es8PlusRestClient implements EsPlusClient {
             
             // 修复Script构建语法
             Map<String, JsonData> finalParams = new HashMap<>();
-            params.forEach((k,v)->{
+            params.forEach((k, v) -> {
                 finalParams.put(k, JsonData.of(v));
             });
             String finalScriptStr = script.toString();
@@ -702,16 +678,17 @@ public class Es8PlusRestClient implements EsPlusClient {
             searchResponse = elasticsearchClient.search(searchRequest, esParamWrapper.getTClass());
             long end = System.currentTimeMillis();
             long mills = end - start;
-            printSearchInfoLog("search index={} timeCost={} \nDSL:{} ", index,  mills,searchRequest);
+            String[] routings = esParamWrapper.getEsQueryParamWrapper().getRoutings();
+            printSearchInfoLog("search index={} routing:{} timeCost={} \nDSL:{} ", index, routings, mills, searchRequest);
         } catch (Exception e) {
-            if (e instanceof ElasticsearchException){
+            if (e instanceof ElasticsearchException) {
                 ElasticsearchException exception = (ElasticsearchException) e;
                 ErrorResponse response = exception.response();
                 log.error("es-plus search error :{}", response);
-                throw new EsException("es-plus search body={} " + response.toString() , e);
-            }else{
+                throw new EsException("es-plus search body={} " + response.toString(), e);
+            } else {
                 log.error("es-plus search error : ", e);
-                throw new EsException("es-plus search" , e);
+                throw new EsException("es-plus search", e);
             }
         }
         //        if (searchResponse. != 200) {
@@ -726,7 +703,7 @@ public class Es8PlusRestClient implements EsPlusClient {
             String... index) {
         try {
             SearchRequest searchRequest;
-            ResponseBody responseBody ;
+            ResponseBody responseBody;
             if (scrollId == null) {
                 // 首次滚动查询
                 SearchRequest.Builder searchSourceBuilder = getSearchSourceBuilder(esParamWrapper, index);
@@ -750,14 +727,14 @@ public class Es8PlusRestClient implements EsPlusClient {
             }
             return getEsResponse(esParamWrapper.getTClass(), responseBody);
         } catch (Exception e) {
-            if (e instanceof ElasticsearchException){
+            if (e instanceof ElasticsearchException) {
                 ElasticsearchException exception = (ElasticsearchException) e;
                 ErrorResponse response = exception.response();
                 log.error("es-plus search error :{}", response);
-                throw new EsException("es-plus search body={} " + response.toString() , e);
-            }else{
+                throw new EsException("es-plus search body={} " + response.toString(), e);
+            } else {
                 log.error("es-plus search error : ", e);
-                throw new EsException("es-plus search" , e);
+                throw new EsException("es-plus search", e);
             }
         }
     }
@@ -867,7 +844,7 @@ public class Es8PlusRestClient implements EsPlusClient {
      * @param hit  打击
      * @param bean 豆
      */
-    public   <T> void setHighLishtField(Hit<T> hit, T bean) {
+    public <T> void setHighLishtField(Hit<T> hit, T bean) {
         Map<String, List<String>> highlightFields = hit.highlight();
         if (highlightFields != null && !highlightFields.isEmpty()) {
             highlightFields.forEach((k, v) -> {
@@ -890,7 +867,7 @@ public class Es8PlusRestClient implements EsPlusClient {
     /**
      * 设置分数
      */
-    public   <T> void setScore(Hit<T> hit, T bean) {
+    public <T> void setScore(Hit<T> hit, T bean) {
         Double score = hit.score();
         if (score != null && !score.isNaN()) {
             EsIndexParam esIndexParam = GlobalParamHolder.getAndInitEsIndexParam(bean.getClass());
@@ -908,7 +885,8 @@ public class Es8PlusRestClient implements EsPlusClient {
             }
         }
     }
-    private <T> SearchRequest.Builder getSearchSourceBuilder(EsParamWrapper<T> esParamWrapper,String... index) {
+    
+    private <T> SearchRequest.Builder getSearchSourceBuilder(EsParamWrapper<T> esParamWrapper, String... index) {
         EsQueryParamWrapper esQueryParamWrapper = esParamWrapper.getEsQueryParamWrapper();
         Integer page = esQueryParamWrapper.getPage();
         Integer size = esQueryParamWrapper.getSize();
@@ -925,6 +903,10 @@ public class Es8PlusRestClient implements EsPlusClient {
             SearchType searchType = SearchType.valueOf(esQueryParamWrapper.getSearchType().name());
             sourceBuilder.searchType(searchType);
         }
+        String[] routings = esQueryParamWrapper.getRoutings();
+        if (routings != null && routings.length > 0) {
+            sourceBuilder.routing(StringUtils.join(routings, ","));
+        }
         
         //超过1万条加了才能返回
         if (GlobalConfigCache.GLOBAL_CONFIG.isTrackTotalHits()) {
@@ -935,19 +917,19 @@ public class Es8PlusRestClient implements EsPlusClient {
         if (esSelect != null) {
             if (ArrayUtils.isNotEmpty(esSelect.getIncludes())
                     || ArrayUtils.isNotEmpty(esSelect.getExcludes())
-                    ||esSelect.getFetch() != null) {
+                    || esSelect.getFetch() != null) {
                 sourceBuilder.source(
-                        a-> {
+                        a -> {
                             SourceConfig.Builder fetch = new SourceConfig.Builder();
                             if (esSelect.getFetch() != null) {
                                 fetch = (SourceConfig.Builder) a.fetch(true);
                             }
-                            fetch.filter(b-> {
-                                SourceFilter.Builder builder=b;
-                                if(ArrayUtils.isNotEmpty(esSelect.getIncludes())){
+                            fetch.filter(b -> {
+                                SourceFilter.Builder builder = b;
+                                if (ArrayUtils.isNotEmpty(esSelect.getIncludes())) {
                                     builder = builder.includes(Arrays.asList(esSelect.getIncludes()));
                                 }
-                                if(ArrayUtils.isNotEmpty(esSelect.getExcludes())){
+                                if (ArrayUtils.isNotEmpty(esSelect.getExcludes())) {
                                     builder = builder.excludes(Arrays.asList(esSelect.getExcludes()));
                                 }
                                 
@@ -976,7 +958,7 @@ public class Es8PlusRestClient implements EsPlusClient {
         
         //searchAfter
         if (esQueryParamWrapper.getSearchAfterValues() != null) {
-            List<FieldValue> fieldValues=new ArrayList<>();
+            List<FieldValue> fieldValues = new ArrayList<>();
             for (Object searchAfterValue : esQueryParamWrapper.getSearchAfterValues()) {
                 FieldValue fieldValue = FieldValue.of(searchAfterValue);
                 fieldValues.add(fieldValue);
@@ -1081,7 +1063,7 @@ public class Es8PlusRestClient implements EsPlusClient {
             
             return esAggregations;
         } catch (Exception e) {
-            if (e instanceof ElasticsearchException){
+            if (e instanceof ElasticsearchException) {
                 ElasticsearchException exception = (ElasticsearchException) e;
                 ErrorResponse response = exception.response();
                 log.error("es-plus aggregations error :{}", response);
@@ -1112,11 +1094,11 @@ public class Es8PlusRestClient implements EsPlusClient {
             
             return response.toString();
         } catch (Exception e) {
-            if (e instanceof ElasticsearchException){
+            if (e instanceof ElasticsearchException) {
                 ElasticsearchException exception = (ElasticsearchException) e;
                 ErrorResponse response = exception.response();
                 log.error("es-plus aggregations error :{}", response);
-            }else{
+            } else {
                 log.error("executeDSL error", e);
             }
             throw new EsException("executeDSL failed", e);
@@ -1327,7 +1309,10 @@ public class Es8PlusRestClient implements EsPlusClient {
             
             deleteBuilder.refresh(true);
             deleteBuilder.scroll(Time.of(t -> t.time("1m")));
-            
+            String[] routings = esQueryParamWrapper.getRoutings();
+            if (routings != null) {
+                deleteBuilder.routing(StringUtils.join(routings, ","));
+            }
             DeleteByQueryResponse response = elasticsearchClient.deleteByQuery(deleteBuilder.build());
             
             EpBulkResponse epBulkResponse = new EpBulkResponse();
@@ -1404,14 +1389,14 @@ public class Es8PlusRestClient implements EsPlusClient {
     }
     
     
-    protected Object handlerSaveParamter(String index,Object esData) {
+    protected Object handlerSaveParamter(String index, Object esData) {
         Map<String, EsObjectHandler> esObjectHandler = GlobalConfigCache.ES_OBJECT_HANDLER;
-        if (esObjectHandler !=null){
+        if (esObjectHandler != null) {
             EsObjectHandler objectHandler = esObjectHandler.get(index);
-            if (objectHandler == null){
+            if (objectHandler == null) {
                 objectHandler = esObjectHandler.get("global");
             }
-            if (objectHandler != null && objectHandler.insertFill()!=null){
+            if (objectHandler != null && objectHandler.insertFill() != null) {
                 objectHandler.setInsertFeild(esData);
                 
             }
@@ -1419,14 +1404,14 @@ public class Es8PlusRestClient implements EsPlusClient {
         return esData;
     }
     
-    protected Object handlerUpdateParamter(String index,Object esData) {
+    protected Object handlerUpdateParamter(String index, Object esData) {
         Map<String, EsObjectHandler> esObjectHandler = GlobalConfigCache.ES_OBJECT_HANDLER;
-        if (esObjectHandler !=null){
+        if (esObjectHandler != null) {
             EsObjectHandler objectHandler = esObjectHandler.get(index);
-            if (objectHandler == null){
+            if (objectHandler == null) {
                 objectHandler = esObjectHandler.get("global");
             }
-            if (objectHandler != null && objectHandler.updateFill()!=null){
+            if (objectHandler != null && objectHandler.updateFill() != null) {
                 objectHandler.setUpdateFeild(esData);
             }
         }

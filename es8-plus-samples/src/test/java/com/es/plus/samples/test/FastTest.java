@@ -21,11 +21,7 @@ import com.es.plus.samples.service.FastTestService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @SpringBootTest(classes = SamplesApplication.class)
@@ -36,7 +32,7 @@ public class FastTest {
     
     @org.junit.jupiter.api.Test
     public void fast() {
-        EsResponse<Map> list = Es.chainQuery(Map.class).index("fast_test_new_v11").term("username","酷酷的").search();
+        EsResponse<Map> list = Es.chainQuery(Map.class).index("fast_test_new_v11").term("username", "酷酷的").search();
         System.out.println(list);
     }
     
@@ -48,17 +44,17 @@ public class FastTest {
     
     @org.junit.jupiter.api.Test
     public void fastSave() {
-        List<FastTestDTO> fastTestDTOs=new ArrayList<>();
-        for (int i = 1000000; i < 8000000; i++) {
+        List<FastTestDTO> fastTestDTOs = new ArrayList<>();
+        for (int i = 7000000; i < 8000000; i++) {
             FastTestDTO fastTestDTO = new FastTestDTO();
             fastTestDTO.setId((long) i);
             fastTestDTO.setText("1刚发的古古怪怪滚滚滚古古怪怪滚滚滚古古怪怪滚滚滚古古怪怪滚滚滚的反反复复方法反反复复方法反反复复方法的发发发发发发反反复复方法反反复复去呜呜呜呜呜呜呜呜呜呜呜呜呜呜呜呜呜呜呜呜呜呜呜呜呜呜呜呜呜呜呜呜呜呜我问问发生的发生的发");
-            fastTestDTO.setAge(1L);
-            fastTestDTO.setUsername("新来的朋友们" );
+            fastTestDTO.setAge(i % 5L);
+            fastTestDTO.setUsername("新来的朋友们");
             fastTestDTO.setUsernameTest("干啥的复古风古大爱上大叔大叔三大四典风格电风扇广东分公司法刀发生的发生的发水电费都是发生的发生的刮大风反反复复方法反反复复发个电饭锅梵蒂冈地方古典风格电饭锅电饭锅电饭锅");
             fastTestDTO.setCreateTime(new Date());
             fastTestDTOs.add(fastTestDTO);
-            if (fastTestDTOs.size()>=3000){
+            if (fastTestDTOs.size() >= 3000) {
                 Es.chainUpdate(FastTestDTO.class).saveBatch(fastTestDTOs);
                 fastTestDTOs.clear();
             }
@@ -66,20 +62,27 @@ public class FastTest {
     }
     
     @org.junit.jupiter.api.Test
+    public void updateQuery() {
+        Es.chainUpdate(FastTestDTO.class).terms("id", "7000004", "7000014")
+                .set("username", "路由")
+                .updateByQuery();
+    }
+    
+    @org.junit.jupiter.api.Test
     public void forceMerge() {
-        Es.chainIndex().index("fast_test_new").forceMerge(1000,true,true,"fast_test_new");
+        Es.chainIndex().index("fast_test_new").forceMerge(1000, true, true, "fast_test_new");
     }
     
     @org.junit.jupiter.api.Test
     public void aaa() {
         EsChainLambdaQueryWrapper<FastTestDTO> fastTestDTOEsChainLambdaQueryWrapper = Es.chainLambdaQuery(FastTestDTO.class);
         EsAggWrapper<FastTestDTO> aggWrapper = fastTestDTOEsChainLambdaQueryWrapper.esAggWrapper();
-        aggWrapper.terms("username",a->
-                        a.size(10000).order(EpBucketOrder.aggregation("id_max",true))
+        aggWrapper.terms("username", a ->
+                        a.size(10000).order(EpBucketOrder.aggregation("id_max", true))
                 
                 )
-                .subAgg(es->es.max("age"));
-  
+                .subAgg(es -> es.max("age"));
+        
         EsAggResult<FastTestDTO> esAggResult = fastTestDTOEsChainLambdaQueryWrapper.aggregations().getEsAggResult();
         Map<String, EsAggResult<FastTestDTO>> usernameTerms = esAggResult.getMultiBucketNestedMap("username_terms");
         usernameTerms.forEach((k, v) -> {
@@ -98,15 +101,15 @@ public class FastTest {
     public void searchQuery() {
         TermsQuery.Builder builder = new TermsQuery.Builder();
         List<FieldValue> a = List.of("a", "新来的朋友们").stream().map(FieldValue::of).collect(Collectors.toList());
-        builder.field("username").terms(b->b.value(a));
+        builder.field("username").terms(b -> b.value(a));
         
         EpQueryBuilder queryBuilder = new EpQueryBuilder()
                 .orginalQuery(builder);
         EsResponse<FastTestDTO> test = Es.chainLambdaQuery(FastTestDTO.class)
                 .sortByAsc("id")
                 .esQuery(queryBuilder)
-                .term(FastTestDTO::getAge,111L)
-                .must(b->b.match(FastTestDTO::getText,"新来的朋友们啊"))
+                .term(FastTestDTO::getAge, 111L)
+                .must(b -> b.match(FastTestDTO::getText, "新来的朋友们啊"))
                 .search();
         System.out.println(test);
     }
@@ -115,29 +118,29 @@ public class FastTest {
     public void searchAggQuery() {
         TermsQuery.Builder builder = new TermsQuery.Builder();
         List<FieldValue> a = List.of("a", "新来的朋友们").stream().map(FieldValue::of).collect(Collectors.toList());
-        builder.field("username").terms(b->b.value(a));
+        builder.field("username").terms(b -> b.value(a));
         
         
         EsChainLambdaQueryWrapper<FastTestDTO> fastTestDTOEsChainLambdaQueryWrapper = Es.chainLambdaQuery(
                 FastTestDTO.class);
         EsLambdaAggWrapper<FastTestDTO> fastTestDTOEsLambdaAggWrapper = fastTestDTOEsChainLambdaQueryWrapper.esLambdaAggWrapper();
         fastTestDTOEsLambdaAggWrapper.terms(FastTestDTO::getUsername).terms(FastTestDTO::getId)
-                .subAgg(b-> {
+                .subAgg(b -> {
                             TermsAggregation.Builder username1 = new TermsAggregation.Builder().field("username");
                             TermsAggregation username = username1.build();
                             b.avg(FastTestDTO::getAge)
                                     .esAgg(new EpAggBuilder().esOrginalAgg(username));
                         }
                 );
-        EsResponse<FastTestDTO> test = fastTestDTOEsChainLambdaQueryWrapper.sortBy("ASC",FastTestDTO::getCreateTime)
+        EsResponse<FastTestDTO> test = fastTestDTOEsChainLambdaQueryWrapper.sortBy("ASC", FastTestDTO::getCreateTime)
                 .search();
-        System.out.println( );
+        System.out.println();
     }
     
     @org.junit.jupiter.api.Test
     public void fastSearch() {
         EsResponse<FastTestDTO> test = Es.chainLambdaQuery(FastTestDTO.class).match(FastTestDTO::getText, "苹果")
-                .term(FastTestDTO::getUsernameTest,"ggg").search();
+                .term(FastTestDTO::getUsernameTest, "ggg").search();
         System.out.println(test);
     }
     
@@ -199,14 +202,14 @@ public class FastTest {
                 .search();
         
         
-        EsResponse<FastTestDTO> test1 = Es.chainLambdaQuery(FastTestDTO.class).sortByAsc("id").sortByAsc("username")  .includes(FastTestDTO::getId)
+        EsResponse<FastTestDTO> test1 = Es.chainLambdaQuery(FastTestDTO.class).sortByAsc("id").sortByAsc("username").includes(FastTestDTO::getId)
                 .trackScores(true)
                 .minScope(0)
                 .searchAfterValues(test.getTailSortValues()).search(10000);
         
         EsChainLambdaQueryWrapper<FastTestDTO> wrapper = Es.chainLambdaQuery(
                 FastTestDTO.class);
-        EsResponse<FastTestDTO> test3 = wrapper.sortByAsc("id").sortByAsc("username")  .includes(FastTestDTO::getId)
+        EsResponse<FastTestDTO> test3 = wrapper.sortByAsc("id").sortByAsc("username").includes(FastTestDTO::getId)
                 .fetch(false)
                 .searchAfterValues(test.getTailSortValues()).search(11);
         
@@ -223,7 +226,7 @@ public class FastTest {
         EsResponse<Map> list = Es.chainQuery(master, Map.class).index("distribution_chain_info").search();
         List<Map> list1 = list.getList();
         System.out.println(list1);
-        Es.chainLambdaUpdate(local,Map.class).index("distribution_chain_info").saveBatch(list1);
+        Es.chainLambdaUpdate(local, Map.class).index("distribution_chain_info").saveBatch(list1);
         
         System.out.println(list1);
     }
@@ -285,6 +288,7 @@ public class FastTest {
     public void aaaaaaaa() {
         
         EsResponse<FastTestDTO> search = Es.chainQuery(FastTestDTO.class)
+                .term("age", 4).routings("4")
                 .search();
         System.out.println(search);
     }

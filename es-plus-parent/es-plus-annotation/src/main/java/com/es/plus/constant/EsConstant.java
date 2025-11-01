@@ -57,7 +57,11 @@ public interface EsConstant {
      */
     String PROPERTIES = "properties";
     /**
-     * 属性
+     * routing
+     */
+    String ROUTING = "_routing";
+    /**
+     * 引用
      */
     String RELATIONS = "relations";
     
@@ -103,16 +107,16 @@ public interface EsConstant {
     /**
      * 默认迁移操作规则 覆盖index   create只创建      index和EXTERNAL搭配使用可以达到版本号大于目标版本号才会更新  create和EXTERNAL一起使用，也会版本号大于目标版本号才会更新
      * 返回体的"version_conflicts": 0,代表冲突数量。如果只配置了index那么冲突数量为0。说明有配置version_type以version_type为主
-     *  {
-     *   "conflicts": "proceed",
-     *   "source": {
-     *     "index": "xx"
-     *   },
-     *   "dest": {
-     *     "index": "xxxxxx",
-     *     "op_type": "index",
-     *     "version_type": "external"
-     *   }
+     * {
+     * "conflicts": "proceed",
+     * "source": {
+     * "index": "xx"
+     * },
+     * "dest": {
+     * "index": "xxxxxx",
+     * "op_type": "index",
+     * "version_type": "external"
+     * }
      * }
      */
     String DEFAULT_DEST_OP_TYPE = "index";

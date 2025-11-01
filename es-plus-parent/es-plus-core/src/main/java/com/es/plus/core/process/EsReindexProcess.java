@@ -1,5 +1,6 @@
 package com.es.plus.core.process;
 
+import com.es.plus.annotation.EsIndex;
 import com.es.plus.common.EsPlusClientFacade;
 import com.es.plus.common.config.GlobalConfigCache;
 import com.es.plus.common.exception.EsException;
@@ -8,7 +9,6 @@ import com.es.plus.common.params.EsIndexResponse;
 import com.es.plus.common.params.EsSettings;
 import com.es.plus.common.properties.EsIndexParam;
 import com.es.plus.common.util.JsonUtils;
-import com.es.plus.annotation.EsIndex;
 import com.es.plus.constant.Commend;
 import com.es.plus.constant.EsConstant;
 import com.es.plus.core.IndexContext;
@@ -18,12 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.StopWatch;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -32,9 +27,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static com.es.plus.constant.EsConstant.MAX_RESULT_WINDOW;
-import static com.es.plus.constant.EsConstant.NUMBER_OF_SHARDS;
-import static com.es.plus.constant.EsConstant.REINDEX_TIME_FILED;
+import static com.es.plus.constant.EsConstant.*;
 
 /**
  * es执行人工具封装
@@ -82,7 +75,7 @@ public class EsReindexProcess {
      * @param esPlusClientFacade es索引执行人
      * @param clazz              clazz
      */
-    public static boolean tryReindex(EsPlusClientFacade esPlusClientFacade, String index,String alias,Class<?> clazz) {
+    public static boolean tryReindex(EsPlusClientFacade esPlusClientFacade, String index, String alias, Class<?> clazz) {
         
         //根据别名获取索引结果 获取不到则通过索引名获取并且修改成目前的别名
         EsIndexResponse getIndexResponse = null;
@@ -90,7 +83,7 @@ public class EsReindexProcess {
         getIndexResponse = esPlusClientFacade.getIndex(index);
         
         String oldAlias = esPlusClientFacade.getAliasByIndex(index);
-        if (oldAlias == null && alias!=null) {
+        if (oldAlias == null && alias != null) {
             esPlusClientFacade.createAlias(index, alias);
         } else if (alias != null && !oldAlias.equals(alias)) {
             esPlusClientFacade.replaceAlias(index, oldAlias, alias);
@@ -127,14 +120,14 @@ public class EsReindexProcess {
             if (ArrayUtils.isEmpty(annotation.alias())) {
                 throw new EsException(ArrayUtils.toString(annotation.index()) + " tryReindex alias Cannot be null");
             }
-            if (annotation.alias().length>1) {
+            if (annotation.alias().length > 1) {
                 throw new EsException(ArrayUtils.toString(annotation.index()) + " tryReindex alias only One");
             }
-            if (GlobalConfigCache.GLOBAL_CONFIG.isAutoReindex()){
+            if (GlobalConfigCache.GLOBAL_CONFIG.isAutoReindex()) {
                 if (StringUtils.isBlank(GlobalConfigCache.GLOBAL_CONFIG.getReindexScope())) {
-                    log.error("es-plus cannot ensure reindex integrity  reindex scope is blank  index:{}",currentIndex);
+                    log.error("es-plus cannot ensure reindex integrity  reindex scope is blank  index:{}", currentIndex);
                 }
-                log.info("EsExecutorUtil index:{} tryReindex Commend:{}",currentIndex, updateCommend);
+                log.info("EsExecutorUtil index:{} tryReindex Commend:{}", currentIndex, updateCommend);
                 if (GlobalConfigCache.GLOBAL_CONFIG.isReindexAsync()) {
                     reindexExecutor
                             .execute(() -> tryLockReindex(esPlusClientFacade, clazz, alias, currentIndex));
@@ -161,8 +154,8 @@ public class EsReindexProcess {
         Integer remoteMaxResultWindow =
                 settings.get(MAX_RESULT_WINDOW) != null ? Integer.parseInt(settings.get(MAX_RESULT_WINDOW).toString()) : 10000;
         Object object = settings.get("refresh_interval");
-        String remoteRefreshInterval =null;
-        if (object!=null){
+        String remoteRefreshInterval = null;
+        if (object != null) {
             remoteRefreshInterval = object.toString();
         }
         
@@ -184,7 +177,7 @@ public class EsReindexProcess {
             newEsSettings.setRefreshInterval((String) localSettings.get("refresh_interval"));
         }
         if (newEsSettings != null) {
-            esPlusClientFacade.updateSettings( newEsSettings,currentIndex);
+            esPlusClientFacade.updateSettings(newEsSettings, currentIndex);
         }
         
         Map<String, Object> analysis = esSettings.getAnalysis();
@@ -238,7 +231,7 @@ public class EsReindexProcess {
     /**
      * 做重建索引 注意事项。es重建索引的时候，如果旧的字段被删除了并且旧的字段有数据的话，重建索引会自动创建旧的字段
      */
-    private static void tryLockReindex(EsPlusClientFacade esPlusClientFacade, Class<?> clazz,String alias,
+    private static void tryLockReindex(EsPlusClientFacade esPlusClientFacade, Class<?> clazz, String alias,
             String currentIndex) {
         //获取新索引
         String reindexName = getReindexName(currentIndex);
@@ -247,14 +240,14 @@ public class EsReindexProcess {
         if (lock) {
             //如果能找到当前索引才需要执行reindex，否则已经执行过
             if (esPlusClientFacade.getIndex(currentIndex) != null) {
-                Map<String ,Object> map = new HashMap<>();
+                Map<String, Object> map = new HashMap<>();
                 // 当前索引名称
                 map.put("reIndexName", reindexName);
                 // 是否完成 1完成  0 reindex处理中
-                map.put("processType",0);
-                map.put("_id",currentIndex);
-                map.put("createTime",System.currentTimeMillis());
-                esPlusClientFacade.save("_doc",map ,"es_plus_reindex_record");
+                map.put("processType", 0);
+                map.put("_id", currentIndex);
+                map.put("createTime", System.currentTimeMillis());
+                esPlusClientFacade.save("_doc", map, "es_plus_reindex_record");
                 //最终状态：当重建索引完成后，
                 // 新索引中的数据将反映你执行的所有操作（包括在重建过程中可能发生的任何删除操作，
                 // 尽管这些删除操作实际上并没有改变任何状态，因为它们针对的是不存在的文档）。
@@ -272,7 +265,7 @@ public class EsReindexProcess {
      * 所以第二次的reindex会跳过第一次执行过的数据。只对增量的数据更新。
      * 两次reindex时间较长。 需要人工确保reindex的可靠性。不能依赖自动reindex。
      * 详见我的语雀https://www.yuque.com/huangdaxia-pqg6y/bzpu9c/pzt2ukt2za7yzk2z  其中有完善的索引0停机迁移方案
-     *
+     * <p>
      * 所以reindexTime字段已经废弃
      */
     private static void doReindex(EsPlusClientFacade esPlusClientFacade, Class<?> clazz, String alias,
@@ -318,16 +311,15 @@ public class EsReindexProcess {
         
         log.info("es-plus doReindex All End currentIndex:{} newIndex:{}", currentIndex, reindexName);
         
-        Map<String ,Object> map = new HashMap<>();
+        Map<String, Object> map = new HashMap<>();
         // 当前索引名称
         map.put("reIndexName", reindexName);
         // 是否完成 1完成  0 reindex处理中
         map.put("processType", 1);
-        map.put("_id",currentIndex);
-        map.put("createTime",System.currentTimeMillis());
-        esPlusClientFacade.save("_doc",map ,"es_plus_reindex_record");
+        map.put("_id", currentIndex);
+        map.put("createTime", System.currentTimeMillis());
+        esPlusClientFacade.save("_doc", map, "es_plus_reindex_record");
     }
-    
     
     
     /**
@@ -359,7 +351,10 @@ public class EsReindexProcess {
                     return Commend.REINDEX;
                 }
                 // 如果减少字段.那么必然要reindex  针对有type的
-                if (esIndexMapping.size() != localIndexMapping.size()) {
+                if (localIndexMapping.size() < esIndexMapping.size()) {
+                    return Commend.REINDEX;
+                }
+                if (localIndexMapping.containsKey(ROUTING) && !esIndexMapping.containsKey(ROUTING)) {
                     return Commend.REINDEX;
                 }
                 
@@ -385,7 +380,7 @@ public class EsReindexProcess {
                         return mappingChange && reindex;
                     }
                     //如果是本地的映射的数量大于远程的映射数量，可以进行添加 针对keyword的 ignore_above
-                    if (localMapping.size()>esMapping.size()){
+                    if (localMapping.size() > esMapping.size()) {
                         return false;
                     }
                     return mappingChange;
@@ -397,8 +392,8 @@ public class EsReindexProcess {
                     return Commend.MAPPING_UPDATE;
                 }
             }
-        }catch (Exception e){
-            log.error("getMappingUpdateCommend CMD error ：",e);
+        } catch (Exception e) {
+            log.error("getMappingUpdateCommend CMD error ：", e);
             return Commend.NO_EXECUTE;
         }
         

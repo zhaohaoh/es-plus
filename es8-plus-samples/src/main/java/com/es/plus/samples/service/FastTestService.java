@@ -17,7 +17,7 @@ import java.util.List;
 
 @Service
 public class FastTestService extends EsServiceImpl<FastTestDTO> {
-
+    
     public void test() {
         EsResponse<FastTestDTO> test = esChainQueryWrapper().match(FastTestDTO::getText, "苹果").search();
         System.out.println(test);
@@ -25,12 +25,12 @@ public class FastTestService extends EsServiceImpl<FastTestDTO> {
     
     public void save() {
         //
-        for (int i = 800000010; i <800000020; i++) {
-            List<FastTestDTO> fastTestDTOs=new ArrayList<>();
+        for (int i = 800000010; i < 800000050; i++) {
+            List<FastTestDTO> fastTestDTOs = new ArrayList<>();
             FastTestDTO fastTestDTO = new FastTestDTO();
             fastTestDTO.setId((long) i);
             fastTestDTO.setText("特殊的8");
-            fastTestDTO.setAge(18L);
+            fastTestDTO.setAge(i % 5L);
             fastTestDTO.setUsername("特殊的8");
             fastTestDTO.setUsernameTest("特殊的8");
             fastTestDTO.setCreateTime(new Date());
@@ -38,7 +38,7 @@ public class FastTestService extends EsServiceImpl<FastTestDTO> {
             Es.chainUpdate(FastTestDTO.class).saveBatch(fastTestDTOs);
         }
     }
-
+    
     public void agg() {
         EsChainLambdaQueryWrapper<FastTestDTO> fastTestDTOEsChainLambdaQueryWrapper = esChainQueryWrapper();
         EsAggWrapper<FastTestDTO> fastTestDTOEsAggWrapper = fastTestDTOEsChainLambdaQueryWrapper.esAggWrapper();
@@ -70,7 +70,7 @@ public class FastTestService extends EsServiceImpl<FastTestDTO> {
         FastTestDTO fastTestDTO = new FastTestDTO();
         fastTestDTO.setId(1L);
         fastTestDTO.setText("asdasdasdsa");
-         Es.chainUpdate(FastTestDTO.class).saveBatchAsyncProcessor(Collections.singletonList(fastTestDTO));
+        Es.chainUpdate(FastTestDTO.class).saveBatchAsyncProcessor(Collections.singletonList(fastTestDTO));
     }
     
     public void updateAsync() {
@@ -79,6 +79,7 @@ public class FastTestService extends EsServiceImpl<FastTestDTO> {
         fastTestDTO.setText("ssssss");
         Es.chainUpdate(FastTestDTO.class).updateBatchAsyncProcessor(Collections.singletonList(fastTestDTO));
     }
+    
     public void saveOrUpdateAsync() {
         FastTestDTO fastTestDTO = new FastTestDTO();
         fastTestDTO.setId(1L);

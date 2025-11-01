@@ -4,7 +4,6 @@ import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.ElasticsearchException;
 import co.elastic.clients.elasticsearch._types.Time;
 import co.elastic.clients.elasticsearch._types.VersionType;
-import co.elastic.clients.elasticsearch._types.mapping.Property;
 import co.elastic.clients.elasticsearch._types.mapping.TypeMapping;
 import co.elastic.clients.elasticsearch.core.ReindexRequest;
 import co.elastic.clients.elasticsearch.core.ReindexResponse;
@@ -90,7 +89,7 @@ public class Es8PlusIndexRestClient implements EsPlusIndexClient {
             }
             
             if (mappings != null) {
-                builder.mappings(TypeMapping.of(m -> m.properties(convertMappingsToProperties(mappings))));
+                builder.mappings(TypeMapping.of(a -> convertMappingsToBuild(mappings)));
             }
             
             if (StringUtils.isNotBlank(alias)) {
@@ -118,7 +117,7 @@ public class Es8PlusIndexRestClient implements EsPlusIndexClient {
             }
             
             if (mappings != null) {
-                builder.mappings(TypeMapping.of(m -> m.properties(convertMappingsToProperties(mappings))));
+                builder.mappings(TypeMapping.of(a -> convertMappingsToBuild(mappings)));
             }
             
             if (ArrayUtils.isNotEmpty(aliases)) {
@@ -155,7 +154,7 @@ public class Es8PlusIndexRestClient implements EsPlusIndexClient {
     public void putMapping(String index, Map<String, Object> mappingProperties) {
         try {
             PutMappingRequest request = PutMappingRequest.of(builder ->
-                    builder.index(index).properties(convertMappingsToProperties(mappingProperties))
+                    builder.index(index).withJson(new ByteArrayInputStream(Objects.requireNonNull(JsonUtils.toJsonStr(mappingProperties)).getBytes()))
             );
             printInfoLog("putMapping index={} info={}", index, JsonUtils.toJsonStr(mappingProperties));
             PutMappingResponse response = elasticsearchClient.indices().putMapping(request);
@@ -195,7 +194,7 @@ public class Es8PlusIndexRestClient implements EsPlusIndexClient {
                     builder.settings(s -> s.otherSettings(settingsMap));
                 }
                 
-                builder.mappings(TypeMapping.of(m -> m.properties(convertMappingsToProperties(esIndexParam.getMappings()))));
+                builder.mappings(TypeMapping.of(a -> convertMappingsToBuild(esIndexParam.getMappings())));
                 
                 printInfoLog("createMapping index={} mappings:{}", index, JsonUtils.toJsonStr(esIndexParam.getMappings()));
                 CreateIndexResponse response = elasticsearchClient.indices().create(builder.build());
@@ -234,7 +233,7 @@ public class Es8PlusIndexRestClient implements EsPlusIndexClient {
                 if (v.settings() != null && v.settings().otherSettings() != null) {
                     IndexSettings indexSettings = v.settings().index();
                     String string = JsonpUtils.toString(indexSettings, new StringBuilder()).toString();
-                    settingsMap.put(indexName,string);
+                    settingsMap.put(indexName, string);
                 }
             });
             
@@ -442,7 +441,7 @@ public class Es8PlusIndexRestClient implements EsPlusIndexClient {
             GetTasksRequest request = GetTasksRequest.of(builder -> builder.taskId(taskId));
             GetTasksResponse response = elasticsearchClient.tasks().get(request);
             
-            if (response.completed() ) {
+            if (response.completed()) {
                 EsPlusGetTaskResponse res = new EsPlusGetTaskResponse();
                 if (response.task() != null) {
                     res.setTaskInfo(response.task().toString());
@@ -643,8 +642,8 @@ public class Es8PlusIndexRestClient implements EsPlusIndexClient {
     private boolean putMappingInternal(String index, Map<String, Object> mappingProperties) {
         try {
             PutMappingRequest request = PutMappingRequest.of(builder ->
-                    builder.index(index).properties(convertMappingsToProperties(mappingProperties))
-            );
+                    builder.index(index).withJson(new ByteArrayInputStream(Objects.requireNonNull(JsonUtils.toJsonStr(mappingProperties)).getBytes())
+                    ));
             printInfoLog("putMapping index={} info={}", index, JsonUtils.toJsonStr(mappingProperties));
             PutMappingResponse response = elasticsearchClient.indices().putMapping(request);
             return response.acknowledged();
@@ -675,7 +674,7 @@ public class Es8PlusIndexRestClient implements EsPlusIndexClient {
                     builder.aliases(aliases);
                 }
                 
-                builder.mappings(TypeMapping.of(m -> m.properties(convertMappingsToProperties(esIndexParam.getMappings()))));
+                builder.mappings(TypeMapping.of(m -> convertMappingsToBuild(esIndexParam.getMappings())));
                 
                 printInfoLog("doCreateIndexMapping index={} mappings:{}", index, JsonUtils.toJsonStr(esIndexParam.getMappings()));
                 elasticsearchClient.indices().create(builder.build());
@@ -720,30 +719,43 @@ public class Es8PlusIndexRestClient implements EsPlusIndexClient {
         return properties;
     }
     
+    private TypeMapping.Builder convertMappingsToBuild(Map<String, Object> mappings) {
+        TypeMapping.Builder builder = new TypeMapping.Builder().withJson(new ByteArrayInputStream(Objects.requireNonNull(JsonUtils.toJsonStr(mappings)).getBytes()));
+        
+        return builder;
+    }
+    
+    
     private co.elastic.clients.elasticsearch._types.mapping.Property convertToProperty(Map<String, Object> propertyMap) {
         
         // 将整个propertyMap转换为JsonData，然后直接创建Property
         return co.elastic.clients.elasticsearch._types.mapping.Property.of(
-                p -> p.withJson(new ByteArrayInputStream(Objects.requireNonNull(JsonUtils.toJsonStr(propertyMap)).getBytes()))
+                p -> {
+                    String jsonStr = JsonUtils.toJsonStr(propertyMap);
+                    return p.withJson(new ByteArrayInputStream(Objects.requireNonNull(jsonStr).getBytes()));
+                }
         );
     }
     
     private Map<String, Object> convertTypeMapping(TypeMapping typeMapping) {
         // 简化实现，实际需要根据TypeMapping的具体结构来转换
-        Map<String, Object> result = new HashMap<>();
-        if (typeMapping.properties() != null) {
-            Map<String, Property> properties = typeMapping.properties();
-            HashMap<String, Object> obj = new HashMap<>();
-            properties.forEach((k, v) -> {
-                
-                String string = String.valueOf(JsonpUtils.toString(v,new StringBuilder()));
-                // 转换为Map
-                Map<String, Object> map = JsonUtils.toMap(string);
-                obj.put(k,map);
-            });
-            result.put(PROPERTIES, obj);
-        }
-        return result;
+        // Map<String, Object> result = new HashMap<>();
+        //        if (typeMapping.properties() != null) {
+        //            Map<String, Property> properties = typeMapping.properties();
+        //            HashMap<String, Object> obj = new HashMap<>();
+        //            properties.forEach((k, v) -> {
+        //
+        //                String string = String.valueOf(JsonpUtils.toString(v, new StringBuilder()));
+        //                // 转换为Map
+        //                Map<String, Object> map = JsonUtils.toMap(string);
+        //                obj.put(k, map);
+        //            });
+        //            result.put(PROPERTIES, obj);
+        //        }
+        String string = String.valueOf(JsonpUtils.toString(typeMapping, new StringBuilder()));
+        // 转换为Map
+        Map<String, Object> map = JsonUtils.toMap(string);
+        return map;
     }
     
     private void printInfoLog(String format, Object... params) {
