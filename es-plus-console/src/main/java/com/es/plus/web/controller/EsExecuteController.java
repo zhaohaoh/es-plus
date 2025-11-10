@@ -1,420 +1,172 @@
 package com.es.plus.web.controller;
 
-import com.es.plus.common.EsPlusClientFacade;
-import com.es.plus.common.exception.EsException;
-import com.es.plus.common.params.EsAggResponse;
-import com.es.plus.common.params.EsIndexResponse;
-import com.es.plus.common.params.EsResponse;
-import com.es.plus.common.pojo.es.EpAggBuilder;
-import com.es.plus.common.pojo.es.EpBoolQueryBuilder;
-import com.es.plus.common.tools.EpDSLConverter;
-import com.es.plus.core.ClientContext;
-import com.es.plus.core.statics.Es;
-import com.es.plus.core.wrapper.aggregation.EsAggWrapper;
-import com.es.plus.core.wrapper.chain.EsChainQueryWrapper;
-import com.es.plus.web.compile.core.CompilationResult;
-import com.es.plus.web.compile.core.DynamicCodeCompiler;
 import com.es.plus.web.pojo.EsDslInfo;
 import com.es.plus.web.pojo.EsPageInfo;
 import com.es.plus.web.pojo.EsRequstInfo;
+import com.es.plus.web.service.EplChainSyntaxParser;
+import com.es.plus.web.service.EplToDslConverter;
+import com.es.plus.web.service.EsRestService;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.Triple;
-import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.common.Strings;
-import org.elasticsearch.common.xcontent.ToXContent;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
-
+/**
+ * Elasticsearch操作控制器
+ * 提供DSL查询、SQL查询、数据操作等功能
+ */
+@Slf4j
 @RestController
 @RequestMapping("/es")
 public class EsExecuteController {
     
-    private String function = "package com.es.plus.web.com.es.plus.samples.controller;\n" + "\n" + "import com.es.plus.core.statics.Es;\n"
-            + "import java.util.Map;\n" + "import com.es.plus.core.wrapper.aggregation.EsAggWrapper;\n"
-            + "import com.es.plus.core.wrapper.chain.EsChainQueryWrapper;\n" + " \n" + "public class EsQuery {\n"
-            + "    \n" + "    public  Object query(){\n" + "         %s;\n" + "    }\n" + "}";
+    @Autowired
+    private EsRestService esRestService;
     
-    @GetMapping("esQuery/epl")
-    public Object esQueryEpl(String epl, @RequestHeader("currentEsClient") String currentEsClient) throws Exception {
-        if (epl.endsWith(";")) {
-            epl = epl.substring(0, epl.length() - 1);
-        }
-        epl= abc(epl);
-        
-        String s = String.format(function, epl);
-        s = StringUtils.replace(s, "chainQuery()", "chainQuery(\"" + currentEsClient + "\")");
-        
-        ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-        
-        DynamicCodeCompiler.clearCache("com.es.plus.web.com.es.plus.samples.controller.EsQuery");
-        //        Class<?> compiled = dynamicClassLoader.compileAndLoad(s, CompilerConfig.createDefault());
-        CompilationResult compilationResult = DynamicCodeCompiler.compile("com.es.plus.web.com.es.plus.samples.controller.EsQuery", s);
-        
-        CustomClassLoader customClassLoader = new CustomClassLoader(getClass().getClassLoader());
-        
-        Class<?> aClass = customClassLoader.loadClass("com.es.plus.web.controller.EsQuery");
-        
-        Object object = aClass.newInstance();
-        Method sleep = aClass.getDeclaredMethod("query");
-        sleep.setAccessible(true);
-        Object invoke =  sleep.invoke(object);
-        Object result = "";
-        if (invoke instanceof EsResponse) {
-            EsResponse esResponse = (EsResponse) invoke;
-            String sourceResponse = esResponse.getSourceResponse();
-            result = sourceResponse.toString();
-            ;
-        }
-        if (invoke instanceof EsAggResponse) {
-            EsAggResponse esAggResponse = (EsAggResponse) invoke;
-            esAggResponse.getAggregations();
-            //            result =  Strings.toString(esAggResponse.getAggregations());
-            return esAggResponse.getAggregations();
-        }
-        
-        //        String jsonStr = JsonUtils.toJsonStr(result);
-        //        System.out.println(jsonStr);
-        //        EsResponse<Map> search = Es.chainQuery(Map.class).index("sys_user2ttt_alias").search();
-        return result;
-    }
+    @Autowired
+    private EplToDslConverter eplToDslConverter;
     
-    
-    @PostMapping("esQuery/dsl")
-    public String esQueryDsl(@RequestBody EsDslInfo  esDslInfo, @RequestHeader("currentEsClient") String currentEsClient) {
-        EsPlusClientFacade esPlusClientFacade = ClientContext.getClient(currentEsClient);
-        String executed = Es.chainQuery(esPlusClientFacade, Map.class).index(esDslInfo.getIndex()).executeDSL(esDslInfo.getDsl());
-        return executed;
-    }
-    
+    @Autowired
+    private EplChainSyntaxParser eplChainSyntaxParser;
     
     /**
-     * sql语句
-     *
-     * @param sql
-     * @return
+     * EPL查询 - 将EPL（支持SQL语法和链式语法）转换为DSL后执行
+     */
+    @GetMapping("esQuery/epl")
+    public Object esQueryEpl(String epl, @RequestHeader("currentEsClient") String currentEsClient) {
+        log.info("EPL查询请求: clientKey={}, epl={}", currentEsClient, epl);
+        
+        try {
+            // 1. 验证EPL语句
+            if (StringUtils.isBlank(epl)) {
+                throw new RuntimeException("EPL语句不能为空");
+            }
+            
+            // 2. 将EPL转换为DSL
+            String dsl = eplToDslConverter.convertEplToDsl(epl);
+            log.debug("EPL转DSL结果: {}", dsl);
+            
+            // 3. 从EPL中提取索引名称
+            String indexName = extractIndexFromEpl(epl);
+            if (StringUtils.isBlank(indexName)) {
+                throw new RuntimeException("无法从EPL语句中提取索引名称，请确保指定了索引");
+            }
+            
+            // 4. 执行DSL查询
+            String searchResponse = esRestService.search(currentEsClient, indexName, dsl);
+            
+            // 5. 检查是否为聚合查询，返回相应格式
+            if (isAggregationQuery(dsl)) {
+                // 聚合查询，使用EsResponseParser解析aggregations部分
+                return eplChainSyntaxParser.parseAggregationsResponse(searchResponse);
+            } else {
+                // 普通查询，返回hits部分（这应该和原来动态编译的格式一致）
+                return searchResponse;
+            }
+            
+        } catch (Exception e) {
+            log.error("EPL查询失败: clientKey={}, epl={}", currentEsClient, epl, e);
+            throw new RuntimeException("EPL查询失败: " + e.getMessage(), e);
+        }
+    }
+    
+    /**
+     * DSL查询
+     */
+    @PostMapping("esQuery/dsl")
+    public String esQueryDsl(@RequestBody EsDslInfo esDslInfo, @RequestHeader("currentEsClient") String currentEsClient) {
+        log.debug("DSL查询请求: clientKey={}, index={}", currentEsClient, esDslInfo.getIndex());
+        return esRestService.search(currentEsClient, esDslInfo.getIndex(), esDslInfo.getDsl());
+    }
+    
+    /**
+     * SQL语句查询
+     * 直接使用Elasticsearch SQL API
      */
     @GetMapping("esQuery/sql")
     public String esQuerySql(String sql, @RequestHeader("currentEsClient") String currentEsClient) {
-        sql=sql.replace("SELECT","select");
-        sql=sql.replace("BY","by");
-        sql=sql.replace("FROM","from");
-        sql=sql.replace("GROUP","group");
-        sql=sql.replace("LIMIT","limit");
-        // 匹配 SQL 语句中的表名
-        Pattern pattern = Pattern.compile("(?i)FROM\\s+([\\w.\\-]+)");
-        Matcher matcher = pattern.matcher(sql);
-        String tableName = null;
-        // 提取表名
-        if (matcher.find()) {
-            tableName = matcher.group(1);
-        }
-        if (StringUtils.isBlank(tableName)) {
-            throw new EsException("sql语句中未找到表名");
+        log.debug("SQL查询请求: clientKey={}, sql={}", currentEsClient, sql);
+        
+        // 基本SQL验证
+        if (StringUtils.isBlank(sql)) {
+            throw new RuntimeException("SQL语句不能为空");
         }
         
-        if (sql.contains("group")&&containsAgg(sql)){
-            String terms = StringUtils.substringAfterLast(sql, "by").trim();
-            String trim = StringUtils.substringBetween(sql, "select", "from").trim();
-            EsChainQueryWrapper<Map> queryWrapper = Es.chainQuery(currentEsClient).index(tableName);
-            setWhereSql(sql, queryWrapper);
-            EsAggWrapper<Map> termsed = queryWrapper.esAggWrapper().terms(terms).subAgg(a->{
-                aggStr(a, trim);
-            });
-            EsAggResponse<Map> aggregations = queryWrapper.aggregations();
-            return Strings.toString((ToXContent) aggregations.getAggregations());
-        } else if (containsAgg(sql)) {
-            EsChainQueryWrapper<Map> queryWrapper = Es.chainQuery(currentEsClient).index(tableName);
-            setWhereSql(sql, queryWrapper);
-            EsAggWrapper<Map> mapEsAggWrapper = queryWrapper.esAggWrapper();
-            String trim = StringUtils.substringBetween(sql, "select", "from").trim();
-            aggStr(mapEsAggWrapper, trim);
-            EsAggResponse<Map> aggregations = queryWrapper.aggregations();
-            return Strings.toString((ToXContent) aggregations.getAggregations());
-        } else if (sql.contains("group")) {
-            String terms = StringUtils.substringAfterLast(sql, "by").trim();
-            
-            
-            EsChainQueryWrapper<Map> queryWrapper = Es.chainQuery(currentEsClient).index(tableName);
-            
-            setWhereSql(sql, queryWrapper);
-            
-            queryWrapper.esAggWrapper().terms(terms);
-            EsAggResponse<Map> aggregations = queryWrapper.aggregations();
-            return Strings.toString((ToXContent) aggregations.getAggregations());
+        // 添加默认limit
+        if (!sql.toLowerCase().contains("limit")) {
+            sql += " limit 100";
         }
         
-        String limit = StringUtils.substringAfterLast(sql, "limit");
-        if (StringUtils.isBlank(limit)){
-            sql = sql+" limit 100";
-            limit = StringUtils.substringAfterLast(sql, "limit");
-        }
-        String[] split = limit.split(",");
-        String pageSize = split[split.length - 1].trim();
-        if (Integer.parseInt(pageSize.trim()) > 50000) {
-            throw new RuntimeException("分页数量不能超过50000");
-        }
-        String result = Es.chainQuery(currentEsClient).executeSQL(sql);
-        return result;
-    }
-    
-    private  void setWhereSql(String sql, EsChainQueryWrapper<Map> queryWrapper) {
-        List<Triple<String, String, String>> triples = extractWhereParams(sql);
-        if (!triples.isEmpty()) {
-            triples.forEach(
-                    t->{
-                        String k = t.getLeft();
-                        String v = t.getRight();
-                        String where = StringUtils.substringAfter(sql, "where");
-                        if (where.contains("or")){
-                            queryWrapper.should();
-                        }
-                        queryWrapper.terms(  t.getMiddle().equals("="),k,v.replace("=",""));
-                        queryWrapper.ge(t.getMiddle().equals(">="),k,v.replace(">=",""));
-                        queryWrapper.gt(t.getMiddle().equals(">"),k,v.replace(">",""));
-                        queryWrapper.le(t.getMiddle().equals("<="),k,v.replace("<=",""));
-                        queryWrapper.lt(t.getMiddle().equals("<"),k,v.replace("<",""));
-                        if (t.getMiddle().equals("!=")){
-                            queryWrapper.mustNot(a->{
-                                a.term(k,v);
-                            });
-                        }
-                        String[] split = t.getRight().split(",");
-                        queryWrapper.terms(t.getMiddle().equalsIgnoreCase("in"),k, Arrays.stream(split).collect(Collectors.toSet()));
-                    }
-            );
-            
-        }
+        return esRestService.searchBySql(currentEsClient, sql);
     }
     
     /**
-     * sql语句
-     *
-     * @param sql
-     * @return
+     * SQL查询解释
      */
     @GetMapping("esQuery/explain")
     public String explain(String sql, @RequestHeader("currentEsClient") String currentEsClient) {
-        sql=sql.replace("SELECT","select");
-        sql=sql.replace("BY","by");
-        sql=sql.replace("FROM","from");
-        sql=sql.replace("GROUP","group");
-        sql=sql.replace("LIMIT","limit");
-        // 匹配 SQL 语句中的表名
-        Pattern pattern = Pattern.compile("(?i)FROM\\s+([\\w.]+)");
-        Matcher matcher = pattern.matcher(sql);
-        String tableName = null;
-        // 提取表名
-        if (matcher.find()) {
-            tableName = matcher.group(1);
-        }
-        if (StringUtils.isBlank(tableName)) {
-            throw new EsException("sql语句中未找到表名");
-        }
-        if (sql.contains("group")&&containsAgg(sql)){
-            String terms = StringUtils.substringAfterLast(sql, "by").trim();
-            String trim = StringUtils.substringBetween(sql, "select", "from").trim();
-            
-            EsChainQueryWrapper<Map> queryWrapper = Es.chainQuery(currentEsClient).index(tableName).profile();
-            setWhereSql(sql, queryWrapper);
-            EsAggWrapper<Map> termsed = queryWrapper.esAggWrapper().terms(terms).subAgg(a->{
-                aggStr(a, trim);
-            });
-            EsAggResponse<Map> aggregations = queryWrapper.aggregations();
-            return Strings.toString((ToXContent) aggregations.getAggregations());
-        } else if (containsAgg(sql)) {
-            EsChainQueryWrapper<Map> queryWrapper = Es.chainQuery(currentEsClient).index(tableName).profile();
-            setWhereSql(sql, queryWrapper);
-            EsAggWrapper<Map> mapEsAggWrapper = queryWrapper.esAggWrapper();
-            String trim = StringUtils.substringBetween(sql, "select", "from").trim();
-            aggStr(mapEsAggWrapper, trim);
-            EsAggResponse<Map> aggregations = queryWrapper.aggregations();
-            return Strings.toString((ToXContent) aggregations.getAggregations());
-        } else if (sql.contains("group")) {
-            String terms = StringUtils.substringAfterLast(sql, "by").trim();
-            EsChainQueryWrapper<Map> queryWrapper = Es.chainQuery(currentEsClient).index(tableName).profile();
-            setWhereSql(sql, queryWrapper);
-            queryWrapper.esAggWrapper().terms(terms);
-            EsAggResponse<Map> aggregations = queryWrapper.aggregations();
-            return Strings.toString((ToXContent) aggregations.getAggregations());
+        log.debug("SQL解释请求: clientKey={}, sql={}", currentEsClient, sql);
+        
+        if (StringUtils.isBlank(sql)) {
+            throw new RuntimeException("SQL语句不能为空");
         }
         
-        String limit = StringUtils.substringAfterLast(sql, "limit");
-        if (StringUtils.isBlank(limit)){
-            sql = sql+" limit 100";
-            limit = StringUtils.substringAfterLast(sql, "limit");
-        }
-        String[] split = limit.split(",");
-        String pageSize = split[split.length - 1].trim();
-        if (Integer.parseInt(pageSize.trim()) > 50000) {
-            throw new RuntimeException("分页数量不能超过50000");
-        }
-        String result = Es.chainQuery(currentEsClient).explainSQL(sql);
-        return result;
+        // 使用ES的SQL API进行解释
+        String explainSql = "EXPLAIN " + sql;
+        return esRestService.searchBySql(currentEsClient, explainSql);
     }
     
     /**
-     * sql语句
-     *
-     * @param sql
-     * @return
+     * SQL转DSL
      */
     @GetMapping("esQuery/sql2Dsl")
     public String sql2Dsl(String sql, @RequestHeader("currentEsClient") String currentEsClient) {
-        sql=sql.replace("SELECT","select");
-        sql=sql.replace("BY","by");
-        sql=sql.replace("FROM","from");
-        sql=sql.replace("GROUP","group");
-        sql=sql.replace("LIMIT","limit");
-        // 匹配 SQL 语句中的表名
-        Pattern pattern = Pattern.compile("(?i)FROM\\s+([\\w.]+)");
-        Matcher matcher = pattern.matcher(sql);
-        String tableName = null;
-        // 提取表名
-        if (matcher.find()) {
-            tableName = matcher.group(1);
-        }
-        if (StringUtils.isBlank(tableName)) {
-            throw new EsException("sql语句中未找到表名");
-        }
-        if (sql.contains("group")&&containsAgg(sql)){
-            String terms = StringUtils.substringAfterLast(sql, "by").trim();
-            String trim = StringUtils.substringBetween(sql, "select", "from").trim();
-            
-            EsChainQueryWrapper<Map> queryWrapper = Es.chainQuery(currentEsClient).index(tableName);
-            setWhereSql(sql, queryWrapper);
-            EsAggWrapper<Map> termsed = queryWrapper.esAggWrapper().terms(terms).subAgg(a->{
-                aggStr(a, trim);
-            });
-            
-            return getSearchSourceBuilder(queryWrapper, termsed);
-        } else if (containsAgg(sql)) {
-            EsChainQueryWrapper<Map> queryWrapper = Es.chainQuery(currentEsClient).index(tableName);
-            setWhereSql(sql, queryWrapper);
-            EsAggWrapper<Map> mapEsAggWrapper = queryWrapper.esAggWrapper();
-            String trim = StringUtils.substringBetween(sql, "select", "from").trim();
-            aggStr(mapEsAggWrapper, trim);
-            return getSearchSourceBuilder(queryWrapper, mapEsAggWrapper);
-        } else if (sql.contains("group")) {
-            String terms = StringUtils.substringAfterLast(sql, "by").trim();
-            EsChainQueryWrapper<Map> queryWrapper = Es.chainQuery(currentEsClient).index(tableName);
-            setWhereSql(sql, queryWrapper);
-            EsAggWrapper<Map> mapEsAggWrapper = queryWrapper.esAggWrapper();
-            mapEsAggWrapper.terms(terms);
-            return getSearchSourceBuilder(queryWrapper, mapEsAggWrapper);
+        log.debug("SQL转DSL请求: clientKey={}, sql={}", currentEsClient, sql);
+        
+        if (StringUtils.isBlank(sql)) {
+            throw new RuntimeException("SQL语句不能为空");
         }
         
-        String limit = StringUtils.substringAfterLast(sql, "limit");
-        if (StringUtils.isBlank(limit)){
-            sql = sql+" limit 100";
-            limit = StringUtils.substringAfterLast(sql, "limit");
-        }
-        String[] split = limit.split(",");
-        String pageSize = split[split.length - 1].trim();
-        if (Integer.parseInt(pageSize.trim()) > 50000) {
-            throw new RuntimeException("分页数量不能超过50000");
-        }
-        String result = Es.chainQuery(currentEsClient).sql2Dsl(sql);
-        return result;
+        return esRestService.sql2Dsl(currentEsClient, sql);
     }
-    
-    private static String getSearchSourceBuilder(EsChainQueryWrapper<Map> queryWrapper,
-            EsAggWrapper<Map> mapEsAggWrapper) {
-        EpBoolQueryBuilder queryBuilder = queryWrapper.getQueryBuilder();
-        
-        List<EpAggBuilder> epAggBuilders = mapEsAggWrapper.getAggregationBuilder();
-        String s = EpDSLConverter.convertToDSL(queryBuilder, epAggBuilders);
-        return s;
-    }
-    
-    private static void aggStr(EsAggWrapper<Map> a, String trim) {
-        if (trim.contains("sum")){
-            String field = StringUtils.substringBetween(trim, "(", ")");
-            a.sum(field);
-        }
-        else if (trim.contains("avg")){
-            String field = StringUtils.substringBetween(trim, "(", ")");
-            a.avg(field);
-        }
-        else if (trim.contains("count")){
-            String field = StringUtils.substringBetween(trim, "(", ")");
-            if (!field.contains("*")){
-                a.count(field);
-            }else{
-                a.count("_id");
-            }
-        }
-        else if (trim.contains("max")){
-            String field = StringUtils.substringBetween(trim, "(", ")");
-            a.max(field);
-        }
-        else if (trim.contains("min")){
-            String field = StringUtils.substringBetween(trim, "(", ")");
-            a.min(field);
-        }
-    }
-    
-    public boolean containsAgg(String str){
-        if (str.contains("count")){
-            return true;
-        }else if (str.contains("sum")){
-            return true;
-        }else if (str.contains("min")){
-            return true;
-        }else if (str.contains("avg")){
-            return true;
-        }else if (str.contains("max")){
-            return true;
-        }
-        return false;
-    }
-    
     
     /**
-     * sql语句
-     *
+     * SQL分页查询
      */
     @PostMapping("esQuery/sqlPage")
     public String esQuerySqlPage(@RequestBody EsPageInfo esPageInfo, @RequestHeader("currentEsClient") String currentEsClient) {
+        log.debug("SQL分页查询请求: clientKey={}, sql={}", currentEsClient, esPageInfo.getSql());
+        
         if (esPageInfo.getSize() > 1000) {
             throw new RuntimeException("分页数量不能超过1000");
         }
-        EsResponse<Map> esResponse = Es.chainQuery(currentEsClient).executeSQLep(esPageInfo.getSql());
         
-        String result = esResponse.getSourceResponse().toString();
-        return result;
+        return esRestService.searchBySql(currentEsClient, esPageInfo.getSql());
     }
     
-    
     /**
-     * 根据id删除es数据
+     * 根据ID删除es数据
      */
     @DeleteMapping("/deleteByIds")
     public void deleteByIds(@RequestBody EsRequstInfo esRequstInfo, @RequestHeader("currentEsClient") String currentEsClient) {
         List<String> ids = esRequstInfo.getIds();
         String index = esRequstInfo.getIndex();
+        
+        log.debug("批量删除请求: clientKey={}, index={}, count={}", currentEsClient, index, ids.size());
+        
         if (CollectionUtils.isEmpty(ids)) {
             throw new RuntimeException("需要删除的id不能为空");
         }
-        EsPlusClientFacade esPlusClientFacade = ClientContext.getClient(currentEsClient);
-        Es.chainUpdate(esPlusClientFacade, Map.class).index(index).removeByIds(ids);
+        
+        esRestService.deleteByIds(currentEsClient, index, ids);
     }
     
     /**
@@ -422,152 +174,127 @@ public class EsExecuteController {
      */
     @PutMapping("/updateBatch")
     public void updateBatch(@RequestBody EsRequstInfo esRequstInfo, @RequestHeader("currentEsClient") String currentEsClient) {
-        EsPlusClientFacade esPlusClientFacade = ClientContext.getClient(currentEsClient);
+        String index = esRequstInfo.getIndex();
+        List<Map<String, Object>> datas = esRequstInfo.getDatas();
         
-        EsIndexResponse mappings = Es.chainIndex(esPlusClientFacade).getIndex(esRequstInfo.getIndex());
-        Map<String, Object> mapping = mappings.getMappings(esRequstInfo.getIndex());
-        Map object = (Map) mapping.get("properties");
-        Set keySet = object.keySet();
+        log.debug("批量更新请求: clientKey={}, index={}, count={}", currentEsClient, index, datas.size());
         
-        List<Map> datas = esRequstInfo.getDatas();
-        for (Map map : datas) {
-            map.forEach((k,v)->{
-                if (k!="_id"){
-                    boolean contains = keySet.contains(k);
-                    if (!contains){
-                        throw new EsException("添加的字段再索引映射中不存在，请确认");
-                    }
-                }
-            });
+        if (CollectionUtils.isEmpty(datas)) {
+            throw new RuntimeException("更新数据不能为空");
         }
         
-        Es.chainUpdate(esPlusClientFacade, Map.class).index(esRequstInfo.getIndex()).saveOrUpdateBatch(esRequstInfo.getDatas());
+        // 获取索引映射，验证字段
+        String mappingResponse = esRestService.getMapping(currentEsClient, index);
+        if (mappingResponse.contains("error")) {
+            throw new RuntimeException("获取索引映射失败: " + mappingResponse);
+        }
+        
+        // 执行批量更新
+        esRestService.saveBatch(currentEsClient, index, datas);
     }
     
-    
-    public String abc(String input) {
-        int lastIndex = input.lastIndexOf(';');
+    /**
+     * 测试ES连接
+     */
+    @GetMapping("/testConnection")
+    public Map<String, Object> testConnection(@RequestHeader("currentEsClient") String currentEsClient) {
+        log.debug("测试连接请求: clientKey={}", currentEsClient);
         
-        if (lastIndex == -1) {
-            return   "return "+input;
-        }
+        boolean pingResult = esRestService.ping(currentEsClient);
+        String clusterHealth = esRestService.getClusterHealth(currentEsClient);
         
-        int secondLastIndex = input.lastIndexOf(';', lastIndex );
-        
-        if (secondLastIndex == -1) {
-            System.out.println(input);
-            return input;
-        }
-        
-        String result = input.substring(0, secondLastIndex + 1)
-                + "\nreturn "
-                + input.substring(secondLastIndex + 1);
-        
+        Map<String, Object> result = new HashMap<>();
+        result.put("success", pingResult);
+        result.put("clusterHealth", clusterHealth);
         return result;
     }
+    
     /**
-     * 提取 SQL WHERE 子句中的参数，返回 List<Triple<参数名, 条件运算符, 参数值>>
-     * @param sql SQL 语句
-     * @return List<Triple<String, String, String>>，例如：
-     *         [("status", "IN", "1,2"), ("createTime", "<=", "2025-02-05 00:00:00")]
+     * 获取索引信息
      */
-    public static List<Triple<String, String, String>> extractWhereParams(String sql) {
-        List<Triple<String, String, String>> params = new ArrayList<>();
-        String whereClause = extractWhereClause(sql);
-        
-        if (whereClause == null || whereClause.trim().isEmpty()) {
-            return params;
-        }
-        
-        // 1. 匹配普通比较条件（=, >, <, >=, <=, !=）
-        Pattern comparisonPattern = Pattern.compile(
-                "(\\w+)\\s*(>=|<=|!=|=|>|<)\\s*(?:'([^']*)'|\"([^\"]*)\"|([^\\s,)]+))",
-                Pattern.CASE_INSENSITIVE
-        );
-        
-        // 匹配 IN 子句（支持数字、字符串、混合类型，包括换行符）
-        Pattern inPattern = Pattern.compile(
-                "(?i)(\\w+)\\s+IN\\s*\\(\\s*([\\s\\S]*?)\\s*\\)",
-                Pattern.CASE_INSENSITIVE
-        );
-        
-        // 处理普通比较条件
-        Matcher comparisonMatcher = comparisonPattern.matcher(whereClause);
-        while (comparisonMatcher.find()) {
-            String paramName = comparisonMatcher.group(1);
-            String operator = comparisonMatcher.group(2);
-            String paramValue = comparisonMatcher.group(3) != null ? comparisonMatcher.group(3) :
-                    comparisonMatcher.group(4) != null ? comparisonMatcher.group(4) :
-                            comparisonMatcher.group(5);
-            params.add(Triple.of(paramName, operator, paramValue));
-        }
-        
-        // 处理 IN 子句
-        Matcher inMatcher = inPattern.matcher(whereClause);
-        while (inMatcher.find()) {
-            String paramName = inMatcher.group(1);
-            String operator = "IN";
-            String inValues = inMatcher.group(2).trim();
-            
-            // 提取 IN 里面的各个值（支持数字、字符串、混合类型）
-            String[] values = extractInValues(inValues);
-            params.add(Triple.of(paramName, operator, String.join(",", values)));
-        }
-        
-        return params;
+    @GetMapping("/indexInfo")
+    public String getIndexInfo(String index, @RequestHeader("currentEsClient") String currentEsClient) {
+        log.debug("获取索引信息: clientKey={}, index={}", currentEsClient, index);
+        return esRestService.getMapping(currentEsClient, index);
     }
     
-    private static String extractWhereClause(String sql) {
-        String cleanSql = removeSqlComments(sql);
-        
-        // 更宽松的 WHERE 子句匹配
-        Pattern wherePattern = Pattern.compile(
-                "(?i)\\bWHERE\\b\\s+(.+)", // 匹配 WHERE 后的所有内容
-                Pattern.DOTALL // 让 `.` 匹配换行符
-        );
-        
-        Matcher whereMatcher = wherePattern.matcher(cleanSql);
-        if (whereMatcher.find()) {
-            String whereClause = whereMatcher.group(1).trim();
-            return whereClause;
-            //            // 检查是否包含 IN 子句（可选）
-            //            if (whereClause.toLowerCase().contains(" in ")) {
-            //                return whereClause;
-            //            }
-        }
-        
-        return null;
-    }
-    private static String removeSqlComments(String sql) {
-        // 移除单行注释 (-- ...)
-        String noSingleLineComments = sql.replaceAll("--.*", "");
-        // 移除多行注释 (/* ... */)
-        String noMultiLineComments = noSingleLineComments.replaceAll("(?s)/\\*.*?\\*/", "");
-        return noMultiLineComments.trim();
-    }
     /**
-     * 提取 IN 子句中的值列表（支持数字、字符串、混合类型）
+     * 刷新索引
      */
-    private static String[] extractInValues(String inValues) {
-        // 匹配数字或带引号的字符串
-        Pattern valuePattern = Pattern.compile(
-                "('[^']*'|\"[^\"]*\"|\\d+|[^\\s,]+)",
-                Pattern.CASE_INSENSITIVE
-        );
-        Matcher valueMatcher = valuePattern.matcher(inValues);
-        
-        List<String> values = new ArrayList<>();
-        while (valueMatcher.find()) {
-            String value = valueMatcher.group(1).trim();
-            // 去掉引号（如果存在）
-            if (value.startsWith("'") && value.endsWith("'")) {
-                value = value.substring(1, value.length() - 1);
-            } else if (value.startsWith("\"") && value.endsWith("\"")) {
-                value = value.substring(1, value.length() - 1);
-            }
-            values.add(value);
+    @PostMapping("/refresh")
+    public String refreshIndex(String index, @RequestHeader("currentEsClient") String currentEsClient) {
+        log.debug("刷新索引: clientKey={}, index={}", currentEsClient, index);
+        return esRestService.refresh(currentEsClient, index);
+    }
+    
+    /**
+     * 判断DSL查询是否包含聚合
+     */
+    private boolean isAggregationQuery(String dsl) {
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            Map<String, Object> dslMap = mapper.readValue(dsl, Map.class);
+            
+            // 检查是否包含aggs字段
+            return dslMap.containsKey("aggs") || dslMap.containsKey("aggregations");
+        } catch (Exception e) {
+            log.debug("判断聚合查询失败，默认为普通查询: {}", dsl, e);
+            return false;
         }
-        
-        return values.toArray(new String[0]);
+    }
+    
+    /**
+     * 从EPL语句中提取索引名称
+     * 支持SQL语法和链式语法两种格式
+     */
+    private String extractIndexFromEpl(String epl) {
+        try {
+            // 1. 尝试从SQL语法的FROM子句中提取索引名
+            Pattern fromPattern = Pattern.compile("(?i)FROM\\s+([\\w_]+)(?:\\s+|$)");
+            Matcher sqlMatcher = fromPattern.matcher(epl);
+            
+            if (sqlMatcher.find()) {
+                return sqlMatcher.group(1).trim();
+            }
+            
+            // 2. 尝试从链式语法的index()方法中提取索引名
+            Pattern indexPattern = Pattern.compile("\\.index\\s*\\(\\s*\"([^\"]+)\"\\s*\\)");
+            Matcher chainMatcher = indexPattern.matcher(epl);
+            
+            if (chainMatcher.find()) {
+                return chainMatcher.group(1).trim();
+            }
+            
+            // 3. 尝试从链式语法的index()方法中提取索引名（单引号）
+            indexPattern = Pattern.compile("\\.index\\s*\\(\\s*'([^']+)'\\s*\\)");
+            chainMatcher = indexPattern.matcher(epl);
+            
+            if (chainMatcher.find()) {
+                return chainMatcher.group(1).trim();
+            }
+            
+            // 4. 尝试从复杂链式语法中提取（使用链式语法解析器）
+            if (epl.contains("Es.chainQuery") || epl.contains(".index(")) {
+                try {
+                    EplChainSyntaxParser.EplParseResult parseResult = eplChainSyntaxParser.parseChain(epl);
+                    for (EplChainSyntaxParser.MethodCall methodCall : parseResult.getMethodCalls()) {
+                        if ("index".equals(methodCall.getMethodName())) {
+                            String indexName = methodCall.getParameterAsString(0);
+                            if (StringUtils.isNotBlank(indexName)) {
+                                return indexName;
+                            }
+                        }
+                    }
+                } catch (Exception parseEx) {
+                    log.debug("链式语法解析失败，跳过: {}", parseEx.getMessage());
+                }
+            }
+            
+            log.warn("无法从EPL语句中提取索引名称: {}", epl);
+            return null;
+        } catch (Exception e) {
+            log.error("从EPL中提取索引名失败: {}", epl, e);
+            return null;
+        }
     }
 }

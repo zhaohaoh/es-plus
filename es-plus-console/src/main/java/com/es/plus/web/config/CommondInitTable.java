@@ -1,75 +1,26 @@
 package com.es.plus.web.config;
 
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.es.plus.autoconfigure.auto.EsClientConfiguration;
-import com.es.plus.autoconfigure.properties.ClientProperties;
-import com.es.plus.autoconfigure.util.Client8Util;
-import com.es.plus.autoconfigure.util.ClientUtil;
-import com.es.plus.common.EsPlusClientFacade;
-import com.es.plus.core.ClientContext;
-import com.es.plus.web.mapper.EsClientMapper;
-import com.es.plus.web.pojo.EsClientProperties;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
-import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @Component
 public class CommondInitTable {
     
     @Autowired
-    private EsClientMapper esClientMapper;
-    @Autowired
     private JdbcTemplate jdbcTemplate;
     
-    
     @PostConstruct
-    public void init() throws SQLException, IOException {
-        
-        //初始化数据库表
+    public void init() throws SQLException {
+        // 初始化数据库表
         createTables();
         
-        //初始化客户端
-        createClient();
-    }
-    
-    private void createClient() {
-        List<EsClientProperties> esClientProperties = esClientMapper.selectList(Wrappers.lambdaQuery());
-        Map<EsClientProperties, ClientProperties> map = esClientProperties.stream()
-                .collect(Collectors.toMap(a->a,c->{
-                    ClientProperties clientProperties = new ClientProperties();
-                    BeanUtils.copyProperties(c, clientProperties);
-                    return clientProperties;
-                }));
-        
-        map.forEach((k, v) -> {
-            ClientProperties clientProperties = v;
-            
-            BeanUtils.copyProperties(k, clientProperties);
-            Object client;
-            if ("8".equals(k.getVersion())){
-                client = Client8Util.getElasticsearchClient(clientProperties);
-            }else {
-                client = ClientUtil.getRestHighLevelClient(clientProperties);
-            }
-            String address = clientProperties.getAddress();
-            address = StringUtils.replace(address,"http://","");
-            address = StringUtils.replace(address,"https://","");
-            clientProperties.setAddress(address);
-            
-            EsPlusClientFacade esPlusClientFacade = ClientContext.buildEsPlusClientFacade(clientProperties.getAddress(),
-                    client,
-                    null,Integer.parseInt(k.getVersion()));
-            ClientContext.addClient(k.getUnikey(), esPlusClientFacade);
-        });
+        // 注意：ES客户端初始化已移除，现在使用HTTP方式直接连接ES
+        // 客户端配置通过数据库管理，由EsRestService动态使用
     }
     
     /**
@@ -94,7 +45,6 @@ public class CommondInitTable {
         }
         
     }
-    
     
     
 }

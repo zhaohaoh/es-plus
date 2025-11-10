@@ -1,14 +1,11 @@
 package com.es.plus.web.service;
 
 import cn.dev33.satoken.stp.StpUtil;
+import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.es.plus.common.EsPlusClientFacade;
-import com.es.plus.common.exception.EsException;
-import com.es.plus.common.params.EsResponse;
-import com.es.plus.common.util.JsonUtils;
-import com.es.plus.core.ClientContext;
-import com.es.plus.core.statics.Es;
+import com.es.plus.web.config.EsException;
+import com.es.plus.web.util.JsonUtils;
 import com.es.plus.web.mapper.EsReindexMapper;
 import com.es.plus.web.pojo.EsReindexTask;
 import com.es.plus.web.pojo.EsindexDataMove;
@@ -17,10 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -28,6 +22,9 @@ public class EsReIndexService {
     
     @Autowired
     private EsReindexMapper esReindexMapper;
+    
+    @Autowired
+    private EsRestService esRestService;
     
     /**
      * reindex任务插入
@@ -55,11 +52,6 @@ public class EsReIndexService {
      * 跨集群数据迁移
      */
     public void indexDataMove(EsindexDataMove esindexDataMove) {
-        EsPlusClientFacade sourceClient = ClientContext.getClient(esindexDataMove.getSourceClient());
-        EsPlusClientFacade targetClient = ClientContext.getClient(esindexDataMove.getTargetClient());
-        if (sourceClient == null || targetClient == null) {
-            throw new EsException("来源或目标客户端为空");
-        }
         if (esindexDataMove.getTargetIndex() == null || esindexDataMove.getSourceIndex() == null) {
             throw new EsException("来源或目标索引为空");
         }
@@ -74,10 +66,19 @@ public class EsReIndexService {
         String batchId = UUID.randomUUID().toString();
         Integer maxSize = esindexDataMove.getMaxSize();
         int currentTotalSize = 0;
-        EsResponse<Map> res = Es.chainQuery(sourceClient, Map.class).index(esindexDataMove.getSourceIndex())
-                .sortByDesc("_id").search(esindexDataMove.getBatchSize());
-        long total = res.getTotal();
-        List<Map> list = res.getList();
+        int batchSize = esindexDataMove.getBatchSize();
+        
+        // 构建初始searchAfter查询
+        String dsl = buildSearchAfterDsl(esindexDataMove.getBatchSize(), null);
+        String searchResponse = esRestService.search(esindexDataMove.getSourceClient(), esindexDataMove.getSourceIndex(), dsl);
+        
+        // 解析响应获取总数和第一批数据
+        Map<String, Object> responseMap = JSONUtil.toBean(searchResponse, cn.hutool.json.JSONObject.class);
+        Map<String, Object> hits = (Map<String, Object>) responseMap.get("hits");
+        long total = hits != null ? (Long) hits.get("total") : 0;
+        List<Map<String, Object>> list = (List<Map<String, Object>>) hits.get("hits");
+        
+        // 创建任务记录
         EsReindexTask esReindexTask = new EsReindexTask();
         esReindexTask.setTaskId(batchId);
         esReindexTask.setSourceIndex(esindexDataMove.getSourceIndex());
@@ -90,54 +91,96 @@ public class EsReIndexService {
         
         reindexTaskInsert(esReindexTask);
         
-        int count =0;
-        if (list != null) {
-            while (true) {
-                if (CollectionUtils.isEmpty(list)) {
-                    Map<String, Object> map = new HashMap<>();
-                    map.put("taskProcess", currentTotalSize + "/" + total);
-                    esReindexTask.setTaskJson(JsonUtils.toJsonStr(map));
-                    reindexTaskUpdate(esReindexTask);
-                    break;
+        int count = 0;
+        Object[] lastSortValues = null;
+        
+        while (true) {
+            if (CollectionUtils.isEmpty(list)) {
+                Map<String, Object> map = new HashMap<>();
+                map.put("taskProcess", currentTotalSize + "/" + total);
+                esReindexTask.setTaskJson(cn.hutool.json.JSONUtil.toJsonStr(map));
+                reindexTaskUpdate(esReindexTask);
+                break;
+            }
+            
+            currentTotalSize += list.size();
+            
+            if (currentTotalSize >= maxSize) {
+                log.info("同步数量大于最大限制数量 停止同步 batchId:{} syncSize:{} maxSize:{}", batchId,
+                        currentTotalSize, maxSize);
+                break;
+            }
+            
+            count++;
+            
+            // 每5次更新一次进度
+            if (count % 5 == 0) {
+                Map<String, Object> map = new HashMap<>();
+                map.put("taskProcess", currentTotalSize + "/" + total);
+                esReindexTask.setTaskJson(cn.hutool.json.JSONUtil.toJsonStr(map));
+                reindexTaskUpdate(esReindexTask);
+            }
+            
+            // 提取_source数据并执行批量保存
+            List<Map<String, Object>> documents = new ArrayList<>();
+            for (Map<String, Object> hit : list) {
+                Map<String, Object> source = (Map<String, Object>) hit.get("_source");
+                if (source != null) {
+                    // 添加_id用于保存
+                    source.put("_id", hit.get("_id"));
+                    documents.add(source);
                 }
-                currentTotalSize += list.size();
                 
-                if (currentTotalSize >= maxSize) {
-                    log.info("同步数量大于最大限制数量 停止同步 batchId:{} syncSize:{} maxSize:{}", batchId,
-                            currentTotalSize, maxSize);
-                    break;
+                // 获取最后一个文档的sort值用于searchAfter
+                if (hit.equals(list.get(list.size() - 1))) {
+                    List<Object> sortValues = (List<Object>) hit.get("sort");
+                    if (sortValues != null) {
+                        lastSortValues = sortValues.toArray();
+                    }
                 }
-                
-                count++;
-                
-                //每10次更新一次进度
-                if (count % 5==0){
-                    Map<String, Object> map = new HashMap<>();
-                    map.put("taskProcess", currentTotalSize + "/" + total);
-                    esReindexTask.setTaskJson(JsonUtils.toJsonStr(map));
-                    reindexTaskUpdate(esReindexTask);
-                }
-                
-                // 执行保存
-                Es.chainUpdate(targetClient, Map.class).index(esindexDataMove.getTargetIndex()).saveOrUpdateBatch(list);
-             
-                
-                Object[] tailSortValues = res.getTailSortValues();
-                log.info("Es-plus 跨集群迁移 batchId:{} 本次同步数据 :{} 本次尾部数据:{}", batchId, list.size(),
-                        tailSortValues);
-                
+            }
+            
+            // 使用HTTP方式批量保存到目标索引
+            if (!documents.isEmpty()) {
+                esRestService.saveBatch(esindexDataMove.getTargetClient(), esindexDataMove.getTargetIndex(), documents);
+            }
+            
+            log.info("Es-plus 跨集群迁移 batchId:{} 本次同步数据 :{} 尾部sort值:{}", batchId, documents.size(),
+                    lastSortValues);
+            
+            // 构建下一次searchAfter查询
+            if (lastSortValues != null) {
+                dsl = buildSearchAfterDsl(batchSize, lastSortValues);
+                searchResponse = esRestService.search(esindexDataMove.getSourceClient(), esindexDataMove.getSourceIndex(), dsl);
+                responseMap = JsonUtils.toMap(searchResponse);
+                hits = (Map<String, Object>) responseMap.get("hits");
+                list = (List<Map<String, Object>>) hits.get("hits");
+            } else {
                 list.clear();
-                res = Es.chainQuery(sourceClient, Map.class).index(esindexDataMove.getSourceIndex()).sortByDesc("_id")
-                        .searchAfterValues(tailSortValues).search(esindexDataMove.getBatchSize());
-                list = res.getList();
-                try {
-                    Thread.sleep(esindexDataMove.getSleepTime());
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
+            }
+            
+            try {
+                Thread.sleep(esindexDataMove.getSleepTime());
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
             }
         }
         
         log.info("Es-plus 跨集群迁移  同步所有数据完成 batchId:{} 总数:{}", batchId, currentTotalSize);
+    }
+    
+    /**
+     * 构建searchAfter查询DSL
+     */
+    private String buildSearchAfterDsl(int size, Object[] searchAfterValues) {
+        Map<String, Object> dsl = new HashMap<>();
+        dsl.put("size", size);
+        dsl.put("sort", new Object[]{"_doc"});
+        
+        if (searchAfterValues != null) {
+            dsl.put("search_after", searchAfterValues);
+        }
+        
+        return cn.hutool.json.JSONUtil.toJsonStr(dsl);
     }
 }

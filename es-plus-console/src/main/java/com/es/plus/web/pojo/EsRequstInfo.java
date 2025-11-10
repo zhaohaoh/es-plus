@@ -7,12 +7,12 @@ import java.util.Map;
 
 @Data
 public class EsRequstInfo {
-    
+
     /**
      * ids
      */
     private List<String> ids;
-    
+
     /**
      * 索引
      */
@@ -20,5 +20,5 @@ public class EsRequstInfo {
     /**
      *
      */
-    private List<Map> datas;
+    private List<Map<String, Object>> datas;
 }

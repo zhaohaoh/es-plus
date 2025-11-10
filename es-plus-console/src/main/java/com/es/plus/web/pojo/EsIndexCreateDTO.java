@@ -1,6 +1,6 @@
 package com.es.plus.web.pojo;
 
-import com.es.plus.common.params.EsSettings;
+import com.es.plus.web.ext.EsSettings;
 import lombok.Data;
 
 import java.util.Map;
