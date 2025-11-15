@@ -4,113 +4,111 @@
       <div class="esQuery-container">
         <el-button-group style="margin-top: -10px; margin-bottom: 10px">
           <el-button type="primary" plain size="small" @click="clickSql"
-            >SQL</el-button
+          >SQL</el-button
           >
           <el-button type="primary" plain size="small" @click="clickEpl"
-            >EPL</el-button
+          >EPL</el-button
           >
           <el-button type="primary" plain size="small" @click="clickDsl"
-            >DSL</el-button
+          >DSL</el-button
           >
         </el-button-group>
 
         <div style="min-height: 30px">
           <!-- :class="{ hidden: queryType !== 'dsl' }" -->
           <el-select
-            v-model="index"
-            placeholder="索引"
-            filterable
-            style="width: 400px; margin-bottom: 10px"
+              v-model="index"
+              placeholder="索引"
+              filterable
+              style="width: 400px; margin-bottom: 10px"
           >
             <el-option
-              v-for="item in indexData"
-              :key="item"
-              :label="item"
-              :value="item"
+                v-for="item in indexData"
+                :key="item"
+                :label="item"
+                :value="item"
             />
           </el-select>
           <!-- :class="{ hidden: queryType !== 'dsl' }" -->
           <el-button
-            @click="copySelectedText"
-            type="primary"
-            style="margin-left: 10px; margin-bottom: 10px"
-            plain
-            >复制名称
+              @click="copySelectedText"
+              type="primary"
+              style="margin-left: 10px; margin-bottom: 10px"
+              plain
+          >复制名称
           </el-button>
           <el-button
-            type="primary"
-            @click="clickIndex"
-            plain
-            style="margin-left: 10px; margin-bottom: 10px"
-            >查看索引</el-button
+              type="primary"
+              @click="clickIndex"
+              plain
+              style="margin-left: 10px; margin-bottom: 10px"
+          >查看索引</el-button
           >
         </div>
 
         <label class="esQuery-label">
-          <Codemirror
-            v-model:value="queryDsl"
-            :options="cmOptions"
-            ref="sqlEditor"
-            border
-            height="630"
-            width="100%"
-            @ready="onSqlReady"
-            class="json-input"
-            placeholder="请输入Sql语句..."
+          <MonacoEditor
+              v-model:value="queryDsl"
+              ref="sqlEditor"
+              :language="editorLanguage"
+              height="630"
+              :showToolbar="false"
+              class="json-input"
+              title=""
+              @ready="onSqlReady"
           />
         </label>
         <div class="controls">
           <el-button
-            size="small"
-            @click="sql2Dsl"
-            type="primary"
-            plain
-            v-show="queryType == 'sql'"
-            >转DSL</el-button
+              size="small"
+              @click="sql2Dsl"
+              type="primary"
+              plain
+              v-show="queryType == 'sql'"
+          >转DSL</el-button
           >
           <el-button
-            size="small"
-            @click="explain"
-            type="primary"
-            plain
-            v-show="queryType == 'sql'"
-            >输出执行计划</el-button
+              size="small"
+              @click="explain"
+              type="primary"
+              plain
+              v-show="queryType == 'sql'"
+          >输出执行计划</el-button
           >
           <el-button
-            size="small"
-            :icon="Search"
-            @click="submitQuery"
-            plain
-            type="primary"
-            >搜索</el-button
+              size="small"
+              :icon="Search"
+              @click="submitQuery"
+              plain
+              type="primary"
+          >搜索</el-button
           >
           <!-- 绑定点击事件 -->
         </div>
       </div>
     </div>
     <div class="right-panel">
-      <Codemirror
-        v-model:value="jsonView"
-        :options="jsonOptions"
-        ref="jsonEd"
-        border
-        class="json-output"
-        height="91%"
-        style="margin-top: 30px"
+      <JsonEditor
+          v-model:value="jsonView"
+          height="650"
+          styles="width: 100%"
+          title="查询结果"
+          class="json-output"
+          style="margin-top: 20px;"
       />
       <div class="footer-button" justify="end">
         <span class="dialog-footer">
           <el-button @click="clickAdd" type="primary" size="small" plain
-            >新增</el-button
+          >新增</el-button
           >
           <el-button @click="clickSave" type="primary" size="small" plain
-            >修改</el-button
+          >修改</el-button
           >
           <el-button type="primary" @click="clickDelete" size="small" plain
-            >删除</el-button
+          >删除</el-button
           >
           <el-button type="primary" @click="clickGetField" size="small" plain
-            >更多操作</el-button
+          >更多操作</el-button
           >
         </span>
       </div>
@@ -125,9 +123,9 @@
     </div>
   </div>
   <el-dialog
-    v-model="addDataVisible"
-    :title="'当前索引:' + index"
-    style="
+      v-model="addDataVisible"
+      :title="'当前索引:' + index"
+      style="
       max-width: 700px;
       position: relative;
       height: 750px;
@@ -136,25 +134,25 @@
   >
     <div>
       <JsonEditor
-        v-model:value="addData"
-        height="600"
-        styles="width: 100%"
-        title="新增数据注意:_id必填,否则会自动生成id"
+          v-model:value="addData"
+          height="600"
+          styles="width: 100%"
+          title="新增数据注意:_id必填,否则会自动生成id"
       />
     </div>
     <el-button
-      type="primary"
-      @click="doAdd"
-      style="position: absolute; right: 10px; bottom: 10px"
+        type="primary"
+        @click="doAdd"
+        style="position: absolute; right: 10px; bottom: 10px"
     >
       保存数据
     </el-button>
   </el-dialog>
 
   <el-dialog
-    v-model="convertFieldVisible"
-    title="更多操作"
-    style="
+      v-model="convertFieldVisible"
+      title="更多操作"
+      style="
       width: 600px;
       max-width: 600px;
       position: relative;
@@ -169,18 +167,18 @@
     </el-button-group>
     <el-input v-model="convertField" />
     <el-button
-      type="primary"
-      plain
-      @click="confirmConvertField"
-      style="position: absolute; right: 10px; bottom: 10px"
-      >确认转换
+        type="primary"
+        plain
+        @click="confirmConvertField"
+        style="position: absolute; right: 10px; bottom: 10px"
+    >确认转换
     </el-button>
   </el-dialog>
 
   <el-dialog
-    v-model="dialogIndexInfo"
-    title="索引信息"
-    style="
+      v-model="dialogIndexInfo"
+      title="索引信息"
+      style="
       width: 900px;
       max-width: 1000px;
       position: relative;
@@ -190,37 +188,20 @@
   >
     <div>
       <JsonEditor
-        v-model:value="indexInfo"
-        height="600"
-        styles="width: 100%"
-        title="索引信息"
+          v-model:value="indexInfo"
+          height="600"
+          styles="width: 100%"
+          title="索引信息"
       />
     </div>
   </el-dialog>
 </template>
 
 <script lang="ts" setup>
-import { ref, reactive, proxy, getCurrentInstance, refs, onMounted } from "vue";
+import { ref, reactive, computed, proxy, getCurrentInstance, refs, onMounted } from "vue";
 
-import Codemirror from "codemirror-editor-vue3";
-// 主题样式（我直接用了纯白色的，看着比较舒服）
-import "codemirror/theme/rubyblue.css";
-// 括号显示匹配
-import "codemirror/addon/edit/matchbrackets";
-import "codemirror/addon/selection/active-line";
-// 括号、引号编辑和删除时成对出现
-import "codemirror/addon/edit/closebrackets";
-// 引入css文件
-import "codemirror/lib/codemirror.css";
-// 引入主题 可以从 codemirror/theme/ 下引入多个
-import "codemirror/theme/idea.css";
-// 引入语言模式 可以从 codemirror/mode/ 下引入多个
-import "codemirror/mode/sql/sql.js";
-// 代码提示功能 具体语言可以从 codemirror/addon/hint/ 下引入多个
-import "codemirror/addon/hint/show-hint.css";
-import "codemirror/addon/hint/show-hint";
-import "codemirror/addon/hint/sql-hint";
-import "codemirror/mode/javascript/javascript.js";
+import MonacoEditor from "../../components/MonacoEditor/index.vue";
+import JsonEditor from "../../components/JsonEditor/index.vue";
 import { Search } from "@element-plus/icons-vue";
 import axios from "axios";
 import { ElMessage, ElMessageBox } from "element-plus";
@@ -230,25 +211,60 @@ import config from "../../config";
 const { proxy } = getCurrentInstance() as any;
 let sql = "SELECT * from fast_test_new_v128 order by id desc limit 10";
 let dsl =
-  "{\n" +
-  '    "query": {\n' +
-  '        "bool": {\n' +
-  '            "must": [\n' +
-  "                {\n" +
-  '                    "match_all": {}\n' +
-  "                }\n" +
-  "            ],\n" +
-  '            "must_not": [],\n' +
-  '            "should": []\n' +
-  "        }\n" +
-  "    },\n" +
-  '    "from": 0,\n' +
-  '    "size": 1,\n' +
-  '    "sort": [],\n' +
-  '    "aggs": {}\n' +
-  "}";
-let epl = 'Es.chainQuery().index("").search(10)';
-let queryDsl = ref("");
+    "{\n" +
+    '    "query": {\n' +
+    '        "bool": {\n' +
+    '            "must": [\n' +
+    '              {\n' +
+    '                "match_all": {}\n' +
+    '              }\n' +
+    '            ]\n' +
+    '        }\n' +
+    '    }\n' +
+    '}';
+let epl =
+    "from BPSuvA\n" +
+    "win\n" +
+    "  window tumbling,\n" +
+    "  keep these \n" +
+    "  ev: tumbletime > 60s;\n" +
+    "\n" +
+    "@name(name) by 1m\n" +
+    "select *\n" +
+    "from BPSuvA\n" +
+    "group by name\n" +
+    "output first(1)";
+
+// 编辑器语言配置
+const editorLanguage = computed(() => {
+  switch (queryType.value) {
+    case 'sql':
+      return 'sql';
+    case 'epl':
+      return 'javascript';
+    case 'dsl':
+      return 'json';
+    default:
+      return 'sql';
+  }
+});
+'    "query": {\n' +
+'        "bool": {\n' +
+'            "must": [\n' +
+"                {\n" +
+'                    "match_all": {}\n' +
+"                }\n" +
+"            ],\n" +
+'            "must_not": [],\n' +
+'            "should": []\n' +
+"        }\n" +
+"    },\n" +
+'    "from": 0,\n' +
+'    "size": 1,\n' +
+'    "sort": [],\n' +
+'    "aggs": {}\n' +
+"}";
+let queryDsl = ref(sql);
 let queryType = ref("sql");
 let index = ref("");
 
@@ -267,9 +283,9 @@ onMounted(() => {
 const copySelectedText = () => {
   if (index.value) {
     navigator.clipboard
-      .writeText(index.value)
-      .then(() => ElMessage.success("复制成功"))
-      .catch(() => fallbackCopy(index.value));
+    .writeText(index.value)
+    .then(() => ElMessage.success("复制成功"))
+    .catch(() => fallbackCopy(index.value));
   }
 };
 
@@ -354,8 +370,8 @@ const clickDsl = () => {
 const excelExport = () => {
   const data = JSON.parse(jsonView.value);
   let d = data.hits.hits
-    .map((hit) => hit._source) // 安全提取并展开数组
-    .filter(Boolean);
+  .map((hit) => hit._source) // 安全提取并展开数组
+  .filter(Boolean);
   let res = exportExcel(d);
 };
 
@@ -407,83 +423,74 @@ const confirmConvertField = () => {
   console.log(convertField.value);
   const data = JSON.parse(jsonView.value);
   let allWareIds = data.hits.hits
-    .flatMap((hit) => hit._source?.[convertField.value] || []) // 安全提取并展开数组
-    .filter(Boolean); // 过滤空值（如果存在）
+  .flatMap((hit) => hit._source?.[convertField.value] || []) // 安全提取并展开数组
+  .filter(Boolean); // 过滤空值（如果存在）
   console.log(allWareIds);
   // 提取所有 wareId 的逻辑
   if (allWareIds.length <= 0) {
     allWareIds = data.hits.hits
-      .flatMap((hit) => hit.fields?.[convertField.value] || []) // 安全提取并展开数组
-      .filter(Boolean); // 过滤空值（如果存在）
+    .flatMap((hit) => hit.fields?.[convertField.value] || []) // 安全提取并展开数组
+    .filter(Boolean); // 过滤空值（如果存在）
   }
   convertFieldVisible.value = false;
   jsonView.value = JSON.stringify(allWareIds);
 };
 
-const jsonOptions = {
-  // 主题
-  theme: "default",
-  // 语言及语法模式
-  mode: "application/json",
-  lineNumbers: true,
-  matchBrackets: true, //括号匹配
-  lineWrapping: true, // 折叠
-  styleActiveLine: true, // 光标行高亮
-  lint: true, // 打开json校验
-};
 
-const cmOptions = {
-  // 语言及语法模式
-  mode: "text/x-sql",
-  // 主题
-  theme: "default", // 'idea'
-  // 显示函数
-  line: true,
-  // 显示行号
-  lineNumbers: true,
-  // 软换行
-  lineWrapping: true,
-  // tab宽度
-  tabSize: 4,
-  // 代码提示功能
-  hintOptions: {
-    // 避免由于提示列表只有一个提示信息时，自动填充
-    completeSingle: false,
-    // 不同的语言支持从配置中读取自定义配置 sql语言允许配置表和字段信息，用于代码提示
-    tables: {
-      BPSuv: ["DocEntry", "Subject", "DocStatus", "Remarks"],
-      BPSuvA: ["DocEntry", "LineNum", "Question", "QstType"],
-      BPSuvB: ["DocEntry", "LineNum", "UserID", "UserName"],
-    },
-  },
-};
+// Codemirror配置 - 已替换为Monaco Editor，暂时保留以备参考
+// const cmOptions = {
+//   // 语言及语法模式
+//   mode: "text/x-sql",
+//   // 主题
+//   theme: "default", // 'idea'
+//   // 显示函数
+//   line: true,
+//   // 显示行号
+//   lineNumbers: true,
+//   // 软换行
+//   lineWrapping: true,
+//   // tab宽度
+//   tabSize: 4,
+//   // 代码提示功能
+//   hintOptions: {
+//     // 避免由于提示列表只有一个提示信息时，自动填充
+//     completeSingle: false,
+//     // 不同的语言支持从配置中读取自定义配置 sql语言允许配置表和字段信息，用于代码提示
+//     tables: {
+//       BPSuv: ["DocEntry", "Subject", "DocStatus", "Remarks"],
+//       BPSuvA: ["DocEntry", "LineNum", "Question", "QstType"],
+//       BPSuvB: ["DocEntry", "LineNum", "UserID", "UserName"],
+//     },
+//   },
+// };
 
-const epOptions = {
-  // 语言及语法模式
-  mode: "text/javascript",
-  // 主题
-  theme: "default", // 'idea'
-  // 显示函数
-  line: true,
-  // 显示行号
-  lineNumbers: true,
-  // 软换行
-  lineWrapping: true,
-  // tab宽度
-  tabSize: 4,
-  indentUnit: 4,
-  // 代码提示功能
-  hintOptions: {
-    // 避免由于提示列表只有一个提示信息时，自动填充
-    completeSingle: false,
-    // 不同的语言支持从配置中读取自定义配置 sql语言允许配置表和字段信息，用于代码提示
-    tables: {
-      BPSuv: ["DocEntry", "Subject", "DocStatus", "Remarks"],
-      BPSuvA: ["DocEntry", "LineNum", "Question", "QstType"],
-      BPSuvB: ["DocEntry", "LineNum", "UserID", "UserName"],
-    },
-  },
-};
+// EPL配置 - 已替换为Monaco Editor，暂时保留以备参考
+// const epOptions = {
+//   // 语言及语法模式
+//   mode: "text/javascript",
+//   // 主题
+//   theme: "default", // 'idea'
+//   // 显示函数
+//   line: true,
+//   // 显示行号
+//   lineNumbers: true,
+//   // 软换行
+//   lineWrapping: true,
+//   // tab宽度
+//   tabSize: 4,
+//   indentUnit: 4,
+//   // 代码提示功能
+//   hintOptions: {
+//     // 避免由于提示列表只有一个提示信息时，自动填充
+//     completeSingle: false,
+//     // 不同的语言支持从配置中读取自定义配置 sql语言允许配置表和字段信息，用于代码提示
+//     tables: {
+//       BPSuv: ["DocEntry", "Subject", "DocStatus", "Remarks"],
+//       BPSuvA: ["DocEntry", "LineNum", "Question", "QstType"],
+//       BPSuvB: ["DocEntry", "LineNum", "UserID", "UserName"],
+//     },
+//   },
+// };
 
 // 代码联想提示源
 const codeHints = {
@@ -550,7 +557,7 @@ const onEpReady = (epEditor) => {
         from: CodeMirror.Pos(cursor.line, token.start),
         to: CodeMirror.Pos(cursor.line, token.end),
         list: hints.filter((item) =>
-          item.toLowerCase().startsWith(token.string.toLowerCase())
+            item.toLowerCase().startsWith(token.string.toLowerCase())
         ),
       }),
     });
@@ -671,18 +678,18 @@ const doAdd = () => {
       cancelButtonText: "取消",
       dangerouslyUseHTMLString: true,
     })
-      .then(() => {
-        const data = JSON.parse(addData.value);
-        const datas: any[] = [];
-        // 如果是数组，展开元素；否则直接推入
-        if (Array.isArray(data)) {
-          datas.push(...data); // 使用展开运算符
-        } else {
-          datas.push(data);
-        }
-        saveByIds(index.value, datas);
-      })
-      .catch(() => {});
+    .then(() => {
+      const data = JSON.parse(addData.value);
+      const datas: any[] = [];
+      // 如果是数组，展开元素；否则直接推入
+      if (Array.isArray(data)) {
+        datas.push(...data); // 使用展开运算符
+      } else {
+        datas.push(data);
+      }
+      saveByIds(index.value, datas);
+    })
+    .catch(() => {});
   }
 };
 
@@ -697,18 +704,18 @@ const clickSave = () => {
       const source = list.map((item) => item._source);
       console.log(index + source);
       ElMessageBox.confirm(
-        "确定编辑" + ids[0] + "...总计" + ids.length + "个数据?",
-        "编辑确认",
-        {
-          confirmButtonText: "确定",
-          cancelButtonText: "取消",
-          dangerouslyUseHTMLString: true,
-        }
+          "确定编辑" + ids[0] + "...总计" + ids.length + "个数据?",
+          "编辑确认",
+          {
+            confirmButtonText: "确定",
+            cancelButtonText: "取消",
+            dangerouslyUseHTMLString: true,
+          }
       )
-        .then(() => {
-          saveByIds(index, source);
-        })
-        .catch(() => {});
+      .then(() => {
+        saveByIds(index, source);
+      })
+      .catch(() => {});
     }
   }
 };
@@ -723,19 +730,19 @@ const clickDelete = () => {
       const ids = list.map((item) => item._id);
       console.log(index + ids);
       ElMessageBox.confirm(
-        "确定删除" + ids[0] + "...总计" + ids.length + "个数据?",
-        "删除确认",
-        {
-          confirmButtonText: "确定",
-          cancelButtonText: "取消",
-          dangerouslyUseHTMLString: true,
-        }
+          "确定删除" + ids[0] + "...总计" + ids.length + "个数据?",
+          "删除确认",
+          {
+            confirmButtonText: "确定",
+            cancelButtonText: "取消",
+            dangerouslyUseHTMLString: true,
+          }
       )
-        .then(() => {
-          console.log("确认删除");
-          deleteByIds(index, ids);
-        })
-        .catch(() => {});
+      .then(() => {
+        console.log("确认删除");
+        deleteByIds(index, ids);
+      })
+      .catch(() => {});
     }
   }
 };
@@ -774,10 +781,11 @@ const saveByIds = async (index, source) => {
 }
 
 .footer-button {
-  margin-top: 10px;
+  margin-top: 5px;
   display: flex;
-  flex: 1;
   justify-content: end;
+  flex-shrink: 0;
+  padding: 8px 0;
 }
 .hidden {
   display: none !important;
@@ -787,30 +795,34 @@ const saveByIds = async (index, source) => {
   flex: 1;
   display: flex;
   align-items: stretch;
-  gap: 1px;
+  gap: 2px;
   background: #f0f0f0;
-  max-width: 1300px;
+  max-width: 1600px;
   margin: 0 auto;
-  padding: 5px;
+  padding: 8px;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .left-panel {
   flex: 1;
-  padding: 20px;
+  padding: 25px;
   background: white;
   border-radius: 4px 0 0 4px;
   width: 500px;
-  height: 780px;
+  height: 800px;
+  box-shadow: 1px 0px 3px rgba(0, 0, 0, 0.1);
 }
 
 .right-panel {
   flex: 1;
-  padding: 20px;
+  padding: 25px;
   background: #ffffff;
   border-radius: 0 4px 4px 0;
-  /* overflow-y: auto; */
-  height: 780px;
-  max-width: 650px;
+  box-shadow: inset 1px 0px 0px #e4e7ed;
+  height: 800px;
+  max-width: 850px;
+  min-width: 600px;
 }
 
 .json-input {
@@ -826,13 +838,6 @@ const saveByIds = async (index, source) => {
 .json-output {
   width: 100%;
   height: calc(100% - 50px);
-  padding: 12px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  resize: none;
-  font-family: "Courier New", monospace;
-  white-space: pre-wrap;
-  color: #333;
 }
 
 .controls {

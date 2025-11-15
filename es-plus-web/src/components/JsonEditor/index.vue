@@ -1,10 +1,10 @@
 <template>
   <div ref="maxDiv" style="width: 100%">
-    <div class="tools-box">
+    <div class="tools-box" v-if="showToolbar">
       <div>
         <span v-if="title != ''">{{ title }}</span>
       </div>
-      <div class="tools-list">
+      <div class="tools-list" v-if="showTools">
         <span class="aides" style="margin-right: 1rem" @click="format">
           <i class="el-icon-edit"></i>
           美化</span
@@ -16,17 +16,17 @@
       </div>
     </div>
     <div
-      id="container"
-      class="json-monaco-editor"
-      ref="container"
-      :style="{ height: `${height}px`, width: containerWidth }"
+        id="container"
+        class="monaco-editor"
+        ref="container"
+        :style="{ height: `${height}px`, width: containerWidth }"
     ></div>
   </div>
 </template>
 <script setup lang="ts">
-import { monaco } from "../../util/monaco";
+import {monaco} from "../../util/monaco";
 
-import { computed, onMounted, ref, watch, nextTick } from "vue";
+import {computed, nextTick, onMounted, ref, watch} from "vue";
 import handleClipboard from "../../util/clipboard";
 
 let isEditorReady = ref(false); // 添加初始化状态标志
@@ -45,7 +45,7 @@ let props = defineProps({
   value: {
     type: String,
     default: () => {
-      return {};
+      return "";
     },
   },
   pointOut: {
@@ -72,166 +72,313 @@ let props = defineProps({
       return "json";
     },
   },
+  showToolbar: {
+    type: Boolean,
+    default: () => {
+      return true;
+    },
+  },
+  showTools: {
+    type: Boolean,
+    default: () => {
+      return true;
+    },
+  },
 });
 
-const copy = () => {
-  handleClipboard(editor.getValue());
+let container = ref(null);
+let maxDiv = ref(null);
+let containerWidth = ref("100%");
+
+const emits = defineEmits(["update:value"]);
+
+let editor = null;
+const jsonValue = ref(props.value);
+const json = computed({
+  get() {
+    return props.value;
+  },
+  set(val) {
+    emits("update:value", val);
+  },
+});
+
+// 创建编辑器
+const createEditor = () => {
+  const monacoEditor = monaco.editor.create(container.value, {
+    value: jsonValue.value,
+    language: props.language,
+    theme: "vs",
+    automaticLayout: true,
+    fontSize: props.fontSize,
+    wordWrap: "on",
+    minimap: {enabled: false},
+    scrollBeyondLastLine: false,
+    readOnly: props.read,
+  });
+
+  editor = monacoEditor;
+  isEditorReady.value = true;
+
+  // 监听内容变化
+  editor.onDidChangeModelContent(() => {
+    json.value = editor.getValue();
+  });
+
+  monaco.languages.registerCompletionItemProvider(props.language, {
+    triggerCharacters: [' ', '(', '.', '"', "'"],
+    provideCompletionItems: (model, position) => {
+      let suggestions = [];
+
+      // 自定义提示词
+      if (props.pointOut && props.pointOut.length > 0) {
+        suggestions = props.pointOut.map((item) => ({
+          label: item,
+          kind: monaco.languages.CompletionItemKind.Text,
+          insertText: item,
+          detail: '自定义'
+        }));
+      }
+
+      // SQL语言查询提示
+      if (props.language === 'sql') {
+        const sqlSuggestions = [
+          // SQL关键字
+          {
+            label: 'SELECT',
+            kind: monaco.languages.CompletionItemKind.Keyword,
+            insertText: 'SELECT ',
+            detail: '查询语句'
+          },
+          {label: 'FROM', kind: monaco.languages.CompletionItemKind.Keyword, insertText: 'FROM ', detail: '指定表名'},
+          {label: 'WHERE', kind: monaco.languages.CompletionItemKind.Keyword, insertText: 'WHERE ', detail: '条件过滤'},
+          {label: 'AND', kind: monaco.languages.CompletionItemKind.Keyword, insertText: ' AND ', detail: '逻辑与'},
+          {label: 'OR', kind: monaco.languages.CompletionItemKind.Keyword, insertText: ' OR ', detail: '逻辑或'},
+          {
+            label: 'ORDER BY',
+            kind: monaco.languages.CompletionItemKind.Keyword,
+            insertText: 'ORDER BY ',
+            detail: '排序'
+          },
+          {
+            label: 'GROUP BY',
+            kind: monaco.languages.CompletionItemKind.Keyword,
+            insertText: 'GROUP BY ',
+            detail: '分组'
+          },
+          {
+            label: 'HAVING',
+            kind: monaco.languages.CompletionItemKind.Keyword,
+            insertText: 'HAVING ',
+            detail: '分组后过滤'
+          },
+          {label: 'LIMIT', kind: monaco.languages.CompletionItemKind.Keyword, insertText: 'LIMIT ', detail: '限制行数'},
+          {label: 'OFFSET', kind: monaco.languages.CompletionItemKind.Keyword, insertText: 'OFFSET ', detail: '偏移量'},
+          {label: 'JOIN', kind: monaco.languages.CompletionItemKind.Keyword, insertText: 'JOIN ', detail: '连接表'},
+          {
+            label: 'LEFT JOIN',
+            kind: monaco.languages.CompletionItemKind.Keyword,
+            insertText: 'LEFT JOIN ',
+            detail: '左连接'
+          },
+          {
+            label: 'RIGHT JOIN',
+            kind: monaco.languages.CompletionItemKind.Keyword,
+            insertText: 'RIGHT JOIN ',
+            detail: '右连接'
+          },
+          {
+            label: 'INNER JOIN',
+            kind: monaco.languages.CompletionItemKind.Keyword,
+            insertText: 'INNER JOIN ',
+            detail: '内连接'
+          },
+          {
+            label: 'UNION',
+            kind: monaco.languages.CompletionItemKind.Keyword,
+            insertText: 'UNION ',
+            detail: '合并结果集'
+          },
+          {
+            label: 'DISTINCT',
+            kind: monaco.languages.CompletionItemKind.Keyword,
+            insertText: 'DISTINCT ',
+            detail: '去重'
+          },
+
+          // 聚合函数
+          {
+            label: 'COUNT',
+            kind: monaco.languages.CompletionItemKind.Function,
+            insertText: 'COUNT($1)',
+            detail: '计数函数'
+          },
+          {label: 'SUM', kind: monaco.languages.CompletionItemKind.Function, insertText: 'SUM($1)', detail: '求和函数'},
+          {
+            label: 'AVG',
+            kind: monaco.languages.CompletionItemKind.Function,
+            insertText: 'AVG($1)',
+            detail: '平均值函数'
+          },
+          {
+            label: 'MAX',
+            kind: monaco.languages.CompletionItemKind.Function,
+            insertText: 'MAX($1)',
+            detail: '最大值函数'
+          },
+          {
+            label: 'MIN',
+            kind: monaco.languages.CompletionItemKind.Function,
+            insertText: 'MIN($1)',
+            detail: '最小值函数'
+          },
+
+          // 操作符
+          {label: '=', kind: monaco.languages.CompletionItemKind.Operator, insertText: ' = ', detail: '等于'},
+          {label: '!=', kind: monaco.languages.CompletionItemKind.Operator, insertText: ' != ', detail: '不等于'},
+          {label: '<>', kind: monaco.languages.CompletionItemKind.Operator, insertText: ' <> ', detail: '不等于'},
+          {label: '<', kind: monaco.languages.CompletionItemKind.Operator, insertText: ' < ', detail: '小于'},
+          {label: '>', kind: monaco.languages.CompletionItemKind.Operator, insertText: ' > ', detail: '大于'},
+          {label: '<=', kind: monaco.languages.CompletionItemKind.Operator, insertText: ' <= ', detail: '小于等于'},
+          {label: '>=', kind: monaco.languages.CompletionItemKind.Operator, insertText: ' >= ', detail: '大于等于'},
+          {label: 'LIKE', kind: monaco.languages.CompletionItemKind.Operator, insertText: ' LIKE ', detail: '模糊匹配'},
+          {label: 'IN', kind: monaco.languages.CompletionItemKind.Operator, insertText: ' IN ', detail: '包含于'},
+          {
+            label: 'NOT IN',
+            kind: monaco.languages.CompletionItemKind.Operator,
+            insertText: ' NOT IN ',
+            detail: '不包含于'
+          },
+          {
+            label: 'IS NULL',
+            kind: monaco.languages.CompletionItemKind.Operator,
+            insertText: ' IS NULL',
+            detail: '为空'
+          },
+          {
+            label: 'IS NOT NULL',
+            kind: monaco.languages.CompletionItemKind.Operator,
+            insertText: ' IS NOT NULL',
+            detail: '非空'
+          },
+          {
+            label: 'BETWEEN',
+            kind: monaco.languages.CompletionItemKind.Operator,
+            insertText: ' BETWEEN ',
+            detail: '区间'
+          },
+          {label: 'EXISTS', kind: monaco.languages.CompletionItemKind.Operator, insertText: 'EXISTS ', detail: '存在'},
+
+          // 排序关键字
+          {label: 'ASC', kind: monaco.languages.CompletionItemKind.Keyword, insertText: ' ASC', detail: '升序'},
+          {label: 'DESC', kind: monaco.languages.CompletionItemKind.Keyword, insertText: ' DESC', detail: '降序'},
+
+          // 通配符
+          {label: '*', kind: monaco.languages.CompletionItemKind.Operator, insertText: '*', detail: '所有字段'}
+        ];
+
+        suggestions = [...suggestions, ...sqlSuggestions];
+      }
+
+      return {suggestions};
+    },
+  });
 };
 
-const getTheme = computed(() => {
-  return "vs";
-});
+// 格式化代码
+const format = () => {
+  if (editor) {
+    editor.getAction("editor.action.formatDocument").run();
+  }
+};
 
-const codesCopy = ref(null);
-// 监听 props.value 变化
+// 复制内容
+const copy = () => {
+  handleClipboard(json.value, () => {
+    console.log("复制成功");
+  });
+};
+
+// 监听value变化
 watch(
-  () => props.value,
-  (newVal) => {
-    if (isEditorReady.value) {
-      SetText(newVal);
+    () => props.value,
+    (newVal) => {
+      if (editor && newVal !== editor.getValue()) {
+        editor.setValue(newVal);
+      }
     }
-  },
-  { immediate: true }
 );
 
-const SetText = (msg) => {
-  const currentPosition = editor.getPosition();
-
-  editor.setValue(msg);
-
-  if (currentPosition) {
-    editor.setPosition(currentPosition);
-    editor.focus();
-  }
-};
-
-const emits = defineEmits(["update:value", "getValue"]);
-let editor = null;
+// 监听language变化
+watch(
+    () => props.language,
+    (newLanguage) => {
+      if (editor) {
+        const model = editor.getModel();
+        if (model) {
+          monaco.editor.setModelLanguage(model, newLanguage);
+        }
+      }
+    }
+);
 
 onMounted(() => {
-  document.documentElement.style.setProperty(
-    "--line-number-bg-color",
-    "#080808"
-  );
   nextTick(() => {
-    initEditor(); // 在DOM更新后初始化编辑器
+    createEditor();
   });
-  monaco.editor.setTheme("vs");
 });
 
-const container = ref();
-
-const format = () => {
-  try {
-    const value = editor.getValue();
-    const tmp = JSON.parse(value);
-    editor.setValue(JSON.stringify(tmp, null, "\t"));
-  } catch (e) {
-    console.log(e);
-  }
-};
-
-const initEditor = () => {
-  if (editor != null) return;
-  setTimeout(() => {
-    editor = monaco.editor.create(container.value, {
-      value: codesCopy.value || props.value,
-      language: props.language,
-      theme: getTheme.value,
-      selectOnLineNumbers: true,
-      roundedSelection: false,
-      readOnly: props.read, // 只读
-      cursorStyle: "line", //光标样式
-      automaticLayout: true, //自动布局
-      glyphMargin: true, //字形边缘
-      useTabStops: false,
-      folding: true, // 启用折叠功能
-      fontSize: props.fontSize,
-    });
-
-    isEditorReady.value = true; // 初始化完成后标记为 true
-    // console.log("打印一下值" + editor.getValue());
-    monaco.languages.registerCompletionItemProvider("json", {
-      provideCompletionItems: function (model, position) {
-        let arr = [];
-
-        for (let v of props.pointOut) {
-          let obj = {
-            label: v.caption,
-            insertText: v.value,
-            kind: monaco.languages.CompletionItemKind.Keyword,
-          };
-
-          if (v.hasOwnProperty("score")) {
-            obj["sortText"] = `${v.score}`;
-          }
-
-          arr.push(obj);
-        }
-
-        return {
-          suggestions: arr,
-        };
-      },
-    });
-
-    editor.onDidChangeModelContent(function (event) {
-      //编辑器内容changge事件
-      codesCopy.value = editor.getValue();
-
-      //父组件的code.value和子组件这个不会双向绑定。需要通过这个代码更新父组件的数据
-      emits("update:value", editor.getValue());
-      // emits("getValue", editor.getValue());
-    });
-  }, 100);
-
-  container.value.innerHTML = "";
-
-  //updateEditorWidth()
-  //编辑器随窗口自适应
-  window.addEventListener("resize", () => {
-    updateEditorWidth();
-  });
-  editor.layout();
-};
-
-const containerWidth = ref("100%");
-const maxDiv = ref();
-
-const updateEditorWidth = () => {
-  if (container.value) {
-    containerWidth.value = `${maxDiv.value.clientWidth}px`;
-  }
-};
-
-defineExpose({ updateEditorWidth, SetText });
+// 暴露方法给父组件
+defineExpose({
+  format,
+  copy,
+  getValue: () => editor?.getValue() || "",
+  setValue: (value: string) => {
+    if (editor) {
+      editor.setValue(value);
+    }
+  },
+});
 </script>
+
 <style scoped>
-.tools-box {
-  display: flex;
-  line-height: 1;
-  font-size: 12px;
-  padding: 8px 15px;
-  align-items: center;
-  justify-content: space-between;
-  border-top: 1px solid #e7e8ee;
+.monaco-editor {
+  border: 1px solid #e4e7ed;
+  border-radius: 4px;
 }
 
-.aides:hover {
-  color: #409eff;
-  cursor: pointer;
+.tools-box {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: #f8f9fa;
+  border: 1px solid #e4e7ed;
+  border-bottom: none;
+  border-radius: 4px 4px 0 0;
+  font-size: 14px;
+  color: #606266;
 }
 
 .tools-list {
   display: flex;
+  gap: 8px;
 }
-</style>
 
-<style>
-.json-monaco-editor .margin {
-  background-color: var(--line-number-bg-color);
+.aides {
+  cursor: pointer;
+  color: #409eff;
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.3s ease;
 }
-.json-monaco-editor {
-  color: black;
+
+.aides:hover {
+  background-color: #ecf5ff;
+}
+
+.aides i {
+  margin-right: 4px;
 }
 </style>

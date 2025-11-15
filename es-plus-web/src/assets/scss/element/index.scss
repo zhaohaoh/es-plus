@@ -1,11 +1,11 @@
 @forward "element-plus/theme-chalk/src/common/var.scss" with (
   $colors: (
     'primary': (
-      // 自定义颜色
-      'base':#009688
+      // 使用Element Plus默认蓝色
+      'base':#409eff
     ),
     'success': (
-      'base':#1dc779
+      'base':#409eff
     ),
     'warning': (
       'base':#ffb302
@@ -32,6 +32,6 @@
     // 'border-color':black
   )
 );
- 
+
 
 // @use "element-plus/theme-chalk/src/index.scss" as *;

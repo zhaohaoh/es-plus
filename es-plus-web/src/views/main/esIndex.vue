@@ -1,31 +1,46 @@
 <template>
   <div class="container">
     <div class="searchInput">
-      <el-row>
-        <el-col :span="20">
-          <el-input
-            v-model="keyword"
-            placeholder="请输入索引名称"
-            style="width: 300px"
-            @change="onSearch"
-          />
-          <el-button
-            type="primary"
-            @click="onSearch()"
-            plain
-            style="transform: translateX(10px)"
-            >查询</el-button
-          >
+      <el-row :gutter="20" align="middle">
+        <!-- 左侧搜索组 -->
+        <el-col :xs="24" :sm="24" :md="16" :lg="16" :xl="16">
+          <div class="search-group">
+            <el-icon class="group-icon"><Search /></el-icon>
+            <span class="group-title">搜索</span>
+            <el-input
+                v-model="keyword"
+                placeholder="请输入索引名称"
+                style="flex: 1; max-width: 300px"
+                @change="onSearch"
+            />
+            <el-button
+                type="primary"
+                @click="onSearch()"
+                plain
+                style="margin-left: 10px"
+            >
+              <el-icon><Search /></el-icon>
+              查询
+            </el-button>
+          </div>
         </el-col>
-        <el-col :span="2" style="transform: translateX(30px)">
-          <el-button type="primary" @click="clickClusterInfo()" plain
-            >集群信息</el-button
-          >
-        </el-col>
-        <el-col :span="2" style="transform: translateX(15px)">
-          <el-button type="primary" @click="clickCreateIndex()" plain
-            >新建索引</el-button
-          >
+
+        <!-- 右侧操作组 -->
+        <el-col :xs="24" :sm="24" :md="8" :lg="8" :xl="8">
+          <div class="action-group">
+            <el-icon class="group-icon"><Operation /></el-icon>
+            <span class="group-title">操作</span>
+            <div class="action-buttons">
+              <el-button type="primary" @click="clickClusterInfo()" plain>
+                <el-icon><Connection /></el-icon>
+                集群信息
+              </el-button>
+              <el-button type="primary" @click="clickCreateIndex()" plain>
+                <el-icon><Plus /></el-icon>
+                新建索引
+              </el-button>
+            </div>
+          </div>
         </el-col>
       </el-row>
     </div>
@@ -33,13 +48,13 @@
       <div v-for="item in data" :key="item.index" class="scrollbar-demo-item">
         <div class="index-item">
           <span style="font-size: 28px; font-weight: bold">{{
-            item.index
-          }}</span>
+              item.index
+            }}</span>
 
           <span class="health-font">别名:</span>
           <span class="health-font" style="font-size: 18px">{{
-            item.alias
-          }}</span>
+              item.alias
+            }}</span>
 
           <span class="health-font">健康状态:</span
           ><span class="health" :style="{ background: item.health }"> </span>
@@ -59,34 +74,34 @@
 
         <div class="editClass">
           <el-button type="primary" @click="clickMappings(item.index)" plain
-            >设置映射</el-button
+          >设置映射</el-button
           >
           <el-button type="primary" @click="clickIndex(item.index)" plain
-            >查看索引信息</el-button
+          >查看索引信息</el-button
           >
           <el-button
-            type="primary"
-            @click="clickSetAlias(item.index, item.alias)"
-            plain
-            >设置别名</el-button
+              type="primary"
+              @click="clickSetAlias(item.index, item.alias)"
+              plain
+          >设置别名</el-button
           >
           <el-button
-            type="primary"
-            plain
-            @click="clickReindex(item.index, item.alias)"
-            >迁移索引</el-button
+              type="primary"
+              plain
+              @click="clickReindex(item.index, item.alias)"
+          >迁移索引</el-button
           >
           <el-button type="danger" @click="clickDelete(item.index)" plain
-            >删除</el-button
+          >删除</el-button
           >
         </div>
       </div>
     </el-scrollbar>
 
     <el-dialog
-      v-model="createAliasVisble"
-      title="设置别名"
-      style="
+        v-model="createAliasVisble"
+        title="设置别名"
+        style="
         width: 600px;
         max-width: 600px;
         position: relative;
@@ -98,77 +113,77 @@
       <el-input v-model="changeAlias" />
 
       <el-button
-        type="primary"
-        plain
-        @click="setAlias"
-        style="position: absolute; right: 110px; bottom: 10px"
-        >设置别名
+          type="primary"
+          plain
+          @click="setAlias"
+          style="position: absolute; right: 110px; bottom: 10px"
+      >设置别名
       </el-button>
       <el-button
-        type="primary"
-        plain
-        @click="removeAlias"
-        style="position: absolute; right: 10px; bottom: 10px"
-        >删除别名
+          type="primary"
+          plain
+          @click="removeAlias"
+          style="position: absolute; right: 10px; bottom: 10px"
+      >删除别名
       </el-button>
     </el-dialog>
 
     <el-dialog
-      v-model="reindexVisble"
-      :title="'当前索引:' + currentIndex"
-      :style="{ height: `${reindexDialogHeigt}px`, width: `600px` }"
+        v-model="reindexVisble"
+        :title="'当前索引:' + currentIndex"
+        :style="{ height: `${reindexDialogHeigt}px`, width: `600px` }"
     >
       <el-button-group style="margin-top: -0px; margin-bottom: 11px">
         <el-button
-          type="primary"
-          plain
-          @click="
+            type="primary"
+            plain
+            @click="
             (jumpDataMove = 1),
               (reindexDialogHeigt = 230),
               (moveName = '点击复制')
           "
-          >索引复制</el-button
+        >索引复制</el-button
         >
         <el-button
-          type="primary"
-          plain
-          @click="
+            type="primary"
+            plain
+            @click="
             (jumpDataMove = 2),
               (reindexDialogHeigt = 200),
               (moveName = '点击迁移')
           "
-          >同源迁移</el-button
+        >同源迁移</el-button
         >
         <el-button
-          type="primary"
-          plain
-          @click="
+            type="primary"
+            plain
+            @click="
             (jumpDataMove = 3),
               (reindexDialogHeigt = 300),
               (moveName = '点击迁移')
           "
-          >跨数据源</el-button
+        >跨数据源</el-button
         >
       </el-button-group>
       <div
-        v-show="jumpDataMove == 1 || jumpDataMove == 3"
-        style="margin-bottom: 10px"
+          v-show="jumpDataMove == 1 || jumpDataMove == 3"
+          style="margin-bottom: 10px"
       >
         <div class="dataMoveClient-form">
           目标数据源:
           <el-select
-            v-model="dataMoveClient"
-            class="m-2"
-            placeholder="Select"
-            style="width: 225px"
-            filterable
+              v-model="dataMoveClient"
+              class="m-2"
+              placeholder="选择ES"
+              style="width: 225px"
+              filterable
           >
             <el-option
-              v-for="item in options"
-              :key="item.id"
-              :label="`${item.unikey} (${item.name})`"
-              :value="item.unikey"
-              :valueKey="item.unikey"
+                v-for="item in options"
+                :key="item.id"
+                :label="`${item.unikey} (${item.name})`"
+                :value="item.unikey"
+                :valueKey="item.unikey"
             />
           </el-select>
         </div>
@@ -176,32 +191,32 @@
       <div v-show="jumpDataMove == 3" class="dataMoveClient-form">
         最大迁移数量:
         <el-input
-          placeholder="本次迁移最大限制数量"
-          v-model="moveSize"
-          style="display: inline"
+            placeholder="本次迁移最大限制数量"
+            v-model="moveSize"
+            style="display: inline"
         />
       </div>
       <el-input placeholder="目标索引" v-model="reindexName" />
       <el-button
-        type="primary"
-        plain
-        @click="doMove"
-        style="position: absolute; right: 110px; bottom: 10px"
-        >{{ moveName }}
+          type="primary"
+          plain
+          @click="doMove"
+          style="position: absolute; right: 110px; bottom: 10px"
+      >{{ moveName }}
       </el-button>
       <el-button
-        type="primary"
-        plain
-        @click="clickReindexTaskList"
-        style="position: absolute; right: 10px; bottom: 10px"
-        >任务明细
+          type="primary"
+          plain
+          @click="clickReindexTaskList"
+          style="position: absolute; right: 10px; bottom: 10px"
+      >任务明细
       </el-button>
     </el-dialog>
 
     <el-dialog
-      v-model="reindexTableVisble"
-      title="迁移任务明细"
-      style="
+        v-model="reindexTableVisble"
+        title="迁移任务明细"
+        style="
         width: 1500px;
         position: relative;
         height: 600px;
@@ -210,26 +225,26 @@
       "
     >
       <el-table
-        :data="reindexTableData"
-        style="max-width: 1500px; max-height: 1000px; min-height: 300px"
-        size="large"
+          :data="reindexTableData"
+          style="max-width: 1500px; max-height: 1000px; min-height: 300px"
+          size="large"
       >
         <el-table-column
-          v-for="item in tableHeader"
-          :key="item.prop"
-          :label="item.label"
-          :prop="item.prop"
-          width="180"
+            v-for="item in tableHeader"
+            :key="item.prop"
+            :label="item.label"
+            :prop="item.prop"
+            width="180"
         >
           <template #default="scope">
             {{
               item.prop === "type"
-                ? scope.row.type === 1
-                  ? "同源迁移"
-                  : scope.row.type === 2
-                  ? "跨源迁移"
-                  : "同源迁移"
-                : scope.row[item.prop]
+                  ? scope.row.type === 1
+                      ? "同源迁移"
+                      : scope.row.type === 2
+                          ? "跨源迁移"
+                          : "同源迁移"
+                  : scope.row[item.prop]
             }}
           </template>
         </el-table-column>
@@ -237,9 +252,9 @@
     </el-dialog>
 
     <el-dialog
-      v-model="addIndexVisble"
-      title="新建索引"
-      style="
+        v-model="addIndexVisble"
+        title="新建索引"
+        style="
         width: 1200px;
         max-width: 1200px;
         position: relative;
@@ -250,12 +265,12 @@
       <el-row>
         <el-col :span="8">
           <el-form
-            :inline="true"
-            :model="esIndexAdd"
-            ref="clientForm"
-            label-width="100px"
-            style="max-width: 660px"
-            label-position="top"
+              :inline="true"
+              :model="esIndexAdd"
+              ref="clientForm"
+              label-width="100px"
+              style="max-width: 660px"
+              label-position="top"
           >
             <el-form-item label="索引名" prop="indexName" style="width: 100%">
               <el-col :span="24">
@@ -268,36 +283,36 @@
               </el-col>
             </el-form-item>
             <el-form-item
-              label="分片数"
-              prop="number_of_shards"
-              style="width: 100%"
+                label="分片数"
+                prop="number_of_shards"
+                style="width: 100%"
             >
               <el-col :span="24">
                 <el-input v-model="esIndexAdd.number_of_shards" />
               </el-col>
             </el-form-item>
             <el-form-item
-              label="副本数"
-              prop="number_of_replicas"
-              style="width: 100%"
+                label="副本数"
+                prop="number_of_replicas"
+                style="width: 100%"
             >
               <el-col :span="24">
                 <el-input v-model="esIndexAdd.number_of_replicas" />
               </el-col>
             </el-form-item>
             <el-form-item
-              label="最大查询数"
-              prop="max_result_window"
-              style="width: 100%"
+                label="最大查询数"
+                prop="max_result_window"
+                style="width: 100%"
             >
               <el-col :span="24">
                 <el-input v-model="esIndexAdd.max_result_window" />
               </el-col>
             </el-form-item>
             <el-form-item
-              label="刷新间隔秒数"
-              prop="refresh_interval"
-              style="width: 100%"
+                label="刷新间隔秒数"
+                prop="refresh_interval"
+                style="width: 100%"
             >
               <el-col :span="24">
                 <el-input v-model="esIndexAdd.refresh_interval" />
@@ -308,28 +323,28 @@
         <el-col :span="16">
           <div>
             <JsonEditor
-              v-model:value="saveIndexMappings"
-              height="450"
-              styles="width: 50%"
-              title="设置映射"
+                v-model:value="saveIndexMappings"
+                height="450"
+                styles="width: 50%"
+                title="设置映射"
             />
           </div>
         </el-col>
       </el-row>
       <el-button
-        type="primary"
-        plain
-        @click="saveIndex"
-        style="position: absolute; right: 10px; bottom: 10px"
+          type="primary"
+          plain
+          @click="saveIndex"
+          style="position: absolute; right: 10px; bottom: 10px"
       >
         确认新增索引
       </el-button>
     </el-dialog>
 
     <el-dialog
-      v-model="dialogFormVisible"
-      title="设置映射"
-      style="
+        v-model="dialogFormVisible"
+        title="设置映射"
+        style="
         width: 1000px;
         max-width: 1000px;
         position: relative;
@@ -339,27 +354,27 @@
     >
       <div>
         <JsonEditor
-          v-model:value="code"
-          height="600"
-          styles="width: 50%"
-          title="新增映射结构"
-          @update:value="handleValueUpdate"
+            v-model:value="code"
+            height="600"
+            styles="width: 50%"
+            title="新增映射结构"
+            @update:value="handleValueUpdate"
         />
       </div>
       <el-button
-        type="primary"
-        plain
-        @click="saveMappinng"
-        style="position: absolute; right: 10px; bottom: 10px"
+          type="primary"
+          plain
+          @click="saveMappinng"
+          style="position: absolute; right: 10px; bottom: 10px"
       >
         保存/修改映射
       </el-button>
     </el-dialog>
 
     <el-dialog
-      v-model="dialogIndexInfo"
-      title="索引信息"
-      style="
+        v-model="dialogIndexInfo"
+        title="索引信息"
+        style="
         width: 900px;
         max-width: 1000px;
         position: relative;
@@ -378,26 +393,26 @@
       /> -->
       <div>
         <JsonEditor
-          v-model:value="indexInfo"
-          height="600"
-          styles="width: 100%"
-          title="索引信息"
+            v-model:value="indexInfo"
+            height="600"
+            styles="width: 100%"
+            title="索引信息"
         />
       </div>
       <el-button
-        type="primary"
-        plain
-        @click="settingsOpen"
-        style="position: absolute; right: 10px; bottom: 10px"
+          type="primary"
+          plain
+          @click="settingsOpen"
+          style="position: absolute; right: 10px; bottom: 10px"
       >
         索引配置编辑
       </el-button>
     </el-dialog>
 
     <el-dialog
-      v-model="dialogSettings"
-      title="索引可修改配置"
-      style="
+        v-model="dialogSettings"
+        title="索引可修改配置"
+        style="
         width: 900px;
         max-width: 1000px;
         position: relative;
@@ -407,26 +422,26 @@
     >
       <div>
         <JsonEditor
-          v-model:value="settings"
-          height="600"
-          styles="width: 100%"
-          title="索引配置信息"
+            v-model:value="settings"
+            height="600"
+            styles="width: 100%"
+            title="索引配置信息"
         />
       </div>
       <el-button
-        type="primary"
-        plain
-        @click="updateSettings"
-        style="position: absolute; right: 10px; bottom: 10px"
+          type="primary"
+          plain
+          @click="updateSettings"
+          style="position: absolute; right: 10px; bottom: 10px"
       >
         保存
       </el-button>
     </el-dialog>
 
     <el-dialog
-      v-model="clusterInfoVisble"
-      title="集群信息"
-      style="
+        v-model="clusterInfoVisble"
+        title="集群信息"
+        style="
         width: 900px;
         max-width: 1000px;
         position: relative;
@@ -436,10 +451,10 @@
     >
       <div>
         <JsonEditor
-          v-model:value="cluseterInfo"
-          height="600"
-          styles="width: 100%"
-          title="集群信息"
+            v-model:value="cluseterInfo"
+            height="600"
+            styles="width: 100%"
+            title="集群信息"
         />
       </div>
     </el-dialog>
@@ -449,6 +464,7 @@
 <script lang="ts" setup>
 import { getCurrentInstance, onMounted, reactive, ref, computed } from "vue";
 import type { FormProps } from "element-plus";
+import { Search, Connection, Plus, Operation } from "@element-plus/icons-vue";
 import JsonEditor from "../../components/JsonEditor/index.vue";
 import elMessage from "../../util/message";
 // import VueJsonHelper from "@/views/indices/components/Helper.vue";
@@ -605,11 +621,11 @@ const saveIndex = async () => {
     confirmButtonText: "确定",
     cancelButtonText: "取消",
   })
-    .then(() => {
-      doSaveIndex(currentIndex.value);
-      elMessage.success();
-    })
-    .catch(() => {});
+  .then(() => {
+    doSaveIndex(currentIndex.value);
+    elMessage.success();
+  })
+  .catch(() => {});
 };
 
 const doSaveIndex = async (index) => {
@@ -631,11 +647,11 @@ const saveMappinng = async () => {
     confirmButtonText: "确定",
     cancelButtonText: "取消",
   })
-    .then(() => {
-      putMapping(currentIndex.value, code.value);
-      elMessage.success();
-    })
-    .catch(() => {});
+  .then(() => {
+    putMapping(currentIndex.value, code.value);
+    elMessage.success();
+  })
+  .catch(() => {});
 };
 
 const putMapping = async (indexName, mappings) => {
@@ -654,11 +670,11 @@ const updateSettings = async () => {
     confirmButtonText: "确定",
     cancelButtonText: "取消",
   })
-    .then(() => {
-      doUpdateSettings(currentIndex.value, settings.value);
-      elMessage.success();
-    })
-    .catch(() => {});
+  .then(() => {
+    doUpdateSettings(currentIndex.value, settings.value);
+    elMessage.success();
+  })
+  .catch(() => {});
 };
 
 const doUpdateSettings = async (indexName, settings) => {
@@ -684,16 +700,16 @@ const doMove = async () => {
 
 const copyIndex = async () => {
   ElMessageBox.confirm(
-    "确认复制索引到 " + dataMoveClient.value + "." + reindexName.value + " 吗?",
-    {
-      confirmButtonText: "确定",
-      cancelButtonText: "取消",
-    }
+      "确认复制索引到 " + dataMoveClient.value + "." + reindexName.value + " 吗?",
+      {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+      }
   )
-    .then(() => {
-      doCopyIndexApi();
-    })
-    .catch(() => {});
+  .then(() => {
+    doCopyIndexApi();
+  })
+  .catch(() => {});
 };
 
 const doCopyIndexApi = async () => {
@@ -713,24 +729,24 @@ const doReindex = async () => {
     confirmButtonText: "确定",
     cancelButtonText: "取消",
   })
-    .then(() => {
-      reindexApi();
-    })
-    .catch(() => {});
+  .then(() => {
+    reindexApi();
+  })
+  .catch(() => {});
 };
 
 const doDataMove = async () => {
   ElMessageBox.confirm(
-    "确认迁移到 " + dataMoveClient.value + "." + reindexName.value + " 吗?",
-    {
-      confirmButtonText: "确定",
-      cancelButtonText: "取消",
-    }
+      "确认迁移到 " + dataMoveClient.value + "." + reindexName.value + " 吗?",
+      {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+      }
   )
-    .then(() => {
-      doDataMoveApi();
-    })
-    .catch(() => {});
+  .then(() => {
+    doDataMoveApi();
+  })
+  .catch(() => {});
 };
 
 const doDataMoveApi = async () => {
@@ -891,10 +907,10 @@ const clickDelete = async (index) => {
     confirmButtonText: "确定",
     cancelButtonText: "取消",
   })
-    .then(() => {
-      esIndexDelete(index);
-    })
-    .catch(() => {});
+  .then(() => {
+    esIndexDelete(index);
+  })
+  .catch(() => {});
 };
 
 // 删除
@@ -906,6 +922,7 @@ const esIndexDelete = async (data) => {
   elMessage.success();
   getIndices(keyword.value);
 };
+
 </script>
 <style scoped>
 /* 在全局样式或组件样式中添加 */
@@ -960,6 +977,127 @@ span {
 }
 .searchInput {
   margin-left: 21px;
+  margin-bottom: 20px;
+  margin-top: -10px;
+}
+
+/* 搜索组样式 - 与统计组高度一致 */
+.search-group {
+  display: flex;
+  align-items: center;
+  background: #f8f9fa;
+  border: 1px solid #e4e7ed;
+  border-radius: 8px;
+  padding: 16px 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+  height: 56px;
+  box-sizing: border-box;
+}
+
+.search-group:hover {
+  border-color: #409eff;
+  box-shadow: 0 4px 8px rgba(64, 158, 255, 0.1);
+}
+
+/* 操作组样式 - 与连接组高度一致 */
+.action-group {
+  display: flex;
+  align-items: center;
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  border-radius: 8px;
+  padding: 16px 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+  height: 56px;
+  box-sizing: border-box;
+}
+
+.action-group:hover {
+  border-color: #409eff;
+  box-shadow: 0 4px 8px rgba(64, 158, 255, 0.1);
+}
+
+/* 操作按钮容器 */
+.action-buttons {
+  display: flex;
+  gap: 12px;
+  margin-left: auto;
+}
+
+/* 强制设置按钮高度 */
+.action-buttons :deep(.el-button) {
+  height: 24px;
+  padding: 0 12px;
+  font-size: 12px;
+}
+
+.action-buttons :deep(.el-button .el-icon) {
+  font-size: 12px;
+}
+
+/* 搜索组中的input和button高度控制 */
+.search-group :deep(.el-input) {
+  height: 24px;
+}
+
+.search-group :deep(.el-input .el-input__wrapper) {
+  height: 24px;
+  min-height: 24px;
+}
+
+.search-group :deep(.el-button) {
+  height: 24px;
+  padding: 0 12px;
+  font-size: 12px;
+}
+
+.search-group :deep(.el-button .el-icon) {
+  font-size: 12px;
+}
+
+/* 组图标样式 */
+.group-icon {
+  font-size: 18px;
+  color: #409eff;
+  margin-right: 8px;
+}
+
+/* 组标题样式 */
+.group-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  margin-right: 16px;
+  white-space: nowrap;
+}
+
+/* 操作按钮容器 */
+.action-buttons {
+  display: flex;
+  gap: 12px;
+  margin-left: auto;
+}
+
+/* 响应式样式 */
+@media (max-width: 768px) {
+  .search-group,
+  .action-group {
+    margin-bottom: 10px;
+    padding: 12px 16px;
+  }
+
+  .action-buttons {
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .group-title {
+    margin-right: 12px;
+    font-size: 13px;
+  }
 }
 .editClass {
   /* 关键：设置绝对定位 */
