@@ -25,12 +25,12 @@ public class FastTestService extends EsServiceImpl<FastTestDTO> {
     
     public void save() {
         //
-        for (int i = 800000010; i < 800000050; i++) {
+        for (int i = 800000010; i < 800000020; i++) {
             List<FastTestDTO> fastTestDTOs = new ArrayList<>();
             FastTestDTO fastTestDTO = new FastTestDTO();
             fastTestDTO.setId((long) i);
             fastTestDTO.setText("特殊的8");
-            fastTestDTO.setAge(i % 5L);
+            fastTestDTO.setAge(18L);
             fastTestDTO.setUsername("特殊的8");
             fastTestDTO.setUsernameTest("特殊的8");
             fastTestDTO.setCreateTime(new Date());

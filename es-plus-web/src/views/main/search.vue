@@ -101,13 +101,13 @@
           <el-button @click="clickAdd" type="primary" size="small" plain
           >新增</el-button
           >
-          <el-button @click="clickSave" type="primary" size="small" plain
+          <el-button @click="clickSave" type="warning" size="small" plain
           >修改</el-button
           >
-          <el-button type="primary" @click="clickDelete" size="small" plain
+          <el-button type="danger" @click="clickDelete" size="small" plain
           >删除</el-button
           >
-          <el-button type="primary" @click="clickGetField" size="small" plain
+          <el-button type="info" @click="clickGetField" size="small" plain
           >更多操作</el-button
           >
         </span>
@@ -128,14 +128,23 @@
       style="
       max-width: 700px;
       position: relative;
-      height: 750px;
+      height: 800px;
       transform: translateY(-50px);
     "
   >
+    <div style="margin-bottom: 10px;">
+      <el-form-item label="Routing (可选):">
+        <el-input
+            v-model="addRoutingInput"
+            placeholder="请输入 routing 值（可选，留空则不使用 routing）"
+            clearable
+        />
+      </el-form-item>
+    </div>
     <div>
       <JsonEditor
           v-model:value="addData"
-          height="600"
+          height="550"
           styles="width: 100%"
           title="新增数据注意:_id必填,否则会自动生成id"
       />
@@ -273,6 +282,7 @@ const convertField = ref("");
 const convertFieldVisible = ref(false);
 const addDataVisible = ref(false);
 const addData = ref("");
+const addRoutingInput = ref("");  // 新增：routing 输入框的值
 const indexData = ref([]);
 onMounted(() => {
   clickSql();
@@ -665,6 +675,9 @@ const sqlQuery = async (sql) => {
 };
 
 const clickAdd = () => {
+  // 打开对话框前清空之前的输入
+  addRoutingInput.value = "";
+  addData.value = "";
   addDataVisible.value = true;
 };
 
@@ -676,18 +689,33 @@ const doAdd = () => {
     ElMessageBox.confirm("索引:" + index.value, "新增数据", {
       confirmButtonText: "确定",
       cancelButtonText: "取消",
+      distinguishCancelAndClose: true,
       dangerouslyUseHTMLString: true,
     })
     .then(() => {
       const data = JSON.parse(addData.value);
       const datas: any[] = [];
+
       // 如果是数组，展开元素；否则直接推入
       if (Array.isArray(data)) {
-        datas.push(...data); // 使用展开运算符
+        datas.push(...data);
       } else {
         datas.push(data);
       }
+
+      // 如果用户输入了 routing，添加到每个数据对象中
+      if (addRoutingInput.value && addRoutingInput.value.trim() !== "") {
+        datas.forEach(item => {
+          item._routing = addRoutingInput.value.trim();
+        });
+      }
+
       saveByIds(index.value, datas);
+
+      // 保存成功后清空输入框
+      addDataVisible.value = false;
+      addRoutingInput.value = "";
+      addData.value = "";
     })
     .catch(() => {});
   }
@@ -700,20 +728,45 @@ const clickSave = () => {
     const list = jsonObject.hits.hits;
     if (list && list.length > 0) {
       const index = list[0]._index;
-      const ids = list.map((item) => item._id);
-      const source = list.map((item) => item._source);
-      console.log(index + source);
+
+      // 合并 _source、_id 和 _routing
+      // 兼容 _source 和 fields 两种格式
+      const datas = list.map((item) => {
+        const sourceData = item._source || item.fields || {};
+
+        // 如果是 fields 格式，需要展平数组值
+        const flattenedData = {};
+        if (item.fields && !item._source) {
+          // fields 格式：每个字段的值都是数组
+          Object.keys(sourceData).forEach(key => {
+            const value = sourceData[key];
+            flattenedData[key] = Array.isArray(value) && value.length === 1 ? value[0] : value;
+          });
+        } else {
+          // _source 格式：直接使用
+          Object.assign(flattenedData, sourceData);
+        }
+
+        return {
+          _id: item._id,
+          _routing: item._routing || "",  // 兼容没有 routing 的情况
+          ...flattenedData
+        };
+      });
+
+      console.log(index + datas[0]._id);
       ElMessageBox.confirm(
-          "确定编辑" + ids[0] + "...总计" + ids.length + "个数据?",
+          "确定编辑" + datas[0]._id + "...总计" + datas.length + "个数据?",
           "编辑确认",
           {
             confirmButtonText: "确定",
             cancelButtonText: "取消",
+            distinguishCancelAndClose: true,
             dangerouslyUseHTMLString: true,
           }
       )
       .then(() => {
-        saveByIds(index, source);
+        saveByIds(index, datas);
       })
       .catch(() => {});
     }
@@ -727,40 +780,49 @@ const clickDelete = () => {
     const list = jsonObject.hits.hits;
     if (list && list.length > 0) {
       const index = list[0]._index;
-      const ids = list.map((item) => item._id);
-      console.log(index + ids);
+
+      // 提取 _id 和 _routing，构建 datas 数组
+      const datas = list.map((item) => ({
+        _id: item._id,
+        _routing: item._routing || ""  // 兼容没有 routing 的情况
+      }));
+
+      console.log(index + datas[0]._id);
       ElMessageBox.confirm(
-          "确定删除" + ids[0] + "...总计" + ids.length + "个数据?",
+          "确定删除" + datas[0]._id + "...总计" + datas.length + "个数据?",
           "删除确认",
           {
             confirmButtonText: "确定",
             cancelButtonText: "取消",
+            type: "warning",
+            distinguishCancelAndClose: true,
+            showCancelButton: true,
             dangerouslyUseHTMLString: true,
           }
       )
       .then(() => {
         console.log("确认删除");
-        deleteByIds(index, ids);
+        deleteByIds(index, datas);
       })
       .catch(() => {});
     }
   }
 };
 
-const deleteByIds = async (index, ids) => {
+const deleteByIds = async (index, datas) => {
   const param = {
-    ids: ids,
     index: index,
+    datas: datas  // 传递包含 _id 和 _routing 的数组
   };
   let res = await proxy.$api.tools.deleteByIds(param);
   const formattedJson = JSON.stringify(res, null, 2);
   jsonView.value = formattedJson;
 };
 
-const saveByIds = async (index, source) => {
+const saveByIds = async (index, datas) => {
   const param = {
     index: index,
-    datas: source,
+    datas: datas  // datas 中已包含 _id、_routing 和其他字段
   };
   console.log(param);
   let res = await proxy.$api.tools.updateBatch(param);

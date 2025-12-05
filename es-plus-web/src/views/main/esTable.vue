@@ -1,10 +1,10 @@
 <template>
   <div class="searchForm" style="max-height: 200px; margin-left: -15px">
     <el-row
-      v-for="(item, index) in searchItems"
-      :key="index"
-      style="width: 100%; margin-bottom: 5px"
-      class="custom-margin"
+        v-for="(item, index) in searchItems"
+        :key="index"
+        style="width: 100%; margin-bottom: 5px"
+        class="custom-margin"
     >
       <el-col :span="3">
         <el-select v-model="item.mustType" placeholder="请选择">
@@ -17,10 +17,10 @@
         <el-select filterable v-model="item.field" placeholder="请选择字段">
           <el-option key="_id" label="_id" value="_id" />
           <el-option
-            v-for="field in currentMapping"
-            :key="field"
-            :label="field"
-            :value="field"
+              v-for="field in currentMapping"
+              :key="field"
+              :label="field"
+              :value="field"
           />
         </el-select>
       </el-col>
@@ -44,7 +44,7 @@
       </el-col>
     </el-row>
     <el-row
-      style="
+        style="
         display: flex;
         justify-content: end;
         margin-top: -0px;
@@ -53,19 +53,19 @@
       "
     >
       <el-col :span="2">
-          <el-button type="primary" plain @click="jsonTableChange">JSON/表格</el-button>
+        <el-button type="primary" plain @click="jsonTableChange">JSON/表格</el-button>
       </el-col>
       <el-col :span="3">
         <el-select
-          filterable
-          v-model="sortParam.sortName"
-          placeholder="请选择字段"
+            filterable
+            v-model="sortParam.sortName"
+            placeholder="请选择字段"
         >
           <el-option
-            v-for="field in currentMapping"
-            :key="field"
-            :label="field"
-            :value="field"
+              v-for="field in currentMapping"
+              :key="field"
+              :label="field"
+              :value="field"
           />
         </el-select>
       </el-col>
@@ -86,11 +86,11 @@
       <el-aside width="250px">
         <el-scrollbar >
           <p
-            v-for="item in indexData"
-            :key="item"
-            class="scrollbar-demo-item"
-            @click="clickIndex(item)"
-            :style="{
+              v-for="item in indexData"
+              :key="item"
+              class="scrollbar-demo-item"
+              @click="clickIndex(item)"
+              :style="{
               background:
                 selectIndex === item
                   ? '#84BEFC'
@@ -101,25 +101,25 @@
           </p>
         </el-scrollbar>
       </el-aside>
-        
+
       <div
-        class="right-container"
-        v-show="tableData.length > 0 && jsonOrTable=='table'"
-        style="margin-top: -20px"
+          class="right-container"
+          v-show="tableData.length > 0 && jsonOrTable=='table'"
+          style="margin-top: -20px"
       >
         <el-row :gutter="10">
           <el-table
-            @cell-dblclick="copyText"
-            :data="tableData"
-            style="max-width: 1200px; max-height: 1000px; min-height: 100px"
-            size="large"
+              @cell-dblclick="copyText"
+              :data="tableData"
+              style="max-width: 1200px; max-height: 1000px; min-height: 100px"
+              size="large"
           >
             <el-table-column
-              v-for="item in tableHeader"
-              :key="item.prop"
-              :label="item.label"
-              :prop="item.prop"
-              width="180"
+                v-for="item in tableHeader"
+                :key="item.prop"
+                :label="item.label"
+                :prop="item.prop"
+                width="180"
             />
           </el-table>
         </el-row>
@@ -129,52 +129,52 @@
           </el-col>
         </el-row>
       </div>
-   <el-card class="box-card" v-if="jsonOrTable=='json'">
-      <div  class="right-container"  >
-        <JsonEditor
-          v-model:value="tableDataJson"
-          height="600"
-          width="800"
-          styles="width: 100%"
-          title=""
-        />
-        <el-row class="row-bg" justify="end">
-          <el-col :span="1">
-            <el-button type="primary" plain @click="saveClick">新增</el-button>
-          </el-col>
-        </el-row>
-      </div>
-  </el-card>
+      <el-card class="box-card" v-if="jsonOrTable=='json'">
+        <div  class="right-container"  >
+          <JsonEditor
+              v-model:value="tableDataJson"
+              height="600"
+              width="800"
+              styles="width: 100%"
+              title=""
+          />
+          <el-row class="row-bg" justify="end">
+            <el-col :span="1">
+              <el-button type="primary" plain @click="saveClick">新增</el-button>
+            </el-col>
+          </el-row>
+        </div>
+      </el-card>
     </div>
   </div>
-  
+
   <div class="downIndex">
     <el-input
-      v-model="indexKeyword"
-      placeholder="请输入索引名称"
-      style="width: 240px; margin-top: 0px; margin-left: -15px"
-      @change="onSearch"
+        v-model="indexKeyword"
+        placeholder="请输入索引名称"
+        style="width: 240px; margin-top: 0px; margin-left: -15px"
+        @change="onSearch"
     />
     <el-button
-      type="primary"
-      @click="onSearch()"
-      plain
-      style="width: 240px; margin-top: 10px; margin-left: -15px"
-      >查询过滤</el-button
+        type="primary"
+        @click="onSearch()"
+        plain
+        style="width: 240px; margin-top: 10px; margin-left: -15px"
+    >查询过滤</el-button
     >
     <el-button
-      type="primary"
-      @click="clickMappings(selectIndex)"
-      plain
-      style="width: 240px; margin-top: 10px; margin-left: -15px"
-      >查看映射</el-button
+        type="primary"
+        @click="clickMappings(selectIndex)"
+        plain
+        style="width: 240px; margin-top: 10px; margin-left: -15px"
+    >查看映射</el-button
     >
   </div>
 
   <el-dialog
-    v-model="dialogFormVisible"
-    title="查看映射"
-    style="
+      v-model="dialogFormVisible"
+      title="查看映射"
+      style="
       max-width: 700px;
       position: relative;
       height: 750px;
@@ -192,36 +192,45 @@
       /> -->
     <div>
       <JsonEditor
-        v-model:value="code"
-        height="600"
-        styles="width: 100%"
-        title="查看映射"
+          v-model:value="code"
+          height="600"
+          styles="width: 100%"
+          title="查看映射"
       />
     </div>
   </el-dialog>
 
   <el-dialog
-    v-model="addDataVisible"
-    :title="'当前索引:' + selectIndex"
-    style="
+      v-model="addDataVisible"
+      :title="'当前索引:' + selectIndex"
+      style="
       max-width: 700px;
       position: relative;
-      height: 750px;
+      height: 800px;
       transform: translateY(-50px);
     "
   >
+    <div style="margin-bottom: 10px;">
+      <el-form-item label="Routing (可选):">
+        <el-input
+            v-model="routingInput"
+            placeholder="请输入 routing 值（可选，留空则不使用 routing）"
+            clearable
+        />
+      </el-form-item>
+    </div>
     <div>
       <JsonEditor
-        v-model:value="addData"
-        height="600"
-        styles="width: 100%"
-        title="新增数据注意:_id必填,否则会自动生成id"
+          v-model:value="addData"
+          height="550"
+          styles="width: 100%"
+          title="新增数据注意:_id必填,否则会自动生成id"
       />
     </div>
     <el-button
-      type="primary"
-      @click="saveData"
-      style="position: absolute; right: 10px; bottom: 10px"
+        type="primary"
+        @click="saveData"
+        style="position: absolute; right: 10px; bottom: 10px"
     >
       保存数据
     </el-button>
@@ -244,12 +253,13 @@ const code = ref("");
 const jsonOrTable = ref('json');
 
 const addData = ref("{}");
+const routingInput = ref("");  // 新增：routing 输入框的值
 
 let indexKeyword = ref("");
 
-const jsonTableChange= () => { 
-   jsonOrTable.value=jsonOrTable.value==='json'?'table' :'json';
-   console.log('表格控制值'+jsonOrTable.value)
+const jsonTableChange= () => {
+  jsonOrTable.value=jsonOrTable.value==='json'?'table' :'json';
+  console.log('表格控制值'+jsonOrTable.value)
 };
 
 const onSearch = () => {
@@ -330,17 +340,32 @@ function fallbackCopy(text) {
 }
 
 const saveClick = async (index) => {
+  // 打开对话框前清空之前的输入
+  routingInput.value = "";
+  addData.value = "{}";
   addDataVisible.value = true;
 };
 
 const saveData = async () => {
+  const dataObj = JSON.parse(addData.value);
+
+  // 如果用户输入了 routing，添加到数据对象中
+  if (routingInput.value && routingInput.value.trim() !== "") {
+    dataObj._routing = routingInput.value.trim();
+  }
+
   const param = {
     index: selectIndex.value,
-    datas: [JSON.parse(addData.value)],
+    datas: [dataObj],
   };
-  console.log("baocun :" + JSON.stringify(param));
+  console.log("保存: " + JSON.stringify(param));
   let res = await proxy.$api.tools.updateBatch(param);
   elMessage.success();
+
+  // 保存成功后清空输入框
+  addDataVisible.value = false;
+  routingInput.value = "";
+  addData.value = "{}";
 };
 
 const clickMappings = async (index) => {
@@ -391,7 +416,7 @@ onMounted(() => {
   }else{
     getIndices("");
   }
- 
+
 
 });
 
@@ -428,17 +453,17 @@ const getList = async () => {
       });
 
       queryDsl +=
-        "." + i.searchType + '("' + i.field + '",' + searchKeyword + ")";
+          "." + i.searchType + '("' + i.field + '",' + searchKeyword + ")";
     }
   });
 
   queryDsl =
-    queryDsl +
-    '.sortBy("' +
-    sortParam.value.sort +
-    '","' +
-    sortParam.value.sortName +
-    '")';
+      queryDsl +
+      '.sortBy("' +
+      sortParam.value.sort +
+      '","' +
+      sortParam.value.sortName +
+      '")';
   queryDsl += ".search(10)";
   console.log(queryDsl);
   eplQuery(queryDsl);
@@ -456,7 +481,10 @@ const eplQuery = async (epl) => {
 
   // const jsonObject = JSON.parse(res);
   const list = res.hits.hits;
-  list.forEach((item) => (item._source["_id"] = item._id));
+  list.forEach((item) => {
+    item._source["_id"] = item._id;
+    item._source["_routing"] = item._routing || "";  // 添加 routing 支持
+  });
   const source = list.map((item) => item._source);
   //列表数据
   if (source != null && source.length > 0) {
@@ -523,7 +551,7 @@ const eplQuery = async (epl) => {
     });
   }
   tableData.value = source;
- tableDataJson.value=JSON.stringify(source, null, 2);
+  tableDataJson.value=JSON.stringify(source, null, 2);
 };
 
 function isObject(value) {

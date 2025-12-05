@@ -11,6 +11,7 @@ import java.util.List;
  * 快速测试
  * 举例4种类型索引
  */
+
 @Data
 @EsIndex(index = "fast_test_new_v6", alias = "fast_test_new_alias", tryReindex = true)
 @BulkProcessor
@@ -21,10 +22,7 @@ public class FastTestDTO {
     private String username;
     @EsField(type = EsFieldType.TEXT)
     private String text;
-    @EsField(type = EsFieldType.TEXT)
-    private String teaaaxaaaaaaat;
     @EsField(type = EsFieldType.LONG)
-    @Routing(required = true)
     private Long age;
     
     @EsField(type = EsFieldType.KEYWORD)
@@ -40,7 +38,6 @@ public class FastTestDTO {
     private String username_test13;
     @Score
     private Float score;
-    
     @EsField(type = EsFieldType.NESTED)
     private FastTestInnerDTO fastTestInner;
 }

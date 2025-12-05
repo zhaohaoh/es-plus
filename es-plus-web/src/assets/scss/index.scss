@@ -1,1 +1,27 @@
-@import './reset.scss'; 
+@import './reset.scss';
+
+/* 覆盖 Element Plus MessageBox 取消按钮的颜色 */
+.el-message-box__btns .el-button:nth-child(1) {
+  background-color: #fff !important;
+  border-color: #dcdfe6 !important;
+  color: #606266 !important;
+}
+
+.el-message-box__btns .el-button:nth-child(1):hover {
+  background-color: #f5f7fa !important;
+  border-color: #c0c4cc !important;
+  color: #606266 !important;
+}
+
+/* 覆盖 Dialog 中 plain 按钮的颜色 */
+.el-dialog .dialog-footer .el-button.is-plain {
+  background-color: #fff !important;
+  border-color: #dcdfe6 !important;
+  color: #606266 !important;
+}
+
+.el-dialog .dialog-footer .el-button.is-plain:hover {
+  background-color: #f5f7fa !important;
+  border-color: #c0c4cc !important;
+  color: #606266 !important;
+}

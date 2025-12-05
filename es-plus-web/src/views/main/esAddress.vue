@@ -3,25 +3,25 @@
     <el-row :gutter="10">
       <el-table :data="tableData" style="width: 100%">
         <el-table-column
-          v-for="item in tableHeader"
-          :key="item.prop"
-          :label="item.label"
-          :prop="item.prop"
+            v-for="item in tableHeader"
+            :key="item.prop"
+            :label="item.label"
+            :prop="item.prop"
         />
 
         <el-table-column prop="address" label="操作" width="180">
           <template #default="scope">
             <el-button
-              type="primary"
-              plain
-              @click="clickEdit(scope.$index, scope.row)"
-              >编辑</el-button
+                type="warning"
+                plain
+                @click="clickEdit(scope.$index, scope.row)"
+            >编辑</el-button
             >
             <el-button
-              type="danger"
-              @click="clickDelete(scope.$index, scope.row)"
-              plain
-              >删除</el-button
+                type="danger"
+                @click="clickDelete(scope.$index, scope.row)"
+                plain
+            >删除</el-button
             >
           </template>
           <!-- </el-col> -->
@@ -40,18 +40,18 @@
 
   <!-- 编辑的弹窗 -->
   <el-dialog
-    v-model="dialogFormVisible"
-    title="保存链接"
-    :before-close="handleCancel"
-    style="max-width: 660px"
+      v-model="dialogFormVisible"
+      title="保存链接"
+      :before-close="handleCancel"
+      style="max-width: 660px"
   >
     <el-form
-      :inline="true"
-      :model="esClient"
-      ref="clientForm"
-      label-width="100px"
-      style="max-width: 660px"
-      label-position="top"
+        :inline="true"
+        :model="esClient"
+        ref="clientForm"
+        label-width="100px"
+        style="max-width: 660px"
+        label-position="top"
     >
       <el-form-item label="唯一英文标识" prop="name" style="width: 100%">
         <el-col :span="24">
@@ -86,8 +86,8 @@
     </el-form>
     <template #footer>
       <span class="dialog-footer">
-        <el-button @click="testClient">测试</el-button>
-        <el-button @click="handleCancel">取消</el-button>
+        <el-button type="success" @click="testClient">测试</el-button>
+        <el-button plain @click="handleCancel">取消</el-button>
         <el-button type="primary" @click="save"> 保存 </el-button>
       </span>
     </template>
@@ -183,10 +183,10 @@ const clickDelete = async (index, param) => {
     confirmButtonText: "确定",
     cancelButtonText: "取消",
   })
-    .then(() => {
-      esClientDelete(param.id);
-    })
-    .catch(() => {});
+  .then(() => {
+    esClientDelete(param.id);
+  })
+  .catch(() => {});
 };
 
 onMounted(() => {

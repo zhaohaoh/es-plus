@@ -109,19 +109,18 @@ public class EsExecuteController {
     }
     
     /**
-     * SQL查询解释
+     * SQL/DSL 查询执行计划（使用 ES 的 profile API）
      */
     @GetMapping("esQuery/explain")
-    public String explain(String sql, @RequestHeader("currentEsClient") String currentEsClient) {
-        log.debug("SQL解释请求: clientKey={}, sql={}", currentEsClient, sql);
+    public String explain(String sql, String index, @RequestHeader("currentEsClient") String currentEsClient) {
+        log.debug("执行计划请求: clientKey={}, sql={}, index={}", currentEsClient, sql, index);
         
         if (StringUtils.isBlank(sql)) {
-            throw new RuntimeException("SQL语句不能为空");
+            throw new RuntimeException("SQL/DSL语句不能为空");
         }
         
-        // 使用ES的SQL API进行解释
-        String explainSql = "EXPLAIN " + sql;
-        return esRestService.searchBySql(currentEsClient, explainSql);
+        // 使用 ES 的 profile API 获取执行计划
+        return esRestService.explainQuery(currentEsClient, sql, index);
     }
     
     /**
@@ -157,16 +156,16 @@ public class EsExecuteController {
      */
     @DeleteMapping("/deleteByIds")
     public void deleteByIds(@RequestBody EsRequstInfo esRequstInfo, @RequestHeader("currentEsClient") String currentEsClient) {
-        List<String> ids = esRequstInfo.getIds();
         String index = esRequstInfo.getIndex();
+        List<Map<String, Object>> datas = esRequstInfo.getDatas();
         
-        log.debug("批量删除请求: clientKey={}, index={}, count={}", currentEsClient, index, ids.size());
+        log.debug("批量删除请求: clientKey={}, index={}, count={}", currentEsClient, index, datas != null ? datas.size() : 0);
         
-        if (CollectionUtils.isEmpty(ids)) {
-            throw new RuntimeException("需要删除的id不能为空");
+        if (CollectionUtils.isEmpty(datas)) {
+            throw new RuntimeException("需要删除的数据不能为空");
         }
         
-        esRestService.deleteByIds(currentEsClient, index, ids);
+        esRestService.deleteByIds(currentEsClient, index, datas);
     }
     
     /**
@@ -189,7 +188,7 @@ public class EsExecuteController {
             throw new RuntimeException("获取索引映射失败: " + mappingResponse);
         }
         
-        // 执行批量更新
+        // 执行批量更新（routing 从 datas 中获取）
         esRestService.saveBatch(currentEsClient, index, datas);
     }
     
