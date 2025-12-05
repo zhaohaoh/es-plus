@@ -7,6 +7,8 @@ import com.es.plus.core.service.EsServiceImpl;
 import com.es.plus.core.statics.Es;
 import com.es.plus.core.wrapper.aggregation.EsAggWrapper;
 import com.es.plus.core.wrapper.chain.EsChainLambdaQueryWrapper;
+import com.es.plus.core.wrapper.chain.EsChainQueryWrapper;
+import com.es.plus.core.wrapper.core.EsQueryWrapper;
 import com.es.plus.samples.dto.FastTestDTO;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.springframework.stereotype.Service;
@@ -41,6 +43,8 @@ public class FastTestService extends EsServiceImpl<FastTestDTO> {
     }
 
     public void agg() {
+        EsChainQueryWrapper<FastTestDTO> should = Es.chainQuery(FastTestDTO.class).should();
+
         EsChainLambdaQueryWrapper<FastTestDTO> fastTestDTOEsChainLambdaQueryWrapper = esChainQueryWrapper();
         EsAggWrapper<FastTestDTO> fastTestDTOEsAggWrapper = fastTestDTOEsChainLambdaQueryWrapper.esAggWrapper();
         EsAggWrapper<FastTestDTO> gsdgdsf = fastTestDTOEsAggWrapper.terms("gsdgdsf");
