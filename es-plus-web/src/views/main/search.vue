@@ -14,36 +14,40 @@
           >
         </el-button-group>
 
-        <div style="min-height: 30px">
-          <!-- :class="{ hidden: queryType !== 'dsl' }" -->
-          <el-select
-              v-model="index"
-              placeholder="索引"
-              filterable
-              style="width: 400px; margin-bottom: 10px"
-          >
-            <el-option
-                v-for="item in indexData"
-                :key="item"
-                :label="item"
-                :value="item"
-            />
-          </el-select>
-          <!-- :class="{ hidden: queryType !== 'dsl' }" -->
-          <el-button
-              @click="copySelectedText"
-              type="primary"
-              style="margin-left: 10px; margin-bottom: 10px"
-              plain
-          >复制名称
-          </el-button>
-          <el-button
-              type="primary"
-              @click="clickIndex"
-              plain
-              style="margin-left: 10px; margin-bottom: 10px"
-          >查看索引</el-button
-          >
+        <div style="min-height: 30px; display: flex; justify-content: space-between; align-items: flex-start;">
+          <div>
+            <!-- :class="{ hidden: queryType !== 'dsl' }" -->
+            <el-select
+                v-model="index"
+                placeholder="索引"
+                filterable
+                style="width: 300px; margin-bottom: 10px"
+            >
+              <el-option
+                  v-for="item in indexData"
+                  :key="item"
+                  :label="item"
+                  :value="item"
+              />
+            </el-select>
+          </div>
+          <div>
+            <!-- :class="{ hidden: queryType !== 'dsl' }" -->
+            <el-button
+                @click="copySelectedText"
+                type="primary"
+                style="margin-bottom: 10px"
+                plain
+            >复制名称
+            </el-button>
+            <el-button
+                type="primary"
+                @click="clickIndex"
+                plain
+                style="margin-left: 10px; margin-bottom: 10px"
+            >查看索引</el-button
+            >
+          </div>
         </div>
 
         <label class="esQuery-label">
@@ -51,7 +55,8 @@
               v-model:value="queryDsl"
               ref="sqlEditor"
               :language="editorLanguage"
-              height="630"
+              :pointOut="queryType === 'epl' ? codeHints.epl : []"
+              height="600"
               :showToolbar="false"
               class="json-input"
               title=""
@@ -90,7 +95,7 @@
     <div class="right-panel">
       <JsonEditor
           v-model:value="jsonView"
-          height="650"
+          height="calc(100% - 80px)"
           styles="width: 100%"
           title="查询结果"
           class="json-output"
@@ -231,18 +236,7 @@ let dsl =
     '        }\n' +
     '    }\n' +
     '}';
-let epl =
-    "from BPSuvA\n" +
-    "win\n" +
-    "  window tumbling,\n" +
-    "  keep these \n" +
-    "  ev: tumbletime > 60s;\n" +
-    "\n" +
-    "@name(name) by 1m\n" +
-    "select *\n" +
-    "from BPSuvA\n" +
-    "group by name\n" +
-    "output first(1)";
+let epl = 'Es.chainQuery().index("").search(10)';
 
 // 编辑器语言配置
 const editorLanguage = computed(() => {
@@ -250,7 +244,7 @@ const editorLanguage = computed(() => {
     case 'sql':
       return 'sql';
     case 'epl':
-      return 'javascript';
+      return 'epl';  // 使用自定义的 epl 语言
     case 'dsl':
       return 'json';
     default:
@@ -503,44 +497,81 @@ const confirmConvertField = () => {
 // };
 
 // 代码联想提示源
-const codeHints = {
-  javascript: [
-    "Es",
-    "chainQuery()",
-    "filter()",
-    "must()",
-    "should()",
-    "mustNot()",
-    'range("","from","to")',
-    'term("","")',
-    'terms("","")',
-    'match("","")',
-    'sortBy(DESC,"")',
-    'ge("","")',
-    'le("","")',
-    'gt("","")',
-    'lt("","")',
-    'matchPhrase("","")',
-    'termsKeyword("","")',
-    'wildcard("","")',
-    'fuzzy("","")',
-    "ids([])",
-    "count()",
-    "search()",
-    "esAggWrapper()",
-    "EsChainQueryWrapper esChainQueryWrapper = ",
+const eplHints = [
+  // 基础入口
+  "Es.chainQuery()",
 
-    //   聚合字段
-    'sum("name","")',
-    'count("","")',
-    'min("","")',
-    'max("","")',
-    'avg("","")',
-    'nested("","")',
-    'range("","")',
-    'filter("","")',
-    'filters("","")',
-  ],
+  // 索引操作
+  '.index("")',
+  '.index("", "")',
+
+  // 精确匹配
+  '.term("", "")',
+  '.terms("", "")',
+  '.terms("", "", "")',
+
+  // 全文搜索
+  '.match("", "")',
+  '.matchPhrase("", "")',
+  '.multiMatch("", "", "")',
+
+  // 模糊/通配符查询
+  '.wildcard("", "*")',
+  '.fuzzy("", "")',
+  '.prefix("", "")',
+
+  // 范围查询
+  '.range("", from, to)',
+  '.ge("", value)',
+  '.le("", value)',
+  '.gt("", value)',
+  '.lt("", value)',
+
+  // 布尔组合
+  '.must()',
+  '.should()',
+  '.mustNot()',
+  '.filter()',
+
+  // 排序
+  '.sortByAsc("")',
+  '.sortByDesc("")',
+
+  // 聚合入口
+  '.esAggWrapper()',
+
+  // 聚合方法
+  '.sum("", "")',
+  '.avg("", "")',
+  '.max("", "")',
+  '.min("", "")',
+  '.count("", "")',
+  '.terms("")',
+  '.subAgg("", "")',
+  '.percentiles("")',
+
+  // 执行方法
+  '.search()',
+  '.search(10)',
+  '.aggregations()',
+
+  // 其他查询方法
+  '.ids([])',
+  '.nestedQuery("", "")',
+  '.includes("")',
+  '.excludes("")',
+  '.trackScores()',
+  '.minScope(0)',
+  '.searchAfterValues()',
+  '.fetch()',
+  '.sortBy()',
+  '.orderByAsc("")',
+  '.orderByDesc("")',
+];
+
+const codeHints = {
+  javascript: eplHints,
+  epl: eplHints,  // EPL 使用相同的提示词
 };
 
 const onEpReady = (epEditor) => {
@@ -576,8 +607,37 @@ const onEpReady = (epEditor) => {
 
 const onSqlReady = (sqlEditor) => {
   sqlEditor.on("inputRead", function (cm, location) {
-    if (/[a-zA-Z]/.test(location.text[0])) {
-      cm.showHint();
+    // SQL 模式使用内置提示
+    if (queryType.value === 'sql') {
+      if (/[a-zA-Z]/.test(location.text[0])) {
+        cm.showHint();
+      }
+    }
+    // EPL 模式使用自定义提示 - 只显示我们定义的提示，不显示 JavaScript 内置提示
+    else if (queryType.value === 'epl') {
+      if (cm.somethingSelected()) {
+        return;
+      }
+      const cursor = cm.getCursor();
+      const token = cm.getTokenAt(cursor);
+      const hints = codeHints.javascript || [];
+
+      // 只使用我们自定义的提示列表，过滤匹配的项
+      const filteredHints = hints.filter((item) =>
+          item.toLowerCase().startsWith(token.string.toLowerCase())
+      );
+
+      // 只有当有匹配的自定义提示时才显示
+      if (filteredHints.length > 0) {
+        cm.showHint({
+          completeSingle: false,
+          hint: () => ({
+            from: CodeMirror.Pos(cursor.line, token.start),
+            to: CodeMirror.Pos(cursor.line, token.end),
+            list: filteredHints,
+          }),
+        });
+      }
     }
   });
 };
@@ -872,8 +932,24 @@ const saveByIds = async (index, datas) => {
   background: white;
   border-radius: 4px 0 0 4px;
   width: 500px;
-  height: 800px;
+  height: calc(100vh - 100px);
   box-shadow: 1px 0px 3px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.esQuery-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.esQuery-label {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
 .right-panel {
@@ -882,7 +958,7 @@ const saveByIds = async (index, datas) => {
   background: #ffffff;
   border-radius: 0 4px 4px 0;
   box-shadow: inset 1px 0px 0px #e4e7ed;
-  height: 800px;
+  height: calc(100vh - 100px);
   max-width: 850px;
   min-width: 600px;
 }

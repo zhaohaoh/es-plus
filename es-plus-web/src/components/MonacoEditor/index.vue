@@ -103,8 +103,85 @@ const json = computed({
   },
 });
 
+// 注册自定义 EPL 语言
+const registerEPLLanguage = () => {
+  // 检查是否已经注册过
+  const languages = monaco.languages.getLanguages();
+  const eplExists = languages.some(lang => lang.id === 'epl');
+
+  if (!eplExists) {
+    // 注册 EPL 语言
+    monaco.languages.register({ id: 'epl' });
+
+    // 设置语法高亮规则（类似 JavaScript）
+    monaco.languages.setMonarchTokensProvider('epl', {
+      defaultToken: '',
+      tokenPostfix: '.epl',
+
+      keywords: [
+        'Es', 'chainQuery', 'index', 'term', 'terms', 'match', 'matchPhrase',
+        'multiMatch', 'wildcard', 'fuzzy', 'prefix', 'range', 'ge', 'le', 'gt', 'lt',
+        'must', 'should', 'mustNot', 'filter', 'sortByAsc', 'sortByDesc',
+        'esAggWrapper', 'sum', 'avg', 'max', 'min', 'count', 'subAgg',
+        'search', 'aggregations', 'includes', 'excludes', 'nestedQuery',
+        'trackScores', 'minScope', 'searchAfterValues', 'fetch', 'sortBy',
+        'orderByAsc', 'orderByDesc', 'percentiles', 'ids'
+      ],
+
+      operators: ['.', ',', '(', ')', '[', ']', '{', '}'],
+
+      tokenizer: {
+        root: [
+          // 标识符和关键字
+          [/[a-zA-Z_]\w*/, {
+            cases: {
+              '@keywords': 'keyword',
+              '@default': 'identifier'
+            }
+          }],
+
+          // 字符串
+          [/"([^"\\]|\\.)*$/, 'string.invalid'],
+          [/"/, 'string', '@string_double'],
+          [/'([^'\\]|\\.)*$/, 'string.invalid'],
+          [/'/, 'string', '@string_single'],
+
+          // 数字
+          [/\d+/, 'number'],
+
+          // 括号
+          [/[{}()\[\]]/, '@brackets'],
+
+          // 分隔符
+          [/[;,.]/, 'delimiter'],
+
+          // 空白
+          [/[ \t\r\n]+/, ''],
+        ],
+
+        string_double: [
+          [/[^\\"]+/, 'string'],
+          [/\\./, 'string.escape'],
+          [/"/, 'string', '@pop']
+        ],
+
+        string_single: [
+          [/[^\\']+/, 'string'],
+          [/\\./, 'string.escape'],
+          [/'/, 'string', '@pop']
+        ],
+      }
+    });
+  }
+};
+
 // 创建编辑器
 const createEditor = () => {
+  // 如果是 EPL 语言，先注册自定义语言
+  if (props.language === 'epl') {
+    registerEPLLanguage();
+  }
+
   const monacoEditor = monaco.editor.create(container.value, {
     value: jsonValue.value,
     language: props.language,
@@ -125,23 +202,59 @@ const createEditor = () => {
     json.value = editor.getValue();
   });
 
-  monaco.languages.registerCompletionItemProvider(props.language, {
-    triggerCharacters: [' ', '(', '.', '"', "'"],
-    provideCompletionItems: (model, position) => {
-      let suggestions = [];
+  // 注册提示提供者
+  registerCompletionProviders();
+};
 
-      // 自定义提示词
-      if (props.pointOut && props.pointOut.length > 0) {
-        suggestions = props.pointOut.map((item) => ({
-          label: item,
-          kind: monaco.languages.CompletionItemKind.Text,
-          insertText: item,
-          detail: '自定义'
+// 存储已注册的提示提供者，用于清理
+let completionProviders = [];
+
+// 注册提示提供者函数
+const registerCompletionProviders = () => {
+  // 清理之前注册的提示提供者
+  completionProviders.forEach(disposable => {
+    if (disposable && disposable.dispose) {
+      disposable.dispose();
+    }
+  });
+  completionProviders = [];
+
+  // 为 EPL 语言注册提示提供者
+  if (props.language === 'epl' && props.pointOut && props.pointOut.length > 0) {
+    const eplProvider = monaco.languages.registerCompletionItemProvider('epl', {
+      triggerCharacters: [' ', '(', '.', '"', "'", 'E'],
+      provideCompletionItems: (model, position) => {
+        const suggestions = props.pointOut.map((item) => ({
+          label: item,  // 显示时保留点，如 ".must()"
+          kind: monaco.languages.CompletionItemKind.Method,
+          insertText: item.startsWith('.') ? item.substring(1) : item,  // 插入时去掉点，如 "must()"
+          detail: 'EPL',
+          sortText: '0' + item  // 确保自定义提示排在前面
         }));
-      }
+        return {suggestions};
+      },
+    });
+    completionProviders.push(eplProvider);
+  }
+
+  // 为 SQL 语言注册提示提供者
+  if (props.language === 'sql') {
+    const sqlProvider = monaco.languages.registerCompletionItemProvider('sql', {
+      triggerCharacters: [' ', '(', '.', '"', "'"],
+      provideCompletionItems: (model, position) => {
+        let suggestions = [];
+
+        // 自定义提示词
+        if (props.pointOut && props.pointOut.length > 0) {
+          suggestions = props.pointOut.map((item) => ({
+            label: item,
+            kind: monaco.languages.CompletionItemKind.Method,
+            insertText: item,
+            detail: '自定义'
+          }));
+        }
 
       // SQL语言查询提示
-      if (props.language === 'sql') {
         const sqlSuggestions = [
           // SQL关键字
           {
@@ -278,11 +391,12 @@ const createEditor = () => {
         ];
 
         suggestions = [...suggestions, ...sqlSuggestions];
-      }
 
-      return {suggestions};
-    },
-  });
+        return {suggestions};
+      },
+    });
+    completionProviders.push(sqlProvider);
+  }
 };
 
 // 格式化代码
@@ -314,12 +428,30 @@ watch(
     () => props.language,
     (newLanguage) => {
       if (editor) {
+        // 如果切换到 EPL 语言，先注册
+        if (newLanguage === 'epl') {
+          registerEPLLanguage();
+        }
         const model = editor.getModel();
         if (model) {
           monaco.editor.setModelLanguage(model, newLanguage);
         }
+        // 重新注册提示提供者
+        registerCompletionProviders();
       }
     }
+);
+
+// 监听pointOut变化
+watch(
+    () => props.pointOut,
+    (newPointOut) => {
+      if (editor) {
+        // 当提示词列表变化时，重新注册提示提供者
+        registerCompletionProviders();
+      }
+    },
+    { deep: true }
 );
 
 onMounted(() => {
