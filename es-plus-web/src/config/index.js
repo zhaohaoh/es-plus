@@ -10,10 +10,10 @@ const env = import.meta.env.MODE || "dev";
 
 const EnvConfig = {
   dev: {
-    baseUrl: "http://localhost:8080",
+    baseUrl: "http://localhost:8989",
   },
   test: {
-    baseUrl: "http://localhost:8080",
+    baseUrl: "http://localhost:8989",
   },
   pro: {
     baseUrl: "//future.com/api",

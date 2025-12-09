@@ -182,7 +182,6 @@ public class EsRestService {
                 trimmed.startsWith("DESC");
     }
     
-
     
     /**
      * SQL转DSL（使用自定义转换器）
@@ -639,7 +638,20 @@ public class EsRestService {
             String url = EsUrlBuilder.buildMappingUrl(baseUrl, indexName);
             Map<String, String> headers = getAuthHeaders(clientKey);
             
-            return httpClient.put(url, mappings, headers);
+            // 处理mappings格式：如果包含外层的"mappings"包装，需要提取内部内容
+            String processedMappings = mappings;
+            try {
+                Map<String, Object> mappingMap = JsonUtils.toMap(mappings);
+                if (mappingMap.containsKey("mappings")) {
+                    // 如果有外层mappings包装，提取内部内容
+                    Object innerMappings = mappingMap.get("mappings");
+                    processedMappings = JsonUtils.toJsonStr(innerMappings);
+                }
+            } catch (Exception e) {
+                log.warn("解析mappings JSON失败，使用原始内容: {}", e.getMessage());
+            }
+            
+            return httpClient.put(url, processedMappings, headers);
         } catch (HttpException e) {
             log.error("更新索引映射失败: clientKey={}, index={}", clientKey, indexName, e);
             throw e;
@@ -652,19 +664,12 @@ public class EsRestService {
     public String createAlias(String clientKey, String indexName, String aliasName) {
         try {
             String baseUrl = getBaseUrl(clientKey);
-            String url = EsUrlBuilder.buildAliasUrl(baseUrl);
+            // 使用 PUT /{index}/_alias/{alias} 方式，更简单直接
+            String url = baseUrl + "/" + indexName + "/_alias/" + aliasName;
             Map<String, String> headers = getAuthHeaders(clientKey);
             
-            Map<String, Object> requestBody = new HashMap<>();
-            Map<String, Object> actions = new HashMap<>();
-            Map<String, Object> addAlias = new HashMap<>();
-            addAlias.put("index", indexName);
-            addAlias.put("alias", aliasName);
-            actions.put("add", addAlias);
-            requestBody.put("actions", new Object[]{actions});
-            
-            String body = cn.hutool.json.JSONUtil.toJsonStr(requestBody);
-            return httpClient.post(url, body, headers);
+            // PUT 方式创建别名，可以传空body或者包含filter等配置
+            return httpClient.put(url, "{}", headers);
         } catch (HttpException e) {
             log.error("创建别名失败: clientKey={}, index={}, alias={}", clientKey, indexName, aliasName, e);
             throw e;
@@ -868,18 +873,32 @@ public class EsRestService {
         
         try {
             String baseUrl = getBaseUrl(clientKey);
-            String indicesPattern = String.join(",", indexNames);
-            String url = baseUrl + "/_cat/aliases/" + indicesPattern + "?format=json";
+            // 使用 /_cat/aliases?format=json 获取所有别名，然后过滤
+            // 这样即使某些索引没有别名也不会报错
+            String url = baseUrl + "/_cat/aliases?format=json";
             Map<String, String> headers = getAuthHeaders(clientKey);
             
             String response = httpClient.get(url, headers);
+            
+            // 如果响应为空或者是空数组，直接返回空的aliases
+            if (response == null || response.trim().equals("[]") || response.trim().isEmpty()) {
+                log.debug("没有找到任何别名信息");
+                return aliases;
+            }
+            
             List<Map> aliasList = JsonUtils.toList(response, Map.class);
+            
+            // 创建索引名称集合用于快速查找
+            java.util.Set<String> indexNameSet = new java.util.HashSet<>(java.util.Arrays.asList(indexNames));
             
             for (Map alias : aliasList) {
                 String index = (String) alias.get("index");
                 String aliasName = (String) alias.get("alias");
                 
-                aliases.computeIfAbsent(index, k -> new ArrayList<>()).add(aliasName);
+                // 只添加我们关心的索引的别名
+                if (indexNameSet.contains(index)) {
+                    aliases.computeIfAbsent(index, k -> new ArrayList<>()).add(aliasName);
+                }
             }
         } catch (Exception e) {
             log.error("获取别名信息失败", e);
@@ -897,42 +916,70 @@ public class EsRestService {
         for (String indexName : indexNames) {
             try {
                 String mappingResponse = getMapping(clientKey, indexName);
+                log.debug("索引 {} 的 mapping 响应: {}", indexName, mappingResponse);
+                
                 Map<String, Object> mapping = JsonUtils.toMap(mappingResponse);
                 
+                // 尝试获取索引的 mapping，支持多种格式
                 Map<String, Object> indexMapping = (Map<String, Object>) mapping.get(indexName);
                 if (indexMapping == null) {
-                    continue;
+                    log.warn("索引 {} 的 mapping 中找不到索引名对应的数据，尝试直接解析", indexName);
+                    // 如果直接用索引名获取不到，可能响应格式就是 mappings 本身
+                    indexMapping = mapping;
                 }
                 
+                // 尝试获取 mappings 字段（某些版本的 ES 可能有这一层）
+                Object mappingsObj = indexMapping.get("mappings");
+                if (mappingsObj instanceof Map) {
+                    indexMapping = (Map<String, Object>) mappingsObj;
+                    log.debug("从 mappings 字段中提取数据");
+                }
+                
+                // 获取 properties
                 Map<String, Object> properties = (Map<String, Object>) indexMapping.get("properties");
                 if (properties == null) {
+                    log.warn("索引 {} 的 mapping 中找不到 properties 字段，跳过", indexName);
                     continue;
                 }
                 
                 Map<String, String> fieldTypes = new HashMap<>();
                 properties.forEach((field, fieldInfo) -> {
-                    Map<String, Object> fieldMap = (Map<String, Object>) fieldInfo;
-                    String type = (String) fieldMap.get("type");
-                    fieldTypes.put(field, type);
-                    
-                    // 处理fields字段（如text字段的keyword子字段）
-                    Object fieldsObj = fieldMap.get("fields");
-                    if (fieldsObj instanceof Map) {
-                        Map<String, Object> fields = (Map<String, Object>) fieldsObj;
-                        fields.forEach((subField, subInfo) -> {
-                            Map<String, Object> subMap = (Map<String, Object>) subInfo;
-                            String subType = (String) subMap.get("type");
-                            fieldTypes.put(field + "." + subField, subType);
-                        });
+                    if (fieldInfo instanceof Map) {
+                        Map<String, Object> fieldMap = (Map<String, Object>) fieldInfo;
+                        String type = (String) fieldMap.get("type");
+                        if (type != null) {
+                            fieldTypes.put(field, type);
+                        }
+                        
+                        // 处理fields字段（如text字段的keyword子字段）
+                        Object fieldsObj = fieldMap.get("fields");
+                        if (fieldsObj instanceof Map) {
+                            Map<String, Object> fields = (Map<String, Object>) fieldsObj;
+                            fields.forEach((subField, subInfo) -> {
+                                if (subInfo instanceof Map) {
+                                    Map<String, Object> subMap = (Map<String, Object>) subInfo;
+                                    String subType = (String) subMap.get("type");
+                                    if (subType != null) {
+                                        fieldTypes.put(field + "." + subField, subType);
+                                    }
+                                }
+                            });
+                        }
                     }
                 });
                 
-                flatMappings.put(indexName, fieldTypes);
+                if (!fieldTypes.isEmpty()) {
+                    flatMappings.put(indexName, fieldTypes);
+                    log.debug("索引 {} 成功构建 flatMappings，包含 {} 个字段", indexName, fieldTypes.size());
+                } else {
+                    log.warn("索引 {} 的 flatMappings 为空", indexName);
+                }
             } catch (Exception e) {
                 log.error("构建索引{}的flatMappings失败", indexName, e);
             }
         }
         
+        log.debug("最终构建的 flatMappings 包含 {} 个索引", flatMappings.size());
         return flatMappings;
     }
     
