@@ -75,8 +75,25 @@ public class EsReIndexService {
         // 解析响应获取总数和第一批数据
         Map<String, Object> responseMap = JSONUtil.toBean(searchResponse, cn.hutool.json.JSONObject.class);
         Map<String, Object> hits = (Map<String, Object>) responseMap.get("hits");
-        long total = hits != null ? (Long) hits.get("total") : 0;
-        List<Map<String, Object>> list = (List<Map<String, Object>>) hits.get("hits");
+        
+        // 兼容 ES 6.x 和 ES 7.x/8.x 的 total 字段格式
+        long total = 0;
+        if (hits != null) {
+            Object totalObj = hits.get("total");
+            if (totalObj instanceof Number) {
+                // ES 6.x 格式：total 是数字
+                total = ((Number) totalObj).longValue();
+            } else if (totalObj instanceof Map) {
+                // ES 7.x/8.x 格式：total 是对象 {"value": 数字, "relation": "eq"}
+                Map<String, Object> totalMap = (Map<String, Object>) totalObj;
+                Object valueObj = totalMap.get("value");
+                if (valueObj instanceof Number) {
+                    total = ((Number) valueObj).longValue();
+                }
+            }
+        }
+        
+        List<Map<String, Object>> list = hits != null ? (List<Map<String, Object>>) hits.get("hits") : new ArrayList<>();
         
         // 创建任务记录
         EsReindexTask esReindexTask = new EsReindexTask();
@@ -128,6 +145,13 @@ public class EsReIndexService {
                 if (source != null) {
                     // 添加_id用于保存
                     source.put("_id", hit.get("_id"));
+                    
+                    // 添加_routing用于保存（如果存在）
+                    Object routing = hit.get("_routing");
+                    if (routing != null) {
+                        source.put("_routing", routing);
+                    }
+                    
                     documents.add(source);
                 }
                 

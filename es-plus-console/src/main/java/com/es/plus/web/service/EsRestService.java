@@ -575,10 +575,23 @@ public class EsRestService {
             
             Map<String, Object> requestBody = new HashMap<>();
             if (settings != null) {
-                requestBody.put("settings", JsonUtils.toMap(settings));
+                Map<String, Object> settingsMap = JsonUtils.toMap(settings);
+                // 过滤掉系统生成的不可设置字段
+                settingsMap = filterSystemSettings(settingsMap);
+                requestBody.put("settings", settingsMap);
             }
             if (mappings != null) {
-                requestBody.put("mappings", JsonUtils.toMap(mappings));
+                Map<String, Object> mappingsMap = JsonUtils.toMap(mappings);
+                
+                // 检查是否已经有外层的 "mappings" 包装，避免双层嵌套
+                if (mappingsMap.containsKey("mappings")) {
+                    // 如果有外层 mappings 包装，直接使用内层的 mappings
+                    requestBody.put("mappings", mappingsMap.get("mappings"));
+                    log.debug("检测到 mappings 已有外层包装，使用内层数据");
+                } else {
+                    // 如果没有，说明传入的就是 properties 等内容，需要包装
+                    requestBody.put("mappings", mappingsMap);
+                }
             }
             if (alias != null) {
                 Map<String, Object> aliases = new HashMap<>();
@@ -593,6 +606,38 @@ public class EsRestService {
             log.error("创建索引失败: clientKey={}, index={}", clientKey, indexName, e);
             throw e;
         }
+    }
+    
+    /**
+     * 过滤掉系统生成的不可设置字段
+     */
+    private Map<String, Object> filterSystemSettings(Map<String, Object> settings) {
+        if (settings == null) {
+            return settings;
+        }
+        
+        // 需要过滤的系统生成字段（不带 index. 前缀）
+        java.util.Set<String> excludedSettings = new java.util.HashSet<>(java.util.Arrays.asList(
+                "creation_date",
+                "uuid",
+                "provided_name",
+                "version",
+                "version.created",
+                "version.upgraded"
+        ));
+        
+        Map<String, Object> filtered = new HashMap<>();
+        for (Map.Entry<String, Object> entry : settings.entrySet()) {
+            String key = entry.getKey();
+            // 跳过系统生成的字段
+            if (!excludedSettings.contains(key)) {
+                filtered.put(key, entry.getValue());
+            } else {
+                log.debug("过滤掉系统设置字段: {}", key);
+            }
+        }
+        
+        return filtered;
     }
     
     /**

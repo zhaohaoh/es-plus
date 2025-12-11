@@ -286,12 +286,34 @@ public class EsIndexController {
             
             Map<String, Object> mappings = (Map<String, Object>) sourceIndexInfo.get("mappings");
             Map<String, Object> settings = (Map<String, Object>) sourceIndexInfo.get("settings");
+            
+            // 需要过滤的系统生成字段（不带 index. 前缀，因为在 settings.index 对象内部字段名不带前缀）
+            Set<String> excludedSettings = new HashSet<>(Arrays.asList(
+                    "creation_date",
+                    "uuid",
+                    "provided_name",
+                    "version"
+            ));
+            
             if (settings != null && settings.containsKey("index")) {
                 Map<String, Object> indexSettings = (Map<String, Object>) settings.get("index");
-                // 移除index前缀以匹配原始逻辑
+                // 过滤掉系统生成的字段
                 Map<String, Object> cleanSettings = new HashMap<>();
                 for (Map.Entry<String, Object> entry : indexSettings.entrySet()) {
-                    String key = entry.getKey().replaceFirst("^index\\.", "");
+                    String key = entry.getKey();
+                    
+                    // 跳过系统生成的字段
+                    if (excludedSettings.contains(key)) {
+                        log.debug("过滤掉系统设置字段: index.{}", key);
+                        continue;
+                    }
+                    
+                    // 跳过 version 开头的字段（如 version.created, version.upgraded）
+                    if (key.startsWith("version.")) {
+                        log.debug("过滤掉系统设置字段: index.{}", key);
+                        continue;
+                    }
+                    
                     cleanSettings.put(key, entry.getValue());
                 }
                 settings = cleanSettings;
@@ -357,11 +379,14 @@ public class EsIndexController {
             EsReindexTaskVO esReindexTaskVO = new EsReindexTaskVO();
             BeanUtils.copyProperties(a, esReindexTaskVO);
             if (a.getType() == null || a.getType() == 1) {
-                EsPlusGetTaskResponse string = reindexTaskGet(esClientName, esReindexTaskVO.getTaskId());
-                if (string != null) {
-                    boolean completed = string.isCompleted();
-                    esReindexTaskVO.setTaskJson(string.getTaskInfo());
-                    esReindexTaskVO.setCompleted(completed);
+                // 只有当 taskId 不为空时才查询任务状态
+                if (esReindexTaskVO.getTaskId() != null && !esReindexTaskVO.getTaskId().isEmpty()) {
+                    EsPlusGetTaskResponse string = reindexTaskGet(esClientName, esReindexTaskVO.getTaskId());
+                    if (string != null) {
+                        boolean completed = string.isCompleted();
+                        esReindexTaskVO.setTaskJson(string.getTaskInfo());
+                        esReindexTaskVO.setCompleted(completed);
+                    }
                 }
             }
             return esReindexTaskVO;
