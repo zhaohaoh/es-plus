@@ -1,5 +1,5 @@
 <template>
-  <div ref="maxDiv" style="width: 100%">
+  <div ref="maxDiv" style="width: 100%; height: 100%; display: flex; flex-direction: column;">
     <div class="tools-box" v-if="showToolbar">
       <div>
         <span v-if="title != ''">{{ title }}</span>
@@ -19,7 +19,11 @@
         id="container"
         class="monaco-editor"
         ref="container"
-        :style="{ height: `${height}px`, width: containerWidth }"
+        :style="{
+          flex: height === '100%' ? '1' : 'none',
+          height: height === '100%' ? 'auto' : `${height}px`,
+          width: containerWidth
+        }"
     ></div>
   </div>
 </template>
@@ -254,7 +258,7 @@ const registerCompletionProviders = () => {
           }));
         }
 
-      // SQL语言查询提示
+        // SQL语言查询提示
         const sqlSuggestions = [
           // SQL关键字
           {

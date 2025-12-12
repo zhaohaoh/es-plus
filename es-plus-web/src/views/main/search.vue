@@ -56,7 +56,7 @@
               ref="sqlEditor"
               :language="editorLanguage"
               :pointOut="queryType === 'epl' ? codeHints.epl : []"
-              height="600"
+              height="100%"
               :showToolbar="false"
               class="json-input"
               title=""
@@ -950,6 +950,7 @@ const saveByIds = async (index, datas) => {
   display: flex;
   flex-direction: column;
   min-height: 0;
+  overflow: hidden;
 }
 
 .right-panel {
@@ -961,11 +962,13 @@ const saveByIds = async (index, datas) => {
   height: calc(100vh - 100px);
   max-width: 850px;
   min-width: 600px;
+  display: flex;
+  flex-direction: column;
 }
 
 .json-input {
   width: 100%;
-  height: calc(50% - 50px);
+  flex: 1;
   padding: 12px;
   border: 1px solid #ddd;
   border-radius: 4px;
