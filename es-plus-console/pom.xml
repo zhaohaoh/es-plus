@@ -116,6 +116,56 @@
                     </execution>
                 </executions>
             </plugin>
+            <!-- Launch4j Maven插件 - 生成Windows exe文件 -->
+            <plugin>
+                <groupId>com.akathist.maven.plugins.launch4j</groupId>
+                <artifactId>launch4j-maven-plugin</artifactId>
+                <version>2.1.2</version>
+                <executions>
+                    <execution>
+                        <id>l4j-gui</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>launch4j</goal>
+                        </goals>
+                        <configuration>
+                            <!-- 输出的exe文件路径 -->
+                            <outfile>target/es-plus-console.exe</outfile>
+                            <!-- 输入的jar文件 -->
+                            <jar>target/${project.artifactId}-${project.version}.jar</jar>
+                            <!-- 不要复制jar到输出目录 -->
+                            <dontWrapJar>false</dontWrapJar>
+                            <!-- 头部类型：console表示有控制台窗口，方便调试 -->
+                            <headerType>gui</headerType>
+                            <!-- 不指定主类，使用JAR文件MANIFEST.MF中的配置 -->
+                            <!-- JRE配置 -->
+                            <jre>
+                                <path>D:\work\openjdk21</path>
+                                <minVersion>1.8.0</minVersion>
+                                <initialHeapSize>256</initialHeapSize>
+                                <maxHeapSize>1024</maxHeapSize>
+                            </jre>
+                            <!-- 单实例配置 - 防止重复启动 -->
+                            <singleInstance>
+                                <mutexName>es-plus-console</mutexName>
+                                <windowTitle>${project.name}</windowTitle>
+                            </singleInstance>
+                            <!-- 版本信息 -->
+                            <versionInfo>
+                                <fileVersion>1.0.0.0</fileVersion>
+                                <txtFileVersion>${project.version}</txtFileVersion>
+                                <fileDescription>ES-Plus Console - Elasticsearch管理控制台</fileDescription>
+                                <copyright>Copyright © 2024 hzh</copyright>
+                                <productVersion>1.0.0.0</productVersion>
+                                <txtProductVersion>${project.version}</txtProductVersion>
+                                <productName>ES-Plus Console</productName>
+                                <internalName>es-plus-console</internalName>
+                                <originalFilename>es-plus-console.exe</originalFilename>
+                            </versionInfo>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
 </project>

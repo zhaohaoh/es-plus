@@ -1,7 +1,7 @@
 spring:
   datasource:
     driver-class-name: org.sqlite.JDBC
-    url: jdbc:sqlite:./sqlite.db
+    url: jdbc:sqlite:${user.home}/.es-plus-console/sqlite.db
 server:
   port: 8989
 ############## Sa-Token 配置 (文档: https://sa-token.cc) ##############
