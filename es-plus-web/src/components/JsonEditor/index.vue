@@ -289,6 +289,7 @@ const createEditor = () => {
   });
 };
 
+// 父组件经异步请求更新内容时同步到 Monaco 编辑器
 // 格式化代码
 const format = () => {
   if (editor) {

@@ -53,6 +53,11 @@
         </div>
       </div>
 
+      <label class="remember-login">
+        <input v-model="rememberCredentials" type="checkbox" />
+        <span>记住账号密码</span>
+      </label>
+
       <button type="submit" class="login-btn">
         <span class="btn-text">立即登录</span>
         <i class="btn-icon icon-arrow-right"></i>
@@ -66,20 +71,41 @@
 </template>
 
 <script setup>
-import { getCurrentInstance, onMounted, reactive, ref } from "vue";
+import { getCurrentInstance, onMounted, reactive, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 
 const username = ref("");
 const password = ref("");
+const rememberCredentials = ref(false);
+const loginCredentialsKey = "es-plus-login-credentials";
+
+watch(rememberCredentials, (remember) => {
+  if (!remember) localStorage.removeItem(loginCredentialsKey);
+});
 
 const { proxy } = getCurrentInstance();
 // export的时候是{}则必须用{}  否则就得去掉{}
 const router = useRouter();
+
+onMounted(() => {
+  const savedCredentials = localStorage.getItem(loginCredentialsKey);
+  if (!savedCredentials) return;
+
+  try {
+    const credentials = JSON.parse(savedCredentials);
+    if (typeof credentials.username !== "string" || typeof credentials.password !== "string") {
+      localStorage.removeItem(loginCredentialsKey);
+      return;
+    }
+    username.value = credentials.username;
+    password.value = credentials.password;
+    rememberCredentials.value = true;
+  } catch {
+    localStorage.removeItem(loginCredentialsKey);
+  }
+});
+
 const handleLogin = async () => {
-  console.log("登录信息:", {
-    username: username.value,
-    password: password.value,
-  });
   const param = {
     username: username.value,
     password: password.value,
@@ -89,6 +115,14 @@ const handleLogin = async () => {
   let res = await proxy.$api.user.doLogin(param);
   if (res.tokenValue) {
     localStorage.setItem("es-plus-token", res.tokenValue);
+    if (rememberCredentials.value) {
+      localStorage.setItem(loginCredentialsKey, JSON.stringify({
+        username: username.value,
+        password: password.value,
+      }));
+    } else {
+      localStorage.removeItem(loginCredentialsKey);
+    }
   }
   router.push("/esIndex");
 };
@@ -309,6 +343,23 @@ const handleLogin = async () => {
   justify-content: center;
   gap: 8px;
   margin-top: 10px;
+}
+
+.remember-login {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: -8px 0 18px;
+  color: #666;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.remember-login input {
+  width: 16px;
+  height: 16px;
+  accent-color: #2a59d7;
+  cursor: pointer;
 }
 
 .login-btn:hover {

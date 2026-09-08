@@ -1,0 +1,13 @@
+{
+  "name": "es-plus-client",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "build:web": "npm --prefix ../es-plus-web run build",
+    "build:node": "npm --prefix es-plus-node run build",
+    "test": "npm --prefix es-plus-node test",
+    "portable:windows": "npm run build:web && npm run build:node && npm --prefix desktop run portable:windows",
+    "dist:windows": "npm run build:web && npm run build:node && npm --prefix desktop run dist:windows"
+  }
+}

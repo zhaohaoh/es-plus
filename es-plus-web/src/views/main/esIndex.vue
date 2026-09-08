@@ -1,5 +1,5 @@
 <template>
-  <div class="container">
+  <div class="container index-page">
     <div class="searchInput">
       <el-row :gutter="20" align="middle">
         <!-- 左侧搜索组 -->
@@ -44,7 +44,7 @@
         </el-col>
       </el-row>
     </div>
-    <el-scrollbar height="700px">
+    <el-scrollbar class="index-scrollbar">
       <div v-for="item in data" :key="item.index" class="scrollbar-demo-item">
         <div class="index-item">
           <span style="font-size: 28px; font-weight: bold">{{
@@ -106,8 +106,6 @@
         max-width: 600px;
         position: relative;
         height: 150px;
-        transform: translateY(80px);
-        transform: translateX(50px);
       "
     >
       <el-input v-model="changeAlias" />
@@ -215,18 +213,19 @@
 
     <el-dialog
         v-model="reindexTableVisble"
+        class="migration-task-dialog"
         title="迁移任务明细"
         style="
-        width: 1500px;
+        width: min(1500px, calc(100vw - 32px));
         position: relative;
-        height: 600px;
-        transform: translateY(80px);
-        transform: translateX(50px);
+        height: min(600px, calc(100vh - 32px));
       "
     >
       <el-table
           :data="reindexTableData"
-          style="max-width: 1500px; max-height: 1000px; min-height: 300px"
+          height="100%"
+          width="100%"
+          table-layout="fixed"
           size="large"
       >
         <el-table-column
@@ -234,7 +233,8 @@
             :key="item.prop"
             :label="item.label"
             :prop="item.prop"
-            width="180"
+            :min-width="item.prop === 'taskJson' ? 220 : 78"
+            show-overflow-tooltip
         >
           <template #default="scope">
             {{
@@ -468,7 +468,7 @@ import { Search, Connection, Plus, Operation } from "@element-plus/icons-vue";
 import JsonEditor from "../../components/JsonEditor/index.vue";
 import elMessage from "../../util/message";
 // import VueJsonHelper from "@/views/indices/components/Helper.vue";
-import { ElMessageBox } from "element-plus";
+import { ElMessage, ElMessageBox } from "element-plus";
 import options from "../../store/global";
 import Codemirror from "codemirror-editor-vue3";
 // 主题样式（我直接用了纯白色的，看着比较舒服）
@@ -830,30 +830,29 @@ const clickReindex = async (index, alias) => {
 };
 
 const setAlias = async () => {
-  createAlias(currentIndex.value, changeAlias.value);
+  await createAlias(currentIndex.value, changeAlias.value);
 };
 
 const createAlias = async (index, alias) => {
   const param = {
     index: index,
-    alias: alias,
+    alias: String(alias ?? "").trim(),
   };
   let res = await proxy.$api.esIndex.createAlias(param);
   createAliasVisble.value = false;
-  onSearch();
+  await onSearch();
 };
 const removeAlias = async () => {
-  deleteAlias(currentIndex.value, changeAlias.value);
+  await deleteAlias(currentIndex.value, changeAlias.value);
 };
 
 const deleteAlias = async (index, alias) => {
-  const param = {
-    index: index,
-    alias: alias,
-  };
-  let res = await proxy.$api.esIndex.removeAlias(param);
+  const aliases = String(alias ?? "").split(",").map((item) => item.trim()).filter(Boolean);
+  for (const aliasName of aliases) {
+    await proxy.$api.esIndex.removeAlias({ index, alias: aliasName });
+  }
   createAliasVisble.value = false;
-  onSearch();
+  await onSearch();
 };
 
 const clickCreateIndex = async () => {
@@ -861,10 +860,15 @@ const clickCreateIndex = async () => {
 };
 
 const clickClusterInfo = async () => {
-  let res = await proxy.$api.esIndex.getIndexStat();
-  cluseterInfo.value = JSON.stringify(res, null, 2);
-  console.log(res);
   clusterInfoVisble.value = true;
+  cluseterInfo.value = "正在加载集群信息...";
+  try {
+    const res = await proxy.$api.esIndex.getIndexStat();
+    cluseterInfo.value = JSON.stringify(res, null, 2);
+  } catch (error) {
+    cluseterInfo.value = JSON.stringify({ error: error instanceof Error ? error.message : String(error) }, null, 2);
+    ElMessage.error("集群信息获取失败 请检查 ES 连接");
+  }
 };
 
 const getIndex = async (index) => {
@@ -889,9 +893,7 @@ onMounted(() => {
   getIndices(keyword.value);
 });
 
-const onSearch = () => {
-  getIndices(keyword.value);
-};
+const onSearch = () => getIndices(keyword.value);
 
 const getIndices = async (keyword) => {
   const param = {
@@ -925,6 +927,51 @@ const esIndexDelete = async (data) => {
 
 </script>
 <style scoped>
+.index-page {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.index-scrollbar {
+  flex: 1;
+  min-height: 0;
+}
+
+:deep(.migration-task-dialog .el-dialog__body) {
+  flex: 1 1 auto;
+  display: flex;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 0;
+  padding: 12px 20px 20px;
+  overflow: hidden;
+}
+
+:deep(.migration-task-dialog.el-dialog) {
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  max-height: calc(100vh - 32px);
+  margin: 16px auto;
+  overflow: hidden;
+}
+
+:deep(.migration-task-dialog .el-dialog__header) {
+  flex: 0 0 auto;
+}
+
+:deep(.migration-task-dialog .el-table) {
+  flex: 1 1 auto;
+  height: 100%;
+  width: 100%;
+  min-height: 0;
+}
+
 /* 在全局样式或组件样式中添加 */
 .scrollbar-demo-item {
   display: flex;

@@ -1,0 +1,61 @@
+{
+  "name": "es-plus-desktop",
+  "private": true,
+  "version": "0.1.0",
+  "description": "ES Plus Windows 客户端",
+  "type": "module",
+  "main": "main.mjs",
+  "scripts": {
+    "start": "electron .",
+    "test:layout": "electron tests/layout-smoke.mjs",
+    "pack:windows": "electron-builder --dir --win --x64",
+    "portable:windows": "electron-builder --win portable --x64",
+    "dist:windows": "electron-builder --win nsis --x64"
+  },
+  "devDependencies": {
+    "electron": "^38.0.0",
+    "electron-builder": "^26.0.12"
+  },
+  "build": {
+    "appId": "com.esplus.desktop",
+    "productName": "ES Plus",
+    "asar": true,
+    "directories": {
+      "output": "dist"
+    },
+    "icon": "build/icon.png",
+    "files": [
+      "main.mjs",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "../es-plus-node/dist/server.js",
+        "to": "node/server.js"
+      },
+      {
+        "from": "../../es-plus-web/dist",
+        "to": "web"
+      }
+    ],
+    "win": {
+      "icon": "build/icon.png",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        }
+      ],
+      "artifactName": "ES-Plus-Setup-${version}-${arch}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    },
+    "portable": {
+      "artifactName": "ES-Plus-Portable-${version}-${arch}.${ext}"
+    }
+  }
+}

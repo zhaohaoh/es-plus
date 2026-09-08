@@ -18,10 +18,14 @@ const EnvConfig = {
   pro: {
     baseUrl: "//future.com/api",
   },
+  production: {
+    // Windows 客户端和静态部署统一使用当前页面同源服务
+    baseUrl: "",
+  },
 };
 
 export default {
   env,
   //获取指定环境的数据
-  ...EnvConfig[env],
+  ...(EnvConfig[env] || EnvConfig.production),
 };

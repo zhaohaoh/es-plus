@@ -47,7 +47,8 @@
 
 .el-menu-vertical-demo:not(.el-menu--collapse) {
   width: 200px;
-  min-height: 850px;
+  height: 100%;
+  min-height: 0;
   background-color: #ffffff;
   /* color: #545c64 !important; */
 }

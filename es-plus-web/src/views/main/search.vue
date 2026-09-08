@@ -80,6 +80,26 @@
               v-show="queryType == 'sql'"
           >输出执行计划</el-button
           >
+          <el-dropdown class="query-history-dropdown" trigger="click" @command="restoreHistory">
+            <el-button size="small" type="info" plain>
+              历史记录<i class="el-icon--right">⌄</i>
+            </el-button>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item v-if="!currentHistory.length" disabled>
+                  暂无{{ queryTypeLabel }}历史记录
+                </el-dropdown-item>
+                <el-dropdown-item
+                    v-for="item in currentHistory"
+                    :key="item.id"
+                    :command="item"
+                >
+                  {{ formatHistoryTime(item.time) }}
+                  <span class="history-index" v-if="item.index">（{{ item.index }}）</span>
+                </el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
           <el-button
               size="small"
               :icon="Search"
@@ -212,7 +232,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, reactive, computed, proxy, getCurrentInstance, refs, onMounted } from "vue";
+import { ref, reactive, computed, proxy, getCurrentInstance, refs, onMounted, onBeforeUnmount } from "vue";
 
 import MonacoEditor from "../../components/MonacoEditor/index.vue";
 import JsonEditor from "../../components/JsonEditor/index.vue";
@@ -237,6 +257,80 @@ let dsl =
     '    }\n' +
     '}';
 let epl = 'Es.chainQuery().index("").search(10)';
+
+type QueryType = "sql" | "epl" | "dsl";
+interface QueryHistoryItem {
+  id: string;
+  type: QueryType;
+  query: string;
+  index: string;
+  time: number;
+}
+
+type QueryHistoryStore = Record<QueryType, QueryHistoryItem[]>;
+
+const loadHistory = (): QueryHistoryStore => {
+  const legacy = (type: QueryType, key: string): QueryHistoryItem[] => {
+    const query = localStorage.getItem(key);
+    return query ? [{ id: `legacy-${type}`, type, query, index: "", time: Date.now() }] : [];
+  };
+  try {
+    const parsed = JSON.parse(localStorage.getItem("queryHistoryByType") ?? "null");
+    if (!parsed || typeof parsed !== "object") {
+      return { sql: legacy("sql", "lastSql"), epl: legacy("epl", "lastEpl"), dsl: legacy("dsl", "lastDsl") };
+    }
+    return {
+      sql: Array.isArray(parsed.sql) && parsed.sql.length ? parsed.sql.slice(0, 10) : legacy("sql", "lastSql"),
+      epl: Array.isArray(parsed.epl) && parsed.epl.length ? parsed.epl.slice(0, 10) : legacy("epl", "lastEpl"),
+      dsl: Array.isArray(parsed.dsl) && parsed.dsl.length ? parsed.dsl.slice(0, 10) : legacy("dsl", "lastDsl"),
+    };
+  } catch {
+    return { sql: [], epl: [], dsl: [] };
+  }
+};
+
+const historyStore = reactive<QueryHistoryStore>(loadHistory());
+const lastQueryStorageKey = "queryLastByType";
+
+/**
+ * 读取每种查询语言最后一次执行的请求。
+ * 历史列表用于回溯多条记录，最后请求单独保存，避免初始化或切换 Tab 时被默认语句覆盖。
+ */
+const loadLastQueries = (): Partial<Record<QueryType, QueryHistoryItem>> => {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(lastQueryStorageKey) ?? "null");
+    if (!parsed || typeof parsed !== "object") return {};
+    return parsed as Partial<Record<QueryType, QueryHistoryItem>>;
+  } catch {
+    return {};
+  }
+};
+
+const saveLastQuery = (type: QueryType, query: string, queryIndex = index.value) => {
+  const value = String(query ?? "").trim();
+  if (!value) return;
+  const queries = loadLastQueries();
+  queries[type] = {
+    id: `last-${type}`,
+    type,
+    query: value,
+    index: queryIndex ?? "",
+    time: Date.now(),
+  };
+  localStorage.setItem(lastQueryStorageKey, JSON.stringify(queries));
+};
+
+const getLastQuery = (type: QueryType): QueryHistoryItem | null => {
+  const item = loadLastQueries()[type];
+  if (item?.query) return item;
+
+  // 兼容此前版本只保存 lastSql / lastEpl / lastDsl 的数据。
+  const legacyKey = { sql: "lastSql", epl: "lastEpl", dsl: "lastDsl" }[type];
+  const legacyQuery = localStorage.getItem(legacyKey);
+  return legacyQuery
+    ? { id: `legacy-last-${type}`, type, query: legacyQuery, index: "", time: Date.now() }
+    : null;
+};
 
 // 编辑器语言配置
 const editorLanguage = computed(() => {
@@ -268,8 +362,61 @@ const editorLanguage = computed(() => {
 '    "aggs": {}\n' +
 "}";
 let queryDsl = ref(sql);
-let queryType = ref("sql");
+let queryType = ref<QueryType>("sql");
 let index = ref("");
+let pageReady = false;
+
+const queryTypeLabel = computed(() => ({ sql: "SQL", epl: "EPL", dsl: "DSL" }[queryType.value]));
+const currentHistory = computed(() => historyStore[queryType.value]);
+
+const persistHistory = () => {
+  localStorage.setItem("queryHistoryByType", JSON.stringify(historyStore));
+};
+
+const recordHistory = (type: QueryType, query: string) => {
+  const value = String(query ?? "").trim();
+  if (!value) return;
+  const records = historyStore[type];
+  const oldIndex = records.findIndex((item) => item.query === value && item.index === index.value);
+  if (oldIndex >= 0) records.splice(oldIndex, 1);
+  records.unshift({
+    id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+    type,
+    query: value,
+    index: index.value,
+    time: Date.now(),
+  });
+  records.splice(10);
+  persistHistory();
+};
+
+const formatHistoryTime = (time: number) => new Date(time).toLocaleString("zh-CN", {
+  year: "numeric", month: "2-digit", day: "2-digit",
+  hour: "2-digit", minute: "2-digit", second: "2-digit",
+});
+
+const restoreHistory = (item: QueryHistoryItem) => {
+  if (!item) return;
+  queryType.value = item.type;
+  queryDsl.value = item.query;
+  index.value = item.index ?? "";
+};
+
+const draftKey = (type: QueryType) => `queryDraft:${type}`;
+const saveCurrentDraft = () => {
+  if (!pageReady || !queryDsl.value.trim()) return;
+  localStorage.setItem(draftKey(queryType.value), JSON.stringify({ query: queryDsl.value, index: index.value }));
+};
+const loadDraft = (type: QueryType): QueryHistoryItem | null => {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(draftKey(type)) ?? "null");
+    return parsed?.query ? { id: `draft-${type}`, type, query: parsed.query, index: parsed.index ?? "", time: Date.now() } : null;
+  } catch {
+    return null;
+  }
+};
+
+onBeforeUnmount(saveCurrentDraft);
 
 const jsonView = ref("");
 const convertField = ref("");
@@ -280,6 +427,7 @@ const addRoutingInput = ref("");  // 新增：routing 输入框的值
 const indexData = ref([]);
 onMounted(() => {
   clickSql();
+  pageReady = true;
   getIndices("");
 });
 
@@ -341,35 +489,25 @@ const getIndices = async (keyword) => {
   indexData.value = res.indices;
 };
 
-const clickSql = () => {
-  const lastSql = localStorage.getItem("lastSql");
-  if (lastSql) {
-    queryDsl.value = lastSql;
+const switchQueryType = (type: QueryType, defaultQuery: string) => {
+  // 先保存离开前的编辑内容，保证用户只修改未执行时也不会丢失。
+  saveCurrentDraft();
+  queryType.value = type;
+
+  // 最后一次执行请求优先，其次恢复草稿，再其次使用历史记录中的第一条。
+  const saved = getLastQuery(type) ?? loadDraft(type) ?? historyStore[type][0];
+  if (saved) {
+    queryDsl.value = saved.query;
+    index.value = saved.index ?? "";
   } else {
-    queryDsl.value = sql;
+    queryDsl.value = defaultQuery;
+    index.value = "";
   }
-  queryType.value = "sql";
 };
 
-const clickEpl = () => {
-  const lastEpl = localStorage.getItem("lastEpl");
-  if (lastEpl) {
-    queryDsl.value = lastEpl;
-  } else {
-    queryDsl.value = epl;
-  }
-  queryType.value = "epl";
-};
-
-const clickDsl = () => {
-  const lastDsl = localStorage.getItem("lastDsl");
-  if (lastDsl) {
-    queryDsl.value = lastDsl;
-  } else {
-    queryDsl.value = dsl;
-  }
-  queryType.value = "dsl";
-};
+const clickSql = () => switchQueryType("sql", sql);
+const clickEpl = () => switchQueryType("epl", epl);
+const clickDsl = () => switchQueryType("dsl", dsl);
 
 const excelExport = () => {
   const data = JSON.parse(jsonView.value);
@@ -694,6 +832,8 @@ const explain = async () => {
 };
 
 const dslQuery = async (dsl) => {
+  saveLastQuery("dsl", dsl);
+  recordHistory("dsl", dsl);
   localStorage.setItem("lastDsl", dsl);
   const param = {
     dsl: dsl,
@@ -710,6 +850,8 @@ const submitEplQuery = () => {
 };
 
 const eplQuery = async (epl) => {
+  saveLastQuery("epl", epl);
+  recordHistory("epl", epl);
   localStorage.setItem("lastEpl", epl);
   const param = {
     epl: epl,
@@ -725,6 +867,8 @@ const submitSqlQuery = () => {
 };
 
 const sqlQuery = async (sql) => {
+  saveLastQuery("sql", sql);
+  recordHistory("sql", sql);
   localStorage.setItem("lastSql", sql);
   const param = {
     sql: sql,
@@ -913,26 +1057,32 @@ const saveByIds = async (index, datas) => {
   display: none !important;
 }
 .container {
-  max-height: 9000px;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
   flex: 1;
   display: flex;
   align-items: stretch;
   gap: 2px;
   background: #f0f0f0;
-  max-width: 1600px;
+  max-width: none;
   margin: 0 auto;
   padding: 8px;
+  overflow: hidden;
   border-radius: 6px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .left-panel {
-  flex: 1;
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 0;
   padding: 25px;
   background: white;
   border-radius: 4px 0 0 4px;
-  width: 500px;
-  height: calc(100vh - 100px);
+  width: auto;
+  height: 100%;
   box-shadow: 1px 0px 3px rgba(0, 0, 0, 0.1);
   overflow: hidden;
   display: flex;
@@ -954,16 +1104,18 @@ const saveByIds = async (index, datas) => {
 }
 
 .right-panel {
-  flex: 1;
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 0;
   padding: 25px;
   background: #ffffff;
   border-radius: 0 4px 4px 0;
   box-shadow: inset 1px 0px 0px #e4e7ed;
-  height: calc(100vh - 100px);
-  max-width: 850px;
-  min-width: 600px;
+  height: 100%;
+  max-width: none;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .json-input {
@@ -984,6 +1136,15 @@ const saveByIds = async (index, datas) => {
 .controls {
   margin: 10px 0px 10px 0px;
   text-align: right;
+}
+
+.query-history-dropdown {
+  margin-left: 8px;
+}
+
+.history-index {
+  color: #909399;
+  margin-left: 4px;
 }
 
 button {

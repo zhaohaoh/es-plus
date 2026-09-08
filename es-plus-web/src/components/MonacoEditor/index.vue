@@ -187,7 +187,8 @@ const createEditor = () => {
   }
 
   const monacoEditor = monaco.editor.create(container.value, {
-    value: jsonValue.value,
+    // 编辑器可能在父组件恢复历史请求之后才创建，必须读取最新的 props.value，不能使用初始化时缓存的默认值。
+    value: props.value,
     language: props.language,
     theme: "vs",
     automaticLayout: true,
@@ -421,6 +422,7 @@ const copy = () => {
 watch(
     () => props.value,
     (newVal) => {
+      jsonValue.value = newVal;
       if (editor && newVal !== editor.getValue()) {
         editor.setValue(newVal);
       }
