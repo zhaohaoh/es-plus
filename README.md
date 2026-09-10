@@ -69,6 +69,15 @@ Es-Plus 是一款 **Elasticsearch Java Client 增强工具**，采用 **MyBatis-
 - **自定义拦截器**：@EsInterceptors 注解支持执行前后拦截逻辑
 - **ES 控制台**：类似 Navicat 的 ES 查询编辑工具
 
+## 🖥️ 快速启动 Console / Client
+- **Console（Java 版）**：项目根目录执行 `mvn -pl es-plus-console spring-boot:run`，启动后访问 `http://localhost:8080`。
+- **Client（Windows 免 Java 版）**：进入 `es-plus-client` 执行 `npm run portable:windows`，然后运行 `desktop/dist/ES-Plus-Portable-0.1.0-x64.exe`。
+- 两个版本均提供索引管理、SQL/EPL/DSL 查询和数据操作能力，Client 使用本地 Node.js 与 SQLite，无需安装 Java。
+**基础搜索界面**
+![基础搜索界面](img_1.png)
+**高级搜索界面**
+![高级搜索界面](img.png)
+
 ## 📦 Maven 依赖
 
 **ES 6.x / 7.x 版本：**
